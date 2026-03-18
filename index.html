@@ -234,128 +234,86 @@ button, input, textarea, select { font-family:var(--font); }
 .add-btn-bottom svg { width:16px; height:16px; }
 .add-btn-bottom:hover { border-color:var(--primary); color:var(--primary); }
 
-/* ===== CALENDAR ===== */
-/* ===== WEEK CALENDAR ===== */
-.cal-wrap { padding:0 0 40px; }
+/* ===== MONTHLY CALENDAR TABLE ===== */
+#calendar-container { padding:0; background:#fff; }
 
-/* Navigation */
-.cal-nav { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 14px; }
-.cal-nav-center { display:flex; flex-direction:column; align-items:center; gap:6px; }
-.cal-nav-title { font-size:16px; font-weight:700; color:var(--text-primary); letter-spacing:-.3px; }
+/* Table structure */
+.cal-month-table {
+  width:100%; border-collapse:collapse; table-layout:fixed;
+  font-family:var(--font);
+}
+.cal-month-table th,
+.cal-month-table td { border:1px solid #dde3ef; }
+
+/* Nav header cell */
+.cal-nav-td { padding:0; border:1px solid #dde3ef; }
+.cal-nav-inner {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px;
+}
 .cal-nav-btn {
-  width:36px; height:36px; border-radius:50%;
+  width:34px; height:34px; border-radius:50%;
   border:1.5px solid var(--border-light); background:#fff;
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; color:#666; transition:all .15s; flex-shrink:0;
+  cursor:pointer; color:#666; transition:all .15s; flex-shrink:0; padding:0;
 }
 .cal-nav-btn:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+.cal-th-title { font-size:17px; font-weight:700; color:var(--text-primary); }
 .cal-today-btn {
   font-size:12px; font-weight:600; color:var(--primary);
   background:var(--primary-bg); border:none; border-radius:20px;
-  padding:4px 14px; cursor:pointer; letter-spacing:-.2px;
+  padding:4px 14px; cursor:pointer; margin-left:8px;
 }
 
-/* Week box */
-.cal-week-box {
-  margin:0 16px;
-  border:1px solid var(--divider); border-radius:16px;
-  overflow:hidden; background:#fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+/* Day-of-week header */
+.cal-dow-th {
+  text-align:center; padding:9px 4px; font-size:13px; font-weight:700;
+  color:#555; background:#f8f9fc;
 }
+.cal-dow-th.sun { color:#e05050; background:#fff5f5; }
+.cal-dow-th.sat { color:#4a7abf; background:#f0f4ff; }
 
-/* Day headers */
-.cal-day-headers { display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--divider); }
-.cal-day-hd {
-  display:flex; flex-direction:column; align-items:center;
-  padding:11px 2px 9px; gap:5px;
-  border-right:1px solid var(--divider);
-  background:#fafbfd;
+/* Date number row */
+.cal-date-td {
+  text-align:right; padding:5px 8px 2px;
+  font-size:13px; font-weight:500; color:#444;
+  border-bottom:none !important;
+  vertical-align:top; height:24px;
 }
-.cal-day-hd:last-child { border-right:none; }
-.cal-day-hd .dow { font-size:10px; color:#c0c4d0; font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
-.cal-day-hd .dom {
-  width:27px; height:27px;
-  display:flex; align-items:center; justify-content:center;
-  border-radius:50%; font-size:13px; font-weight:700; color:#666;
+.cal-date-td.sun { color:#e05050; background:#fff8f8; }
+.cal-date-td.sat { color:#4a7abf; background:#f5f8ff; }
+.cal-date-td.today-num { color:var(--primary); font-weight:800; }
+.cal-date-td.out { color:#ccc; background:#fafafa; }
+
+/* Content row */
+.cal-content-td {
+  vertical-align:top; padding:4px 6px 10px;
+  border-top:none !important;
+  height:72px;
 }
-.cal-day-hd.today .dow { color:var(--primary); }
-.cal-day-hd.today .dom { background:var(--primary); color:#fff; }
-.cal-day-hd.sun .dow { color:#f87171; }
-.cal-day-hd.sun .dom { color:#f87171; }
-.cal-day-hd.sat .dow { color:#60a5fa; }
-.cal-day-hd.sat .dom { color:#60a5fa; }
-.cal-day-hd.today.sun .dom, .cal-day-hd.today.sat .dom { color:#fff; }
+.cal-content-td.sun { background:#fff8f8; }
+.cal-content-td.sat { background:#f5f8ff; }
+.cal-content-td.out { background:#fafafa; }
 
-/* Process card grid area */
-.cal-proc-area { padding:10px 6px 14px; min-height:60px; }
-.cal-proc-grid {
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  grid-auto-rows: auto;
-  gap:8px 0;
+/* Process entry inside a day cell */
+.cal-day-proc { margin-bottom:3px; }
+.cal-day-pname {
+  font-size:12px; font-weight:600; color:#333; line-height:1.4;
 }
-/* Card block — replaces narrow bar */
-.cal-proc-card-grid {
-  border-radius:14px;
-  padding:11px 12px 12px;
-  margin:0 4px;
-  cursor:pointer;
-  transition:opacity .15s, transform .12s;
-  overflow:hidden;
-  position:relative;
+.cal-day-detail {
+  font-size:11px; color:#888; line-height:1.4;
 }
-.cal-proc-card-grid:hover { opacity:0.85; transform:translateY(-1px); }
-/* 이전 주에서 이어지는 경우 왼쪽 radius 제거 */
-.cal-proc-card-grid.cont-l { border-radius:0 14px 14px 0; margin-left:0; }
-/* 다음 주로 이어지는 경우 오른쪽 radius 제거 */
-.cal-proc-card-grid.cont-r { border-radius:14px 0 0 14px; margin-right:0; }
-.cal-proc-card-grid.cont-l.cont-r { border-radius:0; }
+/* Color accent dot before process name */
+.cal-day-proc.c0 .cal-day-pname { color:#2563eb; }
+.cal-day-proc.c1 .cal-day-pname { color:#16a34a; }
+.cal-day-proc.c2 .cal-day-pname { color:#e07000; }
+.cal-day-proc.c3 .cal-day-pname { color:#9333ea; }
+.cal-day-proc.c4 .cal-day-pname { color:#e91e63; }
+.cal-day-proc.c5 .cal-day-pname { color:#00838f; }
+.cal-day-proc.c6 .cal-day-pname { color:#e08000; }
+.cal-day-proc.c7 .cal-day-pname { color:#6d4c41; }
 
-/* 공정명 */
-.pcg-title { font-size:13px; font-weight:800; margin-bottom:7px; line-height:1.2; }
-/* 상세내역 목록 */
-.pcg-items { display:flex; flex-direction:column; gap:3px; }
-.pcg-item { font-size:12px; color:#555; line-height:1.4; }
-/* 업체명 */
-.pcg-company { font-size:11px; color:#999; margin-top:5px; }
-
-/* Card background + title colors */
-.cal-proc-card-grid.c0 { background:#e8f2ff; } .cal-proc-card-grid.c0 .pcg-title { color:#2563eb; }
-.cal-proc-card-grid.c1 { background:#e6faf0; } .cal-proc-card-grid.c1 .pcg-title { color:#16a34a; }
-.cal-proc-card-grid.c2 { background:#fff4e0; } .cal-proc-card-grid.c2 .pcg-title { color:#e07000; }
-.cal-proc-card-grid.c3 { background:#f5eeff; } .cal-proc-card-grid.c3 .pcg-title { color:#9333ea; }
-.cal-proc-card-grid.c4 { background:#ffebf3; } .cal-proc-card-grid.c4 .pcg-title { color:#e91e63; }
-.cal-proc-card-grid.c5 { background:#e0f9fa; } .cal-proc-card-grid.c5 .pcg-title { color:#00838f; }
-.cal-proc-card-grid.c6 { background:#fff9e0; } .cal-proc-card-grid.c6 .pcg-title { color:#e08000; }
-.cal-proc-card-grid.c7 { background:#f0ebe6; } .cal-proc-card-grid.c7 .pcg-title { color:#6d4c41; }
-
-.cal-no-proc { text-align:center; padding:24px 0 10px; color:#ccc; font-size:13px; }
-
-/* Process list below */
-.cal-section-title { font-size:13px; font-weight:700; color:#aaa; letter-spacing:.5px; padding:18px 20px 8px; text-transform:uppercase; }
-.cal-proc-list { padding:0 20px; display:flex; flex-direction:column; gap:0; }
-.cal-list-item {
-  display:flex; align-items:center; gap:12px;
-  padding:11px 0; border-bottom:1px solid var(--divider);
-}
-.cal-list-item:last-child { border-bottom:none; }
-.cal-list-color { width:10px; height:32px; border-radius:4px; flex-shrink:0; }
-.cal-list-color.c0 { background:#2563eb; }
-.cal-list-color.c1 { background:#16a34a; }
-.cal-list-color.c2 { background:#f57c00; }
-.cal-list-color.c3 { background:#9333ea; }
-.cal-list-color.c4 { background:#e91e63; }
-.cal-list-color.c5 { background:#00838f; }
-.cal-list-color.c6 { background:#ff8f00; }
-.cal-list-color.c7 { background:#6d4c41; }
-.cal-list-info { display:flex; flex-direction:column; gap:2px; flex:1; }
-.cal-list-name { font-size:14px; font-weight:600; color:var(--text-primary); }
-.cal-list-date { font-size:12px; color:#999; }
-.cal-list-days { font-size:12px; font-weight:600; color:var(--primary); margin-left:auto; flex-shrink:0; }
-.cal-empty-full { text-align:center; padding:48px 20px; color:#ccc; font-size:14px; line-height:1.6; }
-
-#calendar-container { }
-@media(min-width:768px) { #calendar-container { max-width:680px; margin:0 auto; } }
+.cal-empty-full { text-align:center; padding:48px 20px; color:#ccc; font-size:14px; line-height:1.6; background:#fff; }
 
 /* ===== DROPDOWN MENU ===== */
 .dropdown {
@@ -977,7 +935,7 @@ let state = {
   summaryOpen: true,
 };
 let pendingAction = null;
-let calWeekOffset = 0;
+let calMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
 
 function getProject() { return state.projects.find(p => p.id === state.currentProjectId); }
 
@@ -1253,17 +1211,16 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   if (tab === 'calendar') {
-    // Jump to week containing first scheduled process
     const proj = getProject();
     if (proj) {
       const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>new Date(p.scheduleStart+'T00:00:00'));
       if (starts.length) {
         const minD = new Date(Math.min(...starts));
-        const now = new Date(); now.setHours(0,0,0,0);
-        const nowSun = new Date(now); nowSun.setDate(now.getDate() - now.getDay());
-        const minSun = new Date(minD); minSun.setDate(minD.getDate() - minD.getDay());
-        calWeekOffset = Math.round((minSun - nowSun) / (7*86400000));
-      } else { calWeekOffset = 0; }
+        calMonth = { year: minD.getFullYear(), month: minD.getMonth() };
+      } else {
+        const now = new Date();
+        calMonth = { year: now.getFullYear(), month: now.getMonth() };
+      }
     }
     renderCalendar();
   }
@@ -1565,95 +1522,116 @@ function confirmAddDetail() {
 }
 
 // ===== CALENDAR =====
-// ===== WEEK CALENDAR =====
-function calNav(delta) {
-  if (delta === 0) calWeekOffset = 0;
-  else calWeekOffset += delta;
+// ===== MONTHLY CALENDAR =====
+function calMonthNav(delta) {
+  calMonth.month += delta;
+  if (calMonth.month < 0)  { calMonth.month = 11; calMonth.year--; }
+  if (calMonth.month > 11) { calMonth.month = 0;  calMonth.year++; }
   renderCalendar();
-}
-function getWeekDays(offset) {
-  const now = new Date(); now.setHours(0,0,0,0);
-  const sun = new Date(now); sun.setDate(now.getDate() - now.getDay() + offset * 7);
-  return Array.from({length:7}, (_, i) => { const d = new Date(sun); d.setDate(sun.getDate()+i); return d; });
 }
 function renderCalendar() {
   const proj = getProject(); if (!proj) return;
   const container = document.getElementById('calendar-container');
-  const days = getWeekDays(calWeekOffset);
+  const { year, month } = calMonth;
+  const firstDay   = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
   const today = new Date(); today.setHours(0,0,0,0);
-  const DOW = ['일','월','화','수','목','금','토'];
+  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const DOW    = ['일','월','화','수','목','금','토'];
 
-  // Week label
-  const d0 = days[0], d6 = days[6];
-  const m1 = d0.getMonth()+1, m2 = d6.getMonth()+1;
-  const weekLabel = m1===m2
-    ? `${d0.getFullYear()}년 ${m1}월 ${d0.getDate()}–${d6.getDate()}일`
-    : `${d0.getFullYear()}년 ${m1}월 ${d0.getDate()}일 – ${m2}월 ${d6.getDate()}일`;
-
-  // Day headers HTML
-  const dayHdHtml = days.map((d,i) => {
-    const isToday = d.getTime()===today.getTime();
-    const cls = ['cal-day-hd', isToday?'today':'', i===0?'sun':'', i===6?'sat':''].filter(Boolean).join(' ');
-    return `<div class="${cls}"><span class="dow">${DOW[i]}</span><span class="dom">${d.getDate()}</span></div>`;
-  }).join('');
-
-  // All scheduled processes
-  const allProcs = proj.processes.filter(p=>p.scheduleStart&&p.scheduleEnd).map(p => {
-    const s=new Date(p.scheduleStart+'T00:00:00'), e=new Date(p.scheduleEnd+'T23:59:59');
-    return {...p, s, e};
-  });
-
-  // Processes active this week
-  const weekEnd = new Date(days[6]); weekEnd.setHours(23,59,59,999);
-  const activeProcs = allProcs.filter(p => p.s<=weekEnd && p.e>=days[0]);
-
-  // Build card grid — each process card spans its day columns + shows full content
-  let procGridHtml = '';
-  if (activeProcs.length) {
-    const cards = activeProcs.map(p => {
-      const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
-      const startsBefore = p.s < days[0];
-      const endsAfter = p.e > weekEnd;
-      let colStart = startsBefore ? 1 : Math.round((p.s-days[0])/86400000)+1;
-      let colEnd = endsAfter ? 8 : Math.round((p.e-days[0])/86400000)+2;
-      colStart = Math.max(1,Math.min(7,colStart));
-      colEnd = Math.max(colStart+1,Math.min(8,colEnd));
-      const contCls = (startsBefore?'cont-l ':'')+(endsAfter?'cont-r ':'');
-      const detailItems = (p.details||[]).map(d=>`<div class="pcg-item">${esc(d.desc)}</div>`).join('');
-      return `<div class="cal-proc-card-grid ${cls} ${contCls.trim()}" style="grid-column:${colStart}/${colEnd}">
-        <div class="pcg-title">${esc(p.name)}</div>
-        ${detailItems ? `<div class="pcg-items">${detailItems}</div>` : ''}
-        ${p.company ? `<div class="pcg-company">🏢 ${esc(p.company)}</div>` : ''}
-      </div>`;
-    });
-    procGridHtml = `<div class="cal-proc-grid">${cards.join('')}</div>`;
-  } else {
-    procGridHtml = `<div class="cal-no-proc">이번 주 예정된 공정이 없습니다</div>`;
+  // Build weeks (array of 7-slot arrays with day numbers or null)
+  const weeks = [];
+  let dayNum = 1;
+  let week = Array(7).fill(null);
+  for (let i = firstDay; i < 7 && dayNum <= daysInMonth; i++) week[i] = dayNum++;
+  weeks.push(week);
+  while (dayNum <= daysInMonth) {
+    week = Array(7).fill(null);
+    for (let i = 0; i < 7 && dayNum <= daysInMonth; i++) week[i] = dayNum++;
+    weeks.push(week);
   }
 
-  const todayBtn = calWeekOffset!==0
-    ? `<button class="cal-today-btn" onclick="calNav(0)">오늘</button>` : '';
+  // Get content HTML for a given day
+  function getDayContent(d) {
+    if (d === null) return '';
+    const dateD = new Date(year, month, d);
+    const active = proj.processes.filter(p => {
+      if (!p.scheduleStart || !p.scheduleEnd) return false;
+      return dateD >= new Date(p.scheduleStart+'T00:00:00') && dateD <= new Date(p.scheduleEnd+'T23:59:59');
+    });
+    return active.map(p => {
+      const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
+      const details = (p.details||[]).map(d=>`<div class="cal-day-detail">${esc(d.desc)}</div>`).join('');
+      return `<div class="cal-day-proc ${cls}"><div class="cal-day-pname">${esc(p.name)}</div>${details}</div>`;
+    }).join('');
+  }
+
+  // DOW header row
+  const dowHtml = DOW.map((d,i) =>
+    `<th class="cal-dow-th${i===0?' sun':i===6?' sat':''}">${d}</th>`
+  ).join('');
+
+  // Week rows (date row + content row pairs)
+  let weeksHtml = '';
+  weeks.forEach(wk => {
+    // Date number row
+    let dateRow = '<tr>';
+    wk.forEach((d, i) => {
+      const isSun = i===0, isSat = i===6;
+      const isToday = d && new Date(year,month,d).getTime()===today.getTime();
+      const isEmpty = d === null;
+      let cls = isSun?'sun':isSat?'sat':'';
+      if (isEmpty) cls += (cls?' ':'')+'out';
+      if (isToday) cls += (cls?' ':'')+'today-num';
+      dateRow += `<td class="cal-date-td${cls?' '+cls:''}">${d!==null ? d : ''}</td>`;
+    });
+    dateRow += '</tr>';
+
+    // Content row
+    let contentRow = '<tr>';
+    wk.forEach((d, i) => {
+      const isSun = i===0, isSat = i===6;
+      const isEmpty = d === null;
+      let cls = isSun?'sun':isSat?'sat':'';
+      if (isEmpty) cls += (cls?' ':'')+'out';
+      contentRow += `<td class="cal-content-td${cls?' '+cls:''}">${getDayContent(d)}</td>`;
+    });
+    contentRow += '</tr>';
+
+    weeksHtml += dateRow + contentRow;
+  });
+
+  const nowM = new Date();
+  const isCurrentMonth = year===nowM.getFullYear() && month===nowM.getMonth();
+  const todayBtnHtml = !isCurrentMonth
+    ? `<button class="cal-today-btn" onclick="(()=>{const n=new Date();calMonth={year:n.getFullYear(),month:n.getMonth()};renderCalendar();})()">오늘</button>`
+    : '';
+
+  const hasProcs = proj.processes.some(p=>p.scheduleStart&&p.scheduleEnd);
 
   container.innerHTML = `
-  <div class="cal-wrap">
-    <div class="cal-nav">
-      <button class="cal-nav-btn" onclick="calNav(-1)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div class="cal-nav-center">
-        <div class="cal-nav-title">${weekLabel}</div>
-        ${todayBtn}
-      </div>
-      <button class="cal-nav-btn" onclick="calNav(1)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-    </div>
-    <div class="cal-week-box">
-      <div class="cal-day-headers">${dayHdHtml}</div>
-      <div class="cal-proc-area">${procGridHtml}</div>
-    </div>
-    ${!allProcs.length ? `<div class="cal-empty-full">공정 일정을 입력하면<br>여기에 표시됩니다</div>` : ''}
-  </div>`;
+  <table class="cal-month-table">
+    <thead>
+      <tr>
+        <td colspan="7" class="cal-nav-td">
+          <div class="cal-nav-inner">
+            <button class="cal-nav-btn" onclick="calMonthNav(-1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span style="display:flex;align-items:center;gap:8px;">
+              <span class="cal-th-title">${MONTHS[month]}</span>${todayBtnHtml}
+            </span>
+            <button class="cal-nav-btn" onclick="calMonthNav(1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>${dowHtml}</tr>
+    </thead>
+    <tbody>${weeksHtml}</tbody>
+  </table>
+  ${!hasProcs ? `<div class="cal-empty-full">공정 일정을 입력하면 여기에 표시됩니다</div>` : ''}`;
 }
 function parseKorDate(s) {
   const m = s.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
