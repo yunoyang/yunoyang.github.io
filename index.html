@@ -493,6 +493,96 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .sched-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
+/* ===== CUSTOM DATE PICKER ===== */
+.dp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.dp-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+.dp-nav-btn {
+  width:32px; height:32px; border-radius:50%;
+  border:1px solid var(--border-light); background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:#666; transition:all .15s; padding:0;
+}
+.dp-nav-btn:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+.dp-range-bar {
+  display:flex; align-items:center; gap:6px;
+  background:#f5f8ff; border-radius:12px; padding:10px 14px; margin-bottom:12px;
+}
+.dp-range-item { flex:1; display:flex; flex-direction:column; gap:2px; cursor:pointer; border-radius:8px; padding:4px 6px; transition:background .1s; }
+.dp-range-item.active { background:#e8efff; }
+.dp-range-item.active .dp-range-val { color:var(--primary); font-weight:700; }
+.dp-range-item.active .dp-range-lbl { color:var(--primary); }
+.dp-range-lbl { font-size:10px; color:#aaa; font-weight:700; letter-spacing:.3px; }
+.dp-range-val { font-size:13px; font-weight:600; color:#444; }
+.dp-range-sep { color:#ccc; font-size:16px; flex-shrink:0; }
+.dp-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding:6px 0; border-bottom:1px solid #f0f0f0; }
+.dp-weekdays > span { font-size:11px; color:#c0c4d0; font-weight:600; }
+.dp-weekdays > span.dp-wks { color:#f87171; }
+.dp-weekdays > span.dp-wksa { color:#60a5fa; }
+.dp-grid { display:grid; grid-template-columns:repeat(7,1fr); margin-top:2px; }
+.dp-cell {
+  display:flex; flex-direction:column; align-items:center;
+  padding:3px 0 4px; cursor:pointer; position:relative; min-height:42px;
+}
+.dp-cell.dp-empty { cursor:default; pointer-events:none; }
+.dp-num {
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; font-size:13px; font-weight:500; color:#333;
+  z-index:1; position:relative; transition:background .1s;
+}
+.dp-cell:not(.dp-empty):not(.dp-sel-start):not(.dp-sel-end):hover .dp-num { background:#f0f5ff; }
+/* Range band - behind the number */
+.dp-cell.dp-range::before,
+.dp-cell.dp-range-s::before,
+.dp-cell.dp-range-e::before {
+  content:''; position:absolute; top:3px; height:32px;
+  background:#deeaff; z-index:0;
+}
+.dp-cell.dp-range::before { left:0; right:0; }
+.dp-cell.dp-range-s::before { left:50%; right:0; }
+.dp-cell.dp-range-e::before { left:0; right:50%; }
+.dp-cell.dp-today .dp-num { border:2px solid var(--primary); color:var(--primary); font-weight:700; }
+.dp-cell.dp-sel-start .dp-num,
+.dp-cell.dp-sel-end .dp-num { background:var(--primary) !important; color:#fff !important; font-weight:700; }
+.dp-cell.dp-sun:not(.dp-sel-start):not(.dp-sel-end) .dp-num { color:#f87171; }
+.dp-cell.dp-sat:not(.dp-sel-start):not(.dp-sel-end) .dp-num { color:#60a5fa; }
+.dp-dots { display:flex; gap:2px; justify-content:center; z-index:1; position:relative; }
+.dp-dot { width:4px; height:4px; border-radius:50%; }
+
+/* ===== CALENDAR PROCESS DETAIL CARDS ===== */
+.cal-week-subtitle { font-size:12px; font-weight:700; color:#aaa; letter-spacing:.5px; padding:16px 20px 8px; text-transform:uppercase; }
+.cal-proc-cards { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+.cal-proc-card {
+  border-radius:14px; padding:14px 16px;
+  border-left:4px solid transparent;
+}
+.cal-proc-card.c0 { background:#f0f6ff; border-left-color:#2563eb; }
+.cal-proc-card.c1 { background:#f0fdf4; border-left-color:#16a34a; }
+.cal-proc-card.c2 { background:#fffbf0; border-left-color:#f57c00; }
+.cal-proc-card.c3 { background:#faf5ff; border-left-color:#9333ea; }
+.cal-proc-card.c4 { background:#fff0f6; border-left-color:#e91e63; }
+.cal-proc-card.c5 { background:#f0fdfd; border-left-color:#00838f; }
+.cal-proc-card.c6 { background:#fffdf0; border-left-color:#ff8f00; }
+.cal-proc-card.c7 { background:#fdf8f0; border-left-color:#6d4c41; }
+.pcard-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; gap:8px; }
+.pcard-type-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
+.pcard-type-badge.c0 { background:#dbeafe; color:#1d4ed8; }
+.pcard-type-badge.c1 { background:#dcfce7; color:#15803d; }
+.pcard-type-badge.c2 { background:#fff3e0; color:#c2660a; }
+.pcard-type-badge.c3 { background:#f3e8ff; color:#7e22ce; }
+.pcard-type-badge.c4 { background:#fce4ec; color:#be185d; }
+.pcard-type-badge.c5 { background:#e0f7fa; color:#0e7490; }
+.pcard-type-badge.c6 { background:#fff8e1; color:#b45309; }
+.pcard-type-badge.c7 { background:#efebe9; color:#78350f; }
+.pcard-date { font-size:11px; color:#aaa; font-weight:500; }
+.pcard-name { font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:3px; }
+.pcard-meta { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+.pcard-company { font-size:12px; color:#888; }
+.pcard-cost { font-size:13px; font-weight:700; color:var(--primary); }
+.pcard-details { border-top:1px solid rgba(0,0,0,0.06); padding-top:8px; display:flex; flex-direction:column; gap:5px; }
+.pcard-detail-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; }
+.pcard-detail-amt { font-weight:600; color:#444; white-space:nowrap; margin-left:8px; }
+.pcard-no-detail { font-size:12px; color:#ccc; font-style:italic; }
+
 /* ===== LANDING ===== */
 .landing-screen {
   background:#fff; align-items:center; justify-content:center;
@@ -654,10 +744,10 @@ button, input, textarea, select { font-family:var(--font); }
         <input class="addr-input" id="f-project-name" placeholder="프로젝트 이름 입력" oninput="saveFormData()">
       </div>
       <div class="form-group">
-        <span class="form-label">시공종류</span>
+        <span class="form-label">시공종류 (1개 선택)</span>
         <div class="checkbox-row">
-          <div class="chk-item"><input type="checkbox" id="f-apt" checked onchange="saveFormData()"><label for="f-apt">아파트</label></div>
-          <div class="chk-item"><input type="checkbox" id="f-house" onchange="saveFormData()"><label for="f-house">단독주택</label></div>
+          <div class="chk-item"><input type="radio" name="f-type" id="f-apt" value="아파트" checked onchange="saveFormData()"><label for="f-apt">아파트</label></div>
+          <div class="chk-item"><input type="radio" name="f-type" id="f-house" value="단독주택" onchange="saveFormData()"><label for="f-house">단독주택</label></div>
         </div>
       </div>
       <div class="form-group">
@@ -788,18 +878,11 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- Schedule Picker -->
 <div class="overlay" id="dlg-schedule">
-  <div class="dialog">
+  <div class="dialog" style="gap:12px;">
     <h3>시공 일정 선택</h3>
-    <div class="form-group">
-      <span class="form-label">시작일</span>
-      <input type="date" id="sched-start" class="dialog-input" style="margin-top:4px;">
-    </div>
-    <div class="form-group">
-      <span class="form-label">종료일</span>
-      <input type="date" id="sched-end" class="dialog-input" style="margin-top:4px;">
-    </div>
+    <div id="dp-container"></div>
     <div id="sched-other-section" style="display:none;border-top:1px solid #f0f0f0;padding-top:12px;">
-      <div style="font-size:12px;color:#999;font-weight:700;margin-bottom:8px;">📅 다른 공정 일정 현황</div>
+      <div style="font-size:12px;color:#999;font-weight:700;margin-bottom:8px;">📅 다른 공정 일정</div>
       <div id="sched-other-list"></div>
     </div>
     <div class="dialog-actions">
@@ -1261,41 +1344,159 @@ function deleteDetail(procId, detailId) {
   if (proc) { proc.details = proc.details.filter(d => d.id !== detailId); save(); renderAll(); }
 }
 
-// ===== SCHEDULE DIALOG =====
+// ===== SCHEDULE DIALOG + CUSTOM DATE PICKER =====
 let schedulingProcessId = null;
+let calPicker = { year:0, month:0, start:null, end:null, step:'start', otherProcs:[] };
+
 function openScheduleDialog(procId) {
   schedulingProcessId = procId;
   const proj = getProject();
   const proc = proj.processes.find(p => p.id === procId);
-  document.getElementById('sched-start').value = proc.scheduleStart || '';
-  document.getElementById('sched-end').value = proc.scheduleEnd || '';
-  const others = proj.processes.filter(p => p.id !== procId && p.scheduleStart && p.scheduleEnd);
-  const section = document.getElementById('sched-other-section');
-  const list = document.getElementById('sched-other-list');
-  if (others.length === 0) {
-    section.style.display = 'none';
-  } else {
-    section.style.display = 'block';
-    list.innerHTML = others.map(p => {
-      const cls = PROCESS_COLORS[p.type] || 'c' + (Math.abs(hashCode(p.name)) % 8);
-      const color = COLOR_HEX[cls] || '#666';
-      return `<div class="sched-other-item">
-        <div class="sched-dot" style="background:${color};"></div>
-        <span style="font-weight:700;flex:1;">${esc(p.name)}</span>
-        <span style="color:#aaa;font-size:12px;">${formatDate(p.scheduleStart)} ~ ${formatDate(p.scheduleEnd)}</span>
-      </div>`;
-    }).join('');
-  }
+  // Set initial view month
+  let viewD = new Date();
+  if (proc.scheduleStart) viewD = new Date(proc.scheduleStart + 'T00:00:00');
+  calPicker.year = viewD.getFullYear();
+  calPicker.month = viewD.getMonth();
+  calPicker.start = proc.scheduleStart || null;
+  calPicker.end = proc.scheduleEnd || null;
+  calPicker.step = 'start';
+  calPicker.otherProcs = proj.processes
+    .filter(p => p.id !== procId && p.scheduleStart && p.scheduleEnd)
+    .map(p => {
+      const cls = PROCESS_COLORS[p.type] || ('c' + (Math.abs(hashCode(p.name)) % 8));
+      return { name: p.name, start: p.scheduleStart, end: p.scheduleEnd, cls, color: COLOR_HEX[cls] || '#888' };
+    });
+  renderDatePicker();
   openDialog('dlg-schedule');
 }
+
+function calPickerNav(delta) {
+  calPicker.month += delta;
+  if (calPicker.month < 0) { calPicker.month = 11; calPicker.year--; }
+  if (calPicker.month > 11) { calPicker.month = 0; calPicker.year++; }
+  renderDatePicker();
+}
+
+function calPickerSetStep(step) {
+  calPicker.step = step;
+  renderDatePicker();
+}
+
+function calPickerSelect(dateStr) {
+  if (calPicker.step === 'start') {
+    calPicker.start = dateStr;
+    calPicker.end = null;
+    calPicker.step = 'end';
+  } else {
+    if (calPicker.start && dateStr < calPicker.start) {
+      calPicker.end = calPicker.start;
+      calPicker.start = dateStr;
+    } else {
+      calPicker.end = dateStr;
+    }
+    calPicker.step = 'start';
+  }
+  renderDatePicker();
+}
+
+function renderDatePicker() {
+  const { year, month, start, end, step, otherProcs } = calPicker;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const DOW = ['일','월','화','수','목','금','토'];
+
+  // Build other-process date lookup map
+  const otherMap = new Map();
+  otherProcs.forEach(p => {
+    const s = new Date(p.start+'T00:00:00'), e = new Date(p.end+'T23:59:59');
+    const cur = new Date(s);
+    while (cur <= e) {
+      const ds = cur.toISOString().slice(0,10);
+      if (!otherMap.has(ds)) otherMap.set(ds,[]);
+      otherMap.get(ds).push(p);
+      cur.setDate(cur.getDate()+1);
+    }
+  });
+
+  // Build calendar cells
+  let cells = '';
+  for (let i=0; i<firstDay; i++) cells += '<div class="dp-cell dp-empty"></div>';
+  for (let d=1; d<=daysInMonth; d++) {
+    const mo = String(month+1).padStart(2,'0'), dd = String(d).padStart(2,'0');
+    const ds = `${year}-${mo}-${dd}`;
+    const isStart = ds === start;
+    const isEnd = ds === end;
+    const inRange = start && end && ds > start && ds < end;
+    const isRangeS = isStart && end; // start but range continues right
+    const isRangeE = isEnd;          // end but range comes from left
+    const isToday = ds === todayStr;
+    const col = (firstDay + d - 1) % 7;
+    const isSun = col===0, isSat = col===6;
+    const others = otherMap.get(ds)||[];
+    let cls = 'dp-cell';
+    if (isRangeS) cls += ' dp-range-s';
+    else if (isRangeE) cls += ' dp-range-e';
+    else if (inRange) cls += ' dp-range';
+    if (isStart) cls += ' dp-sel-start';
+    if (isEnd) cls += ' dp-sel-end';
+    if (isToday && !isStart && !isEnd) cls += ' dp-today';
+    if (isSun) cls += ' dp-sun';
+    if (isSat) cls += ' dp-sat';
+    const dots = others.length ? `<div class="dp-dots">${others.slice(0,3).map(p=>`<span class="dp-dot" style="background:${p.color}"></span>`).join('')}</div>` : '';
+    cells += `<div class="${cls}" onclick="calPickerSelect('${ds}')"><span class="dp-num">${d}</span>${dots}</div>`;
+  }
+
+  const startLabel = start ? formatDate(start) : '시작일';
+  const endLabel   = end   ? formatDate(end)   : '종료일';
+
+  document.getElementById('dp-container').innerHTML = `
+    <div class="dp-header">
+      <button class="dp-nav-btn" onclick="calPickerNav(-1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="dp-title">${year}년 ${MONTHS[month]}</span>
+      <button class="dp-nav-btn" onclick="calPickerNav(1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="dp-range-bar">
+      <div class="dp-range-item ${step==='start'?'active':''}" onclick="calPickerSetStep('start')">
+        <span class="dp-range-lbl">시작일</span>
+        <span class="dp-range-val">${startLabel}</span>
+      </div>
+      <span class="dp-range-sep">→</span>
+      <div class="dp-range-item ${step==='end'?'active':''}" onclick="calPickerSetStep('end')">
+        <span class="dp-range-lbl">종료일</span>
+        <span class="dp-range-val">${endLabel}</span>
+      </div>
+    </div>
+    <div class="dp-weekdays">${DOW.map((w,i)=>`<span class="${i===0?'dp-wks':i===6?'dp-wksa':''}">${w}</span>`).join('')}</div>
+    <div class="dp-grid">${cells}</div>`;
+
+  // Other process list
+  const section = document.getElementById('sched-other-section');
+  const list = document.getElementById('sched-other-list');
+  if (!otherProcs.length) { section.style.display='none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = otherProcs.map(p => `
+    <div class="sched-other-item">
+      <div class="sched-dot" style="background:${p.color};"></div>
+      <span style="font-weight:700;flex:1;">${esc(p.name)}</span>
+      <span style="color:#aaa;font-size:12px;">${formatDate(p.start)} ~ ${formatDate(p.end)}</span>
+    </div>`).join('');
+}
+
 function confirmSchedule() {
   const proc = getProject()?.processes.find(p => p.id === schedulingProcessId);
   if (!proc) return;
-  const start = document.getElementById('sched-start').value;
-  const end = document.getElementById('sched-end').value;
-  if (start && end && start > end) { alert('종료일이 시작일보다 빠를 수 없습니다.'); return; }
-  proc.scheduleStart = start;
-  proc.scheduleEnd = end;
+  if (calPicker.start && calPicker.end && calPicker.start > calPicker.end) {
+    alert('종료일이 시작일보다 빠를 수 없습니다.'); return;
+  }
+  proc.scheduleStart = calPicker.start || '';
+  proc.scheduleEnd = calPicker.end || '';
   save(); renderAll();
   closeDialog('dlg-schedule');
 }
@@ -1414,7 +1615,30 @@ function renderCalendar() {
     procGridHtml = `<div class="cal-no-proc">이번 주 예정된 공정이 없습니다</div>`;
   }
 
-  // Process list (all, below the week grid)
+  // Process detail cards (active this week)
+  const activeCardHtml = activeProcs.map(p => {
+    const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
+    const sm=p.s.getMonth()+1, sd=p.s.getDate(), em=p.e.getMonth()+1, ed=p.e.getDate();
+    const daysCnt = Math.round((p.e-p.s)/86400000)+1;
+    const totalCost = (p.details||[]).reduce((s,d)=>s+(d.cost||0),0);
+    const detailRows = (p.details||[]).length
+      ? (p.details||[]).map(d=>`<div class="pcard-detail-row"><span>${esc(d.desc)}</span><span class="pcard-detail-amt">${(d.cost||0).toLocaleString()}원</span></div>`).join('')
+      : `<div class="pcard-no-detail">상세내역 없음</div>`;
+    return `<div class="cal-proc-card ${cls}">
+      <div class="pcard-top">
+        <span class="pcard-type-badge ${cls}">${p.type||p.name}</span>
+        <span class="pcard-date">${sm}/${sd} – ${em}/${ed} (${daysCnt}일)</span>
+      </div>
+      <div class="pcard-name">${esc(p.name)}</div>
+      <div class="pcard-meta">
+        ${p.company ? `<span class="pcard-company">🏢 ${esc(p.company)}</span>` : ''}
+        ${totalCost>0 ? `<span class="pcard-cost">${totalCost.toLocaleString()}원</span>` : ''}
+      </div>
+      <div class="pcard-details">${detailRows}</div>
+    </div>`;
+  }).join('');
+
+  // Process list (all, below)
   const listHtml = allProcs.length ? allProcs.map(p => {
     const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
     const sm=p.s.getMonth()+1, sd=p.s.getDate(), em=p.e.getMonth()+1, ed=p.e.getDate();
@@ -1450,6 +1674,7 @@ function renderCalendar() {
       <div class="cal-day-headers">${dayHdHtml}</div>
       <div class="cal-proc-area">${procGridHtml}</div>
     </div>
+    ${activeProcs.length ? `<div class="cal-week-subtitle">이번 주 공정</div><div class="cal-proc-cards">${activeCardHtml}</div>` : ''}
     ${allProcs.length ? `<div class="cal-section-title">전체 공정 일정</div><div class="cal-proc-list">${listHtml}</div>` : `<div class="cal-empty-full">공정 일정을 입력하면<br>여기에 표시됩니다</div>`}
   </div>`;
 }
@@ -1464,8 +1689,9 @@ function loadFormData() {
   const proj = getProject(); if (!proj) return;
   const f = proj.form;
   document.getElementById('f-project-name').value = proj.name || '';
-  document.getElementById('f-apt').checked = f.type.includes('아파트');
-  document.getElementById('f-house').checked = f.type.includes('단독주택');
+  const typeVal = f.type?.[0] || '아파트';
+  document.getElementById('f-apt').checked = typeVal === '아파트';
+  document.getElementById('f-house').checked = typeVal === '단독주택';
   const sizeVal = f.size?.[0] || '30평대';
   ['10','20','30','40','50','60'].forEach(s => {
     const el = document.getElementById('f-s'+s);
@@ -1484,9 +1710,8 @@ function saveFormData() {
   const f = proj.form;
   const pname = document.getElementById('f-project-name')?.value.trim();
   if (pname) { proj.name = pname; const el = document.getElementById('current-project-name'); if (el) el.textContent = pname; }
-  f.type = [];
-  if (document.getElementById('f-apt').checked) f.type.push('아파트');
-  if (document.getElementById('f-house').checked) f.type.push('단독주택');
+  const typeRadio = document.querySelector('input[name="f-type"]:checked');
+  f.type = typeRadio ? [typeRadio.value] : ['아파트'];
   const sr = document.querySelector('input[name="f-size"]:checked');
   f.size = sr ? [sr.value] : [];
   f.method = [];
