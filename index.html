@@ -286,40 +286,50 @@ button, input, textarea, select { font-family:var(--font); }
 .cal-day-hd.sat .dom { color:#60a5fa; }
 .cal-day-hd.today.sun .dom, .cal-day-hd.today.sat .dom { color:#fff; }
 
-/* Process bar area */
-.cal-proc-area { padding:10px 8px 12px; min-height:68px; }
+/* Process card grid area */
+.cal-proc-area { padding:10px 6px 14px; min-height:60px; }
 .cal-proc-grid {
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-auto-rows: 30px;
-  gap:3px 0;
+  grid-auto-rows: auto;
+  gap:8px 0;
 }
-.cal-proc-bar {
-  border-radius:7px; padding:0 8px;
-  font-size:11px; font-weight:700;
-  display:flex; align-items:center; gap:5px;
-  cursor:pointer; overflow:hidden;
-  transition:opacity .15s, transform .1s;
-  margin:0 2px;
-  align-self: stretch;
+/* Card block — replaces narrow bar */
+.cal-proc-card-grid {
+  border-radius:14px;
+  padding:11px 12px 12px;
+  margin:0 4px;
+  cursor:pointer;
+  transition:opacity .15s, transform .12s;
+  overflow:hidden;
+  position:relative;
 }
-.cal-proc-bar:hover { opacity:0.82; transform:translateY(-1px); }
-.cal-proc-bar .bar-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; background:currentColor; opacity:.7; }
-.cal-proc-bar .bar-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
-.cal-proc-bar .bar-cont-l { font-size:9px; opacity:.6; flex-shrink:0; }
-.cal-proc-bar .bar-cont-r { font-size:9px; opacity:.6; flex-shrink:0; }
+.cal-proc-card-grid:hover { opacity:0.85; transform:translateY(-1px); }
+/* 이전 주에서 이어지는 경우 왼쪽 radius 제거 */
+.cal-proc-card-grid.cont-l { border-radius:0 14px 14px 0; margin-left:0; }
+/* 다음 주로 이어지는 경우 오른쪽 radius 제거 */
+.cal-proc-card-grid.cont-r { border-radius:14px 0 0 14px; margin-right:0; }
+.cal-proc-card-grid.cont-l.cont-r { border-radius:0; }
 
-/* Bar colors */
-.cal-proc-bar.c0 { background:#dbeafe; color:#1d4ed8; }
-.cal-proc-bar.c1 { background:#dcfce7; color:#15803d; }
-.cal-proc-bar.c2 { background:#fff3e0; color:#c2660a; }
-.cal-proc-bar.c3 { background:#f3e8ff; color:#7e22ce; }
-.cal-proc-bar.c4 { background:#fce4ec; color:#be185d; }
-.cal-proc-bar.c5 { background:#e0f7fa; color:#0e7490; }
-.cal-proc-bar.c6 { background:#fff8e1; color:#b45309; }
-.cal-proc-bar.c7 { background:#efebe9; color:#78350f; }
+/* 공정명 */
+.pcg-title { font-size:13px; font-weight:800; margin-bottom:7px; line-height:1.2; }
+/* 상세내역 목록 */
+.pcg-items { display:flex; flex-direction:column; gap:3px; }
+.pcg-item { font-size:12px; color:#555; line-height:1.4; }
+/* 업체명 */
+.pcg-company { font-size:11px; color:#999; margin-top:5px; }
 
-.cal-no-proc { text-align:center; padding:20px 0 8px; color:#ccc; font-size:13px; }
+/* Card background + title colors */
+.cal-proc-card-grid.c0 { background:#e8f2ff; } .cal-proc-card-grid.c0 .pcg-title { color:#2563eb; }
+.cal-proc-card-grid.c1 { background:#e6faf0; } .cal-proc-card-grid.c1 .pcg-title { color:#16a34a; }
+.cal-proc-card-grid.c2 { background:#fff4e0; } .cal-proc-card-grid.c2 .pcg-title { color:#e07000; }
+.cal-proc-card-grid.c3 { background:#f5eeff; } .cal-proc-card-grid.c3 .pcg-title { color:#9333ea; }
+.cal-proc-card-grid.c4 { background:#ffebf3; } .cal-proc-card-grid.c4 .pcg-title { color:#e91e63; }
+.cal-proc-card-grid.c5 { background:#e0f9fa; } .cal-proc-card-grid.c5 .pcg-title { color:#00838f; }
+.cal-proc-card-grid.c6 { background:#fff9e0; } .cal-proc-card-grid.c6 .pcg-title { color:#e08000; }
+.cal-proc-card-grid.c7 { background:#f0ebe6; } .cal-proc-card-grid.c7 .pcg-title { color:#6d4c41; }
+
+.cal-no-proc { text-align:center; padding:24px 0 10px; color:#ccc; font-size:13px; }
 
 /* Process list below */
 .cal-section-title { font-size:13px; font-weight:700; color:#aaa; letter-spacing:.5px; padding:18px 20px 8px; text-transform:uppercase; }
@@ -1597,10 +1607,10 @@ function renderCalendar() {
   const weekEnd = new Date(days[6]); weekEnd.setHours(23,59,59,999);
   const activeProcs = allProcs.filter(p => p.s<=weekEnd && p.e>=days[0]);
 
-  // Build bar grid HTML — each bar gets grid-column: colStart/colEnd
+  // Build card grid — each process card spans its day columns + shows full content
   let procGridHtml = '';
   if (activeProcs.length) {
-    const bars = activeProcs.map(p => {
+    const cards = activeProcs.map(p => {
       const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
       const startsBefore = p.s < days[0];
       const endsAfter = p.e > weekEnd;
@@ -1608,37 +1618,18 @@ function renderCalendar() {
       let colEnd = endsAfter ? 8 : Math.round((p.e-days[0])/86400000)+2;
       colStart = Math.max(1,Math.min(7,colStart));
       colEnd = Math.max(colStart+1,Math.min(8,colEnd));
-      const brdL = startsBefore ? 'border-radius:0 7px 7px 0;' : '';
-      const brdR = endsAfter   ? 'border-radius:7px 0 0 7px;' : '';
-      const styleExtra = (startsBefore||endsAfter) ? (brdL||brdR) : '';
-      const contL = startsBefore ? `<span class="bar-cont-l">◂</span>` : '';
-      const contR = endsAfter   ? `<span class="bar-cont-r">▸</span>` : '';
-      return `<div class="cal-proc-bar ${cls}" style="grid-column:${colStart}/${colEnd};${styleExtra}" title="${p.name}">${contL}<span class="bar-dot"></span><span class="bar-name">${p.name}</span>${contR}</div>`;
+      const contCls = (startsBefore?'cont-l ':'')+(endsAfter?'cont-r ':'');
+      const detailItems = (p.details||[]).map(d=>`<div class="pcg-item">${esc(d.desc)}</div>`).join('');
+      return `<div class="cal-proc-card-grid ${cls} ${contCls.trim()}" style="grid-column:${colStart}/${colEnd}">
+        <div class="pcg-title">${esc(p.name)}</div>
+        ${detailItems ? `<div class="pcg-items">${detailItems}</div>` : ''}
+        ${p.company ? `<div class="pcg-company">🏢 ${esc(p.company)}</div>` : ''}
+      </div>`;
     });
-    procGridHtml = `<div class="cal-proc-grid">${bars.join('')}</div>`;
+    procGridHtml = `<div class="cal-proc-grid">${cards.join('')}</div>`;
   } else {
     procGridHtml = `<div class="cal-no-proc">이번 주 예정된 공정이 없습니다</div>`;
   }
-
-  // Process detail cards (all scheduled, inside calendar box, no price)
-  const allCardHtml = allProcs.map(p => {
-    const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
-    const sm=p.s.getMonth()+1, sd=p.s.getDate(), em=p.e.getMonth()+1, ed=p.e.getDate();
-    const daysCnt = Math.round((p.e-p.s)/86400000)+1;
-    const isActive = activeProcs.some(a=>a.id===p.id);
-    const detailRows = (p.details||[]).length
-      ? (p.details||[]).map(d=>`<div class="pcard-detail-row"><span>${esc(d.desc)}</span></div>`).join('')
-      : `<div class="pcard-no-detail">상세내역 없음</div>`;
-    return `<div class="cal-proc-card ${cls}${isActive?' pcard-active':''}">
-      <div class="pcard-top">
-        <span class="pcard-type-badge ${cls}">${p.type||p.name}</span>
-        <span class="pcard-date">${sm}/${sd} – ${em}/${ed} · ${daysCnt}일</span>
-      </div>
-      <div class="pcard-name">${esc(p.name)}</div>
-      ${p.company ? `<div class="pcard-company">🏢 ${esc(p.company)}</div>` : ''}
-      <div class="pcard-details">${detailRows}</div>
-    </div>`;
-  }).join('');
 
   const todayBtn = calWeekOffset!==0
     ? `<button class="cal-today-btn" onclick="calNav(0)">오늘</button>` : '';
@@ -1660,7 +1651,6 @@ function renderCalendar() {
     <div class="cal-week-box">
       <div class="cal-day-headers">${dayHdHtml}</div>
       <div class="cal-proc-area">${procGridHtml}</div>
-      ${allProcs.length ? `<div class="cal-cards-inner">${allCardHtml}</div>` : ''}
     </div>
     ${!allProcs.length ? `<div class="cal-empty-full">공정 일정을 입력하면<br>여기에 표시됩니다</div>` : ''}
   </div>`;
