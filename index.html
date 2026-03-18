@@ -454,6 +454,69 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .google-btn:hover { background:#f8f9fc; }
 
+/* ===== COMPANY SEARCH DIALOG ===== */
+.dlg-company { gap:12px; }
+.comp-header { display:flex; align-items:center; justify-content:space-between; }
+.comp-proc-badge { font-size:11px; font-weight:700; color:var(--primary); background:var(--primary-bg); padding:3px 10px; border-radius:20px; }
+.comp-source-row { display:flex; gap:6px; }
+.comp-src-btn {
+  flex:1; padding:9px 6px; border:1.5px solid var(--border-light); border-radius:10px;
+  background:#fff; font-size:13px; font-weight:700; cursor:pointer; color:#888;
+  font-family:var(--font); transition:all .15s;
+}
+.comp-src-btn.active { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+.comp-src-btn.kakao.active { border-color:#f9c900; background:#fefde8; color:#3c1e1e; }
+.comp-src-btn.naver.active { border-color:#03c75a; background:#edfff5; color:#008540; }
+.comp-search-row { display:flex; gap:8px; }
+.comp-search-input {
+  flex:1; padding:11px 14px; border:1px solid var(--border-input); border-radius:10px;
+  font-size:15px; font-family:var(--font); outline:none; color:#222;
+}
+.comp-search-input:focus { border-color:var(--primary); }
+.comp-search-btn {
+  padding:0 18px; background:var(--primary); color:#fff; border:none; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font); white-space:nowrap; height:46px;
+}
+.comp-loc-bar {
+  display:flex; align-items:center; gap:6px; font-size:12px; color:#888;
+  background:#f5f7fc; border-radius:8px; padding:7px 12px;
+}
+.comp-loc-bar span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.comp-results { overflow-y:auto; max-height:300px; display:flex; flex-direction:column; gap:8px; }
+.comp-empty { text-align:center; padding:32px 0; color:#ccc; font-size:13px; line-height:1.8; }
+.comp-loading { text-align:center; padding:28px 0; color:#aaa; font-size:13px; }
+.comp-result-card {
+  border:1px solid var(--border-light); border-radius:12px; padding:12px 14px;
+  transition:border-color .15s;
+}
+.comp-result-card:hover { border-color:var(--primary); }
+.comp-result-name { font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+.comp-result-addr { font-size:12px; color:#888; margin-bottom:2px; }
+.comp-result-phone { font-size:12px; color:#555; }
+.comp-result-foot { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+.comp-badge { font-size:10px; font-weight:800; padding:3px 9px; border-radius:20px; }
+.comp-badge.kakao { background:#fee500; color:#3c1e1e; }
+.comp-badge.google { background:#e8f0fe; color:#1a73e8; }
+.comp-badge.naver { background:#e8f5e9; color:#008540; }
+.comp-result-dist { font-size:11px; color:#aaa; }
+.comp-foot-right { display:flex; gap:6px; align-items:center; }
+.comp-link-btn {
+  padding:5px 12px; border:1px solid var(--border-light); border-radius:7px;
+  font-size:12px; font-weight:600; color:#666; text-decoration:none; background:#fff;
+}
+.comp-select-btn {
+  padding:6px 16px; background:var(--primary); color:#fff; border:none; border-radius:7px;
+  font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font);
+}
+/* 업체 선택된 상태 표시 */
+.f-company-selected { display:flex; flex-direction:column; gap:1px; }
+.f-company-name { font-size:15px; color:var(--text-primary); font-weight:600; }
+.f-company-phone { font-size:12px; color:#888; }
+.f-company-src { font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; margin-top:2px; display:inline-block; }
+.f-company-src.kakao { background:#fee500; color:#3c1e1e; }
+.f-company-src.google { background:#e8f0fe; color:#1a73e8; }
+.f-company-src.naver { background:#e8f5e9; color:#008540; }
+
 /* ===== SCHEDULE DIALOG ===== */
 .sched-other-item {
   display:flex; align-items:center; gap:8px;
@@ -865,6 +928,39 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- Company Search -->
+<div class="overlay" id="dlg-company-search">
+  <div class="dialog dlg-company">
+    <div class="comp-header">
+      <h3>업체 검색</h3>
+      <span class="comp-proc-badge" id="comp-proc-badge">업체 검색</span>
+    </div>
+    <!-- API Source -->
+    <div class="comp-source-row">
+      <button class="comp-src-btn kakao active" id="src-kakao" onclick="setCompSource('kakao')">🟡 카카오</button>
+      <button class="comp-src-btn google" id="src-google" onclick="setCompSource('google')">🔵 구글</button>
+      <button class="comp-src-btn naver" id="src-naver" onclick="setCompSource('naver')">🟢 네이버 ↗</button>
+    </div>
+    <!-- Search Input -->
+    <div class="comp-search-row">
+      <input class="comp-search-input" id="comp-search-input" placeholder="업체명 또는 업종 검색"
+        onkeydown="if(event.key==='Enter')runCompanySearch()">
+      <button class="comp-search-btn" onclick="runCompanySearch()">검색</button>
+    </div>
+    <!-- Location -->
+    <div class="comp-loc-bar">
+      <span>📍</span><span id="comp-loc-text">위치 정보 없음</span>
+    </div>
+    <!-- Results -->
+    <div class="comp-results" id="comp-results">
+      <div class="comp-empty">검색 버튼을 눌러<br>주변 업체를 찾아보세요</div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" onclick="closeDialog('dlg-company-search')">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Share -->
 <div class="overlay" id="dlg-share">
   <div class="dialog">
@@ -920,6 +1016,13 @@ button, input, textarea, select { font-family:var(--font); }
 // Google Cloud Console에서 발급받은 Client ID로 교체하세요
 // https://console.cloud.google.com/ → APIs & Services → Credentials → OAuth 2.0 Client IDs
 const GOOGLE_CLIENT_ID = '685508900620-08naghsqb4nfepjkse84tbg0b8nq1en8.apps.googleusercontent.com';
+
+// ===== PLACE SEARCH API KEYS =====
+// 카카오 REST API 키: https://developers.kakao.com → 내 애플리케이션 → REST API 키
+const KAKAO_REST_KEY = 'YOUR_KAKAO_REST_KEY';
+// 구글 Places API 키: https://console.cloud.google.com → Places API (New) 활성화
+const GOOGLE_PLACES_KEY = 'YOUR_GOOGLE_PLACES_KEY';
+// 네이버: CORS 제한으로 지도 앱 딥링크로 연결
 
 // ===== CONSTANTS =====
 const PROCESS_TYPES = ['철거','샷시','목공','타일','욕실','도배','가구','전기'];
@@ -1266,9 +1369,13 @@ function renderWorkCards() {
       <div class="field-divider"></div>
       <div class="work-field">
         <span class="f-label">참여 업체</span>
-        <span class="f-value ${p.company?'filled':''}" onclick="editField('${p.id}','company','참여 업체')">
-          ${p.company ? esc(p.company) : '업체입력'}
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="f-value ${p.company?'filled':''}" onclick="openCompanySearch('${p.id}')">
+          ${p.companyData ? `<div class="f-company-selected">
+            <span class="f-company-name">${esc(p.companyData.name)}</span>
+            ${p.companyData.phone ? `<span class="f-company-phone">📞 ${esc(p.companyData.phone)}</span>` : ''}
+            <span class="f-company-src ${p.companyData.source}">${p.companyData.source==='kakao'?'카카오':p.companyData.source==='google'?'구글':'네이버'}</span>
+          </div>` : p.company ? esc(p.company) : '업체 검색'}
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </span>
       </div>
       <div class="field-divider"></div>
@@ -1314,6 +1421,136 @@ function deleteProcess(procId) {
 function deleteDetail(procId, detailId) {
   const proc = getProject()?.processes.find(p => p.id === procId);
   if (proc) { proc.details = proc.details.filter(d => d.id !== detailId); save(); renderAll(); }
+}
+
+// ===== COMPANY SEARCH =====
+let _compSearchProcId = null;
+let _compSource = 'kakao';
+let _compCoords = null;
+let _compResults = [];
+
+async function openCompanySearch(procId) {
+  _compSearchProcId = procId;
+  _compSource = 'kakao';
+  _compResults = [];
+  const proc = getProject().processes.find(p => p.id === procId);
+  document.getElementById('comp-proc-badge').textContent = `${proc.type||proc.name} 업체`;
+  document.getElementById('comp-search-input').value = proc.type || proc.name;
+  document.getElementById('comp-results').innerHTML = '<div class="comp-empty">검색 버튼을 눌러<br>주변 업체를 찾아보세요</div>';
+  document.querySelectorAll('.comp-src-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('src-kakao').classList.add('active');
+  // 주소 → 좌표 변환
+  const address = getProject()?.form?.address;
+  _compCoords = null;
+  if (address) {
+    document.getElementById('comp-loc-text').textContent = address;
+    try { _compCoords = await _geocodeKakao(address); } catch(e) {}
+  } else {
+    document.getElementById('comp-loc-text').textContent = '프로젝트 주소 미입력 (시공정보에서 주소 설정)';
+  }
+  openDialog('dlg-company-search');
+  setTimeout(() => document.getElementById('comp-search-input').focus(), 200);
+}
+function setCompSource(src) {
+  _compSource = src;
+  document.querySelectorAll('.comp-src-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('src-'+src).classList.add('active');
+}
+async function _geocodeKakao(address) {
+  if (!KAKAO_REST_KEY || KAKAO_REST_KEY.includes('YOUR_')) return null;
+  const r = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
+    { headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` } });
+  const d = await r.json();
+  const doc = d.documents?.[0];
+  return doc ? { lat: parseFloat(doc.y), lon: parseFloat(doc.x) } : null;
+}
+async function runCompanySearch() {
+  const query = document.getElementById('comp-search-input').value.trim();
+  if (!query) { alert('검색어를 입력하세요.'); return; }
+  const el = document.getElementById('comp-results');
+  el.innerHTML = '<div class="comp-loading">🔍 검색 중...</div>';
+  try {
+    if (_compSource === 'naver') {
+      const addr = getProject()?.form?.address || '';
+      window.open(`https://map.naver.com/v5/search/${encodeURIComponent((addr?addr+' ':'')+query)}`, '_blank');
+      el.innerHTML = '<div class="comp-empty">네이버 지도가 새 탭에서 열렸습니다.<br>업체 확인 후 이름을 직접 입력해 주세요.</div>';
+      return;
+    }
+    let items = [];
+    if (_compSource === 'kakao') items = await _searchKakao(query);
+    else if (_compSource === 'google') items = await _searchGoogle(query);
+    _renderCompResults(items);
+  } catch(e) {
+    el.innerHTML = `<div class="comp-empty">오류: ${esc(e.message)}<br><small>API 키 설정을 확인해주세요.</small></div>`;
+  }
+}
+async function _searchKakao(query) {
+  if (!KAKAO_REST_KEY || KAKAO_REST_KEY.includes('YOUR_'))
+    throw new Error('카카오 REST API 키가 설정되지 않았습니다.\nKAKAO_REST_KEY를 입력해주세요.');
+  let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15`;
+  if (_compCoords) url += `&x=${_compCoords.lon}&y=${_compCoords.lat}&radius=20000&sort=distance`;
+  const r = await fetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` } });
+  if (!r.ok) throw new Error(`카카오 API 오류 (${r.status})`);
+  const d = await r.json();
+  return (d.documents||[]).map(doc => ({
+    name: doc.place_name, address: doc.road_address_name||doc.address_name,
+    phone: doc.phone, url: doc.place_url,
+    distance: doc.distance ? (doc.distance < 1000 ? doc.distance+'m' : (doc.distance/1000).toFixed(1)+'km') : '',
+    source: 'kakao', placeId: doc.id
+  }));
+}
+async function _searchGoogle(query) {
+  if (!GOOGLE_PLACES_KEY || GOOGLE_PLACES_KEY.includes('YOUR_'))
+    throw new Error('구글 Places API 키가 설정되지 않았습니다.\nGOOGLE_PLACES_KEY를 입력해주세요.');
+  const body = {
+    textQuery: query + (getProject()?.form?.address ? ' '+getProject().form.address : ''),
+    languageCode: 'ko', maxResultCount: 15
+  };
+  if (_compCoords) body.locationBias = { circle: { center: { latitude: _compCoords.lat, longitude: _compCoords.lon }, radius: 20000 } };
+  const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
+      'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.id' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(`구글 API 오류 (${r.status})`);
+  const d = await r.json();
+  return (d.places||[]).map(p => ({
+    name: p.displayName?.text||'', address: p.formattedAddress||'',
+    phone: p.nationalPhoneNumber||'', url: p.googleMapsUri||p.websiteUri||'',
+    distance: '', source: 'google', placeId: p.id
+  }));
+}
+function _renderCompResults(items) {
+  _compResults = items;
+  const el = document.getElementById('comp-results');
+  if (!items.length) { el.innerHTML = '<div class="comp-empty">검색 결과가 없습니다.<br>다른 검색어를 시도해보세요.</div>'; return; }
+  el.innerHTML = items.map((item, i) => `
+    <div class="comp-result-card">
+      <div class="comp-result-name">${esc(item.name)}</div>
+      ${item.address ? `<div class="comp-result-addr">📍 ${esc(item.address)}</div>` : ''}
+      ${item.phone   ? `<div class="comp-result-phone">📞 ${esc(item.phone)}</div>` : ''}
+      <div class="comp-result-foot">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="comp-badge ${item.source}">${item.source==='kakao'?'카카오':item.source==='google'?'구글':'네이버'}</span>
+          ${item.distance ? `<span class="comp-result-dist">${esc(item.distance)}</span>` : ''}
+        </div>
+        <div class="comp-foot-right">
+          ${item.url ? `<a class="comp-link-btn" href="${esc(item.url)}" target="_blank">지도</a>` : ''}
+          <button class="comp-select-btn" onclick="_selectCompany(${i})">선택</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function _selectCompany(idx) {
+  const item = _compResults[idx];
+  if (!item || !_compSearchProcId) return;
+  const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
+  if (!proc) return;
+  proc.company = item.name;
+  proc.companyData = { name:item.name, phone:item.phone, address:item.address, url:item.url, source:item.source, placeId:item.placeId };
+  save(); renderAll();
+  closeDialog('dlg-company-search');
 }
 
 // ===== SCHEDULE DIALOG + CUSTOM DATE PICKER =====
