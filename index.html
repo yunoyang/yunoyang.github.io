@@ -169,15 +169,15 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
 .work-card-title { font-size:18px; font-weight:700; }
 .card-header-right { display:flex; align-items:center; gap:8px; }
-.work-card-cost { font-size:15px; font-weight:700; color:var(--primary); }
+.work-card-cost { font-size:17px; font-weight:700; color:var(--primary); }
 .card-del-btn { background:none; border:none; cursor:pointer; color:#ccc; padding:2px; display:flex; border-radius:4px; }
 .card-del-btn:hover { color:var(--danger); background:#fff0f0; }
 .card-del-btn svg { width:16px; height:16px; }
 
-.work-field { display:flex; align-items:center; justify-content:space-between; padding:9px 0; }
-.f-label { font-size:14px; color:#888; flex-shrink:0; }
+.work-field { display:flex; align-items:center; justify-content:space-between; padding:11px 0; }
+.f-label { font-size:15px; color:#888; flex-shrink:0; }
 .f-value {
-  display:flex; align-items:center; gap:5px; font-size:14px;
+  display:flex; align-items:center; gap:5px; font-size:17px;
   color:var(--text-placeholder); cursor:pointer;
 }
 .f-value.filled { color:var(--text-secondary); }
@@ -199,11 +199,11 @@ button, input, textarea, select { font-family:var(--font); }
 
 .detail-item {
   display:flex; align-items:flex-start; justify-content:space-between;
-  padding:9px 0; gap:10px;
+  padding:14px 0; gap:10px;
 }
-.d-desc { font-size:16px; color:var(--text-secondary); flex:1; line-height:1.4; }
+.d-desc { font-size:18px; color:var(--text-secondary); flex:1; line-height:1.4; }
 .d-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
-.d-cost { font-size:16px; font-weight:600; white-space:nowrap; }
+.d-cost { font-size:18px; font-weight:600; white-space:nowrap; }
 .detail-del-btn {
   background:none; border:none; cursor:pointer; color:#ccc; padding:2px;
   display:flex; border-radius:4px;
@@ -756,16 +756,11 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="dlg-login">
   <div class="dialog">
     <h3>로그인</h3>
-    <p style="font-size:14px;color:#888;line-height:1.6;">시공정보 입력 및 저장을 위해<br>로그인이 필요합니다.</p>
-    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:48px;margin:4px 0;"></div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;height:1px;background:#eee;"></div>
-      <span style="font-size:12px;color:#ccc;">또는</span>
-      <div style="flex:1;height:1px;background:#eee;"></div>
+    <p style="font-size:14px;color:#888;line-height:1.6;">Google 계정으로 로그인하세요.</p>
+    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:48px;margin:8px 0;"></div>
+    <div id="google-signin-fallback" style="display:none;text-align:center;padding:8px 0;">
+      <p style="font-size:13px;color:#bbb;line-height:1.6;">Google 로그인 설정이 필요합니다.<br>관리자에게 문의하세요.</p>
     </div>
-    <button onclick="demoLogin()" class="google-btn">
-      <i data-lucide="key"></i> 데모 로그인 (테스트용)
-    </button>
     <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-login')">취소</button></div>
   </div>
 </div>
@@ -854,12 +849,16 @@ function openLoginDialog() {
     const btn = document.getElementById('google-signin-btn');
     if (!btn) return;
     btn.innerHTML = '';
+    const fallback = document.getElementById('google-signin-fallback');
     if (typeof google !== 'undefined' && google.accounts &&
         GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
       try {
         google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
         google.accounts.id.renderButton(btn, { theme:'outline', size:'large', text:'signin_with', width:300 });
-      } catch(e) {}
+        if (fallback) fallback.style.display = 'none';
+      } catch(e) { if (fallback) fallback.style.display = 'block'; }
+    } else {
+      if (fallback) fallback.style.display = 'block';
     }
     lucide.createIcons();
   }, 150);
@@ -1253,7 +1252,7 @@ function renderCalendar() {
   });
   if (!allDates.length) {
     const now = new Date();
-    allDates = [now, new Date(now.getFullYear(), now.getMonth()+2, 1)];
+    allDates = [now];
   }
   const minD = new Date(Math.min(...allDates));
   const maxD = new Date(Math.max(...allDates));
