@@ -474,6 +474,136 @@ button, input, textarea, select { font-family:var(--font); }
 .share-option .s-icon svg { width:20px; height:20px; }
 .share-option .s-text { font-size:14px; font-weight:500; }
 
+/* ===== COLLABORATION ===== */
+.share-tabs { display:flex; gap:0; border-bottom:2px solid #f0f2f5; margin-bottom:16px; }
+.share-tab-btn {
+  flex:1; padding:10px 0; font-size:14px; font-weight:600; border:none; background:none;
+  cursor:pointer; color:#888; border-bottom:2px solid transparent; margin-bottom:-2px;
+  font-family:var(--font); transition:color .15s, border-color .15s;
+}
+.share-tab-btn.active { color:var(--primary); border-color:var(--primary); }
+.share-tab-pane { display:none; }
+.share-tab-pane.active { display:block; }
+
+/* collab indicator in header */
+.collab-bar {
+  display:flex; align-items:center; gap:8px; padding:6px 16px;
+  background:linear-gradient(90deg,#f0f4ff,#f5f0ff);
+  border-bottom:1px solid #e0e8ff; font-size:12.5px;
+}
+.collab-bar-dot { width:7px; height:7px; background:#10b981; border-radius:50%; flex-shrink:0; animation:pulse-dot 2s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+.collab-avatars { display:flex; gap:-4px; }
+.collab-avatar {
+  width:24px; height:24px; border-radius:50%; border:2px solid #fff;
+  background:var(--primary); color:#fff; font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; margin-left:-4px;
+  flex-shrink:0;
+}
+.collab-avatar:first-child { margin-left:0; }
+.collab-bar-text { font-size:12px; color:#5b6a8c; font-weight:500; }
+
+/* invite row */
+.collab-member-list { display:flex; flex-direction:column; gap:6px; margin:12px 0 4px; }
+.collab-member-row {
+  display:flex; align-items:center; gap:10px; padding:9px 12px;
+  background:#f8f9fc; border-radius:10px; border:1px solid #eef0f6;
+}
+.cm-avatar {
+  width:32px; height:32px; border-radius:50%; background:var(--primary);
+  color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0;
+}
+.cm-info { flex:1; min-width:0; }
+.cm-name { font-size:13.5px; font-weight:600; color:#222; }
+.cm-email { font-size:11.5px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cm-role {
+  font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px;
+  background:#e8f0ff; color:var(--primary); flex-shrink:0;
+}
+.cm-role.owner { background:#fef9c3; color:#b45309; }
+.cm-role.viewer { background:#f0fdf4; color:#059669; }
+.cm-remove { padding:4px; background:none; border:none; cursor:pointer; color:#ccc; flex-shrink:0; }
+.cm-remove:hover { color:#e05050; }
+
+/* invite form */
+.invite-form { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+.invite-row { display:flex; gap:8px; align-items:center; }
+.invite-row input {
+  flex:1; padding:10px 13px; border:1.5px solid #dde3ef; border-radius:9px;
+  font-size:14px; font-family:var(--font); outline:none; color:#222;
+}
+.invite-row input:focus { border-color:var(--primary); }
+.invite-role-select {
+  padding:10px 12px; border:1.5px solid #dde3ef; border-radius:9px;
+  font-size:13px; font-family:var(--font); background:#fff; outline:none; color:#222; cursor:pointer;
+}
+.invite-role-select:focus { border-color:var(--primary); }
+.invite-gen-btn {
+  padding:10px 18px; background:var(--primary); color:#fff; border:none;
+  border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font);
+  white-space:nowrap; display:flex; align-items:center; gap:6px;
+}
+.invite-gen-btn:disabled { background:#b0c4f0; cursor:not-allowed; }
+
+/* generated link box */
+.invite-link-box {
+  display:none; flex-direction:column; gap:8px; padding:12px 14px;
+  background:#f0f4ff; border:1px solid #c7d7ff; border-radius:10px; margin-top:4px;
+}
+.invite-link-box.show { display:flex; }
+.invite-link-url {
+  font-size:12px; color:#3176ff; word-break:break-all; background:#fff;
+  padding:8px 10px; border-radius:7px; border:1px solid #dde3ef;
+}
+.invite-link-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.invite-link-btn {
+  padding:7px 13px; border-radius:7px; border:none; font-size:12.5px; font-weight:600;
+  cursor:pointer; font-family:var(--font); display:flex; align-items:center; gap:5px;
+}
+.ilb-copy { background:var(--primary); color:#fff; }
+.ilb-mail { background:#f0f2f5; color:#444; }
+.ilb-kakao { background:#fee500; color:#3c1e1e; }
+
+/* pending invites */
+.pending-invite-row {
+  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  background:#fffbeb; border:1px solid #fde68a; border-radius:9px;
+}
+.pi-email { flex:1; font-size:13px; color:#555; }
+.pi-expire { font-size:11px; color:#b45309; }
+.pi-cancel { padding:4px 8px; background:none; border:1px solid #fca5a5; color:#e05050; border-radius:6px; font-size:11.5px; cursor:pointer; }
+
+/* firebase not configured warning */
+.fb-not-configured {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  padding:24px 16px; background:#fffbeb; border:1px dashed #fcd34d; border-radius:12px;
+  text-align:center;
+}
+.fb-not-configured svg { width:32px; height:32px; color:#f59e0b; }
+.fb-not-configured p { font-size:13px; color:#92400e; line-height:1.6; margin:0; }
+
+/* join invite overlay */
+#dlg-join-invite .dialog { gap:20px; }
+.join-project-card {
+  background:linear-gradient(135deg,#f0f4ff,#f5f0ff);
+  border:1px solid #c7d7ff; border-radius:14px; padding:18px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.join-project-title { font-size:17px; font-weight:700; color:#222; }
+.join-project-meta { font-size:13px; color:#5b6a8c; display:flex; gap:14px; flex-wrap:wrap; }
+.join-meta-item { display:flex; align-items:center; gap:5px; }
+.join-role-badge {
+  display:inline-flex; align-items:center; gap:5px; padding:4px 11px;
+  background:#e8f0ff; color:var(--primary); border-radius:20px; font-size:12px; font-weight:600;
+}
+.join-role-badge.editor { background:#dcfce7; color:#15803d; }
+.join-spinner {
+  width:28px; height:28px; border:3px solid #e8f0ff; border-top-color:var(--primary);
+  border-radius:50%; animation:spin .8s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
 /* ===== GOOGLE BTN ===== */
 .google-btn {
   display:flex; align-items:center; justify-content:center; gap:10px;
@@ -725,10 +855,19 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="collab-header-btn" onclick="openCollabFromHeader()" style="display:none;" title="공동작업 멤버">
+        <i data-lucide="users"></i>
+      </button>
       <button class="icon-btn" onclick="toggleMainMenu(event)">
         <i data-lucide="menu"></i>
       </button>
     </div>
+  </div>
+  <!-- 공동작업 활성 표시 바 -->
+  <div id="collab-bar" class="collab-bar" style="display:none;">
+    <div class="collab-bar-dot"></div>
+    <div class="collab-avatars" id="collab-avatars"></div>
+    <div class="collab-bar-text" id="collab-bar-text"></div>
   </div>
 
   <div class="screen-scroll" id="main-scroll">
@@ -994,24 +1133,55 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="dlg-share">
   <div class="dialog">
     <h3>공유하기</h3>
-    <div class="share-options">
-      <div class="share-option" onclick="shareAction('native')">
-        <span class="s-icon"><i data-lucide="share-2"></i></span><span class="s-text">공유하기 (기본)</span>
-      </div>
-      <div class="share-option" onclick="shareAction('link')">
-        <span class="s-icon"><i data-lucide="link"></i></span><span class="s-text">링크 복사</span>
-      </div>
-      <div class="share-option" onclick="shareAction('kakao')">
-        <span class="s-icon" style="font-size:20px;">💬</span><span class="s-text">카카오톡</span>
-      </div>
-      <div class="share-option" onclick="shareAction('twitter')">
-        <span class="s-icon"><i data-lucide="twitter"></i></span><span class="s-text">Twitter / X</span>
-      </div>
-      <div class="share-option" onclick="shareAction('facebook')">
-        <span class="s-icon"><i data-lucide="facebook"></i></span><span class="s-text">Facebook</span>
+    <div class="share-tabs">
+      <button class="share-tab-btn active" id="stab-share" onclick="switchShareTab('share')">링크 공유</button>
+      <button class="share-tab-btn" id="stab-collab" onclick="switchShareTab('collab')">
+        👥 공동작업
+      </button>
+    </div>
+
+    <!-- 링크 공유 탭 -->
+    <div class="share-tab-pane active" id="stab-share-pane">
+      <div class="share-options">
+        <div class="share-option" onclick="shareAction('native')">
+          <span class="s-icon"><i data-lucide="share-2"></i></span><span class="s-text">공유하기 (기본)</span>
+        </div>
+        <div class="share-option" onclick="shareAction('link')">
+          <span class="s-icon"><i data-lucide="link"></i></span><span class="s-text">링크 복사</span>
+        </div>
+        <div class="share-option" onclick="shareAction('kakao')">
+          <span class="s-icon" style="font-size:20px;">💬</span><span class="s-text">카카오톡</span>
+        </div>
+        <div class="share-option" onclick="shareAction('twitter')">
+          <span class="s-icon"><i data-lucide="twitter"></i></span><span class="s-text">Twitter / X</span>
+        </div>
+        <div class="share-option" onclick="shareAction('facebook')">
+          <span class="s-icon"><i data-lucide="facebook"></i></span><span class="s-text">Facebook</span>
+        </div>
       </div>
     </div>
+
+    <!-- 공동작업 탭 -->
+    <div class="share-tab-pane" id="stab-collab-pane">
+      <div id="collab-tab-body"><!-- renderCollabTab()으로 채움 --></div>
+    </div>
+
     <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-share')">닫기</button></div>
+  </div>
+</div>
+
+<!-- 초대 수락 다이얼로그 -->
+<div class="overlay" id="dlg-join-invite">
+  <div class="dialog">
+    <h3>📋 프로젝트 초대</h3>
+    <div id="join-invite-body" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;justify-content:center;padding:20px 0;">
+        <div class="join-spinner"></div>
+      </div>
+    </div>
+    <div class="dialog-actions" id="join-invite-actions">
+      <button class="btn-cancel" onclick="closeDialog('dlg-join-invite')">취소</button>
+    </div>
   </div>
 </div>
 
@@ -1072,9 +1242,15 @@ let calMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
 function getProject() { return state.projects.find(p => p.id === state.currentProjectId); }
 
 let saveTimer = null;
+let _lastSaveTime = 0;
 function save() {
   localStorage.setItem('vibespace', JSON.stringify(state));
   showToast();
+  _lastSaveTime = Date.now();
+  const proj = getProject();
+  if (proj && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+    _syncProjToCloud(proj);
+  }
 }
 let toastTimer = null;
 function showToast() {
@@ -2094,6 +2270,515 @@ function trackUserLogin(user) {
   try { localStorage.setItem(VB_TRACK_KEY, JSON.stringify(store)); } catch(e) {}
 }
 
+// ===================================
+// ===== COLLABORATION / FIREBASE =====
+// ===================================
+
+let _fbLoaded = false, _fbLoadPromise = null;
+let _fbApp = null, _db = null, _collabUnsub = null;
+
+function _loadFirebaseSDK() {
+  if (_fbLoaded) return Promise.resolve(true);
+  if (_fbLoadPromise) return _fbLoadPromise;
+  _fbLoadPromise = new Promise(resolve => {
+    const urls = [
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+    ];
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) { _fbLoaded = true; resolve(true); return; }
+      const s = document.createElement('script');
+      s.src = urls[i++]; s.onload = next;
+      s.onerror = () => { _fbLoadPromise = null; resolve(false); };
+      document.head.appendChild(s);
+    };
+    next();
+  });
+  return _fbLoadPromise;
+}
+
+async function _initFirebase() {
+  const settings = JSON.parse(localStorage.getItem('vb_admin_settings') || '{}');
+  let cfg;
+  try { cfg = JSON.parse(settings.firebaseConfig || 'null'); } catch(e) { cfg = null; }
+  if (!cfg || !cfg.apiKey) return false;
+  const ok = await _loadFirebaseSDK();
+  if (!ok) return false;
+  if (!_fbApp) {
+    try {
+      _fbApp = firebase.initializeApp(cfg);
+    } catch(e) {
+      if (e.code === 'app/duplicate-app') { _fbApp = firebase.app(); } else { return false; }
+    }
+    _db = firebase.firestore();
+  }
+  return true;
+}
+
+function _genToken(len = 28) {
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ===== CLOUD SYNC =====
+async function _pushProjToCloud(proj) {
+  if (!_db) return null;
+  if (!proj.cloudId) proj.cloudId = _genToken(16);
+  const payload = {
+    projectData: JSON.parse(JSON.stringify(proj)),
+    'meta.owner': { email: state.user.email, name: state.user.name },
+    'meta.collaborators': proj.collaborators || [],
+    'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+    'meta.updatedBy': state.user.email,
+  };
+  try {
+    await _db.collection('vb_projects').doc(proj.cloudId).set(payload, { merge: true });
+    return proj.cloudId;
+  } catch(e) { console.error('push failed', e); return null; }
+}
+
+function _syncProjToCloud(proj) {
+  if (!_db || !proj.cloudId) return;
+  const payload = {
+    projectData: JSON.parse(JSON.stringify(proj)),
+    'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+    'meta.updatedBy': state.user.email,
+  };
+  _db.collection('vb_projects').doc(proj.cloudId).update(payload).catch(e => console.error('sync err',e));
+}
+
+// ===== REAL-TIME LISTENER =====
+function _startCollabListener(cloudId) {
+  if (_collabUnsub) { _collabUnsub(); _collabUnsub = null; }
+  if (!_db) return;
+  _collabUnsub = _db.collection('vb_projects').doc(cloudId).onSnapshot(snap => {
+    if (!snap.exists) return;
+    const data = snap.data();
+    const meta = data.meta || {};
+    // Skip our own save echoes
+    if (meta.updatedBy === state.user.email && (Date.now() - _lastSaveTime) < 4000) return;
+    const proj = state.projects.find(p => p.cloudId === cloudId);
+    if (!proj) return;
+    const remote = data.projectData;
+    if (!remote) return;
+    const myRole = proj.myRole;
+    Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    renderAll();
+    updateCollabIndicator(meta.collaborators || [], meta.owner);
+    showToastMessage('팀원이 변경 사항을 업데이트했습니다');
+  });
+}
+
+// ===== COLLAB INDICATOR =====
+function updateCollabIndicator(collaborators, owner) {
+  const bar = document.getElementById('collab-bar');
+  const avatarsEl = document.getElementById('collab-avatars');
+  const textEl = document.getElementById('collab-bar-text');
+  const headerBtn = document.getElementById('collab-header-btn');
+  const proj = getProject();
+  if (!proj || !proj.isCloud) {
+    if (bar) bar.style.display = 'none';
+    if (headerBtn) headerBtn.style.display = 'none';
+    return;
+  }
+  const all = [];
+  if (owner) all.push({ ...owner, role: 'owner' });
+  (collaborators || []).forEach(c => { if (c.email !== owner?.email) all.push(c); });
+  if (bar) bar.style.display = 'flex';
+  if (headerBtn) headerBtn.style.display = '';
+  if (avatarsEl) {
+    avatarsEl.innerHTML = all.slice(0,4).map(m => {
+      const init = (m.name||m.email||'?').charAt(0).toUpperCase();
+      const colors = ['#3176ff','#8b5cf6','#10b981','#f59e0b'];
+      const ci = all.indexOf(m) % colors.length;
+      return `<div class="collab-avatar" style="background:${colors[ci]};z-index:${10-all.indexOf(m)};" title="${esc(m.name||m.email)}">${init}</div>`;
+    }).join('');
+  }
+  if (textEl) {
+    const names = all.filter(m => m.email !== state.user.email).map(m => m.name || m.email.split('@')[0]);
+    textEl.textContent = names.length ? `${names.join(', ')}와(과) 함께 작업 중` : '공동작업 활성화됨';
+  }
+  setTimeout(lucide.createIcons, 50);
+}
+
+function openCollabFromHeader() {
+  openShareDialog();
+  setTimeout(() => switchShareTab('collab'), 50);
+}
+
+// ===== SHARE DIALOG TABS =====
+function switchShareTab(tab) {
+  ['share','collab'].forEach(t => {
+    document.getElementById('stab-'+t)?.classList.toggle('active', t===tab);
+    document.getElementById('stab-'+t+'-pane')?.classList.toggle('active', t===tab);
+  });
+  if (tab === 'collab') renderCollabTab();
+}
+
+async function renderCollabTab() {
+  const body = document.getElementById('collab-tab-body');
+  if (!body) return;
+  const settings = JSON.parse(localStorage.getItem('vb_admin_settings') || '{}');
+  let fbCfg;
+  try { fbCfg = JSON.parse(settings.firebaseConfig || 'null'); } catch(e) { fbCfg = null; }
+
+  if (!fbCfg || !fbCfg.apiKey) {
+    body.innerHTML = `
+      <div class="fb-not-configured">
+        <i data-lucide="alert-circle" style="width:32px;height:32px;color:#f59e0b;"></i>
+        <p><b>Firebase 설정이 필요합니다</b><br>공동작업 기능은 Firebase Firestore를 사용합니다.<br>어드민 → 시스템 설정 → Firebase 구성을 먼저 입력해주세요.</p>
+        <button onclick="window.open('admin.html','_blank')" style="padding:8px 16px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">어드민 설정 열기</button>
+      </div>`;
+    setTimeout(lucide.createIcons,50); return;
+  }
+
+  if (!state.loggedIn) {
+    body.innerHTML = `<div style="text-align:center;padding:20px;font-size:14px;color:#888;">공동작업 기능은 로그인 후 사용 가능합니다.</div>`;
+    return;
+  }
+
+  const proj = getProject();
+  const isOwner = !proj.myRole || proj.myRole === 'owner';
+  const collaborators = proj.collaborators || [];
+  const invites = proj.invites || [];
+  const pendingInvites = invites.filter(inv => new Date(inv.expiresAt) > new Date());
+
+  body.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:6px;">현재 멤버</div>
+    <div class="collab-member-list" id="collab-member-list">
+      <div class="collab-member-row">
+        <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
+        <div class="cm-info">
+          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:11px;color:#aaa;">(나)</span></div>
+          <div class="cm-email">${esc(state.user.email)}</div>
+        </div>
+        <span class="cm-role owner">오너</span>
+      </div>
+      ${collaborators.map((m,i) => `
+        <div class="collab-member-row">
+          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
+            ${(m.name||m.email||'?').charAt(0).toUpperCase()}
+          </div>
+          <div class="cm-info">
+            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
+            <div class="cm-email">${esc(m.email)}</div>
+          </div>
+          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
+          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><i data-lucide="x" style="width:14px;height:14px;"></i></button>` : ''}
+        </div>`).join('')}
+    </div>
+
+    ${pendingInvites.length ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:12px 0 6px;">대기 중인 초대</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${pendingInvites.map(inv => `
+          <div class="pending-invite-row">
+            <i data-lucide="clock" style="width:14px;height:14px;color:#b45309;flex-shrink:0;"></i>
+            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}</div>
+            <div class="pi-expire">~${inv.expiresAt.slice(0,10)}</div>
+            <button class="pi-cancel" onclick="cancelInvite('${inv.token}')">취소</button>
+          </div>`).join('')}
+      </div>` : ''}
+
+    ${isOwner ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:14px 0 8px;">새 멤버 초대</div>
+      <div class="invite-form">
+        <div class="invite-row">
+          <input type="email" id="invite-email-input" placeholder="이메일 주소 입력" />
+          <select class="invite-role-select" id="invite-role-select">
+            <option value="editor">편집자</option>
+            <option value="viewer">뷰어</option>
+          </select>
+        </div>
+        <button class="invite-gen-btn" onclick="generateInviteLink()">
+          <i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성
+        </button>
+        <div class="invite-link-box" id="invite-link-box">
+          <div style="font-size:12px;font-weight:700;color:#3176ff;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="check-circle" style="width:13px;height:13px;"></i> 초대 링크 생성 완료 (7일 유효)
+          </div>
+          <div class="invite-link-url" id="invite-link-url"></div>
+          <div class="invite-link-actions">
+            <button class="invite-link-btn ilb-copy" onclick="copyInviteLink()">
+              <i data-lucide="copy" style="width:12px;height:12px;"></i> 복사
+            </button>
+            <button class="invite-link-btn ilb-mail" onclick="sendInviteByMail()">
+              <i data-lucide="mail" style="width:12px;height:12px;"></i> 이메일 전송
+            </button>
+            <button class="invite-link-btn ilb-kakao" onclick="shareInviteKakao()">
+              💬 카카오톡
+            </button>
+          </div>
+        </div>
+      </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
+  `;
+  setTimeout(lucide.createIcons, 50);
+}
+
+// ===== INVITE GENERATION =====
+let _currentInviteLink = '', _currentInviteEmail = '';
+
+async function generateInviteLink() {
+  const emailEl = document.getElementById('invite-email-input');
+  const roleEl = document.getElementById('invite-role-select');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const role = roleEl ? roleEl.value : 'editor';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    emailEl?.classList.add('error');
+    emailEl?.focus();
+    alert('올바른 이메일 주소를 입력해주세요.'); return;
+  }
+  const btn = document.querySelector('.invite-gen-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 생성 중...'; }
+
+  const ok = await _initFirebase();
+  if (!ok) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    alert('Firebase 연결 실패. 어드민 → 시스템 설정에서 Firebase 구성을 확인하세요.'); return;
+  }
+
+  const proj = getProject();
+  if (!proj.isCloud || !proj.cloudId) {
+    const cloudId = await _pushProjToCloud(proj);
+    if (!cloudId) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+      alert('프로젝트 클라우드 저장 실패'); return;
+    }
+    proj.cloudId = cloudId; proj.isCloud = true;
+    if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
+    save();
+    _startCollabListener(cloudId);
+  }
+
+  const token = _genToken(24);
+  const expiresAt = new Date(Date.now() + 7*24*3600*1000).toISOString();
+  const inviteData = {
+    projectId: proj.cloudId,
+    projectName: proj.name || '시공 프로젝트',
+    ownerName: state.user.name,
+    ownerEmail: state.user.email,
+    inviteeEmail: email,
+    role, expiresAt, used: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  try {
+    await _db.collection('vb_invites').doc(token).set(inviteData);
+    if (!proj.invites) proj.invites = [];
+    proj.invites.push({ token, email, role, createdAt: new Date().toISOString(), expiresAt });
+    save();
+
+    const link = `${window.location.origin}${window.location.pathname}?invite=${token}`;
+    _currentInviteLink = link;
+    _currentInviteEmail = email;
+    const linkBox = document.getElementById('invite-link-box');
+    const linkUrl = document.getElementById('invite-link-url');
+    if (linkBox) linkBox.classList.add('show');
+    if (linkUrl) linkUrl.textContent = link;
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 새 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    updateCollabIndicator(proj.collaborators||[], proj.owner);
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    alert('초대 링크 생성 실패: ' + e.message);
+  }
+}
+
+function copyInviteLink() {
+  if (!_currentInviteLink) return;
+  navigator.clipboard?.writeText(_currentInviteLink).then(() => showToastMessage('링크가 복사되었습니다!')).catch(() => {
+    prompt('아래 링크를 복사하세요:', _currentInviteLink);
+  });
+}
+
+function sendInviteByMail() {
+  const proj = getProject();
+  const subject = encodeURIComponent(`[Vibespace] ${proj?.name||'시공 프로젝트'} 공동작업 초대`);
+  const body = encodeURIComponent(
+    `안녕하세요!\n\n${state.user.name || state.user.email}님이 Vibespace에서 시공 프로젝트에 초대했습니다.\n\n` +
+    `프로젝트명: ${proj?.name||''}\n\n아래 링크를 클릭해 참여하세요:\n${_currentInviteLink}\n\n(링크는 7일간 유효합니다)`
+  );
+  window.open(`mailto:${_currentInviteEmail}?subject=${subject}&body=${body}`);
+}
+
+function shareInviteKakao() {
+  copyInviteLink();
+  alert('링크가 복사되었습니다. 카카오톡에서 붙여넣기로 공유하세요! 💬');
+}
+
+async function cancelInvite(token) {
+  if (!confirm('이 초대를 취소하시겠습니까?')) return;
+  const ok = await _initFirebase();
+  if (ok && _db) { try { await _db.collection('vb_invites').doc(token).delete(); } catch(e){} }
+  const proj = getProject();
+  if (proj && proj.invites) {
+    proj.invites = proj.invites.filter(i => i.token !== token);
+    save();
+  }
+  renderCollabTab();
+}
+
+async function removeCollaborator(email) {
+  if (!confirm(`${email}님을 프로젝트에서 제거하시겠습니까?`)) return;
+  const ok = await _initFirebase();
+  const proj = getProject();
+  if (proj && proj.collaborators) {
+    proj.collaborators = proj.collaborators.filter(c => c.email !== email);
+  }
+  if (ok && _db && proj.cloudId) {
+    try {
+      await _db.collection('vb_projects').doc(proj.cloudId).update({
+        'meta.collaborators': proj.collaborators,
+      });
+    } catch(e){}
+  }
+  save();
+  renderCollabTab();
+  updateCollabIndicator(proj.collaborators||[], proj.owner);
+}
+
+// ===== INVITE ACCEPTANCE (on page load with ?invite=TOKEN) =====
+async function _checkInviteOnLoad() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('invite');
+  if (!token) return;
+  sessionStorage.setItem('vb_pending_invite', token);
+  window.history.replaceState({}, '', window.location.pathname);
+  if (!state.loggedIn) {
+    pendingAction = () => _processInviteToken(token);
+    setTimeout(() => openDialog('dlg-login'), 600);
+  } else {
+    setTimeout(() => _processInviteToken(token), 600);
+  }
+}
+
+async function _processInviteToken(token) {
+  openDialog('dlg-join-invite');
+  const body = document.getElementById('join-invite-body');
+  const actions = document.getElementById('join-invite-actions');
+  if (body) body.innerHTML = `<div style="display:flex;justify-content:center;padding:20px 0;"><div class="join-spinner"></div></div><p style="text-align:center;color:#888;font-size:13px;">초대 정보를 불러오는 중...</p>`;
+
+  const ok = await _initFirebase();
+  if (!ok) {
+    if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;">Firebase 연결 오류가 발생했습니다.</p>`;
+    return;
+  }
+
+  try {
+    const inviteSnap = await _db.collection('vb_invites').doc(token).get();
+    if (!inviteSnap.exists) {
+      if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">유효하지 않은 초대 링크입니다.</p>`;
+      return;
+    }
+    const invite = inviteSnap.data();
+    if (new Date(invite.expiresAt) < new Date()) {
+      if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">초대 링크가 만료되었습니다.<br>오너에게 새 링크를 요청하세요.</p>`;
+      return;
+    }
+    const alreadyJoined = state.projects.some(p => p.cloudId === invite.projectId);
+    if (alreadyJoined) {
+      closeDialog('dlg-join-invite');
+      const existingProj = state.projects.find(p => p.cloudId === invite.projectId);
+      if (existingProj) { state.currentProjectId = existingProj.id; save(); goTo('main'); renderAll(); }
+      showToastMessage('이미 참여 중인 프로젝트입니다.');
+      return;
+    }
+    const projSnap = await _db.collection('vb_projects').doc(invite.projectId).get();
+    if (!projSnap.exists) {
+      if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">프로젝트를 찾을 수 없습니다.</p>`;
+      return;
+    }
+    const cloudProjData = projSnap.data();
+    const meta = cloudProjData.meta || {};
+
+    if (body) body.innerHTML = `
+      <div class="join-project-card">
+        <div class="join-project-title">${esc(invite.projectName)}</div>
+        <div class="join-project-meta">
+          <div class="join-meta-item"><i data-lucide="user" style="width:13px;height:13px;"></i> ${esc(invite.ownerName||invite.ownerEmail)}</div>
+          <div class="join-meta-item"><i data-lucide="users" style="width:13px;height:13px;"></i> 멤버 ${(meta.collaborators||[]).length+1}명</div>
+        </div>
+        <span class="join-role-badge ${invite.role==='editor'?'editor':''}">
+          ${invite.role==='editor'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
+        </span>
+      </div>
+      <p style="font-size:13.5px;color:#555;line-height:1.7;margin:0;">
+        <b>${esc(invite.ownerName||invite.ownerEmail)}</b>님이 시공 프로젝트에 공동작업을 초대했습니다.<br>
+        참여하면 실시간으로 함께 편집할 수 있습니다.
+      </p>
+    `;
+    if (actions) actions.innerHTML = `
+      <button class="btn-cancel" onclick="closeDialog('dlg-join-invite')">거절</button>
+      <button class="btn-confirm" onclick="_acceptInviteFromDialog()">참여하기</button>
+    `;
+    setTimeout(lucide.createIcons, 50);
+    _pendingInviteData = { token, invite, cloudProjData };
+  } catch(e) {
+    if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">오류: ${esc(e.message)}</p>`;
+  }
+}
+
+let _pendingInviteData = null;
+
+async function _acceptInviteFromDialog() {
+  if (!_pendingInviteData) return;
+  const { token, invite, cloudProjData } = _pendingInviteData;
+  await _acceptInvite(token, invite, cloudProjData);
+}
+
+async function _acceptInvite(token, invite, cloudProjData) {
+  const body = document.getElementById('join-invite-body');
+  if (body) body.innerHTML = `<div style="display:flex;justify-content:center;padding:20px 0;"><div class="join-spinner"></div></div><p style="text-align:center;color:#888;font-size:13px;">참여 처리 중...</p>`;
+
+  try {
+    const collaboratorEntry = {
+      email: state.user.email, name: state.user.name,
+      role: invite.role, joinedAt: new Date().toISOString(),
+    };
+    await _db.collection('vb_projects').doc(invite.projectId).update({
+      'meta.collaborators': firebase.firestore.FieldValue.arrayUnion(collaboratorEntry),
+    });
+    await _db.collection('vb_invites').doc(token).update({ used: true });
+
+    const remoteProj = cloudProjData.projectData || {};
+    const localProj = { ...remoteProj, cloudId: invite.projectId, isCloud: true, myRole: invite.role,
+      owner: cloudProjData.meta?.owner || { email: invite.ownerEmail, name: invite.ownerName },
+      collaborators: [...(cloudProjData.meta?.collaborators || []), collaboratorEntry],
+    };
+    const existIdx = state.projects.findIndex(p => p.cloudId === invite.projectId);
+    if (existIdx >= 0) { state.projects[existIdx] = localProj; } else { state.projects.push(localProj); }
+    state.currentProjectId = localProj.id;
+    _pendingInviteData = null;
+    sessionStorage.removeItem('vb_pending_invite');
+    save();
+    _startCollabListener(invite.projectId);
+    closeAllDialogs();
+    goTo('main'); renderAll();
+    updateCollabIndicator(localProj.collaborators, localProj.owner);
+    showToastMessage(`${invite.ownerName||'팀원'}님의 프로젝트에 참여했습니다! 🎉`);
+  } catch(e) {
+    if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">참여 오류: ${esc(e.message)}</p>`;
+    const actions = document.getElementById('join-invite-actions');
+    if (actions) actions.innerHTML = `<button class="btn-cancel" onclick="closeDialog('dlg-join-invite')">닫기</button>`;
+  }
+}
+
+// close all dialogs helper (for accept flow)
+function closeAllDialogs() {
+  document.querySelectorAll('.overlay.active').forEach(el => el.classList.remove('active'));
+}
+
+function showToastMessage(msg) {
+  const el = document.getElementById('autosave-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = '저장됨'; }, 2800);
+}
+
 // ===== INIT =====
 load();
 trackInit();
@@ -2107,6 +2792,15 @@ window.addEventListener('load', () => {
       google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
       if (!state.loggedIn) google.accounts.id.prompt();
     } catch(e) {}
+  }
+  // 공동작업 초대 처리
+  _checkInviteOnLoad();
+  // 기존 cloud 프로젝트 리스너 복구
+  const proj = getProject();
+  if (proj && proj.isCloud && proj.cloudId) {
+    _initFirebase().then(ok => {
+      if (ok) { _startCollabListener(proj.cloudId); updateCollabIndicator(proj.collaborators||[], proj.owner); }
+    });
   }
 });
 </script>

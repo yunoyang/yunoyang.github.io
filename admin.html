@@ -359,6 +359,7 @@ tr:hover td { background:#fafbfe; }
 }
 .settings-field .key-status.ok { color:#10b981; }
 .settings-field .key-status.missing { color:#f59e0b; }
+.settings-field .key-status.error { color:#e05050; }
 .settings-save-btn {
   background:var(--primary); color:#fff;
   padding:10px 20px; border-radius:8px; font-size:13.5px; font-weight:700;
@@ -900,6 +901,63 @@ tr:hover td { background:#fafbfe; }
                 <div class="field-hint">Google Cloud Console → OAuth 2.0 클라이언트 ID</div>
               </div>
               <button class="settings-save-btn" onclick="saveApiKeys()">API 키 저장</button>
+            </div>
+          </div>
+
+          <!-- Firebase Config -->
+          <div class="settings-card settings-full">
+            <div class="settings-section-title">
+              <i data-lucide="database"></i> Firebase 공동작업 설정
+            </div>
+            <div class="settings-body" style="flex-direction:row;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+              <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:14px;">
+                <div class="settings-field">
+                  <label>Firebase Config (JSON)</label>
+                  <textarea id="set-firebase-config" rows="9"
+                    style="width:100%;padding:11px 14px;border:1.5px solid #dde3ef;border-radius:9px;font-family:monospace;font-size:12px;outline:none;resize:vertical;color:#333;line-height:1.5;"
+                    placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+                  <div class="key-status" id="firebase-config-status"></div>
+                  <div class="field-hint">Firebase Console → 프로젝트 설정 → 내 앱 → SDK 구성에서 복사</div>
+                </div>
+                <button class="settings-save-btn" onclick="saveFirebaseConfig()">Firebase 설정 저장</button>
+                <div id="firebase-test-result" style="font-size:13px;"></div>
+              </div>
+              <div style="flex:1;min-width:260px;">
+                <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#374151;">
+                  <div style="font-weight:700;color:#3176ff;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <i data-lucide="info" style="width:14px;height:14px;"></i> Firebase 프로젝트 설정 방법
+                  </div>
+                  <ol style="padding-left:16px;color:#4b5563;margin:0;">
+                    <li><a href="https://console.firebase.google.com" target="_blank" style="color:#3176ff;">console.firebase.google.com</a> 접속</li>
+                    <li><b>프로젝트 추가</b> → 이름: Vibespace</li>
+                    <li>Google Analytics: 기존 GA4 연결 or 건너뜀</li>
+                    <li>좌측 메뉴 → <b>Firestore Database</b></li>
+                    <li><b>데이터베이스 만들기</b> → 프로덕션 모드</li>
+                    <li>규칙 탭 → 아래 규칙 붙여넣기:</li>
+                  </ol>
+                  <pre style="background:#1e293b;color:#e2e8f0;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;margin:8px 0;white-space:pre-wrap;overflow:auto;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /vb_projects/{id} {
+      allow read, write: if request.auth != null;
+    }
+    match /vb_invites/{id} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+                  <ol start="7" style="padding-left:16px;color:#4b5563;margin:0;">
+                    <li>프로젝트 설정(톱니) → <b>내 앱</b> → 웹 앱 추가</li>
+                    <li>앱 닉네임: Vibespace → 등록</li>
+                    <li><b>firebaseConfig</b> 객체 전체 복사</li>
+                    <li>위 textarea에 붙여넣기 후 저장</li>
+                  </ol>
+                  <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-size:12px;color:#6b7280;">
+                    ⏱ 소요시간: 약 10분 / 완전 무료 (Spark Plan)<br>
+                    📦 무료 할당: 1GB / 5만 읽기 / 2만 쓰기 (일)
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1679,14 +1737,55 @@ function loadSettings() {
   document.getElementById('set-google-client').value = settings.googleClient || '';
   document.getElementById('set-ga4-id').value = settings.ga4Id || '';
   document.getElementById('set-ga4-prop').value = settings.ga4PropId || '';
+  // Firebase config
+  const fbEl = document.getElementById('set-firebase-config');
+  if (fbEl) {
+    try {
+      fbEl.value = settings.firebaseConfig
+        ? JSON.stringify(JSON.parse(settings.firebaseConfig), null, 2)
+        : '';
+    } catch(e) { fbEl.value = settings.firebaseConfig || ''; }
+  }
   updateKeyStatus('kakao-key-status', settings.kakaoKey);
   updateKeyStatus('google-key-status', settings.googleKey);
   updateKeyStatus('ga4-key-status', settings.ga4Id);
+  updateFirebaseStatus(settings.firebaseConfig);
   renderGa4Links(settings.ga4Id, settings.ga4PropId);
   renderGa4Banner(settings.ga4Id);
 
   const creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
   document.getElementById('set-admin-email').value = creds?.email || DEFAULT_EMAIL;
+}
+
+// ===== FIREBASE CONFIG =====
+function saveFirebaseConfig() {
+  const raw = document.getElementById('set-firebase-config')?.value.trim() || '';
+  if (!raw) { alert('Firebase Config를 입력해주세요.'); return; }
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch(e) { alert('올바른 JSON 형식이 아닙니다.\nFirebase 콘솔에서 Config를 다시 복사해주세요.'); return; }
+  const required = ['apiKey','authDomain','projectId'];
+  const missing = required.filter(k => !parsed[k]);
+  if (missing.length) { alert(`필수 항목 누락: ${missing.join(', ')}`); return; }
+  const settings = getSettings();
+  settings.firebaseConfig = JSON.stringify(parsed);
+  localStorage.setItem(VB_SETTINGS_KEY, JSON.stringify(settings));
+  updateFirebaseStatus(settings.firebaseConfig);
+  showToast('Firebase 설정이 저장되었습니다. 앱에서 공동작업이 활성화됩니다.');
+}
+
+function updateFirebaseStatus(cfgStr) {
+  const el = document.getElementById('firebase-config-status');
+  if (!el) return;
+  let valid = false;
+  try { const c = JSON.parse(cfgStr||'null'); valid = !!(c && c.apiKey && c.projectId); } catch(e){}
+  if (valid) {
+    el.className = 'key-status ok';
+    el.innerHTML = '<i data-lucide="check-circle" style="width:12px;height:12px;"></i> 설정됨 — 공동작업 사용 가능';
+  } else {
+    el.className = 'key-status error';
+    el.innerHTML = '<i data-lucide="alert-circle" style="width:12px;height:12px;"></i> 미설정 — 공동작업 불가';
+  }
+  setTimeout(lucide.createIcons, 50);
 }
 
 // ===== GA4 =====
