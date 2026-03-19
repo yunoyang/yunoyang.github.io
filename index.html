@@ -184,6 +184,28 @@ button, input, textarea, select { font-family:var(--font); }
 .card-del-btn { background:none; border:none; cursor:pointer; color:#ccc; padding:2px; display:flex; border-radius:4px; }
 .card-del-btn:hover { color:var(--danger); background:#fff0f0; }
 .card-del-btn svg { width:16px; height:16px; }
+.card-more-btn {
+  background:none; border:none; cursor:pointer; color:#bbb; padding:4px 6px;
+  display:flex; border-radius:6px; font-size:18px; font-weight:700; letter-spacing:1px;
+  line-height:1; align-items:center; justify-content:center;
+}
+.card-more-btn:hover { background:#f5f5f5; color:#555; }
+.card-more-menu {
+  position:fixed; z-index:500; background:#fff; border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15); border:1px solid #eef0f6;
+  overflow:hidden; min-width:140px;
+  opacity:0; pointer-events:none; transform:scale(0.95) translateY(-4px);
+  transition:all .15s ease;
+}
+.card-more-menu.open { opacity:1; pointer-events:all; transform:scale(1) translateY(0); }
+.card-menu-item {
+  display:flex; align-items:center; gap:10px; padding:12px 16px;
+  font-size:14px; font-weight:600; color:#333; cursor:pointer; background:none; border:none;
+  width:100%; text-align:left; font-family:var(--font);
+}
+.card-menu-item:hover { background:#f8f9fc; }
+.card-menu-item.danger { color:#e05050; }
+.card-menu-item.danger:hover { background:#fff0f0; }
 
 .work-field { display:flex; align-items:center; justify-content:space-between; padding:11px 0; }
 .f-label { font-size:15px; color:#888; flex-shrink:0; }
@@ -1132,36 +1154,44 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
-<!-- Company Search -->
+<!-- Company Manual Input -->
 <div class="overlay" id="dlg-company-search">
-  <div class="dialog dlg-company">
+  <div class="dialog">
     <div class="comp-header">
-      <h3>업체 검색</h3>
-      <span class="comp-proc-badge" id="comp-proc-badge">업체 검색</span>
+      <h3>업체 입력</h3>
+      <span class="comp-proc-badge" id="comp-proc-badge">업체 정보</span>
     </div>
-    <!-- API Source -->
-    <div class="comp-source-row">
-      <button class="comp-src-btn kakao active" id="src-kakao" onclick="setCompSource('kakao')">🟡 카카오</button>
-      <button class="comp-src-btn google" id="src-google" onclick="setCompSource('google')">🔵 구글</button>
-      <button class="comp-src-btn naver" id="src-naver" onclick="setCompSource('naver')">🟢 네이버 ↗</button>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+      <div>
+        <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">업체명 <span style="color:#e05050;">*</span></label>
+        <input id="comp-manual-name" type="text" placeholder="예) 홍길동 인테리어"
+          style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+          oninput="this.style.borderColor='var(--primary)'"
+          onkeydown="if(event.key==='Enter')document.getElementById('comp-manual-phone').focus()">
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">전화번호</label>
+        <input id="comp-manual-phone" type="tel" placeholder="예) 010-1234-5678"
+          style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+          oninput="this.style.borderColor='var(--primary)'"
+          onkeydown="if(event.key==='Enter')saveCompanyManual()">
+      </div>
+      <!-- 기존 업체 표시 -->
+      <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;color:#555;line-height:1.7;"></div>
     </div>
-    <!-- Search Input -->
-    <div class="comp-search-row">
-      <input class="comp-search-input" id="comp-search-input" placeholder="업체명 또는 업종 검색"
-        onkeydown="if(event.key==='Enter')runCompanySearch()">
-      <button class="comp-search-btn" onclick="runCompanySearch()">검색</button>
+    <div class="dialog-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
+      <button class="btn-primary" onclick="saveCompanyManual()">저장</button>
     </div>
-    <!-- Location -->
-    <div class="comp-loc-bar">
-      <span>📍</span><span id="comp-loc-text">위치 정보 없음</span>
-    </div>
-    <!-- Results -->
-    <div class="comp-results" id="comp-results">
-      <div class="comp-empty">검색 버튼을 눌러<br>주변 업체를 찾아보세요</div>
-    </div>
-    <div class="dialog-actions">
-      <button class="btn-cancel" onclick="closeDialog('dlg-company-search')">닫기</button>
-    </div>
+  </div>
+</div>
+
+<!-- Process Tip Dialog -->
+<div class="overlay" id="dlg-proc-tip">
+  <div class="dialog">
+    <h3 id="tip-dialog-title">💡 시공팁</h3>
+    <div id="tip-dialog-body" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;max-height:60vh;overflow-y:auto;"></div>
+    <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-proc-tip')">닫기</button></div>
   </div>
 </div>
 
@@ -1219,6 +1249,16 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="btn-cancel" onclick="closeDialog('dlg-join-invite')">취소</button>
     </div>
   </div>
+</div>
+
+<!-- Card More Menu (shared, positioned via JS) -->
+<div id="card-more-menu" class="card-more-menu">
+  <button class="card-menu-item" id="card-menu-tip" onclick="cardMenuTip()">
+    <span>💡</span> 시공팁
+  </button>
+  <button class="card-menu-item danger" id="card-menu-del" onclick="cardMenuDelete()">
+    <span>🗑️</span> 삭제하기
+  </button>
 </div>
 
 <!-- Day Bottom Popup -->
@@ -1618,6 +1658,214 @@ function switchMainTab(tab, btn) {
   setTimeout(lucide.createIcons, 40);
 }
 
+// ===== PROCESS TIPS =====
+const PROCESS_TIPS = {
+  '철거': [
+    '🏗️ 구조벽(내력벽) 철거 전 반드시 전문가 확인 필수',
+    '🔌 철거 전 전기·수도·가스 차단 여부 확인',
+    '🌫️ 석면 등 분진 마감재 포함 여부 사전 검사 권장',
+    '📋 폐기물 처리 비용을 견적에 포함했는지 꼭 확인',
+    '🔊 소음 작업 가능 시간 확인 (보통 09:00~18:00)',
+  ],
+  '샷시': [
+    '🌡️ 단열 성능 등급 확인 (1등급 권장)',
+    '🔧 브랜드별 A/S 기간·범위 꼭 비교하세요',
+    '💨 방풍재·기밀 시공 꼼꼼히 체크',
+    '🪟 복층유리 vs 삼중유리 — 층수·방향 고려해 선택',
+    '🚚 엘리베이터 없는 경우 자재 반입비 별도 확인',
+  ],
+  '목공': [
+    '🪵 합판 두께 9T(일반) / 12T(바닥·무거운 곳) 권장',
+    '💧 방습지·방습 처리 여부 확인 (특히 바닥·외벽)',
+    '🔩 석고보드 12.5T 기본 / 방화 구간은 2겹 시공',
+    '📐 몰딩 마감 선은 빛 방향으로 눈에 잘 띄니 꼼꼼히',
+    '💡 천장 높이 확인 후 다운라이트 위치 목공 전에 확정',
+  ],
+  '타일': [
+    '🎨 줄눈 색상 미리 결정 (밝은 줄눈은 오염 주의)',
+    '💧 방수 시공 완료 후 타일 시공 순서 지켜야 함',
+    '🛁 욕실 바닥엔 논슬립 타일 필수',
+    '📏 큰 규격 타일일수록 시공비 높음 — 미리 비교',
+    '🔨 타일 로스율 10~15% 여유분 발주',
+  ],
+  '욕실': [
+    '💧 방수 시공 2회 이상 / 타설 후 최소 72시간 건조',
+    '🌬️ 환풍기 용량(CMH)을 욕실 크기에 맞게 선택',
+    '🚿 수전·욕조·세면대 위치는 배관 전에 확정',
+    '🏠 욕실장 높이·거울 위치 미리 설계',
+    '🌡️ 온수기 용량 가족 수에 맞게 확인',
+  ],
+  '도배': [
+    '🧹 초배지 작업 포함 여부 확인 (마감 품질 큰 차이)',
+    '💨 시공 후 24~48시간 충분한 환기 필수',
+    '📄 합지(저가·얇음) vs 실크(내구성·청소 용이) 차이 확인',
+    '🌡️ 시공 시 온도 5°C 이상 유지 (겨울철 주의)',
+    '🧹 기존 벽지 제거 + 퍼티 처리 포함 여부 확인',
+  ],
+  '가구': [
+    '📏 현장 실측 필수 — 설치 후 수정 불가',
+    '🪵 상판 두께·재질 확인 (LPM / 하이그로시 / 세라믹)',
+    '🔩 경첩·서랍 슬라이드 브랜드 확인 (블룸·헤팔레 권장)',
+    '🔌 가구 내 콘센트·조명 위치 미리 결정',
+    '📦 A/S 기간 및 보증 내용 계약서에 명시',
+  ],
+  '전기': [
+    '⚡ 분전반 용량(A) 확인 — 필요 시 증설 여부 판단',
+    '🔌 콘센트 위치·수량 가구 배치도 보고 미리 결정',
+    '💡 다운라이트·간접 조명 위치는 목공 전에 확정',
+    '🌐 인터넷·TV·CCTV 배선 계획 전기 공사 시 동시 진행',
+    '📋 전기 안전 확인서(사용전점검) 발급 여부 확인',
+  ],
+  '도장': [
+    '🧹 퍼티 작업이 도장 품질의 80% — 면 정리가 핵심',
+    '🎨 무광·반광·유광 중 원하는 광택 미리 결정',
+    '💨 시공 중·후 환기 필수 (VOC 유해 가스)',
+    '🌡️ 온도 5°C 이상 / 습도 85% 이하 조건에서 시공',
+    '🖌️ 색상은 테스트 패치 먼저 적용 후 최종 결정',
+  ],
+  '마루': [
+    '🏠 온돌마루(습식) vs 강마루(건식) 방식 먼저 확인',
+    '💧 바닥 수분 함량 측정 후 시공 (습기로 뒤틀림 방지)',
+    '📏 걸레받이(경계 마감재) 포함 여부 확인',
+    '🌡️ 시공 후 72시간 이내 바닥 난방 금지',
+    '🔧 들뜸·소음 방지를 위해 접착 시공 권장',
+  ],
+  '방수': [
+    '💧 방수 도막 두께 최소 1.5mm 이상 확인',
+    '🔁 방수 시공은 최소 2회 도포 필수',
+    '⏱️ 1차 건조 후 2차 시공 — 건조 시간 충분히 확보',
+    '🔍 코너·배관 관통부 등 취약 부위 보강 여부 확인',
+    '🌊 방수 후 물 채워서 누수 테스트 (48시간)',
+  ],
+  '조명': [
+    '💡 다운라이트 위치는 목공 전에 최종 확정',
+    '🌡️ 전구 색온도 선택 — 따뜻한 빛(2700K) vs 화이트(4000K)',
+    '🔌 스위치 위치·회로 구성 미리 계획',
+    '🔋 LED 등급 및 수명 확인 (50,000시간 이상 권장)',
+    '📐 간접 조명 홈 깊이 최소 15cm 이상 확보',
+  ],
+};
+
+function getTipsForProcess(typeName) {
+  if (PROCESS_TIPS[typeName]) return PROCESS_TIPS[typeName];
+  // 유사 키워드 매칭
+  const keys = Object.keys(PROCESS_TIPS);
+  const match = keys.find(k => typeName.includes(k) || k.includes(typeName));
+  return match ? PROCESS_TIPS[match] : null;
+}
+
+// ===== CARD MORE MENU =====
+let _cardMenuProcId = null, _cardMenuProcType = null;
+
+function toggleCardMenu(e, procId, procType) {
+  e.stopPropagation();
+  const menu = document.getElementById('card-more-menu');
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const isOpen = menu.classList.contains('open') && _cardMenuProcId === procId;
+  // 닫기
+  menu.classList.remove('open');
+  if (isOpen) { _cardMenuProcId = null; return; }
+  // 열기
+  _cardMenuProcId = procId;
+  _cardMenuProcType = procType;
+  // 위치 계산
+  const menuW = 150, menuH = 90;
+  let top = rect.bottom + 4;
+  let left = rect.right - menuW;
+  if (top + menuH > window.innerHeight) top = rect.top - menuH - 4;
+  if (left < 8) left = 8;
+  menu.style.top = top + 'px';
+  menu.style.left = left + 'px';
+  // 시공팁 버튼 노출 여부
+  const hasTip = !!getTipsForProcess(_cardMenuProcType);
+  document.getElementById('card-menu-tip').style.display = hasTip ? '' : 'none';
+  menu.classList.add('open');
+}
+
+function cardMenuDelete() {
+  closeCardMenu();
+  deleteProcess(_cardMenuProcId);
+}
+
+function cardMenuTip() {
+  closeCardMenu();
+  showProcessTip(_cardMenuProcType);
+}
+
+function closeCardMenu() {
+  document.getElementById('card-more-menu').classList.remove('open');
+  _cardMenuProcId = null;
+}
+
+function showProcessTip(typeName) {
+  const tips = getTipsForProcess(typeName);
+  const body = document.getElementById('tip-dialog-body');
+  const title = document.getElementById('tip-dialog-title');
+  title.textContent = `💡 ${typeName} 시공팁`;
+  if (!tips) {
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb;font-size:14px;">해당 공정의 팁이 준비 중입니다.</div>';
+  } else {
+    body.innerHTML = tips.map((tip, i) => `
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:${i%2===0?'#f8f9fc':'#fff'};border-radius:10px;border:1px solid #eef0f6;">
+        <span style="font-size:16px;flex-shrink:0;margin-top:1px;">${tip.slice(0,2)}</span>
+        <span style="font-size:14px;color:#333;line-height:1.6;">${tip.slice(2).trim()}</span>
+      </div>`).join('');
+  }
+  openDialog('dlg-proc-tip');
+}
+
+// 카드 메뉴 외부 클릭 시 닫기
+document.addEventListener('click', () => {
+  const menu = document.getElementById('card-more-menu');
+  if (menu) menu.classList.remove('open');
+  _cardMenuProcId = null;
+}, true);
+
+// ===== COMPANY MANUAL INPUT =====
+function openCompanySearch(procId) {
+  _compSearchProcId = procId;
+  const proc = getProject()?.processes.find(p => p.id === procId);
+  document.getElementById('comp-proc-badge').textContent = `${proc?.type||proc?.name||''} 업체`;
+  document.getElementById('comp-manual-name').value = proc?.companyData?.name || proc?.company || '';
+  document.getElementById('comp-manual-phone').value = proc?.companyData?.phone || '';
+  // 기존 정보 표시
+  const cur = document.getElementById('comp-current-info');
+  if (proc?.companyData?.name) {
+    cur.style.display = 'block';
+    cur.innerHTML = `<span style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:3px;">현재 등록 업체</span>${esc(proc.companyData.name)}${proc.companyData.phone ? ' · ' + esc(proc.companyData.phone) : ''}`;
+  } else {
+    cur.style.display = 'none';
+  }
+  openDialog('dlg-company-search');
+  setTimeout(() => document.getElementById('comp-manual-name').focus(), 100);
+}
+
+function saveCompanyManual() {
+  const name = document.getElementById('comp-manual-name').value.trim();
+  if (!name) {
+    document.getElementById('comp-manual-name').style.borderColor = '#e05050';
+    document.getElementById('comp-manual-name').focus();
+    return;
+  }
+  const phone = document.getElementById('comp-manual-phone').value.trim();
+  const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
+  if (proc) {
+    proc.company = name;
+    proc.companyData = { name, phone, source: 'manual' };
+    save(); renderAll();
+  }
+  closeDialog('dlg-company-search');
+  clearCompanyManual();
+}
+
+function clearCompanyManual() {
+  const n = document.getElementById('comp-manual-name');
+  const p = document.getElementById('comp-manual-phone');
+  if (n) { n.value = ''; n.style.borderColor = ''; }
+  if (p) { p.value = ''; p.style.borderColor = ''; }
+}
+
 // ===== WORK CARDS =====
 let editingProcessId = null, editingFieldKey = null;
 function renderWorkCards() {
@@ -1641,11 +1889,9 @@ function renderWorkCards() {
       : '일정 선택';
     return `
     <div class="work-card">
-      <div class="work-card-header">
+      <div class="work-card-header" style="position:relative;">
         <span class="work-card-title">${esc(p.name)}</span>
-        <button class="card-del-btn" onclick="deleteProcess('${p.id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </button>
+        <button class="card-more-btn" onclick="toggleCardMenu(event,'${p.id}','${esc(p.type||p.name)}')">···</button>
       </div>
       <div class="work-field">
         <span class="f-label">예상견적</span>
@@ -1668,8 +1914,7 @@ function renderWorkCards() {
           ${p.companyData ? `<div class="f-company-selected">
             <span class="f-company-name">${esc(p.companyData.name)}</span>
             ${p.companyData.phone ? `<span class="f-company-phone">📞 ${esc(p.companyData.phone)}</span>` : ''}
-            <span class="f-company-src ${p.companyData.source}">${p.companyData.source==='kakao'?'카카오':p.companyData.source==='google'?'구글':'네이버'}</span>
-          </div>` : p.company ? esc(p.company) : '업체 검색'}
+          </div>` : p.company ? esc(p.company) : '업체 입력'}
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333333;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </span>
       </div>
