@@ -1326,12 +1326,6 @@ async function _autoUploadOnLogin() {
   if (!proj) return;
   const ok = await _initFirebase();
   if (!ok) return;
-  // Firebase Auth 세션이 준비될 때까지 대기
-  const fbUser = await _waitForFirebaseAuth();
-  if (!fbUser) {
-    console.warn('Firebase Auth 세션 없음 — Firestore 쓰기 불가');
-    return;
-  }
   // 이미 클라우드 프로젝트면 리스너만 시작
   if (proj.isCloud && proj.cloudId) {
     _startCollabListener(proj.cloudId);
@@ -1341,13 +1335,17 @@ async function _autoUploadOnLogin() {
   // 처음 로그인 → 클라우드에 업로드
   proj.isCloud = true;
   proj.owner = { email: state.user.email, name: state.user.name };
-  const cloudId = await _pushProjToCloud(proj);
-  if (cloudId) {
-    proj.cloudId = cloudId;
-    save();
-    _startCollabListener(cloudId);
-    updateCollabIndicator(proj.collaborators||[], proj.owner);
-    showToastMessage('☁️ 클라우드에 저장됐습니다. 공동작업 초대가 가능합니다.');
+  try {
+    const cloudId = await _pushProjToCloud(proj);
+    if (cloudId) {
+      proj.cloudId = cloudId;
+      save();
+      _startCollabListener(cloudId);
+      updateCollabIndicator(proj.collaborators||[], proj.owner);
+      showToastMessage('☁️ 클라우드에 저장됐습니다. 공동작업 초대가 가능합니다.');
+    }
+  } catch(e) {
+    console.error('Auto upload failed:', e);
   }
 }
 function demoLogin() {
@@ -2572,13 +2570,6 @@ async function generateInviteLink() {
   if (!ok) {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
-  }
-
-  // Firebase Auth 세션 확인
-  const fbUser = await _waitForFirebaseAuth();
-  if (!fbUser) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
-    alert('인증 세션이 만료되었습니다. 로그아웃 후 다시 로그인해주세요.'); return;
   }
 
   const proj = getProject();
