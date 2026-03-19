@@ -1121,8 +1121,10 @@ function handleGoogleResponse(response) {
   try {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     state.loggedIn = true;
-    state.user = { name: payload.name || '사용자', email: payload.email || '' };
+    state.user = { name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
     save();
+    trackUserLogin(state.user);
+    trackEvent('auth', 'login', 'google');
     closeDialog('dlg-login');
     updateLoginUI();
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
@@ -1994,8 +1996,67 @@ function renderAll() {
   setTimeout(lucide.createIcons, 30);
 }
 
+// ===== ANALYTICS TRACKER =====
+const VB_TRACK_KEY = 'vb_analytics';
+const VB_SESSION_KEY = 'vb_session';
+
+function trackInit() {
+  const now = Date.now();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let sessionId = sessionStorage.getItem('vb_sid');
+  if (!sessionId) {
+    sessionId = 'sid_' + now + '_' + Math.random().toString(36).slice(2, 7);
+    sessionStorage.setItem('vb_sid', sessionId);
+  }
+  // Load analytics store
+  let store = JSON.parse(localStorage.getItem(VB_TRACK_KEY) || '{"visits":[],"events":[]}');
+  // Check if this session already recorded today
+  const existingVisit = store.visits.find(v => v.sessionId === sessionId);
+  if (!existingVisit) {
+    const isNewUser = !store.visits.some(v => v.date < todayStr);
+    store.visits.push({ sessionId, date: todayStr, ts: now, duration: 0, isNew: isNewUser, page: 'app' });
+    localStorage.setItem(VB_TRACK_KEY, JSON.stringify(store));
+  }
+  // Update duration on unload
+  window.addEventListener('beforeunload', () => {
+    let s2 = JSON.parse(localStorage.getItem(VB_TRACK_KEY) || '{"visits":[],"events":[]}');
+    const idx = s2.visits.findIndex(v => v.sessionId === sessionId);
+    if (idx >= 0) { s2.visits[idx].duration = Math.round((Date.now() - now) / 1000); }
+    try { localStorage.setItem(VB_TRACK_KEY, JSON.stringify(s2)); } catch(e) {}
+  });
+  // Keep session start time for duration tracking
+  sessionStorage.setItem('vb_sid_ts', String(now));
+}
+
+function trackEvent(category, action, label) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const sessionId = sessionStorage.getItem('vb_sid') || 'unknown';
+  let store = JSON.parse(localStorage.getItem(VB_TRACK_KEY) || '{"visits":[],"events":[]}');
+  if (!store.events) store.events = [];
+  store.events.push({ date: todayStr, ts: Date.now(), sessionId, category, action, label: label || '' });
+  // Keep only last 1000 events
+  if (store.events.length > 1000) store.events = store.events.slice(-1000);
+  try { localStorage.setItem(VB_TRACK_KEY, JSON.stringify(store)); } catch(e) {}
+}
+
+function trackUserLogin(user) {
+  let store = JSON.parse(localStorage.getItem(VB_TRACK_KEY) || '{"visits":[],"events":[],"users":[]}');
+  if (!store.users) store.users = [];
+  const existing = store.users.find(u => u.email === user.email);
+  if (!existing) {
+    store.users.push({ email: user.email, name: user.name, picture: user.picture, joinedAt: new Date().toISOString(), lastSeen: new Date().toISOString(), sessions: 1 });
+  } else {
+    existing.lastSeen = new Date().toISOString();
+    existing.name = user.name;
+    existing.picture = user.picture;
+    existing.sessions = (existing.sessions || 0) + 1;
+  }
+  try { localStorage.setItem(VB_TRACK_KEY, JSON.stringify(store)); } catch(e) {}
+}
+
 // ===== INIT =====
 load();
+trackInit();
 goTo('landing');
 updateLoginUI();
 window.addEventListener('load', () => {

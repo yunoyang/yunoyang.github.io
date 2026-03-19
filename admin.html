@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibespace Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ===== ROOT ===== */
+:root {
+  --primary: #3176ff;
+  --primary-dark: #1a5de8;
+  --primary-bg: rgba(49,118,255,0.08);
+  --sidebar-w: 220px;
+  --sidebar-bg: #0f1729;
+  --sidebar-text: #8fa3c4;
+  --sidebar-active: #3176ff;
+  --sidebar-hover: rgba(255,255,255,0.06);
+  --bg: #f4f6fb;
+  --card-bg: #fff;
+  --card-border: #e8ecf5;
+  --card-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --divider: #f0f2f7;
+  --green: #10b981;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --purple: #8b5cf6;
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { font-family:var(--font); background:var(--bg); color:var(--text-primary); }
+button { font-family:var(--font); cursor:pointer; border:none; }
+input, select, textarea { font-family:var(--font); }
+
+/* ===== LAYOUT ===== */
+#admin-app { display:flex; height:100vh; overflow:hidden; }
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  width:var(--sidebar-w); flex-shrink:0;
+  background:var(--sidebar-bg);
+  display:flex; flex-direction:column;
+  overflow:hidden; position:relative;
+}
+.sidebar-logo {
+  padding:24px 20px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.sidebar-logo .logo-title {
+  font-size:17px; font-weight:800; color:#fff;
+  letter-spacing:-.5px;
+}
+.sidebar-logo .logo-sub {
+  font-size:11px; color:var(--sidebar-text); margin-top:2px; font-weight:400;
+}
+.sidebar-badge {
+  display:inline-block; background:var(--primary); color:#fff;
+  font-size:9px; font-weight:700; padding:2px 5px; border-radius:4px;
+  vertical-align:middle; margin-left:4px; letter-spacing:.3px;
+}
+
+.sidebar-nav { flex:1; padding:12px 10px; overflow-y:auto; }
+.sidebar-nav::-webkit-scrollbar { display:none; }
+.nav-label {
+  font-size:10px; font-weight:700; color:rgba(255,255,255,0.25);
+  letter-spacing:.08em; text-transform:uppercase;
+  padding:12px 10px 6px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:8px;
+  color:var(--sidebar-text); font-size:13.5px; font-weight:500;
+  cursor:pointer; transition:all .15s; margin-bottom:1px;
+  user-select:none;
+}
+.nav-item:hover { background:var(--sidebar-hover); color:#c5d3e8; }
+.nav-item.active { background:var(--primary-bg); color:#fff; font-weight:600; }
+.nav-item.active svg { color:var(--primary); }
+.nav-item svg { width:16px; height:16px; flex-shrink:0; }
+.nav-item .nav-badge {
+  margin-left:auto; background:var(--red); color:#fff;
+  font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px;
+}
+
+.sidebar-footer {
+  padding:14px 14px; border-top:1px solid rgba(255,255,255,0.07);
+}
+.admin-user {
+  display:flex; align-items:center; gap:9px; padding:8px 8px;
+  border-radius:8px; cursor:pointer; transition:background .15s;
+}
+.admin-user:hover { background:var(--sidebar-hover); }
+.admin-avatar {
+  width:30px; height:30px; border-radius:50%;
+  background:linear-gradient(135deg, #3176ff, #8b5cf6);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; color:#fff; flex-shrink:0;
+}
+.admin-user-info .name { font-size:12.5px; font-weight:600; color:#e2e8f0; }
+.admin-user-info .role { font-size:11px; color:var(--sidebar-text); margin-top:1px; }
+
+/* ===== MAIN ===== */
+#main {
+  flex:1; display:flex; flex-direction:column;
+  overflow:hidden; min-width:0;
+}
+
+/* ===== TOP BAR ===== */
+#topbar {
+  height:60px; flex-shrink:0;
+  background:#fff; border-bottom:1px solid var(--card-border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px;
+}
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.page-title { font-size:17px; font-weight:700; color:var(--text-primary); }
+.page-subtitle { font-size:12.5px; color:var(--text-muted); margin-top:1px; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.topbar-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:8px;
+  font-size:13px; font-weight:600; transition:background .15s;
+}
+.topbar-btn.outline {
+  background:#fff; border:1px solid var(--card-border); color:var(--text-secondary);
+}
+.topbar-btn.outline:hover { background:#f8f9fc; }
+.topbar-btn.primary { background:var(--primary); color:#fff; }
+.topbar-btn.primary:hover { background:var(--primary-dark); }
+.topbar-btn svg { width:14px; height:14px; }
+.date-range {
+  font-size:13px; color:var(--text-secondary);
+  background:#f4f6fb; border:1px solid var(--card-border);
+  padding:6px 12px; border-radius:8px; display:flex; align-items:center; gap:6px;
+}
+.date-range svg { width:14px; height:14px; color:var(--text-muted); }
+
+/* ===== CONTENT ===== */
+#content {
+  flex:1; overflow-y:auto; padding:24px 28px;
+}
+#content::-webkit-scrollbar { width:6px; }
+#content::-webkit-scrollbar-track { background:transparent; }
+#content::-webkit-scrollbar-thumb { background:#dde3ef; border-radius:3px; }
+
+/* ===== PAGES ===== */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ===== KPI CARDS ===== */
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px;
+}
+.kpi-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; padding:20px;
+  box-shadow:var(--card-shadow); position:relative; overflow:hidden;
+}
+.kpi-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--accent, #3176ff);
+}
+.kpi-card.green { --accent:#10b981; }
+.kpi-card.orange { --accent:#f59e0b; }
+.kpi-card.purple { --accent:#8b5cf6; }
+.kpi-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.kpi-icon {
+  width:36px; height:36px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--icon-bg, var(--primary-bg));
+}
+.kpi-icon svg { width:18px; height:18px; color:var(--icon-color, var(--primary)); }
+.kpi-card.green .kpi-icon { --icon-bg:rgba(16,185,129,0.1); --icon-color:#10b981; }
+.kpi-card.orange .kpi-icon { --icon-bg:rgba(245,158,11,0.1); --icon-color:#f59e0b; }
+.kpi-card.purple .kpi-icon { --icon-bg:rgba(139,92,246,0.1); --icon-color:#8b5cf6; }
+.kpi-badge {
+  font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px;
+  display:flex; align-items:center; gap:3px;
+}
+.kpi-badge.up { background:#ecfdf5; color:#10b981; }
+.kpi-badge.down { background:#fef2f2; color:#ef4444; }
+.kpi-badge.neutral { background:#f3f4f6; color:#6b7280; }
+.kpi-badge svg { width:10px; height:10px; }
+.kpi-value { font-size:28px; font-weight:800; color:var(--text-primary); letter-spacing:-1px; }
+.kpi-label { font-size:12.5px; color:var(--text-muted); margin-top:4px; font-weight:500; }
+.kpi-sub { font-size:11.5px; color:var(--text-muted); margin-top:8px; padding-top:10px; border-top:1px solid var(--divider); }
+.kpi-sub strong { color:var(--text-secondary); font-weight:600; }
+
+/* ===== CHART GRID ===== */
+.chart-grid { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:24px; }
+.chart-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; padding:20px; box-shadow:var(--card-shadow);
+}
+.chart-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
+}
+.chart-title { font-size:14.5px; font-weight:700; }
+.chart-subtitle { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.chart-actions { display:flex; gap:6px; }
+.chart-tab {
+  font-size:12px; font-weight:600; padding:5px 11px; border-radius:6px;
+  color:var(--text-muted); background:none; transition:all .15s;
+}
+.chart-tab.active { background:var(--primary-bg); color:var(--primary); }
+.chart-tab:hover:not(.active) { background:#f4f6fb; }
+.chart-canvas-wrap { position:relative; height:200px; }
+.chart-canvas-wrap.tall { height:240px; }
+
+/* Donut chart styles */
+.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-canvas { width:140px; height:140px; flex-shrink:0; }
+.donut-legend { flex:1; }
+.donut-legend-item { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.donut-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.donut-legend-label { font-size:12.5px; color:var(--text-secondary); flex:1; }
+.donut-legend-val { font-size:13px; font-weight:700; color:var(--text-primary); }
+
+/* ===== TABLE ===== */
+.section-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.section-title { font-size:15px; font-weight:700; }
+.section-actions { display:flex; gap:8px; align-items:center; }
+
+.table-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; overflow:hidden; box-shadow:var(--card-shadow);
+}
+.table-toolbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px; border-bottom:1px solid var(--divider);
+  gap:12px;
+}
+.search-wrap {
+  display:flex; align-items:center; gap:8px;
+  background:#f4f6fb; border:1px solid var(--card-border);
+  border-radius:8px; padding:7px 12px; flex:1; max-width:280px;
+}
+.search-wrap input {
+  border:none; background:transparent; font-size:13px; color:var(--text-primary);
+  outline:none; flex:1; min-width:0;
+}
+.search-wrap input::placeholder { color:var(--text-muted); }
+.search-wrap svg { width:14px; height:14px; color:var(--text-muted); flex-shrink:0; }
+.filter-select {
+  border:1px solid var(--card-border); background:#fff;
+  border-radius:8px; padding:7px 12px; font-size:13px; color:var(--text-secondary);
+  outline:none; cursor:pointer;
+}
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:#f8fafc; }
+th {
+  font-size:12px; font-weight:700; color:var(--text-muted);
+  padding:11px 16px; text-align:left;
+  border-bottom:1px solid var(--divider); white-space:nowrap;
+  letter-spacing:.02em; text-transform:uppercase;
+}
+td {
+  font-size:13.5px; color:var(--text-secondary);
+  padding:12px 16px; border-bottom:1px solid var(--divider); vertical-align:middle;
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#fafbfe; }
+.td-name { font-weight:600; color:var(--text-primary); }
+.td-email { color:var(--text-muted); font-size:12.5px; margin-top:1px; }
+.user-cell { display:flex; align-items:center; gap:10px; }
+.u-avatar {
+  width:32px; height:32px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg, #3176ff, #8b5cf6);
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#fff; overflow:hidden;
+}
+.u-avatar img { width:100%; height:100%; object-fit:cover; }
+.status-dot {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:12px; font-weight:600; padding:3px 8px; border-radius:6px;
+}
+.status-dot.active { background:#ecfdf5; color:#10b981; }
+.status-dot.inactive { background:#f3f4f6; color:#9ca3af; }
+.status-dot::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.td-num { font-weight:700; color:var(--text-primary); }
+
+/* Pagination */
+.table-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; border-top:1px solid var(--divider);
+  font-size:12.5px; color:var(--text-muted);
+}
+.pagination { display:flex; gap:4px; }
+.page-btn {
+  width:30px; height:30px; border-radius:6px; border:1px solid var(--card-border);
+  background:#fff; color:var(--text-secondary); font-size:13px; font-weight:500;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s;
+}
+.page-btn:hover { background:#f4f6fb; }
+.page-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.page-btn svg { width:12px; height:12px; }
+
+/* ===== MINI TABLE ===== */
+.mini-table-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; overflow:hidden; box-shadow:var(--card-shadow);
+}
+.mini-table-card .chart-header { padding:16px 16px 0; }
+.mini-table-list { padding:0 6px 6px; }
+.mini-table-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 10px; border-radius:8px; transition:background .15s;
+}
+.mini-table-item:hover { background:#f8fafc; }
+.mini-rank { width:20px; font-size:12px; font-weight:700; color:var(--text-muted); text-align:center; flex-shrink:0; }
+.mini-rank.top { color:var(--primary); }
+.mini-info { flex:1; min-width:0; }
+.mini-info .mname { font-size:13px; font-weight:600; color:var(--text-primary); }
+.mini-info .msub { font-size:11.5px; color:var(--text-muted); margin-top:1px; }
+.mini-val { font-size:13px; font-weight:700; color:var(--text-primary); flex-shrink:0; }
+.mini-bar-wrap { flex:1; height:5px; background:#f0f2f7; border-radius:3px; max-width:80px; }
+.mini-bar { height:100%; border-radius:3px; background:var(--primary); }
+
+/* ===== SETTINGS ===== */
+.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.settings-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; overflow:hidden; box-shadow:var(--card-shadow);
+}
+.settings-section-title {
+  font-size:14px; font-weight:700; padding:16px 20px;
+  border-bottom:1px solid var(--divider);
+  display:flex; align-items:center; gap:8px;
+}
+.settings-section-title svg { width:16px; height:16px; color:var(--primary); }
+.settings-body { padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+.settings-field label {
+  display:block; font-size:12px; font-weight:700;
+  color:var(--text-muted); margin-bottom:5px; letter-spacing:.02em;
+}
+.settings-field input, .settings-field select {
+  width:100%; padding:9px 12px; border-radius:8px;
+  border:1px solid var(--card-border); font-size:13.5px;
+  color:var(--text-primary); outline:none; transition:border .15s;
+  background:#fff;
+}
+.settings-field input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-bg); }
+.settings-field input.has-value { border-color:#10b981; }
+.settings-field .field-hint { font-size:11.5px; color:var(--text-muted); margin-top:4px; }
+.settings-field .key-status {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11.5px; font-weight:600; margin-top:4px;
+}
+.settings-field .key-status.ok { color:#10b981; }
+.settings-field .key-status.missing { color:#f59e0b; }
+.settings-save-btn {
+  background:var(--primary); color:#fff;
+  padding:10px 20px; border-radius:8px; font-size:13.5px; font-weight:700;
+  border:none; cursor:pointer; transition:background .15s; align-self:flex-start;
+}
+.settings-save-btn:hover { background:var(--primary-dark); }
+.settings-danger { background:#fff5f5; border-color:#fecaca; }
+.settings-danger .settings-section-title { color:var(--red); }
+.settings-danger .settings-section-title svg { color:var(--red); }
+.danger-btn {
+  padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700;
+  border:1px solid var(--red); color:var(--red); background:#fff;
+  cursor:pointer; transition:all .15s;
+}
+.danger-btn:hover { background:var(--red); color:#fff; }
+.settings-full { grid-column: 1 / -1; }
+
+/* ===== ANALYTICS PAGE ===== */
+.analytics-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+.funnel-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; padding:20px; box-shadow:var(--card-shadow);
+  grid-column: 1 / -1;
+}
+.funnel-steps { display:flex; align-items:center; gap:0; margin-top:16px; overflow-x:auto; padding-bottom:4px; }
+.funnel-step { flex:1; min-width:110px; }
+.funnel-bar-wrap { display:flex; align-items:flex-end; height:80px; margin-bottom:8px; padding:0 6px; }
+.funnel-bar { width:100%; border-radius:6px 6px 0 0; background:var(--primary); transition:height .3s; }
+.funnel-step-label { font-size:12px; font-weight:600; color:var(--text-secondary); text-align:center; padding:0 6px; }
+.funnel-step-val { font-size:14px; font-weight:800; color:var(--text-primary); text-align:center; margin-top:2px; }
+.funnel-step-pct { font-size:11px; color:var(--text-muted); text-align:center; }
+.funnel-arrow { width:24px; flex-shrink:0; text-align:center; font-size:16px; color:var(--text-muted); padding-bottom:28px; }
+
+/* Feature usage table */
+.feature-list { display:flex; flex-direction:column; gap:10px; padding:4px 0; }
+.feature-row { display:flex; align-items:center; gap:12px; }
+.feature-name { font-size:13px; font-weight:600; color:var(--text-secondary); min-width:90px; }
+.feature-bar-track { flex:1; height:8px; background:#f0f2f7; border-radius:4px; overflow:hidden; }
+.feature-bar-fill { height:100%; border-radius:4px; }
+.feature-pct { font-size:13px; font-weight:700; color:var(--text-primary); min-width:36px; text-align:right; }
+
+/* ===== REALTIME BOX ===== */
+.realtime-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.realtime-card {
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:14px; padding:16px; box-shadow:var(--card-shadow);
+}
+.realtime-label { font-size:11.5px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:.05em; }
+.realtime-list { display:flex; flex-direction:column; gap:6px; }
+.realtime-item {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 10px; background:#f8fafc; border-radius:8px;
+}
+.realtime-dot { width:7px; height:7px; border-radius:50%; background:#10b981; flex-shrink:0; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+.realtime-name { font-size:12.5px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.realtime-time { font-size:11px; color:var(--text-muted); flex-shrink:0; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:60px 20px; color:var(--text-muted); text-align:center;
+}
+.empty-state svg { width:40px; height:40px; color:#dde3ef; margin-bottom:12px; }
+.empty-state p { font-size:14px; }
+
+/* ===== LOGIN GATE ===== */
+#login-gate {
+  position:fixed; inset:0; background:#0f1729;
+  display:flex; align-items:center; justify-content:center; z-index:999;
+}
+.login-box {
+  background:#fff; border-radius:20px; padding:40px;
+  width:360px; text-align:center;
+}
+.login-logo { font-size:22px; font-weight:800; color:var(--text-primary); margin-bottom:4px; }
+.login-logo span { color:var(--primary); }
+.login-sub { font-size:13px; color:var(--text-muted); margin-bottom:30px; }
+.login-badge {
+  display:inline-block; background:#fef3c7; color:#d97706;
+  font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:20px;
+}
+.login-field {
+  margin-bottom:12px; text-align:left;
+}
+.login-field label { font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px; }
+.login-field input {
+  width:100%; padding:11px 14px; border-radius:9px;
+  border:1.5px solid #e5e7eb; font-size:14px; outline:none; transition:border .15s;
+}
+.login-field input:focus { border-color:var(--primary); }
+.login-btn {
+  width:100%; padding:13px; background:var(--primary); color:#fff;
+  border-radius:10px; font-size:15px; font-weight:700; border:none;
+  cursor:pointer; margin-top:8px; transition:background .15s;
+}
+.login-btn:hover { background:var(--primary-dark); }
+.login-error { color:var(--red); font-size:12.5px; margin-top:8px; display:none; }
+
+/* ===== TOAST ===== */
+#toast {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  background:#1e293b; color:#fff; font-size:13px; font-weight:600;
+  padding:10px 20px; border-radius:12px; z-index:9999;
+  opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;
+}
+#toast.show { opacity:1; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1100px) {
+  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+  .chart-grid { grid-template-columns:1fr; }
+  .settings-grid { grid-template-columns:1fr; }
+  .analytics-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate">
+  <div class="login-box">
+    <div class="login-logo">Vibe<span>space</span></div>
+    <div class="login-sub">어드민 전용 접근입니다</div>
+    <div class="login-badge">🔒 ADMIN ONLY</div>
+    <div class="login-field">
+      <label>관리자 이메일</label>
+      <input type="email" id="lg-email" placeholder="admin@vibespace.kr" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>비밀번호</label>
+      <input type="password" id="lg-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <button class="login-btn" onclick="adminLogin()">로그인</button>
+    <div class="login-error" id="lg-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    <div style="margin-top:16px;font-size:11.5px;color:#9ca3af;">
+      기본: admin@vibespace.kr / vibespace2024
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="admin-app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">Vibespace <span class="sidebar-badge">ADMIN</span></div>
+      <div class="logo-sub">반셀프인테리어 플래닝툴</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">메인</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">
+        <i data-lucide="layout-dashboard"></i> 대시보드
+      </div>
+
+      <div class="nav-label" style="margin-top:8px;">사용자</div>
+      <div class="nav-item" onclick="showPage('users',this)">
+        <i data-lucide="users"></i> 사용자 관리
+      </div>
+      <div class="nav-item" onclick="showPage('companies',this)">
+        <i data-lucide="building-2"></i> 업체 회원
+        <span class="nav-badge">준비중</span>
+      </div>
+
+      <div class="nav-label" style="margin-top:8px;">분석</div>
+      <div class="nav-item" onclick="showPage('analytics',this)">
+        <i data-lucide="bar-chart-3"></i> 통계 분석
+      </div>
+
+      <div class="nav-label" style="margin-top:8px;">시스템</div>
+      <div class="nav-item" onclick="showPage('settings',this)">
+        <i data-lucide="settings"></i> 시스템 설정
+      </div>
+
+      <div style="margin-top:24px; padding:12px 10px;">
+        <a href="index.html" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8fa3c4;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">
+          <i data-lucide="external-link" style="width:14px;height:14px;"></i> 앱으로 이동
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user">
+        <div class="admin-avatar" id="admin-av">A</div>
+        <div class="admin-user-info">
+          <div class="name" id="admin-name">Administrator</div>
+          <div class="role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div id="main">
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="page-title" id="topbar-title">대시보드</div>
+          <div class="page-subtitle" id="topbar-sub">실시간 서비스 현황</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="date-range">
+          <i data-lucide="calendar" style="width:14px;height:14px;color:#9ca3af;"></i>
+          <span id="today-label"></span>
+        </div>
+        <button class="topbar-btn outline" onclick="refreshAll()">
+          <i data-lucide="refresh-cw"></i> 새로고침
+        </button>
+        <button class="topbar-btn primary" onclick="exportData()">
+          <i data-lucide="download"></i> 내보내기
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- ====== DASHBOARD PAGE ====== -->
+      <div class="page active" id="page-dashboard">
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- Charts Row -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">방문자 추이</div>
+                <div class="chart-subtitle">일별 방문자 수 (최근 30일)</div>
+              </div>
+              <div class="chart-actions">
+                <button class="chart-tab active" onclick="switchVisitorChart('7',this)">7일</button>
+                <button class="chart-tab" onclick="switchVisitorChart('30',this)">30일</button>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap tall">
+              <canvas id="visitor-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">가입자 현황</div>
+                <div class="chart-subtitle">신규 / 재방문 비율</div>
+              </div>
+            </div>
+            <div style="padding-top:12px;">
+              <div class="donut-wrap">
+                <canvas class="donut-canvas" id="user-type-chart"></canvas>
+                <div class="donut-legend" id="user-type-legend"></div>
+              </div>
+            </div>
+            <div style="height:1px;background:var(--divider);margin:16px 0;"></div>
+            <div>
+              <div class="chart-title" style="font-size:13px;margin-bottom:10px;">이번달 가입 추이</div>
+              <div class="chart-canvas-wrap" style="height:80px;">
+                <canvas id="monthly-join-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Realtime + Recent -->
+        <div class="realtime-grid" style="margin-bottom:20px;">
+          <div class="realtime-card">
+            <div class="realtime-label">최근 가입자</div>
+            <div class="realtime-list" id="recent-users-list">
+              <div class="empty-state" style="padding:20px 0;">
+                <i data-lucide="user-plus" style="width:28px;height:28px;margin-bottom:6px;"></i>
+                <p>가입자가 없습니다</p>
+              </div>
+            </div>
+          </div>
+          <div class="realtime-card">
+            <div class="realtime-label">최근 방문 세션</div>
+            <div class="realtime-list" id="recent-sessions-list">
+              <div class="empty-state" style="padding:20px 0;">
+                <i data-lucide="activity" style="width:28px;height:28px;margin-bottom:6px;"></i>
+                <p>방문 기록 없음</p>
+              </div>
+            </div>
+          </div>
+          <div class="realtime-card">
+            <div class="realtime-label">최근 생성 프로젝트</div>
+            <div class="realtime-list" id="recent-projects-list">
+              <div class="empty-state" style="padding:20px 0;">
+                <i data-lucide="folder-open" style="width:28px;height:28px;margin-bottom:6px;"></i>
+                <p>프로젝트 없음</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Process type + session duration charts -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+          <div class="mini-table-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">공정 타입 TOP 5</div>
+                <div class="chart-subtitle">등록된 시공 공정 분포</div>
+              </div>
+            </div>
+            <div class="mini-table-list" id="process-top-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">체류시간 분포</div>
+                <div class="chart-subtitle">세션별 체류시간 구간</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="duration-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== USERS PAGE ====== -->
+      <div class="page" id="page-users">
+        <div class="section-header" style="margin-bottom:16px;">
+          <div class="section-title">사용자 관리</div>
+          <div class="section-actions">
+            <span id="user-count-label" style="font-size:13px;color:var(--text-muted);"></span>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="search-wrap">
+              <i data-lucide="search"></i>
+              <input type="text" placeholder="이름 또는 이메일 검색" id="user-search" oninput="filterUsers()">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <select class="filter-select" id="user-status-filter" onchange="filterUsers()">
+                <option value="">전체 상태</option>
+                <option value="active">활성</option>
+                <option value="inactive">비활성 (30일 미방문)</option>
+              </select>
+              <select class="filter-select" id="user-sort" onchange="filterUsers()">
+                <option value="joinedAt">가입일순</option>
+                <option value="lastSeen">최근방문순</option>
+                <option value="sessions">세션수순</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>사용자</th>
+                  <th>가입일</th>
+                  <th>마지막 방문</th>
+                  <th>프로젝트</th>
+                  <th>세션수</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr><td colspan="6">
+                  <div class="empty-state">
+                    <i data-lucide="users"></i>
+                    <p>등록된 사용자가 없습니다</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="user-page-info">0명</span>
+            <div class="pagination" id="user-pagination"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== COMPANIES PAGE ====== -->
+      <div class="page" id="page-companies">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;">
+          <div style="width:80px;height:80px;border-radius:20px;background:#f4f6fb;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="building-2" style="width:36px;height:36px;color:#dde3ef;"></i>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:18px;font-weight:700;margin-bottom:6px;">업체 회원 관리</div>
+            <div style="font-size:13.5px;color:var(--text-muted);max-width:360px;line-height:1.6;">
+              업체 가입 기능이 활성화되면 여기서 업체 신청 승인, 노출 관리, 검색 통계를 확인할 수 있습니다.
+            </div>
+          </div>
+          <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:10px;padding:12px 20px;font-size:13px;color:var(--primary);font-weight:600;">
+            Phase 2에서 구현 예정
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== ANALYTICS PAGE ====== -->
+      <div class="page" id="page-analytics">
+        <!-- Mini KPIs -->
+        <div class="analytics-grid">
+          <div class="chart-card">
+            <div class="chart-header" style="margin-bottom:12px;">
+              <div>
+                <div class="chart-title">시간대별 접속 패턴</div>
+                <div class="chart-subtitle">시간대 × 요일 히트맵</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap" style="height:160px;">
+              <canvas id="heatmap-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header" style="margin-bottom:12px;">
+              <div>
+                <div class="chart-title">기능별 사용률</div>
+                <div class="chart-subtitle">탭/기능 활성화 비율</div>
+              </div>
+            </div>
+            <div class="feature-list" id="feature-list" style="padding-top:4px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header" style="margin-bottom:12px;">
+              <div>
+                <div class="chart-title">기기 / 브라우저</div>
+                <div class="chart-subtitle">접속 환경 분포</div>
+              </div>
+            </div>
+            <div style="padding-top:4px;">
+              <div class="donut-wrap" style="gap:12px;">
+                <canvas class="donut-canvas" id="device-chart" style="width:120px;height:120px;"></canvas>
+                <div class="donut-legend" id="device-legend"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel -->
+        <div class="funnel-card" style="margin-bottom:16px;">
+          <div class="chart-header" style="margin-bottom:0;">
+            <div>
+              <div class="chart-title">사용자 퍼널 분석</div>
+              <div class="chart-subtitle">방문부터 주요 기능 사용까지 전환율</div>
+            </div>
+          </div>
+          <div class="funnel-steps" id="funnel-steps"></div>
+        </div>
+
+        <!-- Traffic chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">월별 방문자 / 가입자 추이</div>
+              <div class="chart-subtitle">최근 6개월</div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap tall" style="height:220px;">
+            <canvas id="monthly-traffic-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== SETTINGS PAGE ====== -->
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+
+          <!-- API Keys -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <i data-lucide="key"></i> API 키 관리
+            </div>
+            <div class="settings-body">
+              <div class="settings-field">
+                <label>KAKAO REST API KEY</label>
+                <input type="text" id="set-kakao-key" placeholder="발급받은 REST API 키 입력">
+                <div class="key-status" id="kakao-key-status"></div>
+                <div class="field-hint">Kakao Developers → 내 애플리케이션 → 앱 키 → REST API 키</div>
+              </div>
+              <div class="settings-field">
+                <label>GOOGLE PLACES API KEY</label>
+                <input type="text" id="set-google-key" placeholder="발급받은 API 키 입력">
+                <div class="key-status" id="google-key-status"></div>
+                <div class="field-hint">Google Cloud Console → API 및 서비스 → Places API (New) 활성화</div>
+              </div>
+              <div class="settings-field">
+                <label>GOOGLE CLIENT ID (OAuth)</label>
+                <input type="text" id="set-google-client" placeholder="xxx.apps.googleusercontent.com">
+                <div class="field-hint">Google Cloud Console → OAuth 2.0 클라이언트 ID</div>
+              </div>
+              <button class="settings-save-btn" onclick="saveApiKeys()">API 키 저장</button>
+            </div>
+          </div>
+
+          <!-- Admin Account -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <i data-lucide="shield"></i> 관리자 계정
+            </div>
+            <div class="settings-body">
+              <div class="settings-field">
+                <label>관리자 이메일</label>
+                <input type="email" id="set-admin-email" placeholder="admin@vibespace.kr">
+              </div>
+              <div class="settings-field">
+                <label>현재 비밀번호</label>
+                <input type="password" id="set-pw-current" placeholder="현재 비밀번호">
+              </div>
+              <div class="settings-field">
+                <label>새 비밀번호</label>
+                <input type="password" id="set-pw-new" placeholder="새 비밀번호 (8자 이상)">
+              </div>
+              <div class="settings-field">
+                <label>새 비밀번호 확인</label>
+                <input type="password" id="set-pw-confirm" placeholder="새 비밀번호 재입력">
+              </div>
+              <button class="settings-save-btn" onclick="saveAdminAccount()">계정 정보 변경</button>
+            </div>
+          </div>
+
+          <!-- App Config -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <i data-lucide="sliders-horizontal"></i> 앱 설정
+            </div>
+            <div class="settings-body">
+              <div class="settings-field">
+                <label>앱 이름</label>
+                <input type="text" id="set-app-name" value="Vibespace">
+              </div>
+              <div class="settings-field">
+                <label>서비스 URL</label>
+                <input type="text" id="set-app-url" placeholder="https://yunoyang.github.io">
+              </div>
+              <div class="settings-field">
+                <label>공정 타입 기본값</label>
+                <select id="set-default-type">
+                  <option>아파트</option>
+                  <option>단독주택</option>
+                  <option>상업시설</option>
+                </select>
+              </div>
+              <button class="settings-save-btn" onclick="saveAppConfig()">앱 설정 저장</button>
+            </div>
+          </div>
+
+          <!-- Data Management -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <i data-lucide="database"></i> 데이터 관리
+            </div>
+            <div class="settings-body">
+              <div style="background:#f8fafc;border-radius:10px;padding:14px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Analytics 데이터</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">방문, 세션, 이벤트 등 수집된 데이터를 JSON으로 내보냅니다</div>
+                <button class="topbar-btn primary" style="font-size:13px;" onclick="exportData()">
+                  <i data-lucide="download" style="width:13px;height:13px;"></i> Analytics JSON 내보내기
+                </button>
+              </div>
+              <div style="background:#f8fafc;border-radius:10px;padding:14px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:10px;">앱 데이터 (vb_state)</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">전체 프로젝트 데이터를 백업합니다</div>
+                <button class="topbar-btn outline" style="font-size:13px;" onclick="exportAppData()">
+                  앱 데이터 백업
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger Zone -->
+          <div class="settings-card settings-danger settings-full">
+            <div class="settings-section-title">
+              <i data-lucide="triangle-alert"></i> 위험 구역
+            </div>
+            <div class="settings-body" style="flex-direction:row;gap:20px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <div style="font-size:13.5px;font-weight:600;margin-bottom:4px;">Analytics 데이터 초기화</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">방문자, 이벤트 기록을 모두 삭제합니다</div>
+                <button class="danger-btn" onclick="clearAnalytics()">Analytics 초기화</button>
+              </div>
+              <div style="flex:1;min-width:200px;">
+                <div style="font-size:13.5px;font-weight:600;margin-bottom:4px;">어드민 로그아웃</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">현재 세션에서 로그아웃합니다</div>
+                <button class="danger-btn" onclick="adminLogout()">로그아웃</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /admin-app -->
+
+<div id="toast"></div>
+
+<script>
+// ===== CONSTANTS =====
+const ADMIN_CREDS_KEY = 'vb_admin_creds';
+const VB_TRACK_KEY = 'vb_analytics';
+const VB_STATE_KEY = 'vb_state';
+const VB_SETTINGS_KEY = 'vb_admin_settings';
+
+const DEFAULT_EMAIL = 'admin@vibespace.kr';
+const DEFAULT_PW = 'vibespace2024';
+
+// Chart instances
+let visitorChartInst = null;
+let userTypeChartInst = null;
+let monthlyJoinChartInst = null;
+let durationChartInst = null;
+let heatmapChartInst = null;
+let deviceChartInst = null;
+let monthlyTrafficChartInst = null;
+
+// Pagination
+let usersPage = 1;
+const USERS_PER_PAGE = 10;
+let filteredUsers = [];
+
+// ===== AUTH =====
+function adminLogin() {
+  const email = document.getElementById('lg-email').value.trim();
+  const pw = document.getElementById('lg-pw').value;
+  const errEl = document.getElementById('lg-error');
+
+  let creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
+  const storedEmail = creds?.email || DEFAULT_EMAIL;
+  const storedPw = creds?.pw || DEFAULT_PW;
+
+  if (email === storedEmail && pw === storedPw) {
+    sessionStorage.setItem('vb_admin_auth', '1');
+    document.getElementById('login-gate').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    errEl.style.display = 'none';
+    document.getElementById('admin-name').textContent = email.split('@')[0];
+    document.getElementById('admin-av').textContent = email[0].toUpperCase();
+    initAdmin();
+  } else {
+    errEl.style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('vb_admin_auth');
+  document.getElementById('login-gate').style.display = 'flex';
+  document.getElementById('admin-app').style.display = 'none';
+}
+
+// ===== INIT =====
+function initAdmin() {
+  // Today label
+  const now = new Date();
+  document.getElementById('today-label').textContent =
+    `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+
+  // Load settings
+  loadSettings();
+  // Render all sections
+  renderKPIs();
+  renderDashboardCharts('7');
+  renderRecentLists();
+  renderProcessTop();
+  renderDurationChart();
+  renderUsersTable();
+  renderAnalytics();
+
+  setTimeout(() => { lucide.createIcons(); }, 100);
+}
+
+// ===== DATA HELPERS =====
+function getAnalytics() {
+  return JSON.parse(localStorage.getItem(VB_TRACK_KEY) || '{"visits":[],"events":[],"users":[]}');
+}
+function getAppState() {
+  return JSON.parse(localStorage.getItem(VB_STATE_KEY) || '{"projects":[],"currentId":null}');
+}
+function getSettings() {
+  return JSON.parse(localStorage.getItem(VB_SETTINGS_KEY) || '{}');
+}
+
+function getDaysAgo(n) {
+  const d = new Date(); d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+function timeAgo(iso) {
+  if (!iso) return '-';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff/60000);
+  if (m < 1) return '방금';
+  if (m < 60) return `${m}분 전`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h}시간 전`;
+  const day = Math.floor(h/24);
+  if (day < 30) return `${day}일 전`;
+  return fmtDate(iso);
+}
+function fmtDur(sec) {
+  if (!sec) return '0초';
+  if (sec < 60) return `${sec}초`;
+  return `${Math.floor(sec/60)}분 ${sec%60}초`;
+}
+
+// ===== KPIs =====
+function renderKPIs() {
+  const store = getAnalytics();
+  const appState = getAppState();
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = getDaysAgo(1);
+  const d7ago = getDaysAgo(7);
+  const d30ago = getDaysAgo(30);
+
+  // 총 가입자
+  const totalUsers = (store.users || []).length;
+  const newToday = (store.users || []).filter(u => u.joinedAt?.slice(0,10) === today).length;
+
+  // 오늘 방문자 (UV)
+  const todayVisits = (store.visits || []).filter(v => v.date === today).length;
+  const yestVisits = (store.visits || []).filter(v => v.date === yesterday).length;
+  const visitChange = yestVisits > 0 ? Math.round((todayVisits - yestVisits) / yestVisits * 100) : 0;
+
+  // 평균 체류시간
+  const visitsWithDur = (store.visits || []).filter(v => v.duration > 0);
+  const avgDur = visitsWithDur.length > 0
+    ? Math.round(visitsWithDur.reduce((a,v) => a + v.duration, 0) / visitsWithDur.length)
+    : 0;
+  const week7Visits = (store.visits || []).filter(v => v.date >= d7ago && v.duration > 0);
+  const avgDur7 = week7Visits.length > 0
+    ? Math.round(week7Visits.reduce((a,v) => a + v.duration, 0) / week7Visits.length) : 0;
+
+  // 총 프로젝트
+  const totalProjects = (appState.projects || []).length;
+  const activeProjects = (appState.projects || []).filter(p => {
+    const procs = p.processes || [];
+    return procs.some(pr => pr.scheduleEnd && new Date(pr.scheduleEnd) >= new Date());
+  }).length;
+
+  // MAU
+  const mau = new Set((store.visits || []).filter(v => v.date >= d30ago).map(v => v.sessionId)).size;
+
+  const kpis = [
+    {
+      label: '총 가입자', value: fmt(totalUsers), sub: `오늘 신규 +${newToday}명`,
+      badge: newToday > 0 ? { type:'up', text:`+${newToday}` } : { type:'neutral', text:'변동없음' },
+      icon: 'users', color: ''
+    },
+    {
+      label: '오늘 방문자 (UV)', value: fmt(todayVisits),
+      sub: `어제: ${fmt(yestVisits)}명`,
+      badge: visitChange > 0 ? { type:'up', text:`+${visitChange}%` } : visitChange < 0 ? { type:'down', text:`${visitChange}%` } : { type:'neutral', text:'0%' },
+      icon: 'eye', color: 'green'
+    },
+    {
+      label: '평균 체류시간', value: fmtDur(avgDur),
+      sub: `7일 평균: ${fmtDur(avgDur7)}`,
+      badge: { type:'neutral', text:'전체' },
+      icon: 'clock', color: 'orange'
+    },
+    {
+      label: '활성 프로젝트 / MAU', value: `${fmt(activeProjects)}건`,
+      sub: `월 활성 사용자 ${fmt(mau)}명`,
+      badge: { type:'neutral', text:`전체 ${totalProjects}건` },
+      icon: 'layout-grid', color: 'purple'
+    },
+  ];
+
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.color}">
+      <div class="kpi-header">
+        <div class="kpi-icon"><i data-lucide="${k.icon}"></i></div>
+        <div class="kpi-badge ${k.badge.type}">
+          ${k.badge.type==='up'?'<i data-lucide="trending-up"></i>':k.badge.type==='down'?'<i data-lucide="trending-down"></i>':''}
+          ${k.badge.text}
+        </div>
+      </div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function fmt(n) { return n.toLocaleString('ko-KR'); }
+
+// ===== VISITOR CHART =====
+function renderDashboardCharts(days) {
+  const store = getAnalytics();
+  const n = parseInt(days);
+  const labels = [], uvData = [], pvData = [];
+
+  for (let i = n - 1; i >= 0; i--) {
+    const d = getDaysAgo(i);
+    const dayVisits = (store.visits || []).filter(v => v.date === d);
+    labels.push(d.slice(5)); // MM-DD
+    uvData.push(dayVisits.length);
+    pvData.push(dayVisits.length * (1 + Math.random() * 1.5 | 0)); // estimate PV
+  }
+
+  const ctx = document.getElementById('visitor-chart').getContext('2d');
+  if (visitorChartInst) visitorChartInst.destroy();
+  visitorChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '방문자 (UV)',
+          data: uvData,
+          borderColor: '#3176ff',
+          backgroundColor: 'rgba(49,118,255,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: n <= 7 ? 4 : 2,
+          pointBackgroundColor: '#3176ff',
+        },
+        {
+          label: '페이지뷰 (PV)',
+          data: pvData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.05)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: n <= 7 ? 4 : 2,
+          pointBackgroundColor: '#10b981',
+          borderDash: [4,2],
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top', labels: { font: { family: 'Pretendard', size: 12 }, boxWidth: 10, padding: 16 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Pretendard', size: 11 }, color: '#9ca3af' } },
+        y: { grid: { color: '#f0f2f7' }, beginAtZero: true, ticks: { font: { family: 'Pretendard', size: 11 }, color: '#9ca3af', stepSize: 1 } }
+      }
+    }
+  });
+
+  renderUserTypeChart();
+  renderMonthlyJoinChart();
+}
+
+function switchVisitorChart(days, btn) {
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboardCharts(days);
+}
+
+function renderUserTypeChart() {
+  const store = getAnalytics();
+  const d30 = getDaysAgo(30);
+  const recentVisits = (store.visits || []).filter(v => v.date >= d30);
+  const newVisits = recentVisits.filter(v => v.isNew).length;
+  const retVisits = recentVisits.length - newVisits;
+
+  const colors = ['#3176ff', '#10b981', '#f59e0b'];
+  const legendEl = document.getElementById('user-type-legend');
+  const labels = ['신규 방문', '재방문'];
+  const vals = [newVisits, retVisits];
+
+  legendEl.innerHTML = labels.map((l, i) => `
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${colors[i]};"></div>
+      <span class="donut-legend-label">${l}</span>
+      <span class="donut-legend-val">${vals[i]}</span>
+    </div>
+  `).join('');
+
+  const ctx = document.getElementById('user-type-chart').getContext('2d');
+  if (userTypeChartInst) userTypeChartInst.destroy();
+  userTypeChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: vals.map(v => v||0), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}명` } } },
+      cutout: '68%'
+    }
+  });
+}
+
+function renderMonthlyJoinChart() {
+  const store = getAnalytics();
+  const labels = [], data = [];
+  const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    labels.push(i % 7 === 0 ? ds.slice(5) : '');
+    data.push((store.users || []).filter(u => u.joinedAt?.slice(0,10) === ds).length);
+  }
+  const ctx = document.getElementById('monthly-join-chart').getContext('2d');
+  if (monthlyJoinChartInst) monthlyJoinChartInst.destroy();
+  monthlyJoinChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: '#3176ff', borderRadius: 3, barPercentage: 0.6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false, beginAtZero: true } }
+    }
+  });
+}
+
+// ===== PROCESS TOP =====
+function renderProcessTop() {
+  const appState = getAppState();
+  const counts = {};
+  (appState.projects || []).forEach(proj => {
+    (proj.processes || []).forEach(p => {
+      counts[p.type] = (counts[p.type] || 0) + 1;
+    });
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const max = sorted[0]?.[1] || 1;
+  const colors = ['#3176ff','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+  const el = document.getElementById('process-top-list');
+  if (!sorted.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:24px 0;"><i data-lucide="layers"></i><p>공정 데이터 없음</p></div>';
+    return;
+  }
+  el.innerHTML = sorted.map(([name, cnt], i) => `
+    <div class="mini-table-item">
+      <span class="mini-rank ${i<3?'top':''}">${i+1}</span>
+      <div class="mini-info">
+        <div class="mname">${name}</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" style="width:${Math.round(cnt/max*100)}%;background:${colors[i]};"></div></div>
+      </div>
+      <span class="mini-val">${cnt}건</span>
+    </div>
+  `).join('');
+}
+
+// ===== DURATION CHART =====
+function renderDurationChart() {
+  const store = getAnalytics();
+  const visits = (store.visits || []).filter(v => v.duration > 0);
+  const buckets = [0, 0, 0, 0];
+  visits.forEach(v => {
+    if (v.duration < 60) buckets[0]++;
+    else if (v.duration < 180) buckets[1]++;
+    else if (v.duration < 600) buckets[2]++;
+    else buckets[3]++;
+  });
+  const ctx = document.getElementById('duration-chart').getContext('2d');
+  if (durationChartInst) durationChartInst.destroy();
+  durationChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['1분 미만', '1-3분', '3-10분', '10분+'],
+      datasets: [{
+        data: buckets,
+        backgroundColor: ['#fecaca','#fde68a','#6ee7b7','#93c5fd'],
+        borderRadius: 6, barPercentage: 0.6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Pretendard', size: 11 }, color: '#9ca3af' } },
+        y: { grid: { color: '#f0f2f7' }, beginAtZero: true, ticks: { font: { family: 'Pretendard', size: 11 }, color: '#9ca3af', stepSize: 1 } }
+      }
+    }
+  });
+}
+
+// ===== RECENT LISTS =====
+function renderRecentLists() {
+  const store = getAnalytics();
+  const appState = getAppState();
+
+  // Recent users
+  const users = [...(store.users || [])].sort((a,b) => new Date(b.joinedAt) - new Date(a.joinedAt)).slice(0, 5);
+  const ulEl = document.getElementById('recent-users-list');
+  ulEl.innerHTML = users.length ? users.map(u => `
+    <div class="realtime-item">
+      <div class="realtime-dot" style="background:#3176ff;animation:none;"></div>
+      <span class="realtime-name">${u.name}</span>
+      <span class="realtime-time">${timeAgo(u.joinedAt)}</span>
+    </div>
+  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="user-plus" style="width:24px;height:24px;"></i><p style="font-size:12px;">가입자 없음</p></div>`;
+
+  // Recent sessions
+  const sessions = [...(store.visits || [])].sort((a,b) => b.ts - a.ts).slice(0,5);
+  const slEl = document.getElementById('recent-sessions-list');
+  slEl.innerHTML = sessions.length ? sessions.map(v => `
+    <div class="realtime-item">
+      <div class="realtime-dot"></div>
+      <span class="realtime-name">${v.sessionId.slice(0,12)}…</span>
+      <span class="realtime-time">${timeAgo(new Date(v.ts).toISOString())}</span>
+    </div>
+  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="activity" style="width:24px;height:24px;"></i><p style="font-size:12px;">방문 기록 없음</p></div>`;
+
+  // Recent projects
+  const projects = [...(appState.projects || [])].sort((a,b) => (b.createdAt||0) - (a.createdAt||0)).slice(0,5);
+  const plEl = document.getElementById('recent-projects-list');
+  plEl.innerHTML = projects.length ? projects.map(p => `
+    <div class="realtime-item">
+      <div class="realtime-dot" style="background:#8b5cf6;animation:none;"></div>
+      <span class="realtime-name">${p.name || '(이름없음)'}</span>
+      <span class="realtime-time">${(p.processes||[]).length}개 공정</span>
+    </div>
+  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="folder-open" style="width:24px;height:24px;"></i><p style="font-size:12px;">프로젝트 없음</p></div>`;
+}
+
+// ===== USERS TABLE =====
+function renderUsersTable() {
+  const store = getAnalytics();
+  const appState = getAppState();
+  const users = store.users || [];
+
+  document.getElementById('user-count-label').textContent = `총 ${users.length}명`;
+  filterUsers();
+}
+
+function filterUsers() {
+  const store = getAnalytics();
+  const appState = getAppState();
+  let users = [...(store.users || [])];
+  const q = document.getElementById('user-search').value.toLowerCase();
+  const statusF = document.getElementById('user-status-filter').value;
+  const sortF = document.getElementById('user-sort').value;
+  const d30ago = getDaysAgo(30);
+
+  if (q) users = users.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
+  if (statusF === 'active') users = users.filter(u => u.lastSeen >= d30ago);
+  if (statusF === 'inactive') users = users.filter(u => u.lastSeen < d30ago);
+  if (sortF === 'joinedAt') users.sort((a,b) => new Date(b.joinedAt) - new Date(a.joinedAt));
+  else if (sortF === 'lastSeen') users.sort((a,b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+  else if (sortF === 'sessions') users.sort((a,b) => (b.sessions||0) - (a.sessions||0));
+
+  filteredUsers = users;
+  usersPage = 1;
+  renderUsersPage();
+}
+
+function renderUsersPage() {
+  const appState = getAppState();
+  const start = (usersPage - 1) * USERS_PER_PAGE;
+  const pageUsers = filteredUsers.slice(start, start + USERS_PER_PAGE);
+  const d30ago = getDaysAgo(30);
+
+  const tbody = document.getElementById('users-tbody');
+  if (!pageUsers.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i data-lucide="users"></i><p>사용자가 없습니다</p></div></td></tr>`;
+    setTimeout(lucide.createIcons, 30);
+    return;
+  }
+
+  tbody.innerHTML = pageUsers.map(u => {
+    const isActive = (u.lastSeen || '') >= d30ago;
+    const projCount = (appState.projects || []).filter(p =>
+      (p.form?.email === u.email) || false
+    ).length;
+    const initials = (u.name || '?')[0].toUpperCase();
+    return `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="u-avatar">${u.picture ? `<img src="${u.picture}" alt="">` : initials}</div>
+            <div>
+              <div class="td-name">${u.name || '-'}</div>
+              <div class="td-email">${u.email || '-'}</div>
+            </div>
+          </div>
+        </td>
+        <td>${fmtDate(u.joinedAt)}</td>
+        <td>${timeAgo(u.lastSeen)}</td>
+        <td class="td-num">${projCount}</td>
+        <td class="td-num">${u.sessions || 1}</td>
+        <td><span class="status-dot ${isActive ? 'active' : 'inactive'}">${isActive ? '활성' : '비활성'}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  // Pagination
+  const total = filteredUsers.length;
+  const pages = Math.ceil(total / USERS_PER_PAGE);
+  document.getElementById('user-page-info').textContent = `${total}명 중 ${start+1}-${Math.min(start+USERS_PER_PAGE,total)}명`;
+  const pgEl = document.getElementById('user-pagination');
+  pgEl.innerHTML = '';
+  if (pages > 1) {
+    pgEl.innerHTML += `<button class="page-btn" onclick="goUsersPage(${usersPage-1})" ${usersPage<=1?'disabled':''}>‹</button>`;
+    for (let i = 1; i <= Math.min(pages, 7); i++) {
+      pgEl.innerHTML += `<button class="page-btn ${i===usersPage?'active':''}" onclick="goUsersPage(${i})">${i}</button>`;
+    }
+    pgEl.innerHTML += `<button class="page-btn" onclick="goUsersPage(${usersPage+1})" ${usersPage>=pages?'disabled':''}>›</button>`;
+  }
+  setTimeout(lucide.createIcons, 30);
+}
+
+function goUsersPage(p) {
+  const pages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  if (p < 1 || p > pages) return;
+  usersPage = p;
+  renderUsersPage();
+}
+
+// ===== ANALYTICS PAGE =====
+function renderAnalytics() {
+  renderHeatmap();
+  renderFeatureList();
+  renderDeviceChart();
+  renderFunnel();
+  renderMonthlyTraffic();
+}
+
+function renderHeatmap() {
+  // Simplified: just show a bar chart by hour using available events data
+  const store = getAnalytics();
+  const hourCounts = Array(24).fill(0);
+  (store.visits || []).forEach(v => {
+    const h = new Date(v.ts).getHours();
+    hourCounts[h]++;
+  });
+  const labels = Array.from({length:24}, (_,i) => i % 3 === 0 ? `${i}시` : '');
+  const ctx = document.getElementById('heatmap-chart').getContext('2d');
+  if (heatmapChartInst) heatmapChartInst.destroy();
+  heatmapChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: hourCounts,
+        backgroundColor: hourCounts.map(v => `rgba(49,118,255,${Math.min(0.9, 0.1 + v * 0.2)})`),
+        borderRadius: 4, barPercentage: 0.8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: (ctx) => `${ctx[0].dataIndex}시`, label: c => ` ${c.raw}회 접속` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family:'Pretendard', size:10 }, color:'#9ca3af' } },
+        y: { display: false, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderFeatureList() {
+  const store = getAnalytics();
+  const events = store.events || [];
+  const features = [
+    { name: '공정 추가', key: 'add_process', color: '#3176ff' },
+    { name: '캘린더', key: 'calendar', color: '#10b981' },
+    { name: '업체 검색', key: 'company_search', color: '#f59e0b' },
+    { name: '일정 설정', key: 'schedule', color: '#8b5cf6' },
+    { name: '공유', key: 'share', color: '#ef4444' },
+  ];
+  const total = Math.max(events.length, 1);
+  const el = document.getElementById('feature-list');
+  el.innerHTML = features.map(f => {
+    const cnt = events.filter(e => e.action?.includes(f.key) || e.category?.includes(f.key)).length;
+    const pct = Math.round(cnt / total * 100);
+    return `
+      <div class="feature-row">
+        <span class="feature-name">${f.name}</span>
+        <div class="feature-bar-track">
+          <div class="feature-bar-fill" style="width:${pct||2}%;background:${f.color};"></div>
+        </div>
+        <span class="feature-pct">${pct}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDeviceChart() {
+  const ua = navigator.userAgent;
+  // Simulated distribution — in production, track this during visits
+  const labels = ['모바일', '데스크톱', '태블릿'];
+  const vals = [60, 35, 5];
+  const colors = ['#3176ff', '#10b981', '#f59e0b'];
+  const legendEl = document.getElementById('device-legend');
+  legendEl.innerHTML = labels.map((l,i) => `
+    <div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${colors[i]};"></div>
+      <span class="donut-legend-label">${l}</span>
+      <span class="donut-legend-val">${vals[i]}%</span>
+    </div>
+  `).join('');
+  const ctx = document.getElementById('device-chart').getContext('2d');
+  if (deviceChartInst) deviceChartInst.destroy();
+  deviceChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: false, plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+}
+
+function renderFunnel() {
+  const store = getAnalytics();
+  const appState = getAppState();
+  const totalVisits = Math.max((store.visits||[]).length, 1);
+  const totalUsers = Math.max((store.users||[]).length, 0);
+  const totalProjects = (appState.projects||[]).length;
+  const totalProcesses = (appState.projects||[]).reduce((a,p) => a + (p.processes||[]).length, 0);
+  const evts = store.events || [];
+  const searchEvts = evts.filter(e => e.action === 'company_search').length;
+
+  const steps = [
+    { label: '방문', val: totalVisits },
+    { label: '로그인', val: totalUsers },
+    { label: '프로젝트 생성', val: totalProjects },
+    { label: '공정 추가', val: totalProcesses },
+    { label: '업체 검색', val: searchEvts },
+  ];
+  const maxVal = steps[0].val || 1;
+
+  document.getElementById('funnel-steps').innerHTML = steps.map((s, i) => {
+    const pct = Math.round(s.val / maxVal * 100);
+    const height = Math.max(pct, 4);
+    return `
+      ${i > 0 ? '<div class="funnel-arrow">›</div>' : ''}
+      <div class="funnel-step">
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="height:${height}%;opacity:${0.5+pct/200};"></div>
+        </div>
+        <div class="funnel-step-label">${s.label}</div>
+        <div class="funnel-step-val">${fmt(s.val)}</div>
+        <div class="funnel-step-pct">${i===0?'100%':pct+'%'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMonthlyTraffic() {
+  const store = getAnalytics();
+  const months = [], visits = [], users = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth() - i);
+    const ym = d.toISOString().slice(0,7);
+    months.push(ym.slice(2));
+    visits.push((store.visits||[]).filter(v => v.date?.startsWith(ym)).length);
+    users.push((store.users||[]).filter(u => u.joinedAt?.startsWith(ym)).length);
+  }
+  const ctx = document.getElementById('monthly-traffic-chart').getContext('2d');
+  if (monthlyTrafficChartInst) monthlyTrafficChartInst.destroy();
+  monthlyTrafficChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: '방문자', data: visits, backgroundColor: 'rgba(49,118,255,0.7)', borderRadius: 6, barPercentage: 0.5 },
+        { label: '신규가입', data: users, backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 6, barPercentage: 0.5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'top', labels: { font:{family:'Pretendard',size:12}, boxWidth:10 } } },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{family:'Pretendard',size:12},color:'#9ca3af'} },
+        y: { grid:{color:'#f0f2f7'}, beginAtZero:true, ticks:{font:{family:'Pretendard',size:11},color:'#9ca3af',stepSize:1} }
+      }
+    }
+  });
+}
+
+// ===== SETTINGS =====
+function loadSettings() {
+  const store = getAnalytics();
+  const settings = getSettings();
+  // API keys (read from vb_admin_settings)
+  document.getElementById('set-kakao-key').value = settings.kakaoKey || '';
+  document.getElementById('set-google-key').value = settings.googleKey || '';
+  document.getElementById('set-google-client').value = settings.googleClient || '';
+  updateKeyStatus('kakao-key-status', settings.kakaoKey);
+  updateKeyStatus('google-key-status', settings.googleKey);
+
+  const creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
+  document.getElementById('set-admin-email').value = creds?.email || DEFAULT_EMAIL;
+}
+
+function updateKeyStatus(elId, val) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (val && val.length > 10) {
+    el.className = 'key-status ok';
+    el.innerHTML = '<i data-lucide="check-circle" style="width:12px;height:12px;"></i> 설정됨';
+  } else {
+    el.className = 'key-status missing';
+    el.innerHTML = '<i data-lucide="alert-circle" style="width:12px;height:12px;"></i> 미설정';
+  }
+  setTimeout(lucide.createIcons, 30);
+}
+
+function saveApiKeys() {
+  const settings = getSettings();
+  settings.kakaoKey = document.getElementById('set-kakao-key').value.trim();
+  settings.googleKey = document.getElementById('set-google-key').value.trim();
+  settings.googleClient = document.getElementById('set-google-client').value.trim();
+  localStorage.setItem(VB_SETTINGS_KEY, JSON.stringify(settings));
+  updateKeyStatus('kakao-key-status', settings.kakaoKey);
+  updateKeyStatus('google-key-status', settings.googleKey);
+  showToast('API 키가 저장되었습니다');
+}
+
+function saveAdminAccount() {
+  const email = document.getElementById('set-admin-email').value.trim();
+  const curPw = document.getElementById('set-pw-current').value;
+  const newPw = document.getElementById('set-pw-new').value;
+  const confirmPw = document.getElementById('set-pw-confirm').value;
+  const creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
+  const storedPw = creds?.pw || DEFAULT_PW;
+  if (newPw && curPw !== storedPw) { showToast('현재 비밀번호가 올바르지 않습니다'); return; }
+  if (newPw && newPw !== confirmPw) { showToast('새 비밀번호가 일치하지 않습니다'); return; }
+  if (newPw && newPw.length < 8) { showToast('비밀번호는 8자 이상이어야 합니다'); return; }
+  localStorage.setItem(ADMIN_CREDS_KEY, JSON.stringify({ email, pw: newPw || storedPw }));
+  document.getElementById('set-pw-current').value = '';
+  document.getElementById('set-pw-new').value = '';
+  document.getElementById('set-pw-confirm').value = '';
+  showToast('계정 정보가 변경되었습니다');
+}
+
+function saveAppConfig() {
+  const settings = getSettings();
+  settings.appName = document.getElementById('set-app-name').value;
+  settings.appUrl = document.getElementById('set-app-url').value;
+  settings.defaultType = document.getElementById('set-default-type').value;
+  localStorage.setItem(VB_SETTINGS_KEY, JSON.stringify(settings));
+  showToast('앱 설정이 저장되었습니다');
+}
+
+function clearAnalytics() {
+  if (!confirm('Analytics 데이터를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  localStorage.removeItem(VB_TRACK_KEY);
+  showToast('Analytics 데이터가 초기화되었습니다');
+  setTimeout(() => location.reload(), 1000);
+}
+
+// ===== EXPORT =====
+function exportData() {
+  const store = getAnalytics();
+  const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vibespace_analytics_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Analytics 데이터를 내보냈습니다');
+}
+
+function exportAppData() {
+  const data = localStorage.getItem(VB_STATE_KEY) || '{}';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vibespace_data_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('앱 데이터를 내보냈습니다');
+}
+
+// ===== REFRESH =====
+function refreshAll() {
+  renderKPIs();
+  renderDashboardCharts('7');
+  renderRecentLists();
+  renderProcessTop();
+  renderDurationChart();
+  renderUsersTable();
+  renderAnalytics();
+  showToast('데이터를 새로고침했습니다');
+  setTimeout(lucide.createIcons, 100);
+}
+
+// ===== NAVIGATION =====
+const pageTitles = {
+  dashboard: ['대시보드', '실시간 서비스 현황'],
+  users: ['사용자 관리', '가입자 및 방문 현황'],
+  companies: ['업체 회원', '업체 파트너 관리 (Phase 2)'],
+  analytics: ['통계 분석', '트래픽 및 행동 분석'],
+  settings: ['시스템 설정', 'API 키 및 앱 설정'],
+};
+
+function showPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  navEl.classList.add('active');
+  const titles = pageTitles[name] || [name, ''];
+  document.getElementById('topbar-title').textContent = titles[0];
+  document.getElementById('topbar-sub').textContent = titles[1];
+  if (name === 'analytics') renderAnalytics();
+  setTimeout(lucide.createIcons, 60);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ===== BOOT =====
+window.addEventListener('load', () => {
+  lucide.createIcons();
+  // Check auth
+  if (sessionStorage.getItem('vb_admin_auth') === '1') {
+    document.getElementById('login-gate').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    initAdmin();
+  }
+  // Enter on password
+  document.getElementById('lg-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('lg-pw').focus();
+  });
+});
+</script>
+</body>
+</html>
