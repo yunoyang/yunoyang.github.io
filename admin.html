@@ -7,6 +7,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 /* ===== ROOT ===== */
 :root {
@@ -564,6 +567,9 @@ tr:hover td { background:#fafbfe; }
         </div>
       </div>
       <div class="topbar-right">
+        <div id="fb-status-badge" style="display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#f3f4f6;color:#6b7280;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#9ca3af;flex-shrink:0;"></span>Firestore 대기 중
+        </div>
         <div class="date-range">
           <i data-lucide="calendar" style="width:14px;height:14px;color:#9ca3af;"></i>
           <span id="today-label"></span>
@@ -1157,15 +1163,153 @@ function adminLogout() {
 }
 
 // ===== INIT =====
+// ===== FIREBASE CONFIG =====
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDq7zt2cyE3dV--wfGjqJYgw8Qt1kJVUdA",
+  authDomain: "vibespace-b2329.firebaseapp.com",
+  projectId: "vibespace-b2329",
+  storageBucket: "vibespace-b2329.firebasestorage.app",
+  messagingSenderId: "293342215882",
+  appId: "1:293342215882:web:36637699126e9de805fe33"
+};
+
+let _adminDb = null;
+let _fbData = { projects: [], invites: [], loaded: false };
+let _unsubs = [];
+
+function initFirestoreAdmin() {
+  try {
+    const app = firebase.initializeApp(FIREBASE_CONFIG, 'admin');
+    _adminDb = firebase.firestore(app);
+  } catch(e) {
+    if (e.code === 'app/duplicate-app') {
+      _adminDb = firebase.firestore(firebase.app('admin'));
+    } else { console.error('Firebase init error', e); return; }
+  }
+
+  setFbStatus('connecting');
+
+  // 실시간 리스너 — vb_projects
+  const unsubProj = _adminDb.collection('vb_projects')
+    .onSnapshot(snap => {
+      _fbData.projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      _fbData.loaded = true;
+      setFbStatus('connected', snap.docs.length);
+      refreshAllWithFirestore();
+    }, err => {
+      console.error('Firestore error', err);
+      setFbStatus('error');
+    });
+
+  // 실시간 리스너 — vb_invites
+  const unsubInv = _adminDb.collection('vb_invites')
+    .onSnapshot(snap => {
+      _fbData.invites = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      refreshAllWithFirestore();
+    }, () => {});
+
+  _unsubs.push(unsubProj, unsubInv);
+}
+
+function setFbStatus(status, count) {
+  const el = document.getElementById('fb-status-badge');
+  if (!el) return;
+  const map = {
+    connecting: { bg:'#fef9c3', color:'#b45309', dot:'#f59e0b', text:'Firestore 연결 중...' },
+    connected:  { bg:'#ecfdf5', color:'#065f46', dot:'#10b981', text:`Firestore 연동됨 · ${count || 0}개 프로젝트` },
+    error:      { bg:'#fef2f2', color:'#991b1b', dot:'#ef4444', text:'Firestore 연결 오류' },
+  };
+  const s = map[status] || map.connecting;
+  el.style.cssText = `display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:${s.bg};color:${s.color};`;
+  el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${s.dot};flex-shrink:0;${status==='connecting'?'animation:pulse-dot 1.5s infinite':''}"></span>${s.text}`;
+}
+
+// Firestore 데이터 → 파생값 계산
+function getFbDerived() {
+  const projects = _fbData.projects;
+  const today = new Date().toISOString().slice(0, 10);
+  const d30ago = new Date(Date.now() - 30*86400000).toISOString().slice(0,10);
+
+  // 고유 사용자 (owner 기준)
+  const ownerMap = {};
+  projects.forEach(doc => {
+    const owner = doc.meta?.owner;
+    if (!owner?.email) return;
+    if (!ownerMap[owner.email]) {
+      ownerMap[owner.email] = {
+        email: owner.email,
+        name: owner.name || owner.email.split('@')[0],
+        projects: [],
+        firstSeen: null,
+        lastSeen: null,
+      };
+    }
+    ownerMap[owner.email].projects.push(doc);
+    const updAt = doc.meta?.updatedAt?.toDate?.()?.toISOString() || '';
+    if (updAt) {
+      if (!ownerMap[owner.email].firstSeen || updAt < ownerMap[owner.email].firstSeen)
+        ownerMap[owner.email].firstSeen = updAt;
+      if (!ownerMap[owner.email].lastSeen || updAt > ownerMap[owner.email].lastSeen)
+        ownerMap[owner.email].lastSeen = updAt;
+    }
+    // collaborators도 사용자로 추가
+    (doc.meta?.collaborators || []).forEach(c => {
+      if (!c.email || ownerMap[c.email]) return;
+      ownerMap[c.email] = {
+        email: c.email, name: c.name || c.email.split('@')[0],
+        projects: [], firstSeen: c.joinedAt || null, lastSeen: c.joinedAt || null, isCollab: true,
+      };
+    });
+  });
+  const users = Object.values(ownerMap);
+
+  // 활성 프로젝트 (미래 일정 있는 것)
+  const activeProjects = projects.filter(doc => {
+    const procs = doc.projectData?.processes || [];
+    return procs.some(p => p.scheduleEnd && p.scheduleEnd >= today);
+  });
+
+  // 공동작업 프로젝트
+  const collabProjects = projects.filter(doc =>
+    (doc.meta?.collaborators || []).length > 0
+  );
+
+  // 공정 타입 통계
+  const procTypeCount = {};
+  projects.forEach(doc => {
+    (doc.projectData?.processes || []).forEach(p => {
+      const t = p.type || p.name;
+      procTypeCount[t] = (procTypeCount[t] || 0) + 1;
+    });
+  });
+
+  // 오늘·이번달 신규 프로젝트
+  const todayNew = projects.filter(doc => {
+    const t = doc.meta?.updatedAt?.toDate?.()?.toISOString() || '';
+    return t.slice(0,10) === today;
+  }).length;
+
+  // 초대 통계
+  const invitesSent = _fbData.invites.length;
+  const invitesUsed = _fbData.invites.filter(i => i.used).length;
+
+  return { users, projects, activeProjects, collabProjects, procTypeCount, todayNew, invitesSent, invitesUsed };
+}
+
+function refreshAllWithFirestore() {
+  renderKPIs();
+  renderRecentLists();
+  renderUsersTable();
+  renderProcessTop();
+  setTimeout(lucide.createIcons, 100);
+}
+
 function initAdmin() {
-  // Today label
   const now = new Date();
   document.getElementById('today-label').textContent =
     `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
 
-  // Load settings
   loadSettings();
-  // Render all sections
   renderKPIs();
   renderDashboardCharts('7');
   renderRecentLists();
@@ -1173,6 +1317,7 @@ function initAdmin() {
   renderDurationChart();
   renderUsersTable();
   renderAnalytics();
+  initFirestoreAdmin();
 
   setTimeout(() => { lucide.createIcons(); }, 100);
 }
@@ -1218,63 +1363,71 @@ function fmtDur(sec) {
 // ===== KPIs =====
 function renderKPIs() {
   const store = getAnalytics();
-  const appState = getAppState();
   const today = new Date().toISOString().slice(0,10);
   const yesterday = getDaysAgo(1);
   const d7ago = getDaysAgo(7);
   const d30ago = getDaysAgo(30);
 
-  // 총 가입자
-  const totalUsers = (store.users || []).length;
-  const newToday = (store.users || []).filter(u => u.joinedAt?.slice(0,10) === today).length;
-
-  // 오늘 방문자 (UV)
+  // GA4 기반 방문자 데이터 (localStorage)
   const todayVisits = (store.visits || []).filter(v => v.date === today).length;
-  const yestVisits = (store.visits || []).filter(v => v.date === yesterday).length;
+  const yestVisits  = (store.visits || []).filter(v => v.date === yesterday).length;
   const visitChange = yestVisits > 0 ? Math.round((todayVisits - yestVisits) / yestVisits * 100) : 0;
-
-  // 평균 체류시간
   const visitsWithDur = (store.visits || []).filter(v => v.duration > 0);
   const avgDur = visitsWithDur.length > 0
-    ? Math.round(visitsWithDur.reduce((a,v) => a + v.duration, 0) / visitsWithDur.length)
-    : 0;
-  const week7Visits = (store.visits || []).filter(v => v.date >= d7ago && v.duration > 0);
-  const avgDur7 = week7Visits.length > 0
-    ? Math.round(week7Visits.reduce((a,v) => a + v.duration, 0) / week7Visits.length) : 0;
+    ? Math.round(visitsWithDur.reduce((a,v) => a+v.duration,0) / visitsWithDur.length) : 0;
+  const w7 = (store.visits||[]).filter(v=>v.date>=d7ago&&v.duration>0);
+  const avgDur7 = w7.length>0 ? Math.round(w7.reduce((a,v)=>a+v.duration,0)/w7.length) : 0;
+  const mau = new Set((store.visits||[]).filter(v=>v.date>=d30ago).map(v=>v.sessionId)).size;
 
-  // 총 프로젝트
-  const totalProjects = (appState.projects || []).length;
-  const activeProjects = (appState.projects || []).filter(p => {
-    const procs = p.processes || [];
-    return procs.some(pr => pr.scheduleEnd && new Date(pr.scheduleEnd) >= new Date());
-  }).length;
-
-  // MAU
-  const mau = new Set((store.visits || []).filter(v => v.date >= d30ago).map(v => v.sessionId)).size;
+  // Firestore 실제 데이터 우선 사용
+  let totalUsers, newToday, totalProjects, activeCount, collabCount, invitesSent;
+  if (_fbData.loaded) {
+    const d = getFbDerived();
+    totalUsers    = d.users.length;
+    newToday      = d.todayNew;
+    totalProjects = d.projects.length;
+    activeCount   = d.activeProjects.length;
+    collabCount   = d.collabProjects.length;
+    invitesSent   = d.invitesSent;
+  } else {
+    // fallback: localStorage
+    const appState = getAppState();
+    totalUsers    = (store.users||[]).length;
+    newToday      = (store.users||[]).filter(u=>u.joinedAt?.slice(0,10)===today).length;
+    totalProjects = (appState.projects||[]).length;
+    activeCount   = (appState.projects||[]).filter(p=>(p.processes||[]).some(pr=>pr.scheduleEnd&&pr.scheduleEnd>=today)).length;
+    collabCount   = 0;
+    invitesSent   = 0;
+  }
 
   const kpis = [
     {
-      label: '총 가입자', value: fmt(totalUsers), sub: `오늘 신규 +${newToday}명`,
-      badge: newToday > 0 ? { type:'up', text:`+${newToday}` } : { type:'neutral', text:'변동없음' },
-      icon: 'users', color: ''
+      label: '총 가입자 (Firebase)',
+      value: _fbData.loaded ? fmt(totalUsers) : '…',
+      sub: _fbData.loaded ? `공동작업 프로젝트 ${collabCount}건 · 초대 ${invitesSent}건` : 'Firestore 로딩 중',
+      badge: newToday>0 ? {type:'up',text:`오늘 +${newToday}`} : {type:'neutral',text:'실시간'},
+      icon:'users', color:''
     },
     {
-      label: '오늘 방문자 (UV)', value: fmt(todayVisits),
-      sub: `어제: ${fmt(yestVisits)}명`,
-      badge: visitChange > 0 ? { type:'up', text:`+${visitChange}%` } : visitChange < 0 ? { type:'down', text:`${visitChange}%` } : { type:'neutral', text:'0%' },
-      icon: 'eye', color: 'green'
+      label: '오늘 방문자 (GA4)',
+      value: fmt(todayVisits),
+      sub: `어제 ${fmt(yestVisits)}명 · MAU ${fmt(mau)}명`,
+      badge: visitChange>0?{type:'up',text:`+${visitChange}%`}:visitChange<0?{type:'down',text:`${visitChange}%`}:{type:'neutral',text:'0%'},
+      icon:'eye', color:'green'
     },
     {
-      label: '평균 체류시간', value: fmtDur(avgDur),
+      label: '평균 체류시간',
+      value: fmtDur(avgDur),
       sub: `7일 평균: ${fmtDur(avgDur7)}`,
-      badge: { type:'neutral', text:'전체' },
-      icon: 'clock', color: 'orange'
+      badge:{type:'neutral',text:'전체'},
+      icon:'clock', color:'orange'
     },
     {
-      label: '활성 프로젝트 / MAU', value: `${fmt(activeProjects)}건`,
-      sub: `월 활성 사용자 ${fmt(mau)}명`,
-      badge: { type:'neutral', text:`전체 ${totalProjects}건` },
-      icon: 'layout-grid', color: 'purple'
+      label: '전체 프로젝트 (Firebase)',
+      value: _fbData.loaded ? fmt(totalProjects) : '…',
+      sub: _fbData.loaded ? `활성(일정있음) ${activeCount}건` : 'Firestore 로딩 중',
+      badge:{type:'neutral', text:_fbData.loaded?'실시간':'로딩중'},
+      icon:'layout-grid', color:'purple'
     },
   ];
 
@@ -1417,31 +1570,32 @@ function renderMonthlyJoinChart() {
 
 // ===== PROCESS TOP =====
 function renderProcessTop() {
-  const appState = getAppState();
-  const counts = {};
-  (appState.projects || []).forEach(proj => {
-    (proj.processes || []).forEach(p => {
-      counts[p.type] = (counts[p.type] || 0) + 1;
-    });
-  });
-  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  let counts = {};
+  if (_fbData.loaded) {
+    counts = getFbDerived().procTypeCount;
+  } else {
+    (getAppState().projects||[]).forEach(proj =>
+      (proj.processes||[]).forEach(p => { counts[p.type]=(counts[p.type]||0)+1; })
+    );
+  }
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const max = sorted[0]?.[1] || 1;
-  const colors = ['#3176ff','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+  const colors = ['#3176ff','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16'];
   const el = document.getElementById('process-top-list');
   if (!sorted.length) {
     el.innerHTML = '<div class="empty-state" style="padding:24px 0;"><i data-lucide="layers"></i><p>공정 데이터 없음</p></div>';
     return;
   }
-  el.innerHTML = sorted.map(([name, cnt], i) => `
+  const src = _fbData.loaded ? ' <span style="font-size:10px;color:#10b981;">● Firebase</span>' : '';
+  el.innerHTML = sorted.map(([name,cnt],i) => `
     <div class="mini-table-item">
       <span class="mini-rank ${i<3?'top':''}">${i+1}</span>
       <div class="mini-info">
-        <div class="mname">${name}</div>
+        <div class="mname">${name}${i===0?src:''}</div>
         <div class="mini-bar-wrap"><div class="mini-bar" style="width:${Math.round(cnt/max*100)}%;background:${colors[i]};"></div></div>
       </div>
       <span class="mini-val">${cnt}건</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ===== DURATION CHART =====
@@ -1483,64 +1637,113 @@ function renderRecentLists() {
   const store = getAnalytics();
   const appState = getAppState();
 
-  // Recent users
-  const users = [...(store.users || [])].sort((a,b) => new Date(b.joinedAt) - new Date(a.joinedAt)).slice(0, 5);
+  // ── 최근 가입자: Firestore 우선 ──
   const ulEl = document.getElementById('recent-users-list');
-  ulEl.innerHTML = users.length ? users.map(u => `
-    <div class="realtime-item">
-      <div class="realtime-dot" style="background:#3176ff;animation:none;"></div>
-      <span class="realtime-name">${u.name}</span>
-      <span class="realtime-time">${timeAgo(u.joinedAt)}</span>
-    </div>
-  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="user-plus" style="width:24px;height:24px;"></i><p style="font-size:12px;">가입자 없음</p></div>`;
+  if (_fbData.loaded) {
+    const d = getFbDerived();
+    const users = [...d.users]
+      .sort((a,b) => new Date(b.firstSeen||0) - new Date(a.firstSeen||0))
+      .slice(0,5);
+    ulEl.innerHTML = users.length ? users.map(u => `
+      <div class="realtime-item">
+        <div class="realtime-dot" style="background:#3176ff;animation:none;"></div>
+        <span class="realtime-name">${u.name}</span>
+        <span class="realtime-time">${timeAgo(u.firstSeen)}</span>
+      </div>`).join('')
+      : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="user-plus" style="width:24px;height:24px;"></i><p style="font-size:12px;">Firebase 사용자 없음</p></div>`;
+  } else {
+    const users = [...(store.users||[])].sort((a,b)=>new Date(b.joinedAt)-new Date(a.joinedAt)).slice(0,5);
+    ulEl.innerHTML = users.length ? users.map(u=>`
+      <div class="realtime-item">
+        <div class="realtime-dot" style="background:#3176ff;animation:none;"></div>
+        <span class="realtime-name">${u.name}</span>
+        <span class="realtime-time">${timeAgo(u.joinedAt)}</span>
+      </div>`).join('')
+      : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="user-plus" style="width:24px;height:24px;"></i><p style="font-size:12px;">가입자 없음</p></div>`;
+  }
 
-  // Recent sessions
-  const sessions = [...(store.visits || [])].sort((a,b) => b.ts - a.ts).slice(0,5);
+  // ── 최근 세션: GA4 localStorage ──
+  const sessions = [...(store.visits||[])].sort((a,b)=>b.ts-a.ts).slice(0,5);
   const slEl = document.getElementById('recent-sessions-list');
-  slEl.innerHTML = sessions.length ? sessions.map(v => `
+  slEl.innerHTML = sessions.length ? sessions.map(v=>`
     <div class="realtime-item">
       <div class="realtime-dot"></div>
       <span class="realtime-name">${v.sessionId.slice(0,12)}…</span>
       <span class="realtime-time">${timeAgo(new Date(v.ts).toISOString())}</span>
-    </div>
-  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="activity" style="width:24px;height:24px;"></i><p style="font-size:12px;">방문 기록 없음</p></div>`;
+    </div>`).join('')
+    : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="activity" style="width:24px;height:24px;"></i><p style="font-size:12px;">방문 기록 없음</p></div>`;
 
-  // Recent projects
-  const projects = [...(appState.projects || [])].sort((a,b) => (b.createdAt||0) - (a.createdAt||0)).slice(0,5);
+  // ── 최근 프로젝트: Firestore 우선 ──
   const plEl = document.getElementById('recent-projects-list');
-  plEl.innerHTML = projects.length ? projects.map(p => `
-    <div class="realtime-item">
-      <div class="realtime-dot" style="background:#8b5cf6;animation:none;"></div>
-      <span class="realtime-name">${p.name || '(이름없음)'}</span>
-      <span class="realtime-time">${(p.processes||[]).length}개 공정</span>
-    </div>
-  `).join('') : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="folder-open" style="width:24px;height:24px;"></i><p style="font-size:12px;">프로젝트 없음</p></div>`;
+  if (_fbData.loaded) {
+    const sorted = [..._fbData.projects]
+      .sort((a,b) => (b.meta?.updatedAt?.seconds||0) - (a.meta?.updatedAt?.seconds||0))
+      .slice(0,5);
+    plEl.innerHTML = sorted.length ? sorted.map(doc => {
+      const pd = doc.projectData || {};
+      const procCount = (pd.processes||[]).length;
+      const collabs = (doc.meta?.collaborators||[]).length;
+      const updAt = doc.meta?.updatedAt?.toDate?.()?.toISOString() || '';
+      return `
+        <div class="realtime-item">
+          <div class="realtime-dot" style="background:#8b5cf6;animation:none;"></div>
+          <span class="realtime-name">${pd.name || '(이름없음)'}</span>
+          <span class="realtime-time">${procCount}공정${collabs>0?` · 👥${collabs}`:''}  ${timeAgo(updAt)}</span>
+        </div>`;
+    }).join('')
+    : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="folder-open" style="width:24px;height:24px;"></i><p style="font-size:12px;">Firebase 프로젝트 없음</p></div>`;
+  } else {
+    const projects = [...(appState.projects||[])].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
+    plEl.innerHTML = projects.length ? projects.map(p=>`
+      <div class="realtime-item">
+        <div class="realtime-dot" style="background:#8b5cf6;animation:none;"></div>
+        <span class="realtime-name">${p.name||'(이름없음)'}</span>
+        <span class="realtime-time">${(p.processes||[]).length}개 공정</span>
+      </div>`).join('')
+      : `<div class="empty-state" style="padding:20px 0;"><i data-lucide="folder-open" style="width:24px;height:24px;"></i><p style="font-size:12px;">프로젝트 없음</p></div>`;
+  }
 }
 
 // ===== USERS TABLE =====
 function renderUsersTable() {
-  const store = getAnalytics();
-  const appState = getAppState();
-  const users = store.users || [];
-
-  document.getElementById('user-count-label').textContent = `총 ${users.length}명`;
-  filterUsers();
+  if (_fbData.loaded) {
+    const d = getFbDerived();
+    document.getElementById('user-count-label').textContent =
+      `총 ${d.users.length}명 (Firebase 실시간)`;
+    filterUsers();
+  } else {
+    const store = getAnalytics();
+    document.getElementById('user-count-label').textContent = `총 ${(store.users||[]).length}명`;
+    filterUsers();
+  }
 }
 
 function filterUsers() {
-  const store = getAnalytics();
-  const appState = getAppState();
-  let users = [...(store.users || [])];
   const q = document.getElementById('user-search').value.toLowerCase();
   const statusF = document.getElementById('user-status-filter').value;
   const sortF = document.getElementById('user-sort').value;
   const d30ago = getDaysAgo(30);
 
+  // Firestore 사용자 우선
+  let users;
+  if (_fbData.loaded) {
+    const d = getFbDerived();
+    users = d.users.map(u => ({
+      ...u,
+      joinedAt: u.firstSeen,
+      lastSeen: u.lastSeen,
+      sessions: u.projects.length,
+      projectCount: u.projects.length,
+    }));
+  } else {
+    users = [...(getAnalytics().users || [])];
+  }
+
   if (q) users = users.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
-  if (statusF === 'active') users = users.filter(u => u.lastSeen >= d30ago);
-  if (statusF === 'inactive') users = users.filter(u => u.lastSeen < d30ago);
-  if (sortF === 'joinedAt') users.sort((a,b) => new Date(b.joinedAt) - new Date(a.joinedAt));
-  else if (sortF === 'lastSeen') users.sort((a,b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+  if (statusF === 'active') users = users.filter(u => (u.lastSeen||'') >= d30ago);
+  if (statusF === 'inactive') users = users.filter(u => (u.lastSeen||'') < d30ago);
+  if (sortF === 'joinedAt') users.sort((a,b) => new Date(b.joinedAt||0) - new Date(a.joinedAt||0));
+  else if (sortF === 'lastSeen') users.sort((a,b) => new Date(b.lastSeen||0) - new Date(a.lastSeen||0));
   else if (sortF === 'sessions') users.sort((a,b) => (b.sessions||0) - (a.sessions||0));
 
   filteredUsers = users;
