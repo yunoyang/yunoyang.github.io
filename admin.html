@@ -961,6 +961,46 @@ service cloud.firestore {
             </div>
           </div>
 
+          <!-- Firebase Status -->
+          <div class="settings-card settings-full">
+            <div class="settings-section-title">
+              <i data-lucide="flame"></i> Firebase 공동작업 연동 상태
+            </div>
+            <div class="settings-body">
+              <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border-radius:12px;border:1px solid #bbf7d0;">
+                <div style="width:40px;height:40px;background:#10b981;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i data-lucide="check-circle" style="width:20px;height:20px;color:#fff;"></i>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#065f46;">Firebase 연동 완료</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px;">프로젝트: <b>vibespace-b2329</b> · Firestore 활성화됨</div>
+                  <div style="font-size:12px;color:#6b7280;">공동작업 초대 · 실시간 동기화 · 클라우드 저장 사용 가능</div>
+                </div>
+                <a href="https://console.firebase.google.com/project/vibespace-b2329/firestore" target="_blank"
+                  style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
+                  <i data-lucide="external-link" style="width:13px;height:13px;"></i> Firestore 열기
+                </a>
+              </div>
+              <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                <div style="padding:12px;background:#f8f9fc;border-radius:10px;border:1px solid #eef0f6;text-align:center;">
+                  <div style="font-size:11px;color:#888;margin-bottom:4px;">컬렉션</div>
+                  <div style="font-size:13px;font-weight:700;color:#1a1a2e;">vb_projects</div>
+                  <div style="font-size:11px;color:#10b981;margin-top:2px;">✓ 활성</div>
+                </div>
+                <div style="padding:12px;background:#f8f9fc;border-radius:10px;border:1px solid #eef0f6;text-align:center;">
+                  <div style="font-size:11px;color:#888;margin-bottom:4px;">컬렉션</div>
+                  <div style="font-size:13px;font-weight:700;color:#1a1a2e;">vb_invites</div>
+                  <div style="font-size:11px;color:#10b981;margin-top:2px;">✓ 활성</div>
+                </div>
+                <div style="padding:12px;background:#f8f9fc;border-radius:10px;border:1px solid #eef0f6;text-align:center;">
+                  <div style="font-size:11px;color:#888;margin-bottom:4px;">컬렉션</div>
+                  <div style="font-size:13px;font-weight:700;color:#1a1a2e;">vb_collaborators</div>
+                  <div style="font-size:11px;color:#10b981;margin-top:2px;">✓ 활성</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Admin Account -->
           <div class="settings-card">
             <div class="settings-section-title">
