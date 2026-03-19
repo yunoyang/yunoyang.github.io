@@ -1254,10 +1254,10 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Card More Menu (shared, positioned via JS) -->
 <div id="card-more-menu" class="card-more-menu">
   <button class="card-menu-item" id="card-menu-tip" onclick="cardMenuTip()">
-    <span>💡</span> 시공팁
+    <i data-lucide="lightbulb" style="width:15px;height:15px;color:#f59e0b;"></i> 시공팁
   </button>
   <button class="card-menu-item danger" id="card-menu-del" onclick="cardMenuDelete()">
-    <span>🗑️</span> 삭제하기
+    <i data-lucide="trash-2" style="width:15px;height:15px;"></i> 삭제하기
   </button>
 </div>
 
@@ -1781,6 +1781,7 @@ function toggleCardMenu(e, procId, procType) {
   const hasTip = !!getTipsForProcess(_cardMenuProcType);
   document.getElementById('card-menu-tip').style.display = hasTip ? '' : 'none';
   menu.classList.add('open');
+  setTimeout(() => lucide.createIcons({ nodes: [menu] }), 10);
 }
 
 function cardMenuDelete() {
@@ -1963,36 +1964,10 @@ function deleteDetail(procId, detailId) {
   if (proc) { proc.details = proc.details.filter(d => d.id !== detailId); save(); renderAll(); }
 }
 
-// ===== COMPANY SEARCH =====
-let _compSearchProcId = null;
+// ===== COMPANY SEARCH (legacy vars — kept for _selectCompany) =====
 let _compSource = 'kakao';
 let _compCoords = null;
 let _compResults = [];
-
-async function openCompanySearch(procId) {
-  _compSearchProcId = procId;
-  _compSource = 'kakao';
-  _compResults = [];
-  const proc = getProject().processes.find(p => p.id === procId);
-  gtag('event', 'company_search_open', { process_type: proc?.type || proc?.name || '' });
-  trackEvent('company', 'search_open', proc?.type || proc?.name || '');
-  document.getElementById('comp-proc-badge').textContent = `${proc.type||proc.name} 업체`;
-  document.getElementById('comp-search-input').value = proc.type || proc.name;
-  document.getElementById('comp-results').innerHTML = '<div class="comp-empty">검색 버튼을 눌러<br>주변 업체를 찾아보세요</div>';
-  document.querySelectorAll('.comp-src-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('src-kakao').classList.add('active');
-  // 주소 → 좌표 변환
-  const address = getProject()?.form?.address;
-  _compCoords = null;
-  if (address) {
-    document.getElementById('comp-loc-text').textContent = address;
-    try { _compCoords = await _geocodeKakao(address); } catch(e) {}
-  } else {
-    document.getElementById('comp-loc-text').textContent = '프로젝트 주소 미입력 (시공정보에서 주소 설정)';
-  }
-  openDialog('dlg-company-search');
-  setTimeout(() => document.getElementById('comp-search-input').focus(), 200);
-}
 function setCompSource(src) {
   _compSource = src;
   document.querySelectorAll('.comp-src-btn').forEach(b => b.classList.remove('active'));
