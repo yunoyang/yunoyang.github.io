@@ -5,6 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vibespace - 반셀프인테리어 플래닝툴</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+<!-- ===== GOOGLE ANALYTICS 4 ===== -->
+<script>
+(function() {
+  // GA4 Measurement ID는 admin.html 설정에서 저장됨
+  var settings = JSON.parse(localStorage.getItem('vb_admin_settings') || '{}');
+  var GA_ID = settings.ga4Id || '';
+  if (!GA_ID || GA_ID === 'G-XXXXXXXXXX') return;
+  // gtag 로더 동적 삽입
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', GA_ID, {
+    page_title: 'Vibespace',
+    page_location: window.location.href,
+    send_page_view: true
+  });
+})();
+// gtag 안전 래퍼 — GA4 미설정시 콘솔 에러 방지
+if (typeof window.gtag !== 'function') {
+  window.gtag = function() {};
+}
+</script>
+<!-- ========================== -->
+
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -1125,6 +1154,7 @@ function handleGoogleResponse(response) {
     save();
     trackUserLogin(state.user);
     trackEvent('auth', 'login', 'google');
+    gtag('event', 'login', { method: 'google', user_name: state.user.name });
     closeDialog('dlg-login');
     updateLoginUI();
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
@@ -1315,6 +1345,7 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
+  gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -1436,6 +1467,8 @@ async function openCompanySearch(procId) {
   _compSource = 'kakao';
   _compResults = [];
   const proc = getProject().processes.find(p => p.id === procId);
+  gtag('event', 'company_search_open', { process_type: proc?.type || proc?.name || '' });
+  trackEvent('company', 'search_open', proc?.type || proc?.name || '');
   document.getElementById('comp-proc-badge').textContent = `${proc.type||proc.name} 업체`;
   document.getElementById('comp-search-input').value = proc.type || proc.name;
   document.getElementById('comp-results').innerHTML = '<div class="comp-empty">검색 버튼을 눌러<br>주변 업체를 찾아보세요</div>';
@@ -1708,6 +1741,8 @@ function confirmSchedule() {
   }
   proc.scheduleStart = calPicker.start || '';
   proc.scheduleEnd = calPicker.end || '';
+  gtag('event', 'set_schedule', { process_name: proc.name, start: proc.scheduleStart, end: proc.scheduleEnd });
+  trackEvent('schedule', 'set_schedule', proc.name);
   save(); renderAll();
   closeDialog('dlg-schedule');
 }
@@ -1738,6 +1773,8 @@ function confirmAddProcess() {
   const name = custom || selectedProcessType;
   if (!name) { alert('공정 유형을 선택하거나 이름을 입력하세요.'); return; }
   getProject().processes.push({ id:'proc_'+Date.now(), name, type:selectedProcessType||name, scheduleStart:'', scheduleEnd:'', company:'', details:[] });
+  gtag('event', 'add_process', { process_type: name, is_custom: !!custom });
+  trackEvent('process', 'add_process', name);
   save(); renderAll();
   closeDialog('dlg-add-process');
 }
@@ -1921,6 +1958,9 @@ function saveFormAndBack() {
   saveFormData();
   if (formMode === 'new') {
     formMode = 'edit';
+    const _np = getProject();
+    gtag('event', 'create_project', { project_name: _np?.name || '', type: _np?.form?.type?.[0] || '' });
+    trackEvent('project', 'create', _np?.name || '');
     document.getElementById('form-title').textContent = '시공 정보';
     document.getElementById('form-submit-btn').textContent = '수정완료';
     goTo('main');
@@ -1942,7 +1982,7 @@ function searchAddress() {
 }
 
 // ===== SHARE =====
-function openShareDialog() { closeAllMenus(); openDialog('dlg-share'); }
+function openShareDialog() { closeAllMenus(); gtag('event', 'share_open'); trackEvent('share','open'); openDialog('dlg-share'); }
 function openExpertDialog() { closeAllMenus(); openDialog('dlg-expert'); }
 function shareAction(type) {
   const proj = getProject();

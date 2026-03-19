@@ -627,6 +627,9 @@ tr:hover td { background:#fafbfe; }
           </div>
         </div>
 
+        <!-- GA4 Status Banner -->
+        <div id="ga4-status-banner" style="margin-bottom:20px;border-radius:14px;overflow:hidden;border:1px solid var(--card-border);"></div>
+
         <!-- Realtime + Recent -->
         <div class="realtime-grid" style="margin-bottom:20px;">
           <div class="realtime-card">
@@ -826,6 +829,52 @@ tr:hover td { background:#fafbfe; }
       <!-- ====== SETTINGS PAGE ====== -->
       <div class="page" id="page-settings">
         <div class="settings-grid">
+
+          <!-- GA4 Settings -->
+          <div class="settings-card settings-full">
+            <div class="settings-section-title">
+              <i data-lucide="bar-chart-2"></i> Google Analytics 4 연동
+            </div>
+            <div class="settings-body" style="flex-direction:row;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+              <!-- Left: Input -->
+              <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:14px;">
+                <div class="settings-field">
+                  <label>GA4 MEASUREMENT ID</label>
+                  <input type="text" id="set-ga4-id" placeholder="G-XXXXXXXXXX">
+                  <div class="key-status" id="ga4-key-status"></div>
+                  <div class="field-hint">Google Analytics → 관리 → 데이터 스트림 → 측정 ID</div>
+                </div>
+                <div class="settings-field">
+                  <label>PROPERTY ID (숫자) — 리포트 링크용</label>
+                  <input type="text" id="set-ga4-prop" placeholder="123456789">
+                  <div class="field-hint">Google Analytics → 관리 → 속성 설정 → 속성 ID</div>
+                </div>
+                <button class="settings-save-btn" onclick="saveGa4Settings()">GA4 설정 저장</button>
+                <div id="ga4-links" style="display:none;flex-direction:column;gap:8px;margin-top:4px;"></div>
+              </div>
+              <!-- Right: Guide -->
+              <div style="flex:1;min-width:260px;">
+                <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#374151;">
+                  <div style="font-weight:700;color:#3176ff;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <i data-lucide="info" style="width:14px;height:14px;"></i> GA4 속성 생성 방법
+                  </div>
+                  <ol style="padding-left:16px;color:#4b5563;">
+                    <li><a href="https://analytics.google.com" target="_blank" style="color:#3176ff;">analytics.google.com</a> 접속</li>
+                    <li>관리 (톱니바퀴) → <b>속성 만들기</b></li>
+                    <li>속성 이름: <b>Vibespace</b></li>
+                    <li>업종: 기타 → 비즈니스 목표 선택</li>
+                    <li>플랫폼: <b>웹</b> 선택</li>
+                    <li>URL: <b>yunoyang.github.io</b></li>
+                    <li>스트림 생성 → <b>측정 ID (G-xxx)</b> 복사</li>
+                    <li>위 필드에 붙여넣기 후 저장</li>
+                  </ol>
+                  <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-size:12px;color:#6b7280;">
+                    ⏱ 소요시간: 약 5분 / 완전 무료
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- API Keys -->
           <div class="settings-card">
@@ -1624,17 +1673,110 @@ function renderMonthlyTraffic() {
 
 // ===== SETTINGS =====
 function loadSettings() {
-  const store = getAnalytics();
   const settings = getSettings();
-  // API keys (read from vb_admin_settings)
   document.getElementById('set-kakao-key').value = settings.kakaoKey || '';
   document.getElementById('set-google-key').value = settings.googleKey || '';
   document.getElementById('set-google-client').value = settings.googleClient || '';
+  document.getElementById('set-ga4-id').value = settings.ga4Id || '';
+  document.getElementById('set-ga4-prop').value = settings.ga4PropId || '';
   updateKeyStatus('kakao-key-status', settings.kakaoKey);
   updateKeyStatus('google-key-status', settings.googleKey);
+  updateKeyStatus('ga4-key-status', settings.ga4Id);
+  renderGa4Links(settings.ga4Id, settings.ga4PropId);
+  renderGa4Banner(settings.ga4Id);
 
   const creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
   document.getElementById('set-admin-email').value = creds?.email || DEFAULT_EMAIL;
+}
+
+// ===== GA4 =====
+function saveGa4Settings() {
+  const settings = getSettings();
+  const ga4Id = document.getElementById('set-ga4-id').value.trim();
+  const ga4PropId = document.getElementById('set-ga4-prop').value.trim();
+  settings.ga4Id = ga4Id;
+  settings.ga4PropId = ga4PropId;
+  localStorage.setItem(VB_SETTINGS_KEY, JSON.stringify(settings));
+  updateKeyStatus('ga4-key-status', ga4Id);
+  renderGa4Links(ga4Id, ga4PropId);
+  renderGa4Banner(ga4Id);
+  showToast('GA4 설정이 저장되었습니다. 앱 재방문 시 추적이 시작됩니다.');
+}
+
+function renderGa4Banner(ga4Id) {
+  const el = document.getElementById('ga4-status-banner');
+  if (!el) return;
+  const isSet = ga4Id && ga4Id.startsWith('G-') && ga4Id.length > 5;
+  if (isSet) {
+    el.innerHTML = `
+      <div style="background:linear-gradient(135deg,#ecfdf5,#f0fdf4);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;background:#10b981;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="activity" style="width:18px;height:18px;color:#fff;"></i>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#065f46;">GA4 연동됨 — ${ga4Id}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">실제 방문자 데이터가 Google Analytics에 수집되고 있습니다</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="https://analytics.google.com" target="_blank"
+            style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+            <i data-lucide="external-link" style="width:13px;height:13px;"></i> GA4 열기
+          </a>
+        </div>
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <div style="background:linear-gradient(135deg,#fffbeb,#fef9c3);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;background:#f59e0b;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="alert-triangle" style="width:18px;height:18px;color:#fff;"></i>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#92400e;">GA4 미연동 — 실제 방문자 데이터가 수집되지 않습니다</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">시스템 설정에서 Measurement ID를 입력하세요 (5분 소요)</div>
+          </div>
+        </div>
+        <button onclick="showPage('settings', document.querySelectorAll('.nav-item')[4])"
+          style="padding:8px 14px;background:#f59e0b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;">
+          지금 설정하기
+        </button>
+      </div>
+    `;
+  }
+  setTimeout(lucide.createIcons, 50);
+}
+
+function renderGa4Links(ga4Id, propId) {
+  const el = document.getElementById('ga4-links');
+  if (!el) return;
+  if (!ga4Id || !ga4Id.startsWith('G-')) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const base = 'https://analytics.google.com/analytics/web/';
+  const propPart = propId ? `#/p${propId}` : '';
+  el.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">GA4 빠른 링크</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="${base}${propPart}/reports/overview" target="_blank" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:7px;font-size:12.5px;font-weight:600;color:#3176ff;text-decoration:none;">
+        <i data-lucide="layout-dashboard" style="width:12px;height:12px;"></i> 개요
+      </a>
+      <a href="${base}${propPart}/reports/realtime" target="_blank" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;font-size:12.5px;font-weight:600;color:#10b981;text-decoration:none;">
+        <i data-lucide="activity" style="width:12px;height:12px;"></i> 실시간
+      </a>
+      <a href="${base}${propPart}/reports/lifecycle/acquisition/overview" target="_blank" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;font-size:12.5px;font-weight:600;color:#f59e0b;text-decoration:none;">
+        <i data-lucide="users" style="width:12px;height:12px;"></i> 사용자 획득
+      </a>
+      <a href="${base}${propPart}/reports/lifecycle/engagement/overview" target="_blank" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:7px;font-size:12.5px;font-weight:600;color:#8b5cf6;text-decoration:none;">
+        <i data-lucide="mouse-pointer-click" style="width:12px;height:12px;"></i> 참여도
+      </a>
+      <a href="https://lookerstudio.google.com" target="_blank" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f8fafc;border:1px solid var(--card-border);border-radius:7px;font-size:12.5px;font-weight:600;color:var(--text-secondary);text-decoration:none;">
+        <i data-lucide="bar-chart-3" style="width:12px;height:12px;"></i> Looker Studio
+      </a>
+    </div>
+  `;
+  setTimeout(lucide.createIcons, 50);
 }
 
 function updateKeyStatus(elId, val) {
