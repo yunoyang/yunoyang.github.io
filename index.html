@@ -1521,6 +1521,13 @@ function openLoginDialog() {
         google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
         google.accounts.id.renderButton(btn, { theme:'outline', size:'large', text:'signin_with', width:300 });
         if (fallback) fallback.style.display = 'none';
+        // GSI가 도메인 미등록 시 에러 없이 렌더링 안 함 → 600ms 후 체크
+        setTimeout(() => {
+          if (!btn.querySelector('iframe') && !btn.querySelector('div[role]')) {
+            btn.style.display = 'none';
+            if (fallback) fallback.style.display = 'block';
+          }
+        }, 600);
       } catch(e) { if (fallback) fallback.style.display = 'block'; }
     } else {
       if (fallback) fallback.style.display = 'block';
