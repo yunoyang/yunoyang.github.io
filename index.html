@@ -837,73 +837,62 @@ button, input, textarea, select { font-family:var(--font); }
 .pcard-no-detail { font-size:12px; color:#ccc; font-style:italic; }
 
 /* ===== LANDING ===== */
-/* ===== LANDING — FULL SCREEN DARK ===== */
+/* ===== LANDING — WHITE CLEAN ===== */
 .landing-screen {
-  position:relative; overflow:hidden;
-  background:#111; padding:0;
-  justify-content:flex-end; align-items:stretch;
+  background:#fff; padding:0;
+  justify-content:space-between; align-items:stretch;
+  flex-direction:column;
 }
-.landing-bg {
-  position:absolute; inset:0; z-index:0;
-  background: url('https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900&q=80') center/cover no-repeat;
-}
-.landing-bg::after {
-  content:''; position:absolute; inset:0;
-  background:linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.35) 0%,
-    rgba(0,0,0,0.20) 40%,
-    rgba(0,0,0,0.65) 75%,
-    rgba(0,0,0,0.85) 100%
-  );
-}
+.landing-bg { display:none; }
 .landing-center {
-  position:absolute; inset:0; z-index:1;
-  display:flex; flex-direction:column;
+  flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  padding-bottom:220px;
-  gap:10px;
+  padding:60px 32px 32px; gap:14px; text-align:center;
 }
 .landing-logo {
-  font-size:36px; font-weight:800; color:#fff;
-  letter-spacing:-0.5px;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  font-size:38px; font-weight:800; color:#111;
+  letter-spacing:-1px; line-height:1;
+}
+.landing-logo span {
+  color:var(--primary);
 }
 .landing-main-copy {
-  font-size:14px; font-weight:400; color:rgba(255,255,255,0.82);
-  text-align:center; line-height:1.65; letter-spacing:-.1px;
+  font-size:15px; font-weight:400; color:#666;
+  text-align:center; line-height:1.7; letter-spacing:-.1px;
+  margin-top:4px;
+}
+.landing-divider {
+  width:40px; height:3px; background:var(--primary);
+  border-radius:2px; margin:4px 0;
 }
 .landing-bottom {
-  position:relative; z-index:1;
-  padding:0 24px 40px; display:flex; flex-direction:column; gap:10px;
+  padding:0 24px 48px; display:flex; flex-direction:column; gap:10px;
   width:100%; box-sizing:border-box;
 }
 .landing-btn {
   width:100%; padding:16px; background:var(--btn-blue); color:#fff; border:none;
   border-radius:14px; font-size:16px; font-weight:700; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  box-shadow:0 4px 20px rgba(49,118,255,0.45); transition:transform .13s, opacity .13s;
+  box-shadow:0 4px 20px rgba(49,118,255,0.3); transition:transform .13s, opacity .13s;
   font-family:var(--font);
 }
 .landing-btn svg { width:19px; height:19px; }
 .landing-btn:active { transform:scale(.97); opacity:.9; }
 .landing-btn-secondary {
-  width:100%; padding:15px; background:rgba(255,255,255,0.13); color:#fff;
-  border:1.5px solid rgba(255,255,255,0.3); border-radius:14px;
+  width:100%; padding:15px; background:#f5f7fc; color:#444;
+  border:1.5px solid #e4e9f4; border-radius:14px;
   font-size:15px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   transition:transform .13s, background .15s; font-family:var(--font);
 }
-.landing-btn-secondary:active { transform:scale(.97); background:rgba(255,255,255,0.2); }
-.landing-btn-secondary svg { width:17px; height:17px; }
+.landing-btn-secondary:active { transform:scale(.97); background:#edf0f8; }
+.landing-btn-secondary svg { width:17px; height:17px; color:#888; }
 .landing-btn-google {
   width:100%; padding:15px; background:#fff; color:#333;
-  border:none; border-radius:14px;
+  border:1.5px solid #e4e9f4; border-radius:14px;
   font-size:15px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  transition:transform .13s, box-shadow .15s; font-family:var(--font);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  transition:transform .13s; font-family:var(--font);
 }
 .landing-btn-google:active { transform:scale(.97); }
 .landing-btn-google svg { width:17px; height:17px; }
@@ -925,12 +914,11 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- ===== LANDING ===== -->
 <div class="screen landing-screen" id="screen-landing">
-  <!-- 배경 이미지 -->
-  <div class="landing-bg"></div>
 
   <!-- 중앙 로고 + 카피 -->
   <div class="landing-center">
-    <div class="landing-logo">Vibespace</div>
+    <div class="landing-logo">Vibe<span>space</span></div>
+    <div class="landing-divider"></div>
     <div class="landing-main-copy">막막한 반셀프 인테리어 과정,<br>바이브스페이스와 함께 하세요</div>
   </div>
 
