@@ -406,6 +406,11 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .day-detail-desc { font-size:13px; color:#444; flex:1; }
 .day-detail-cost { font-size:13px; font-weight:600; color:#333; white-space:nowrap; }
+.day-detail-date-badge {
+  font-size:10px; font-weight:700; color:var(--primary);
+  background:rgba(49,118,255,0.1); padding:2px 7px;
+  border-radius:6px; flex-shrink:0; white-space:nowrap;
+}
 .day-detail-del {
   width:24px; height:24px; border-radius:50%; background:none; border:none;
   cursor:pointer; color:#ccc; display:flex; align-items:center; justify-content:center;
@@ -2573,6 +2578,7 @@ function openDayPopup(year, month, day) {
   document.getElementById('day-popup-title').textContent =
     `${month+1}월 ${day}일 (${DOW_KO[dateD.getDay()]})`;
 
+  const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const body = document.getElementById('day-popup-body');
   if (!active.length) {
     body.innerHTML = '<div class="day-popup-empty">이 날짜에 예정된 공정이 없습니다</div>';
@@ -2580,16 +2586,32 @@ function openDayPopup(year, month, day) {
     body.innerHTML = active.map(p => {
       const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
       const hex = COLOR_HEX[cls] || '#3176ff';
-      const details = p.details && p.details.length
-        ? p.details.map(d => `
+      const allDetails = p.details || [];
+      // 오늘 날짜 지정 상세내역
+      const todayDetails = allDetails.filter(d => d.date === dateStr);
+      // 날짜 미지정 상세내역
+      const undatedDetails = allDetails.filter(d => !d.date);
+
+      let detailsHtml = '';
+      if (todayDetails.length) {
+        detailsHtml += todayDetails.map(d => `
           <div class="day-detail-row">
+            <span class="day-detail-date-badge">오늘</span>
             <span class="day-detail-desc">${esc(d.desc)}</span>
             <span class="day-detail-cost">${(d.cost||0).toLocaleString()}원</span>
-            <button class="day-detail-del" onclick="deleteDayDetail('${p.id}','${d.id}')" title="삭제">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>`).join('')
-        : `<div class="day-detail-row"><span class="day-detail-desc" style="color:#bbb;">상세내역 없음</span></div>`;
+          </div>`).join('');
+      }
+      if (undatedDetails.length) {
+        detailsHtml += undatedDetails.map(d => `
+          <div class="day-detail-row">
+            <span class="day-detail-desc" style="color:#888;">${esc(d.desc)}</span>
+            <span class="day-detail-cost" style="color:#aaa;">${(d.cost||0).toLocaleString()}원</span>
+          </div>`).join('');
+      }
+      if (!detailsHtml) {
+        detailsHtml = `<div class="day-detail-row"><span class="day-detail-desc" style="color:#bbb;">상세내역 없음</span></div>`;
+      }
+
       return `
         <div class="day-proc-block">
           <div class="day-proc-head" style="background:rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},0.08);">
@@ -2597,7 +2619,7 @@ function openDayPopup(year, month, day) {
             <span style="color:${hex};font-weight:700;">${esc(p.name)}</span>
             <span style="font-size:11px;color:#aaa;font-weight:400;margin-left:auto;">${formatDate(p.scheduleStart)} ~ ${formatDate(p.scheduleEnd)}</span>
           </div>
-          ${details}
+          ${detailsHtml}
         </div>`;
     }).join('');
   }
@@ -2657,6 +2679,7 @@ function renderCalendar() {
   function getDayInfo(d) {
     if (d === null) return { html: '', bg: '' };
     const dateD = new Date(year, month, d);
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const active = proj.processes.filter(p => {
       if (!p.scheduleStart || !p.scheduleEnd) return false;
       return dateD >= new Date(p.scheduleStart+'T00:00:00') && dateD <= new Date(p.scheduleEnd+'T23:59:59');
@@ -2664,10 +2687,13 @@ function renderCalendar() {
     if (!active.length) return { html: '', bg: '' };
     const html = active.map(p => {
       const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
-      const details = (p.details||[]).map(dt=>`<div class="cal-day-detail">${esc(dt.desc)}</div>`).join('');
-      return `<div class="cal-day-proc ${cls}"><div class="cal-day-pname">${esc(p.name)}</div>${details}</div>`;
+      // 날짜가 지정된 상세내역 중 오늘 날짜와 일치하는 것만 표시
+      const todayDetails = (p.details||[]).filter(dt => dt.date === dateStr);
+      const detailsHtml = todayDetails.map(dt =>
+        `<div class="cal-day-detail">· ${esc(dt.desc)}</div>`
+      ).join('');
+      return `<div class="cal-day-proc ${cls}"><div class="cal-day-pname">${esc(p.name)}</div>${detailsHtml}</div>`;
     }).join('');
-    // alpha 6% background from first process color
     const firstCls = PROCESS_COLORS[active[0].type] || ('c'+(Math.abs(hashCode(active[0].name))%8));
     const hex = COLOR_HEX[firstCls] || '#3176ff';
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
