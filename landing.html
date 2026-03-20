@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibespace — 처음 하는 반셀프인테리어, 혼자 하지 않아도 됩니다</title>
+<meta name="description" content="철거부터 조명까지, 12가지 공정 계획을 한눈에. 예산·업체·일정을 하나의 앱에서 관리하세요.">
+<meta property="og:title" content="Vibespace — 반셀프인테리어 플래닝 앱">
+<meta property="og:description" content="처음 하는 반셀프 인테리어, 막막하지 않게. 공정 계획부터 업체 관리까지 한번에.">
+<meta property="og:url" content="https://vibespacekorea.com">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root {
+  --primary: #3176ff;
+  --primary-dark: #1a5cdf;
+  --primary-light: rgba(49,118,255,0.08);
+  --text-dark: #111;
+  --text-gray: #555;
+  --text-light: #999;
+  --border: #e8ecf3;
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:var(--font); background:#fff; color:var(--text-dark); overflow-x:hidden; }
+a { text-decoration:none; }
+
+/* ===== NAV ===== */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(255,255,255,0.92); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(0,0,0,0.06);
+  height:60px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+}
+.nav-logo { font-size:20px; font-weight:800; color:#111; letter-spacing:-0.5px; }
+.nav-logo span { color:var(--primary); }
+.nav-cta {
+  background:var(--primary); color:#fff; padding:10px 18px;
+  border-radius:10px; font-size:14px; font-weight:700;
+  font-family:var(--font); transition:opacity .15s;
+  display:flex; align-items:center; gap:6px;
+}
+.nav-cta:hover { opacity:.88; }
+
+/* ===== HERO ===== */
+.hero {
+  min-height:100vh; padding:90px 24px 60px;
+  display:flex; flex-direction:column; align-items:center;
+  background:linear-gradient(170deg, #fff 0%, #eef3ff 60%, #e8eeff 100%);
+  text-align:center; position:relative; overflow:hidden;
+}
+.hero::before {
+  content:''; position:absolute; top:-100px; right:-120px;
+  width:500px; height:500px; border-radius:50%;
+  background:radial-gradient(circle, rgba(49,118,255,0.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--primary-light); color:var(--primary);
+  border:1px solid rgba(49,118,255,0.18);
+  padding:7px 16px; border-radius:100px;
+  font-size:13px; font-weight:700; margin-bottom:24px;
+}
+.hero-badge::before { content:'✦'; font-size:10px; }
+.hero-title {
+  font-size:clamp(34px,8vw,58px); font-weight:800;
+  line-height:1.12; letter-spacing:-2px; color:#111;
+  margin-bottom:20px;
+}
+.hero-title em { color:var(--primary); font-style:normal; display:block; }
+.hero-sub {
+  font-size:17px; color:var(--text-gray); line-height:1.75;
+  margin-bottom:40px; max-width:440px;
+}
+.hero-btns {
+  display:flex; flex-direction:column; gap:10px;
+  width:100%; max-width:360px; margin-bottom:14px;
+}
+.btn-hero-primary {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--primary); color:#fff; padding:18px 24px;
+  border-radius:16px; font-size:17px; font-weight:700;
+  font-family:var(--font); border:none; cursor:pointer;
+  box-shadow:0 8px 28px rgba(49,118,255,0.38);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn-hero-primary:hover { transform:translateY(-2px); box-shadow:0 12px 36px rgba(49,118,255,0.45); }
+.btn-hero-secondary {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:#fff; color:#444; padding:17px 24px;
+  border-radius:16px; font-size:15px; font-weight:600;
+  border:1.5px solid #dde4f0; transition:background .15s; font-family:var(--font);
+}
+.btn-hero-secondary:hover { background:#f5f7fc; }
+.hero-note { font-size:12px; color:#aaa; margin-bottom:56px; }
+
+/* ===== PHONE MOCKUP ===== */
+.hero-mockup { width:100%; max-width:280px; position:relative; }
+.phone {
+  background:#1a1a2e; border-radius:42px; padding:11px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.08);
+}
+.phone-inner { background:#f4f6fb; border-radius:32px; overflow:hidden; }
+.phone-notch {
+  width:72px; height:22px; background:#1a1a2e;
+  border-radius:0 0 14px 14px; margin:0 auto; position:relative; z-index:1;
+}
+.ph-header {
+  background:#fff; padding:10px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid #eef0f5;
+}
+.ph-pname { font-size:13px; font-weight:700; color:#111; }
+.ph-dots { display:flex; gap:3px; }
+.ph-dot { width:5px; height:5px; border-radius:50%; background:#ddd; }
+.ph-summary {
+  margin:10px; background:#fff; border-radius:12px;
+  border:1px solid #e8ecf3; padding:10px 12px;
+}
+.ph-sum-row {
+  display:flex; justify-content:space-between; align-items:center; padding:4px 0;
+}
+.ph-sum-label { font-size:9px; color:#999; }
+.ph-sum-val { font-size:10px; font-weight:700; color:#111; }
+.ph-sum-val.blue { color:#3176ff; }
+.ph-tabs {
+  display:flex; background:#fff; border-bottom:1.5px solid #eef0f5; margin:0 10px;
+}
+.ph-tab { flex:1; text-align:center; padding:7px; font-size:9px; color:#bbb; }
+.ph-tab.on { color:#222; font-weight:700; border-bottom:2px solid #3176ff; margin-bottom:-1.5px; }
+.ph-cards { padding:8px 10px 14px; background:#EDF0F4; display:flex; flex-direction:column; gap:7px; }
+.ph-card {
+  background:#fff; border-radius:11px; padding:10px 11px;
+  border:1px solid #e8ecf3;
+}
+.ph-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.ph-card-title { font-size:10px; font-weight:700; color:#111; }
+.ph-card-more { font-size:12px; color:#ccc; letter-spacing:1px; }
+.ph-card-row { display:flex; justify-content:space-between; padding:2px 0; }
+.ph-card-lbl { font-size:8px; color:#aaa; }
+.ph-card-val { font-size:8px; font-weight:600; color:#444; }
+.ph-card-val.blue { color:#3176ff; }
+
+/* ===== STATS STRIP ===== */
+.stats-strip {
+  background:#fff; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  padding:24px 24px; display:flex; justify-content:center; gap:0; flex-wrap:wrap;
+}
+.stat-item {
+  flex:1; min-width:120px; max-width:200px; text-align:center;
+  padding:12px 16px; position:relative;
+}
+.stat-item:not(:last-child)::after {
+  content:''; position:absolute; right:0; top:20%; height:60%; width:1px; background:#eee;
+}
+.stat-num { font-size:28px; font-weight:800; color:var(--primary); letter-spacing:-1px; }
+.stat-label { font-size:12px; color:#888; margin-top:2px; font-weight:500; }
+
+/* ===== SECTION COMMON ===== */
+.section { padding:80px 24px; }
+.section-inner { max-width:640px; margin:0 auto; }
+.section-tag {
+  display:inline-block; font-size:12px; font-weight:700;
+  color:var(--primary); letter-spacing:0.5px;
+  margin-bottom:10px;
+}
+.section-title {
+  font-size:clamp(26px,5vw,38px); font-weight:800;
+  line-height:1.2; letter-spacing:-1px; margin-bottom:14px;
+}
+.section-desc {
+  font-size:15px; color:var(--text-gray); line-height:1.75;
+  margin-bottom:48px;
+}
+
+/* ===== PAIN ===== */
+.pain-section { background:#fff; }
+.pain-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+.pain-card {
+  background:#f8f9fc; border:1px solid #eef0f5; border-radius:16px;
+  padding:20px; display:flex; align-items:flex-start; gap:14px;
+}
+.pain-emoji { font-size:30px; flex-shrink:0; line-height:1; margin-top:2px; }
+.pain-card h4 { font-size:15px; font-weight:700; color:#111; margin-bottom:5px; }
+.pain-card p { font-size:13px; color:var(--text-gray); line-height:1.65; }
+
+/* ===== FEATURES ===== */
+.features-section { background:#f8f9fc; }
+.feature-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+.feature-card {
+  background:#fff; border-radius:16px; padding:22px 20px;
+  border:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.04);
+}
+.feat-icon {
+  width:46px; height:46px; border-radius:14px;
+  background:var(--primary-light);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; margin-bottom:14px;
+}
+.feature-card h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
+.feature-card p { font-size:13px; color:var(--text-gray); line-height:1.65; }
+.feature-tag {
+  display:inline-block; margin-top:10px;
+  font-size:11px; font-weight:700; color:var(--primary);
+  background:var(--primary-light); padding:3px 10px; border-radius:20px;
+}
+
+/* ===== HOW IT WORKS ===== */
+.how-section { background:#fff; }
+.steps { display:flex; flex-direction:column; gap:0; max-width:480px; margin:0 auto; }
+.step {
+  display:flex; gap:20px; align-items:flex-start;
+  padding-bottom:32px; position:relative;
+}
+.step:not(:last-child)::before {
+  content:''; position:absolute; left:19px; top:44px; bottom:0;
+  width:2px; background:linear-gradient(180deg, var(--primary) 0%, #dde9ff 100%);
+}
+.step-circle {
+  width:40px; height:40px; border-radius:50%;
+  background:var(--primary); color:#fff;
+  font-size:16px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; box-shadow:0 4px 14px rgba(49,118,255,0.35);
+}
+.step-content { padding-top:8px; }
+.step-content h4 { font-size:16px; font-weight:700; margin-bottom:6px; }
+.step-content p { font-size:14px; color:var(--text-gray); line-height:1.65; }
+
+/* ===== COLLAB ===== */
+.collab-section {
+  background:linear-gradient(135deg, #0f1f5c 0%, #1a3a9e 50%, #2255cc 100%);
+  padding:80px 24px; text-align:center;
+}
+.collab-section .section-tag { color:rgba(255,255,255,0.5); }
+.collab-section .section-title { color:#fff; }
+.collab-section .section-desc { color:rgba(255,255,255,0.65); margin-bottom:36px; }
+.collab-badges { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:40px; }
+.collab-badge {
+  background:rgba(255,255,255,0.12); color:#fff;
+  padding:8px 16px; border-radius:100px; font-size:13px; font-weight:600;
+  border:1px solid rgba(255,255,255,0.18);
+  display:flex; align-items:center; gap:6px;
+}
+.btn-collab {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:#fff; color:var(--primary); padding:17px 36px;
+  border-radius:16px; font-size:16px; font-weight:700;
+  font-family:var(--font); border:none; cursor:pointer;
+  box-shadow:0 6px 24px rgba(0,0,0,0.18);
+  transition:transform .15s;
+}
+.btn-collab:hover { transform:translateY(-2px); }
+
+/* ===== FINAL CTA ===== */
+.cta-section {
+  background:#fff; padding:80px 24px;
+  text-align:center; border-top:1px solid #eef0f5;
+}
+.cta-section .section-title { margin-bottom:14px; }
+.cta-section .section-desc { margin-bottom:32px; }
+.btn-cta-main {
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  background:var(--primary); color:#fff; padding:18px 40px;
+  border-radius:16px; font-size:17px; font-weight:700;
+  font-family:var(--font); border:none; cursor:pointer;
+  box-shadow:0 8px 28px rgba(49,118,255,0.38);
+  transition:transform .15s, box-shadow .15s;
+  margin-bottom:12px;
+}
+.btn-cta-main:hover { transform:translateY(-2px); box-shadow:0 12px 36px rgba(49,118,255,0.45); }
+.cta-note { font-size:13px; color:#aaa; }
+.cta-note strong { color:#888; }
+
+/* ===== FOOTER ===== */
+footer {
+  background:#111; padding:40px 24px 48px;
+  text-align:center; color:#666;
+}
+.footer-logo { font-size:20px; font-weight:800; color:#fff; margin-bottom:6px; }
+.footer-logo span { color:var(--primary); }
+.footer-tagline { font-size:13px; color:#666; margin-bottom:24px; }
+.footer-links {
+  display:flex; justify-content:center; gap:20px; flex-wrap:wrap;
+  margin-bottom:24px;
+}
+.footer-links a { font-size:13px; color:#555; transition:color .15s; }
+.footer-links a:hover { color:#fff; }
+footer p { font-size:12px; color:#444; }
+
+/* ===== DESKTOP ===== */
+@media(min-width:768px) {
+  .hero {
+    flex-direction:row; text-align:left; padding:120px 48px 80px;
+    justify-content:center; gap:60px; max-width:1200px;
+    margin:0 auto; min-height:100vh;
+  }
+  .hero::before { right:-60px; }
+  .hero-content { flex:1; max-width:520px; }
+  .hero-badge, .hero-btns { align-self:flex-start; }
+  .hero-btns { flex-direction:row; max-width:none; width:auto; }
+  .hero-note { text-align:left; }
+  .hero-mockup { max-width:260px; flex-shrink:0; }
+  nav { padding:0 48px; max-width:none; }
+  .pain-grid { grid-template-columns:1fr 1fr; }
+  .feature-grid { grid-template-columns:1fr 1fr; }
+  .section-inner { max-width:760px; }
+  .stats-strip { gap:20px; }
+  .section { padding:100px 48px; }
+  /* hero section not inside section-inner */
+}
+@media(min-width:1100px) {
+  .hero { max-width:1200px; margin:0 auto; }
+  .feature-grid { grid-template-columns:1fr 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Vibe<span>space</span></div>
+  <a href="./index.html" class="nav-cta">앱 열기 →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">반셀프인테리어 플래닝 앱</div>
+    <h1 class="hero-title">
+      처음 하는<br>반셀프인테리어,
+      <em>막막하지 않게</em>
+    </h1>
+    <p class="hero-sub">
+      철거부터 조명까지 12가지 공정 계획,<br>
+      예산·업체·일정을 한 곳에서 관리하세요.
+    </p>
+    <div class="hero-btns">
+      <a href="./index.html" class="btn-hero-primary">✦ 무료로 시작하기</a>
+      <a href="#features" class="btn-hero-secondary">기능 살펴보기 ↓</a>
+    </div>
+    <p class="hero-note">회원가입 없이 바로 사용 가능 · 완전 무료</p>
+  </div>
+
+  <!-- App Mockup -->
+  <div class="hero-mockup">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="phone-notch"></div>
+        <div class="ph-header">
+          <span class="ph-pname">🏠 우리집 인테리어</span>
+          <div class="ph-dots">
+            <div class="ph-dot"></div><div class="ph-dot"></div><div class="ph-dot"></div>
+          </div>
+        </div>
+        <div class="ph-summary">
+          <div class="ph-sum-row">
+            <span class="ph-sum-label">예상 총 비용</span>
+            <span class="ph-sum-val blue">32,500,000원</span>
+          </div>
+          <div class="ph-sum-row">
+            <span class="ph-sum-label">전체 공사 기간</span>
+            <span class="ph-sum-val">45일</span>
+          </div>
+          <div class="ph-sum-row">
+            <span class="ph-sum-label">함께하는 업체</span>
+            <span class="ph-sum-val">4개 업체</span>
+          </div>
+        </div>
+        <div class="ph-tabs">
+          <div class="ph-tab on">공정 계획</div>
+          <div class="ph-tab">전체 일정</div>
+        </div>
+        <div class="ph-cards">
+          <div class="ph-card">
+            <div class="ph-card-top">
+              <span class="ph-card-title">🔨 철거</span>
+              <span class="ph-card-more">···</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">예상 견적</span>
+              <span class="ph-card-val blue">6,500,000원</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">일정</span>
+              <span class="ph-card-val">03.19 ~ 03.21</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">담당 업체</span>
+              <span class="ph-card-val">철거왕</span>
+            </div>
+          </div>
+          <div class="ph-card">
+            <div class="ph-card-top">
+              <span class="ph-card-title">🪟 샷시</span>
+              <span class="ph-card-more">···</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">예상 견적</span>
+              <span class="ph-card-val blue">4,200,000원</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">일정</span>
+              <span class="ph-card-val">03.22 ~ 03.25</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">담당 업체</span>
+              <span class="ph-card-val">한국창호</span>
+            </div>
+          </div>
+          <div class="ph-card">
+            <div class="ph-card-top">
+              <span class="ph-card-title">🪵 목공</span>
+              <span class="ph-card-more">···</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">예상 견적</span>
+              <span class="ph-card-val blue">8,800,000원</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">일정</span>
+              <span class="ph-card-val">일정 선택</span>
+            </div>
+            <div class="ph-card-row">
+              <span class="ph-card-lbl">담당 업체</span>
+              <span class="ph-card-val">업체 입력</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stat-item">
+    <div class="stat-num">12</div>
+    <div class="stat-label">공정 단계 지원</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">5+</div>
+    <div class="stat-label">공정별 시공팁</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">∞</div>
+    <div class="stat-label">프로젝트 생성</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">0원</div>
+    <div class="stat-label">완전 무료</div>
+  </div>
+</div>
+
+<!-- PAIN SECTION -->
+<section class="section pain-section">
+  <div class="section-inner">
+    <span class="section-tag">공감하시나요?</span>
+    <h2 class="section-title">인테리어 앞에서<br>막막했던 순간들</h2>
+    <p class="section-desc">처음 반셀프 인테리어를 계획하는 분들이 공통으로 겪는 어려움, 바이브스페이스가 해결합니다.</p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-emoji">🤯</div>
+        <div>
+          <h4>어떤 공정부터 해야 하지?</h4>
+          <p>철거, 목공, 도배, 마루… 공정 순서를 몰라 어디서부터 시작해야 할지 모르겠습니다.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">💸</div>
+        <div>
+          <h4>예산이 얼마나 필요할까?</h4>
+          <p>업체마다 다른 견적, 어디서 얼마를 써야 할지 전체 그림이 안 잡힙니다.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">📞</div>
+        <div>
+          <h4>업체 연락처가 다 흩어져 있어요</h4>
+          <p>카카오톡·메모장·문자에 업체 정보가 뿔뿔이 흩어져 있습니다.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-emoji">📅</div>
+        <div>
+          <h4>일정 관리가 너무 복잡해요</h4>
+          <p>공정이 겹치거나 빠지지 않도록 일정을 한눈에 볼 방법이 없습니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-section" id="features">
+  <div class="section-inner">
+    <span class="section-tag">주요 기능</span>
+    <h2 class="section-title">인테리어 계획의<br>모든 것을 한 곳에</h2>
+    <p class="section-desc">복잡한 반셀프 인테리어를 체계적으로 관리할 수 있도록 필요한 기능을 담았습니다.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feat-icon">🔧</div>
+        <h3>12가지 공정 관리</h3>
+        <p>철거·샷시·목공·타일·욕실·도배·가구·전기·도장·마루·방수·조명까지. 공정별 카드로 체계적으로 관리하세요.</p>
+        <span class="feature-tag">공정팁 제공</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">💰</div>
+        <h3>예산 자동 계산</h3>
+        <p>공정별 상세 내역을 입력하면 예상 비용이 자동으로 합산됩니다. 전체 예산을 한눈에 파악하세요.</p>
+        <span class="feature-tag">실시간 합산</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">📅</div>
+        <h3>캘린더 일정 관리</h3>
+        <p>공정별 시작일·종료일을 설정하면 캘린더로 전체 공사 일정을 확인할 수 있습니다.</p>
+        <span class="feature-tag">기간 자동 계산</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🏢</div>
+        <h3>담당 업체 연결</h3>
+        <p>공정마다 담당 업체 이름과 연락처를 기록하세요. 더 이상 연락처를 여기저기 찾지 않아도 됩니다.</p>
+        <span class="feature-tag">업체 한곳에</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">👥</div>
+        <h3>가족·전문가 공동작업</h3>
+        <p>초대 링크 하나로 가족이나 인테리어 전문가를 초대해 실시간으로 함께 계획을 세울 수 있습니다.</p>
+        <span class="feature-tag">실시간 동기화</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">☁️</div>
+        <h3>클라우드 자동 저장</h3>
+        <p>구글 로그인 시 계획이 자동으로 클라우드에 저장됩니다. 어느 기기에서든 이어서 사용하세요.</p>
+        <span class="feature-tag">멀티 디바이스</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-section">
+  <div class="section-inner" style="text-align:center;">
+    <span class="section-tag">시작 방법</span>
+    <h2 class="section-title">3단계로<br>바로 시작하세요</h2>
+    <p class="section-desc">복잡한 설정 없이, 지금 당장 내 인테리어 계획을 시작할 수 있습니다.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-circle">1</div>
+      <div class="step-content">
+        <h4>공사 정보 입력</h4>
+        <p>주소, 평수, 시공 범위 등 기본 정보를 입력하고 내 공사 프로젝트를 만드세요. 1분이면 충분합니다.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-circle">2</div>
+      <div class="step-content">
+        <h4>공정별 계획 작성</h4>
+        <p>필요한 공정을 추가하고, 상세 내역·예상 비용·일정·담당 업체를 하나씩 채워 나가세요.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-circle">3</div>
+      <div class="step-content">
+        <h4>가족·업체와 공유</h4>
+        <p>완성된 계획을 링크 하나로 공유하거나, 가족·전문가를 초대해 함께 완성해 나가세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLLAB SECTION -->
+<section class="collab-section">
+  <div class="section-inner" style="margin:0 auto;">
+    <span class="section-tag">공동작업</span>
+    <h2 class="section-title" style="margin-bottom:14px;">혼자 하지 않아도<br>됩니다</h2>
+    <p class="section-desc">인테리어는 가족과 함께 결정하고, 전문가의 도움도 받아야 합니다.<br>바이브스페이스에서 모두 함께 하세요.</p>
+    <div class="collab-badges">
+      <div class="collab-badge">👨‍👩‍👧 가족과 공동 편집</div>
+      <div class="collab-badge">🏗️ 인테리어 전문가 초대</div>
+      <div class="collab-badge">🔗 링크 하나로 초대</div>
+      <div class="collab-badge">⚡ 실시간 동기화</div>
+    </div>
+    <a href="./index.html" class="btn-collab">지금 함께 시작하기 →</a>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="section-inner" style="margin:0 auto;">
+    <span class="section-tag">무료로 시작</span>
+    <h2 class="section-title">내 인테리어 계획,<br>오늘 시작해보세요</h2>
+    <p class="section-desc">회원가입 없이도 바로 사용할 수 있습니다.<br>구글 로그인 시 클라우드 저장 및 공동작업 가능.</p>
+    <div>
+      <a href="./index.html" class="btn-cta-main" style="display:inline-flex;">
+        ✦ 무료로 시작하기
+      </a>
+      <p class="cta-note">
+        <strong>회원가입 불필요</strong> · 완전 무료 · 브라우저에서 바로 사용
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Vibe<span>space</span></div>
+  <p class="footer-tagline">반셀프인테리어 플래닝 서비스</p>
+  <div class="footer-links">
+    <a href="./index.html">앱 열기</a>
+    <a href="./index.html">서비스 시작하기</a>
+  </div>
+  <p>© 2025 Vibespace. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

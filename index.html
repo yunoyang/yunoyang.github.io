@@ -1407,10 +1407,14 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="dlg-login">
   <div class="dialog">
     <h3>로그인</h3>
-    <p style="font-size:14px;color:#888;line-height:1.6;">Google 계정으로 로그인하세요.</p>
-    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:48px;margin:8px 0;"></div>
-    <div id="google-signin-fallback" style="display:none;text-align:center;padding:8px 0;">
-      <p style="font-size:13px;color:#bbb;line-height:1.6;">Google 로그인 설정이 필요합니다.<br>관리자에게 문의하세요.</p>
+    <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:16px;">Google 계정으로 로그인하세요.</p>
+    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:48px;margin:0 0 4px;"></div>
+    <div id="google-signin-fallback" style="display:none;padding:4px 0 8px;">
+      <button class="google-btn" onclick="retryGoogleSignIn()" style="width:100%;">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Google 계정으로 계속하기
+      </button>
+      <p style="font-size:12px;color:#bbb;text-align:center;margin-top:8px;line-height:1.6;">버튼이 작동하지 않으면 페이지를 새로고침 후<br>다시 시도해주세요.</p>
     </div>
     <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-login')">취소</button></div>
   </div>
@@ -1508,32 +1512,77 @@ function requireLogin(action) {
   pendingAction = action;
   openLoginDialog();
 }
-function openLoginDialog() {
-  openDialog('dlg-login');
-  setTimeout(() => {
-    const btn = document.getElementById('google-signin-btn');
-    if (!btn) return;
-    btn.innerHTML = '';
-    const fallback = document.getElementById('google-signin-fallback');
-    if (typeof google !== 'undefined' && google.accounts &&
-        GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-      try {
-        google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
-        google.accounts.id.renderButton(btn, { theme:'outline', size:'large', text:'signin_with', width:300 });
-        if (fallback) fallback.style.display = 'none';
-        // GSI가 도메인 미등록 시 에러 없이 렌더링 안 함 → 600ms 후 체크
-        setTimeout(() => {
-          if (!btn.querySelector('iframe') && !btn.querySelector('div[role]')) {
-            btn.style.display = 'none';
-            if (fallback) fallback.style.display = 'block';
-          }
-        }, 600);
-      } catch(e) { if (fallback) fallback.style.display = 'block'; }
-    } else {
+function _renderGoogleButton() {
+  const btn = document.getElementById('google-signin-btn');
+  const fallback = document.getElementById('google-signin-fallback');
+  if (!btn) return;
+  btn.innerHTML = '';
+  if (typeof google !== 'undefined' && google.accounts &&
+      GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+    try {
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+      google.accounts.id.renderButton(btn, { theme:'outline', size:'large', text:'signin_with', width:280 });
+      if (fallback) fallback.style.display = 'none';
+      // GSI가 도메인 미등록 시 iframe 생성 안 됨 → 800ms 후 체크
+      setTimeout(() => {
+        if (!btn.querySelector('iframe') && !btn.querySelector('div[role]')) {
+          btn.style.display = 'none';
+          if (fallback) fallback.style.display = 'block';
+        }
+      }, 800);
+    } catch(e) {
+      btn.style.display = 'none';
       if (fallback) fallback.style.display = 'block';
     }
-    lucide.createIcons();
-  }, 150);
+  } else {
+    btn.style.display = 'none';
+    if (fallback) fallback.style.display = 'block';
+  }
+}
+function openLoginDialog() {
+  openDialog('dlg-login');
+  // GSI 스크립트 로드 대기 후 버튼 렌더링
+  if (typeof google !== 'undefined' && google.accounts) {
+    setTimeout(_renderGoogleButton, 100);
+  } else {
+    // GSI 아직 로드 중 → 최대 3초 대기
+    let attempts = 0;
+    const wait = setInterval(() => {
+      attempts++;
+      if (typeof google !== 'undefined' && google.accounts) {
+        clearInterval(wait);
+        _renderGoogleButton();
+      } else if (attempts >= 15) {
+        clearInterval(wait);
+        const btn = document.getElementById('google-signin-btn');
+        const fallback = document.getElementById('google-signin-fallback');
+        if (btn) btn.style.display = 'none';
+        if (fallback) fallback.style.display = 'block';
+      }
+    }, 200);
+  }
+}
+function retryGoogleSignIn() {
+  if (typeof google !== 'undefined' && google.accounts) {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // prompt 실패 시 renderButton 재시도
+        const btn = document.getElementById('google-signin-btn');
+        const fallback = document.getElementById('google-signin-fallback');
+        if (btn) { btn.style.display = 'flex'; btn.innerHTML = ''; }
+        if (fallback) fallback.style.display = 'none';
+        try {
+          google.accounts.id.renderButton(btn, { theme:'outline', size:'large', text:'signin_with', width:280 });
+        } catch(e) {
+          if (btn) btn.style.display = 'none';
+          if (fallback) fallback.style.display = 'block';
+        }
+      }
+    });
+  } else {
+    alert('Google 로그인 서비스를 불러오는 중입니다. 페이지를 새로고침 후 다시 시도해주세요.');
+  }
 }
 function handleGoogleResponse(response) {
   try {
