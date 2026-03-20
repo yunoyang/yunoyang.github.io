@@ -71,14 +71,14 @@ button, input, textarea, select { font-family:var(--font); }
 .project-selector { position:relative; flex:1; min-width:0; }
 .project-badge {
   display:inline-flex; align-items:center; gap:6px;
-  background:var(--primary-bg); border-radius:10px; padding:8px 12px;
-  cursor:pointer; border:none; font-family:var(--font); max-width:260px;
+  background:transparent; border-radius:10px; padding:10px 6px 10px 2px;
+  cursor:pointer; border:none; font-family:var(--font); max-width:280px;
 }
 .project-badge .name {
-  color:var(--primary); font-size:16px; font-weight:700;
-  letter-spacing:-.4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:#111; font-size:18px; font-weight:600;
+  letter-spacing:-.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-.project-badge .pchev { color:var(--primary); transition:transform .2s; display:flex; }
+.project-badge .pchev { color:#888; transition:transform .2s; display:flex; }
 .project-badge.open .pchev { transform:rotate(180deg); }
 
 /* Project dropdown */
@@ -127,43 +127,51 @@ button, input, textarea, select { font-family:var(--font); }
 .autosave-toast.show { opacity:1; }
 
 /* ===== SUMMARY ===== */
-.summary-wrap { padding:16px 20px 0; }
+.summary-wrap { padding:16px 20px 0; background:#fff; padding-bottom:0; }
+.summary-unified {
+  background:#fff; border-radius:16px;
+  border:1px solid var(--border-light); overflow:hidden;
+}
 .summary-toggle-row {
   display:flex; align-items:center; justify-content:space-between;
-  padding:11px 16px; background:#fff; border-radius:10px;
-  border:1px solid var(--border-light); cursor:pointer;
+  padding:14px 18px; background:transparent; border-radius:0;
+  border:none; cursor:pointer;
 }
 .summary-toggle-row span { font-size:14px; font-weight:600; }
 .sum-chev { transition:transform .3s; display:flex; }
 .sum-chev.open { transform:rotate(180deg); }
 .summary-card {
-  background:#fff; border-radius:10px; padding:16px 20px;
-  border:1px solid var(--border-light);
-  margin-top:4px; max-height:400px; overflow:hidden;
-  transition: max-height .3s ease, padding .3s ease, opacity .3s ease, margin .3s ease;
+  background:transparent; border-radius:0; padding:0 18px 14px;
+  border:none; margin-top:0; max-height:400px; overflow:hidden;
+  transition: max-height .3s ease, padding .3s ease, opacity .3s ease;
 }
-.summary-card.collapsed { max-height:0!important; padding:0 20px; opacity:0; border:0; margin-top:0; }
-.summary-list { display:flex; flex-direction:column; gap:10px; }
+.summary-card.collapsed { max-height:0!important; padding:0 18px; opacity:0; }
+.summary-list { display:flex; flex-direction:column; gap:12px; }
 .summary-row { display:flex; align-items:center; justify-content:space-between; height:28px; }
 .summary-row .label { font-size:14px; color:var(--text-muted); }
-.summary-row .value { font-size:16px; font-weight:700; }
-.summary-divider { height:1px; background:var(--divider); }
+.summary-row .value { font-size:16px; font-weight:600; }
+.summary-divider { display:none; }
 
 /* ===== TABS ===== */
-.tab-section { padding:14px 20px 0; display:flex; align-items:center; gap:10px; }
+.tab-section {
+  padding:0 20px; display:flex; align-items:center; background:#fff;
+  border-bottom:1.5px solid #eef0f5;
+}
 .tab-toggle {
-  flex:1; display:flex; height:44px; background:var(--tab-bg);
-  border-radius:10px; border:1px solid var(--tab-border); overflow:hidden;
+  flex:1; display:flex; height:48px; background:transparent;
+  border-radius:0; border:none; overflow:visible;
 }
 .tab-btn {
   flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-  font-size:14px; font-weight:500; color:var(--tab-inactive);
-  cursor:pointer; border:none; background:none; transition:all .2s;
+  font-size:14px; font-weight:500; color:#818590;
+  cursor:pointer; border:none; background:transparent; transition:all .2s;
+  border-bottom:2.5px solid transparent; margin-bottom:-1.5px;
 }
 .tab-btn svg { width:15px; height:15px; }
 .tab-btn.active {
-  background:#fff; color:#111; font-weight:700; border-radius:10px;
-  border:1px solid #d8dff0;
+  background:transparent; color:#222222; font-weight:600;
+  border-radius:0; border:none;
+  border-bottom:2.5px solid var(--primary);
 }
 
 /* ===== CARDS ===== */
@@ -174,11 +182,11 @@ button, input, textarea, select { font-family:var(--font); }
   gap:16px;
 }
 .work-card {
-  background:#fff; border-radius:14px; padding:24px;
+  background:#fff; border-radius:16px; padding:24px;
   border:1px solid var(--card-border); box-shadow:var(--card-shadow);
 }
 .work-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.work-card-title { font-size:18px; font-weight:700; }
+.work-card-title { font-size:18px; font-weight:600; }
 .card-header-right { display:flex; align-items:center; gap:8px; }
 .work-card-cost { font-size:17px; font-weight:700; color:var(--primary); }
 .card-del-btn { background:none; border:none; cursor:pointer; color:#ccc; padding:2px; display:flex; border-radius:4px; }
@@ -516,8 +524,51 @@ button, input, textarea, select { font-family:var(--font); }
   padding:10px 22px; border-radius:8px; border:none;
   font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font);
 }
+.dialog-actions.split button { flex:1; height:48px; border-radius:10px; }
 .btn-cancel { background:#f0f2f5; color:#555; }
 .btn-confirm { background:var(--primary); color:#fff; }
+
+/* ===== SHARE REDESIGN ===== */
+.share-link-box {
+  display:flex; align-items:center; gap:10px;
+  border:1.5px solid #e4e9f2; border-radius:12px; padding:12px 14px;
+  background:#f8f9fc; margin-bottom:20px;
+}
+.share-link-url {
+  flex:1; font-size:13px; color:#555; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap;
+}
+.share-link-copy-btn {
+  display:flex; align-items:center; gap:5px; background:none; border:none;
+  cursor:pointer; color:var(--primary); font-size:13px; font-weight:600;
+  font-family:var(--font); flex-shrink:0; padding:4px 8px;
+  border-radius:8px; transition:background .15s;
+}
+.share-link-copy-btn:hover { background:var(--primary-bg); }
+.share-link-copy-btn svg { width:15px; height:15px; }
+.share-social-divider {
+  display:flex; align-items:center; gap:10px;
+  font-size:12px; color:#aaa; font-weight:500; margin-bottom:20px;
+}
+.share-social-divider::before, .share-social-divider::after {
+  content:''; flex:1; height:1px; background:#eef0f5;
+}
+.share-social-row {
+  display:flex; justify-content:center; gap:28px; margin-bottom:8px;
+}
+.share-social-btn {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  cursor:pointer; border:none; background:none; font-family:var(--font);
+}
+.share-social-icon {
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.share-social-icon.kakao-icon { background:#FEE500; }
+.share-social-icon.x-icon { background:#000; }
+.share-social-icon.ig-icon { background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+.share-social-label { font-size:12px; color:#555; font-weight:500; }
 @media(min-width:600px) {
   .overlay { align-items:center; padding:20px; }
   .dialog { border-radius:20px; }
@@ -974,17 +1025,17 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="screen-scroll" id="main-scroll">
     <!-- Summary -->
     <div class="summary-wrap">
-      <div class="summary-toggle-row" onclick="toggleSummary()">
-        <span>공사 한눈에 보기</span>
-        <span class="sum-chev open" id="sum-chev"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
-      </div>
-      <div class="summary-card" id="summary-card">
-        <div class="summary-list">
-          <div class="summary-row"><span class="label">예상 총 비용</span><span class="value" id="sum-cost">0원</span></div>
-          <div class="summary-divider"></div>
-          <div class="summary-row"><span class="label">전체 공사 기간</span><span class="value" id="sum-duration">-</span></div>
-          <div class="summary-divider"></div>
-          <div class="summary-row"><span class="label">함께하는 업체</span><span class="value" id="sum-companies">0개 업체</span></div>
+      <div class="summary-unified">
+        <div class="summary-toggle-row" onclick="toggleSummary()">
+          <span>공사 한눈에 보기</span>
+          <span class="sum-chev open" id="sum-chev"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
+        </div>
+        <div class="summary-card" id="summary-card">
+          <div class="summary-list">
+            <div class="summary-row"><span class="label">예상 총 비용</span><span class="value" id="sum-cost">0원</span></div>
+            <div class="summary-row"><span class="label">전체 공사 기간</span><span class="value" id="sum-duration">-</span></div>
+            <div class="summary-row"><span class="label">함께하는 업체</span><span class="value" id="sum-companies">0개 업체</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -998,7 +1049,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan">
+    <div id="tab-plan" style="background:#EDF0F4; min-height:60vh;">
       <div class="cards-area" id="work-cards"></div>
       <div class="add-btn-bottom" onclick="openAddProcess()">
         <i data-lucide="plus"></i> 공정 단계 추가
@@ -1006,7 +1057,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Calendar Tab -->
-    <div id="tab-calendar" style="display:none;">
+    <div id="tab-calendar" style="display:none; background:#EDF0F4; min-height:60vh;">
       <div id="calendar-container"></div>
     </div>
   </div>
@@ -1222,9 +1273,9 @@ button, input, textarea, select { font-family:var(--font); }
       <!-- 기존 업체 표시 -->
       <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;color:#555;line-height:1.7;"></div>
     </div>
-    <div class="dialog-actions" style="margin-top:16px;">
+    <div class="dialog-actions split" style="margin-top:16px;">
       <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
-      <button class="btn-primary" onclick="saveCompanyManual()">저장</button>
+      <button class="btn-confirm" onclick="saveCompanyManual()">저장</button>
     </div>
   </div>
 </div>
@@ -1251,22 +1302,45 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- 링크 공유 탭 -->
     <div class="share-tab-pane active" id="stab-share-pane">
-      <div class="share-options">
-        <div class="share-option" onclick="shareAction('native')">
-          <span class="s-icon"><i data-lucide="share-2"></i></span><span class="s-text">공유하기 (기본)</span>
-        </div>
-        <div class="share-option" onclick="shareAction('link')">
-          <span class="s-icon"><i data-lucide="link"></i></span><span class="s-text">링크 복사</span>
-        </div>
-        <div class="share-option" onclick="shareAction('kakao')">
-          <span class="s-icon" style="font-size:20px;">💬</span><span class="s-text">카카오톡</span>
-        </div>
-        <div class="share-option" onclick="shareAction('twitter')">
-          <span class="s-icon"><i data-lucide="twitter"></i></span><span class="s-text">Twitter / X</span>
-        </div>
-        <div class="share-option" onclick="shareAction('facebook')">
-          <span class="s-icon"><i data-lucide="facebook"></i></span><span class="s-text">Facebook</span>
-        </div>
+      <!-- 링크 복사 박스 -->
+      <div class="share-link-box">
+        <span class="share-link-url" id="share-link-url-text">https://vibespacekorea.com</span>
+        <button class="share-link-copy-btn" onclick="shareAction('link')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          복사
+        </button>
+      </div>
+      <!-- SNS 구분선 -->
+      <div class="share-social-divider">SNS로 공유</div>
+      <!-- SNS 아이콘 3종 -->
+      <div class="share-social-row">
+        <!-- 카카오톡 -->
+        <button class="share-social-btn" onclick="shareAction('kakao')">
+          <div class="share-social-icon kakao-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 5C9.925 5 5 8.806 5 13.5c0 2.97 1.918 5.586 4.85 7.157l-1.02 3.81a.25.25 0 0 0 .384.272l4.636-3.082A13.5 13.5 0 0 0 16 21.999c6.075 0 11-3.806 11-8.5S22.075 5 16 5z" fill="#3C1E1E"/>
+            </svg>
+          </div>
+          <span class="share-social-label">카카오톡</span>
+        </button>
+        <!-- X (Twitter) -->
+        <button class="share-social-btn" onclick="shareAction('twitter')">
+          <div class="share-social-icon x-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631 5.905-5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </div>
+          <span class="share-social-label">X</span>
+        </button>
+        <!-- Instagram -->
+        <button class="share-social-btn" onclick="shareAction('instagram')">
+          <div class="share-social-icon ig-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </div>
+          <span class="share-social-label">인스타그램</span>
+        </button>
       </div>
     </div>
 
@@ -2592,21 +2666,25 @@ function openShareDialog() { closeAllMenus(); gtag('event', 'share_open'); track
 function openExpertDialog() { closeAllMenus(); openDialog('dlg-expert'); }
 function shareAction(type) {
   const proj = getProject();
-  const url = window.location.href;
+  const url = 'https://vibespacekorea.com';
   const text = `[Vibespace] ${proj ? proj.name : '시공 계획'}`;
-  if (type === 'native') {
-    navigator.share ? navigator.share({title:text, url}).catch(()=>{}) : shareAction('link');
-  } else if (type === 'link') {
-    navigator.clipboard ? navigator.clipboard.writeText(url).then(()=>alert('링크가 복사되었습니다!')) : alert('링크: ' + url);
+  if (type === 'link') {
+    navigator.clipboard ? navigator.clipboard.writeText(url).then(()=>showToastMessage('링크가 복사됐습니다!')) : alert('링크: ' + url);
+    return;
   } else if (type === 'twitter') {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url),'_blank');
-  } else if (type === 'facebook') {
-    window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url),'_blank');
   } else if (type === 'kakao') {
-    alert('카카오톡 공유는 카카오 SDK 연동 후 이용 가능합니다.\n링크를 복사하여 공유해 주세요.');
-    shareAction('link'); return;
+    navigator.clipboard.writeText(url).then(()=>showToastMessage('링크를 복사했습니다. 카카오톡에 붙여넣기 하세요!'));
+    return;
+  } else if (type === 'instagram') {
+    navigator.clipboard.writeText(url).then(()=>showToastMessage('링크를 복사했습니다. 인스타그램 DM에 붙여넣기 하세요!'));
+    return;
   }
   closeDialog('dlg-share');
+}
+function _updateShareLinkBox() {
+  const el = document.getElementById('share-link-url-text');
+  if (el) el.textContent = 'https://vibespacekorea.com';
 }
 
 // ===== DIALOGS =====
