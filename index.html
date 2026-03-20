@@ -1064,9 +1064,6 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Plan Tab -->
     <div id="tab-plan" style="background:#EDF0F4; min-height:60vh;">
       <div class="cards-area" id="work-cards"></div>
-      <div class="add-btn-bottom" onclick="openAddProcess()">
-        <i data-lucide="plus"></i> 공정 단계 추가
-      </div>
     </div>
 
     <!-- Calendar Tab -->
@@ -1088,7 +1085,7 @@ button, input, textarea, select { font-family:var(--font); }
       <i data-lucide="file-text"></i> 공사 정보
     </button>
     <button class="dropdown-item" onclick="openShareDialog()">
-      <i data-lucide="share-2"></i> 업체·가족과 공유
+      <i data-lucide="share-2"></i> 공유하기
     </button>
     <button class="dropdown-item" onclick="openExpertDialog()">
       <i data-lucide="star"></i> 전문가 검토 받기<span class="menu-badge">준비 중</span>
@@ -1334,9 +1331,7 @@ button, input, textarea, select { font-family:var(--font); }
     <h3>공유하기</h3>
     <div class="share-tabs">
       <button class="share-tab-btn active" id="stab-share" onclick="switchShareTab('share')">링크 공유</button>
-      <button class="share-tab-btn" id="stab-collab" onclick="switchShareTab('collab')">
-        👥 공동작업
-      </button>
+      <button class="share-tab-btn" id="stab-collab" onclick="switchShareTab('collab')">공동작업</button>
     </div>
 
     <!-- 링크 공유 탭 -->
@@ -1388,7 +1383,9 @@ button, input, textarea, select { font-family:var(--font); }
       <div id="collab-tab-body"><!-- renderCollabTab()으로 채움 --></div>
     </div>
 
-    <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-share')">닫기</button></div>
+    <div style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeDialog('dlg-share')" style="width:100%;height:48px;border-radius:12px;font-size:15px;font-weight:600;">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -2127,7 +2124,10 @@ function renderWorkCards() {
           ${p.companyData ? `<div class="f-company-selected">
             <span class="f-company-name">${esc(p.companyData.name)}</span>
           </div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
-          <i data-lucide="pen-line" style="width:16px;height:16px;color:#333333;flex-shrink:0;"></i>
+          ${(p.companyData || p.company)
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
+          }
         </span>
       </div>
       <div class="field-divider"></div>
