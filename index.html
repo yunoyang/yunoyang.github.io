@@ -2026,9 +2026,58 @@ function handleGoogleResponse(response) {
   } catch(e) { alert('로그인 오류가 발생했습니다.'); }
 }
 
+async function _notifyNewUserIfNeeded() {
+  if (!_db || !state.user?.email) return;
+  try {
+    const userRef = _db.collection('vb_users').doc(state.user.email.replace(/\./g,'_'));
+    const doc = await userRef.get();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    if (!doc.exists) {
+      // ── 신규 가입자 ──
+      await userRef.set({
+        email: state.user.email,
+        name:  state.user.name,
+        picture: state.user.picture || '',
+        firstLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLoginAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        loginCount: 1,
+      });
+      const tgText =
+        `🎉 *신규 가입자!*\n\n` +
+        `👤 ${state.user.name}\n` +
+        `📧 ${state.user.email}\n` +
+        `🕐 ${dateStr}`;
+      fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id:_TG_CHAT_ID, text:tgText, parse_mode:'Markdown' })
+      });
+    } else {
+      // ── 기존 유저 재로그인 ──
+      const loginCount = (doc.data().loginCount || 1) + 1;
+      await userRef.update({
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        loginCount,
+      });
+      const tgText =
+        `🔄 *재로그인*\n\n` +
+        `👤 ${state.user.name}\n` +
+        `📧 ${state.user.email}\n` +
+        `🕐 ${dateStr}\n` +
+        `📊 총 로그인 ${loginCount}회`;
+      fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id:_TG_CHAT_ID, text:tgText, parse_mode:'Markdown' })
+      });
+    }
+  } catch(e) { console.warn('User notify failed:', e); }
+}
+
 async function _autoUploadOnLogin() {
   const ok = await _initFirebase();
   if (!ok) return;
+  _notifyNewUserIfNeeded(); // 신규/재로그인 텔레그램 알림 (비동기, 논블로킹)
 
   // ── 클라우드 전체 프로젝트 조회 (ownerEmail + meta.owner.email 두 방식 모두 시도) ──
   showToastMessage('☁️ 클라우드 데이터 확인 중...');
