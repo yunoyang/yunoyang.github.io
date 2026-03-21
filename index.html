@@ -167,7 +167,7 @@ button, input, textarea, select { font-family:var(--font); }
   overflow:hidden;
 }
 .screen.active { opacity:1; pointer-events:all; transform:translateX(0); z-index:2; }
-.screen-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.screen-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; }
 .screen-scroll::-webkit-scrollbar { display:none; }
 
 /* ===== HEADER ===== */
@@ -261,7 +261,7 @@ button, input, textarea, select { font-family:var(--font); }
 .autosave-toast.show { opacity:1; }
 
 /* ===== SUMMARY ===== */
-.summary-wrap { padding:16px 20px 0; background:#fff; padding-bottom:0; }
+.summary-wrap { padding:16px 20px 0; background:#fff; padding-bottom:0; flex-shrink:0; }
 .summary-unified {
   background:#fff; border-radius:16px;
   border:1px solid var(--border-light); overflow:hidden;
@@ -289,7 +289,7 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== TABS ===== */
 .tab-section {
   padding:0 24px; display:flex; align-items:center; background:#fff;
-  border-bottom:1.5px solid #eef0f5;
+  border-bottom:1.5px solid #eef0f5; flex-shrink:0;
 }
 .tab-toggle {
   flex:1; display:flex; height:54px; background:transparent;
@@ -1355,12 +1355,12 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan" style="background:#EDF0F4; min-height:60vh;">
+    <div id="tab-plan" style="background:#EDF0F4; flex:1;">
       <div class="cards-area" id="work-cards"></div>
     </div>
 
     <!-- Calendar Tab -->
-    <div id="tab-calendar" style="display:none; background:#EDF0F4; min-height:60vh;">
+    <div id="tab-calendar" style="display:none; background:#EDF0F4; flex:1;">
       <div id="calendar-container"></div>
     </div>
   </div>
