@@ -2282,6 +2282,12 @@ function selectProjectDD(id) {
 }
 function deleteProjectDD(id) {
   if (!confirm('이 프로젝트를 삭제하시겠습니까?')) return;
+  // Firestore에서도 삭제 (재로그인 시 복원 방지)
+  const target = state.projects.find(p => p.id === id);
+  if (target?.cloudId && _db) {
+    _db.collection('vb_projects').doc(target.cloudId).delete()
+      .catch(e => console.warn('Firestore project delete failed:', e));
+  }
   state.projects = state.projects.filter(p => p.id !== id);
   if (state.currentProjectId === id) state.currentProjectId = state.projects[0]?.id || null;
   if (!state.projects.length) initDefaultProject();
@@ -2473,6 +2479,11 @@ function toggleCardMenu(e, procId, procType) {
   // 열기
   _cardMenuProcId = procId;
   _cardMenuProcType = procType;
+  // 버튼 data 속성에도 직접 저장 (글로벌 변수 소실 방지)
+  const delBtn = document.getElementById('card-menu-del');
+  const tipBtn = document.getElementById('card-menu-tip');
+  if (delBtn) delBtn.dataset.procId = procId;
+  if (tipBtn) tipBtn.dataset.procType = procType;
   // 위치 계산
   const menuW = 150, menuH = 90;
   let top = rect.bottom + 4;
@@ -2483,21 +2494,24 @@ function toggleCardMenu(e, procId, procType) {
   menu.style.left = left + 'px';
   // 시공팁 버튼 노출 여부
   const hasTip = !!getTipsForProcess(_cardMenuProcType);
-  document.getElementById('card-menu-tip').style.display = hasTip ? '' : 'none';
+  if (tipBtn) tipBtn.style.display = hasTip ? '' : 'none';
   menu.classList.add('open');
   setTimeout(() => lucide.createIcons({ nodes: [menu] }), 10);
 }
 
 function cardMenuDelete() {
-  const procId = _cardMenuProcId;  // closeCardMenu() 전에 저장
+  const delBtn = document.getElementById('card-menu-del');
+  // data attribute 우선, 글로벌 변수 fallback
+  const procId = (delBtn?.dataset?.procId) || _cardMenuProcId;
   closeCardMenu();
-  deleteProcess(procId);
+  if (procId) deleteProcess(procId);
 }
 
 function cardMenuTip() {
-  const procType = _cardMenuProcType;  // closeCardMenu() 전에 저장
+  const tipBtn = document.getElementById('card-menu-tip');
+  const procType = (tipBtn?.dataset?.procType) || _cardMenuProcType;
   closeCardMenu();
-  showProcessTip(procType);
+  if (procType) showProcessTip(procType);
 }
 
 function closeCardMenu() {
@@ -2665,9 +2679,13 @@ function confirmEditField() {
   closeDialog('dlg-edit-field');
 }
 function deleteProcess(procId) {
+  if (!procId) { console.warn('deleteProcess: procId is null'); return; }
   if (!confirm('이 공정을 삭제하시겠습니까?')) return;
   const proj = getProject();
+  if (!proj) return;
+  const before = proj.processes.length;
   proj.processes = proj.processes.filter(p => p.id !== procId);
+  if (proj.processes.length === before) { console.warn('deleteProcess: procId not found', procId); return; }
   save(); renderAll();
 }
 function deleteDetail(procId, detailId) {
