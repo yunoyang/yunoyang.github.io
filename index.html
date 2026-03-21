@@ -2001,72 +2001,40 @@ function handleGoogleResponse(response) {
 }
 
 async function _autoUploadOnLogin() {
-  const proj = getProject();
-  if (!proj) return;
   const ok = await _initFirebase();
   if (!ok) return;
 
-  // ── 이미 클라우드 프로젝트면 리스너만 재개 ──
-  if (proj.isCloud && proj.cloudId) {
-    _startCollabListener(proj.cloudId);
-    updateCollabIndicator(proj.collaborators||[], proj.owner);
+  // ── 클라우드 전체 프로젝트 조회 (ownerEmail + meta.owner.email 두 방식 모두 시도) ──
+  showToastMessage('☁️ 클라우드 데이터 확인 중...');
+  const allCloudProjs = await _fetchAllMyCloudProjects();
+
+  if (allCloudProjs.length) {
+    // 클라우드에 데이터 있음 → processes 많은 순으로 정렬 후 교체
+    allCloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
+    state.projects = allCloudProjs;
+    state.currentProjectId = state.projects[0]?.id || null;
+    save();
+    renderAll();
+    showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+    for (const p of state.projects) {
+      if (p.cloudId) {
+        _startCollabListener(p.cloudId);
+        updateCollabIndicator(p.collaborators||[], p.owner);
+      }
+    }
     return;
   }
 
-  // ── 신규 기기: 클라우드에 내 데이터가 있는지 먼저 확인 ──
-  // 로컬이 빈 기본 프로젝트인지 판단 (이름이 기본값이고 공정이 0개면 빈 것으로 간주)
+  // ── 클라우드에 데이터 없음 → 로컬에 실제 데이터 있을 때만 업로드 ──
+  const proj = getProject();
+  if (!proj) return;
   const isLocalEmpty = !proj.processes?.length;
-  showToastMessage('☁️ 클라우드 데이터 확인 중...');
-
-  try {
-    const snap = await _db.collection('vb_projects')
-      .where('ownerEmail', '==', state.user.email)
-      .limit(20)
-      .get();
-
-    if (!snap.empty) {
-      // ── 클라우드에 데이터 있음 → 다운로드해서 덮어쓰기 ──
-      const cloudProjs = [];
-      snap.forEach(doc => {
-        const data = doc.data();
-        const pd = data.projectData;
-        if (!pd) return;
-        pd.cloudId = doc.id;
-        pd.isCloud = true;
-        pd.collaborators = data.meta?.collaborators || [];
-        pd.owner = data.meta?.owner || {};
-        cloudProjs.push(pd);
-      });
-
-      if (cloudProjs.length) {
-        if (isLocalEmpty) {
-          // 로컬이 비어있으면 클라우드 데이터로 완전 교체
-          state.projects = cloudProjs;
-        } else {
-          // 로컬에 실제 데이터가 있으면 클라우드 프로젝트 추가 (중복 제외)
-          const existingIds = new Set(state.projects.map(p => p.cloudId).filter(Boolean));
-          for (const cp of cloudProjs) {
-            if (!existingIds.has(cp.cloudId)) state.projects.push(cp);
-          }
-        }
-        state.currentProjectId = state.projects[0]?.id || null;
-        save();
-        renderAll();
-        showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
-        const first = state.projects[0];
-        if (first?.cloudId) {
-          _startCollabListener(first.cloudId);
-          updateCollabIndicator(first.collaborators||[], first.owner);
-        }
-        return;
-      }
-    }
-  } catch(e) {
-    // 쿼리 실패(예: 인덱스 미생성)해도 업로드로 폴백
-    console.warn('Cloud fetch failed, falling back to upload:', e);
+  if (isLocalEmpty) {
+    // 빈 프로젝트를 클라우드에 올리지 않음 (다른 기기 데이터 오염 방지)
+    showToastMessage('💡 PC에서 프로젝트를 먼저 저장해주세요.');
+    return;
   }
 
-  // ── 클라우드에 데이터 없음 → 로컬 데이터 업로드 ──
   proj.isCloud = true;
   proj.owner = { email: state.user.email, name: state.user.name };
   try {
@@ -2081,6 +2049,44 @@ async function _autoUploadOnLogin() {
   } catch(e) {
     console.error('Auto upload failed:', e);
   }
+}
+
+// ── 내 모든 클라우드 프로젝트 조회 (ownerEmail / meta.owner.email 두 쿼리 병행) ──
+async function _fetchAllMyCloudProjects() {
+  if (!_db || !state.user?.email) return [];
+  const seenIds = new Set();
+  const result = [];
+
+  function _parseSnap(snap) {
+    snap.forEach(doc => {
+      if (seenIds.has(doc.id)) return;
+      seenIds.add(doc.id);
+      const data = doc.data();
+      const pd = data.projectData;
+      if (!pd) return;
+      pd.cloudId = doc.id;
+      pd.isCloud = true;
+      pd.collaborators = data.meta?.collaborators || [];
+      pd.owner = data.meta?.owner || {};
+      result.push(pd);
+    });
+  }
+
+  // 1) ownerEmail 쿼리 (새 문서)
+  try {
+    const s1 = await _db.collection('vb_projects')
+      .where('ownerEmail', '==', state.user.email).limit(20).get();
+    _parseSnap(s1);
+  } catch(e) { console.warn('ownerEmail query failed:', e); }
+
+  // 2) meta.owner.email 쿼리 (구버전 문서 — 자동 인덱스로 동작)
+  try {
+    const s2 = await _db.collection('vb_projects')
+      .where('meta.owner.email', '==', state.user.email).limit(20).get();
+    _parseSnap(s2);
+  } catch(e) { console.warn('meta.owner.email query failed:', e); }
+
+  return result;
 }
 function demoLogin() {
   state.loggedIn = true;
@@ -3836,6 +3842,7 @@ function _syncProjToCloud(proj) {
   if (!_db || !proj.cloudId) return;
   const payload = {
     projectData: JSON.parse(JSON.stringify(proj)),
+    ownerEmail: state.user.email,   // 구버전 문서 ownerEmail 자동 backfill
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
     'meta.updatedBy': state.user.email,
   };
@@ -4436,61 +4443,37 @@ async function _syncFromCloudOnStartup() {
   const ok = await _initFirebase();
   if (!ok) return;
 
-  const localProjects = state.projects || [];
-  const hasCloudIds = localProjects.some(p => p.isCloud && p.cloudId);
+  try {
+    // ownerEmail + meta.owner.email 두 쿼리로 구버전·신버전 문서 모두 조회
+    const cloudProjs = await _fetchAllMyCloudProjects();
 
-  // 이미 cloudId 있는 로컬 프로젝트 → 리스너만 재시작
-  if (hasCloudIds) {
-    for (const p of localProjects) {
+    if (!cloudProjs.length) {
+      // 클라우드에 없음 → 기존 리스너만 재시작
+      for (const p of (state.projects||[])) {
+        if (p.isCloud && p.cloudId) _startCollabListener(p.cloudId);
+      }
+      return;
+    }
+
+    // processes 수로 풍부도 비교 → 클라우드가 더 많거나 같으면 교체
+    cloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
+    const cloudTotal = cloudProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
+    const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
+
+    if (cloudTotal >= localTotal) {
+      state.projects = cloudProjs;
+      state.currentProjectId = state.projects[0]?.id || null;
+      save();
+      renderAll();
+      if (cloudTotal > 0) showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+    }
+
+    // 리스너 시작
+    for (const p of state.projects) {
       if (p.isCloud && p.cloudId) {
         _startCollabListener(p.cloudId);
         updateCollabIndicator(p.collaborators||[], p.owner);
       }
-    }
-    return;
-  }
-
-  // cloudId 없음(신규 기기) → 클라우드에서 내 프로젝트 조회
-  try {
-    const snap = await _db.collection('vb_projects')
-      .where('ownerEmail', '==', state.user.email)
-      .limit(20)
-      .get();
-
-    if (snap.empty) return; // 클라우드에도 없으면 패스
-
-    const cloudProjs = [];
-    snap.forEach(doc => {
-      const data = doc.data();
-      const pd = data.projectData;
-      if (!pd) return;
-      pd.cloudId  = doc.id;
-      pd.isCloud  = true;
-      pd.collaborators = data.meta?.collaborators || [];
-      pd.owner         = data.meta?.owner || {};
-      cloudProjs.push(pd);
-    });
-    if (!cloudProjs.length) return;
-
-    // 로컬이 빈 상태면 클라우드로 완전 교체
-    const isLocalEmpty = localProjects.every(p => !p.processes?.length);
-    if (isLocalEmpty) {
-      state.projects = cloudProjs;
-    } else {
-      const existingIds = new Set(localProjects.map(p => p.cloudId).filter(Boolean));
-      for (const cp of cloudProjs) {
-        if (!existingIds.has(cp.cloudId)) state.projects.push(cp);
-      }
-    }
-    state.currentProjectId = state.projects[0]?.id || null;
-    save();
-    renderAll();
-    showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
-
-    const first = state.projects[0];
-    if (first?.cloudId) {
-      _startCollabListener(first.cloudId);
-      updateCollabIndicator(first.collaborators||[], first.owner);
     }
   } catch(e) {
     console.warn('Startup cloud sync failed:', e);
