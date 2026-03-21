@@ -234,6 +234,23 @@ button, input, textarea, select { font-family:var(--font); }
 .icon-btn:hover { background:#f5f7fa; }
 .icon-btn svg { width:18px; height:18px; }
 
+/* ===== PROFILE AVATAR ===== */
+.profile-avatar-btn {
+  width:38px; height:38px; border-radius:50%; border:none; cursor:pointer; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; flex-shrink:0; transition:transform .15s, box-shadow .15s;
+  font-family:var(--font); background:var(--primary);
+}
+.profile-avatar-btn:hover { transform:scale(1.07); box-shadow:0 3px 12px rgba(0,0,0,0.18); }
+.profile-avatar-btn:active { transform:scale(.96); }
+.profile-avatar-img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+.profile-avatar-initials { font-size:14px; font-weight:700; color:#fff; letter-spacing:0; line-height:1; pointer-events:none; }
+.profile-avatar-login {
+  width:auto !important; border-radius:20px !important; padding:0 14px !important;
+  background:var(--primary) !important; gap:5px;
+}
+.profile-avatar-login span { font-size:13px; font-weight:700; color:#fff; pointer-events:none; }
+
 /* ===== AUTOSAVE ===== */
 .autosave-toast {
   position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
@@ -1265,12 +1282,7 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="collab-header-btn" onclick="openCollabFromHeader()" style="display:none;" title="공동작업 멤버">
-        <i data-lucide="users"></i>
-      </button>
-      <button class="icon-btn" onclick="toggleMainMenu(event)">
-        <i data-lucide="menu"></i>
-      </button>
+      <button id="profile-avatar-btn" class="profile-avatar-btn" onclick="handleAvatarClick(event)" title="메뉴"></button>
     </div>
   </div>
   <!-- 공동작업 활성 표시 바 -->
@@ -2023,6 +2035,7 @@ function handleMenuLogin() {
   }
 }
 function updateLoginUI() {
+  // 드롭다운 메뉴 로그인/로그아웃 항목
   const btn = document.getElementById('menu-login-btn');
   if (btn) {
     if (state.loggedIn) {
@@ -2033,6 +2046,8 @@ function updateLoginUI() {
       btn.classList.remove('danger');
     }
   }
+  // 프로필 아바타 버튼
+  _renderProfileAvatar();
   // Show/hide landing Google login button
   const googleBtn = document.querySelector('.landing-btn-google');
   if (googleBtn) googleBtn.style.display = state.loggedIn ? 'none' : '';
@@ -2040,6 +2055,52 @@ function updateLoginUI() {
   const loginGate = document.getElementById('main-login-gate');
   if (loginGate) loginGate.style.display = state.loggedIn ? 'none' : 'flex';
   lucide.createIcons();
+}
+
+function _renderProfileAvatar() {
+  const avatarBtn = document.getElementById('profile-avatar-btn');
+  if (!avatarBtn) return;
+  if (state.loggedIn) {
+    const { name, email, picture } = state.user;
+    avatarBtn.className = 'profile-avatar-btn';
+    if (picture) {
+      const initials = _getInitials(name);
+      const bgColor = _avatarColor(email);
+      avatarBtn.style.background = bgColor;
+      avatarBtn.innerHTML = `<img class="profile-avatar-img" src="${picture}" alt="${initials}"
+        onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'profile-avatar-initials\\'>${initials}</span>';this.parentElement.style.background='${bgColor}';">`;
+    } else {
+      avatarBtn.style.background = _avatarColor(email);
+      avatarBtn.innerHTML = `<span class="profile-avatar-initials">${_getInitials(name)}</span>`;
+    }
+  } else {
+    avatarBtn.className = 'profile-avatar-btn profile-avatar-login';
+    avatarBtn.style.background = '';
+    avatarBtn.innerHTML = `<span>로그인</span>`;
+  }
+}
+
+function handleAvatarClick(e) {
+  if (state.loggedIn) {
+    toggleMainMenu(e);
+  } else {
+    pendingAction = null;
+    openLoginDialog();
+  }
+}
+
+function _getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function _avatarColor(str) {
+  const COLORS = ['#3176ff','#16a34a','#f57c00','#9333ea','#e91e63','#00838f','#dc2626','#0891b2','#7c3aed','#db2777'];
+  let hash = 0;
+  for (let i = 0; i < (str||'a').length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  return COLORS[Math.abs(hash) % COLORS.length];
 }
 function doLogout() {
   state.loggedIn = false;
@@ -3501,7 +3562,7 @@ function closeAllMenus() {
   document.querySelectorAll('.project-badge').forEach(b => b.classList.remove('open'));
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('.dropdown') && !e.target.closest('.icon-btn') && !e.target.closest('.project-selector'))
+  if (!e.target.closest('.dropdown') && !e.target.closest('.icon-btn') && !e.target.closest('.profile-avatar-btn') && !e.target.closest('.project-selector'))
     closeAllMenus();
 });
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
