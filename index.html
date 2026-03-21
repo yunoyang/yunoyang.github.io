@@ -2522,11 +2522,13 @@ function showProcessTip(typeName) {
   openDialog('dlg-proc-tip');
 }
 
-// 카드 메뉴 외부 클릭 시 닫기
-document.addEventListener('click', () => {
+// 카드 메뉴 외부 클릭 시 닫기 (메뉴 내부 클릭은 제외)
+document.addEventListener('click', (e) => {
   const menu = document.getElementById('card-more-menu');
-  if (menu) menu.classList.remove('open');
-  _cardMenuProcId = null;
+  if (menu && !menu.contains(e.target)) {
+    menu.classList.remove('open');
+    _cardMenuProcId = null;
+  }
 }, true);
 
 // ===== COMPANY MANUAL INPUT =====
@@ -3893,29 +3895,34 @@ function updateCollabIndicator(collaborators, owner) {
   const bar = document.getElementById('collab-bar');
   const avatarsEl = document.getElementById('collab-avatars');
   const textEl = document.getElementById('collab-bar-text');
-  const headerBtn = document.getElementById('collab-header-btn');
   const proj = getProject();
-  if (!proj || !proj.isCloud) {
+
+  // owner 정보가 없으면 현재 로그인 유저로 fallback
+  const effectiveOwner = (owner?.email) ? owner : (state.user ? { email: state.user.email, name: state.user.name } : null);
+
+  const realCollabs = (collaborators || []).filter(c => c.email && c.email !== effectiveOwner?.email);
+
+  // 혼자(collaborators 없음)이면 collab-bar 숨김
+  if (!proj || !proj.isCloud || !realCollabs.length) {
     if (bar) bar.style.display = 'none';
-    if (headerBtn) headerBtn.style.display = 'none';
     return;
   }
+
   const all = [];
-  if (owner) all.push({ ...owner, role: 'owner' });
-  (collaborators || []).forEach(c => { if (c.email !== owner?.email) all.push(c); });
+  if (effectiveOwner) all.push({ ...effectiveOwner, role: 'owner' });
+  realCollabs.forEach(c => all.push(c));
+
   if (bar) bar.style.display = 'flex';
-  if (headerBtn) headerBtn.style.display = '';
   if (avatarsEl) {
-    avatarsEl.innerHTML = all.slice(0,4).map(m => {
-      const init = (m.name||m.email||'?').charAt(0).toUpperCase();
+    avatarsEl.innerHTML = all.slice(0,4).map((m, ci) => {
+      const init = (m.name || m.email || '?').charAt(0).toUpperCase();
       const colors = ['#3176ff','#8b5cf6','#10b981','#f59e0b'];
-      const ci = all.indexOf(m) % colors.length;
-      return `<div class="collab-avatar" style="background:${colors[ci]};z-index:${10-all.indexOf(m)};" title="${esc(m.name||m.email)}">${init}</div>`;
+      return `<div class="collab-avatar" style="background:${colors[ci % colors.length]};z-index:${10-ci};" title="${esc(m.name||m.email)}">${init}</div>`;
     }).join('');
   }
   if (textEl) {
-    const names = all.filter(m => m.email !== state.user.email).map(m => m.name || m.email.split('@')[0]);
-    textEl.textContent = names.length ? `${names.join(', ')}와(과) 함께 작업 중` : '공동작업 활성화됨';
+    const names = realCollabs.map(m => m.name || m.email.split('@')[0]);
+    textEl.textContent = `${names.join(', ')}와(과) 함께 작업 중`;
   }
   setTimeout(lucide.createIcons, 50);
 }
