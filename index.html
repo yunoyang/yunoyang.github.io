@@ -2020,7 +2020,7 @@ async function _autoUploadOnLogin() {
 
   try {
     const snap = await _db.collection('vb_projects')
-      .where('meta.owner.email', '==', state.user.email)
+      .where('ownerEmail', '==', state.user.email)
       .limit(20)
       .get();
 
@@ -3820,6 +3820,7 @@ async function _pushProjToCloud(proj) {
   if (!proj.cloudId) proj.cloudId = _genToken(16);
   const payload = {
     projectData: JSON.parse(JSON.stringify(proj)),
+    ownerEmail: state.user.email,          // top-level: 인덱스 없이 쿼리 가능
     'meta.owner': { email: state.user.email, name: state.user.name },
     'meta.collaborators': proj.collaborators || [],
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
@@ -4425,14 +4426,76 @@ window.addEventListener('load', () => {
   // 공동작업 초대 처리
   _checkInviteOnLoad();
   _loadBrandLogo();
-  // 기존 cloud 프로젝트 리스너 복구
-  const proj = getProject();
-  if (proj && proj.isCloud && proj.cloudId) {
-    _initFirebase().then(ok => {
-      if (ok) { _startCollabListener(proj.cloudId); updateCollabIndicator(proj.collaborators||[], proj.owner); }
-    });
-  }
+  // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
+  _syncFromCloudOnStartup();
 });
+
+// 앱 시작 시 클라우드 데이터 동기화 (모바일/신규기기 대응)
+async function _syncFromCloudOnStartup() {
+  if (!state.loggedIn || !state.user?.email) return;
+  const ok = await _initFirebase();
+  if (!ok) return;
+
+  const localProjects = state.projects || [];
+  const hasCloudIds = localProjects.some(p => p.isCloud && p.cloudId);
+
+  // 이미 cloudId 있는 로컬 프로젝트 → 리스너만 재시작
+  if (hasCloudIds) {
+    for (const p of localProjects) {
+      if (p.isCloud && p.cloudId) {
+        _startCollabListener(p.cloudId);
+        updateCollabIndicator(p.collaborators||[], p.owner);
+      }
+    }
+    return;
+  }
+
+  // cloudId 없음(신규 기기) → 클라우드에서 내 프로젝트 조회
+  try {
+    const snap = await _db.collection('vb_projects')
+      .where('ownerEmail', '==', state.user.email)
+      .limit(20)
+      .get();
+
+    if (snap.empty) return; // 클라우드에도 없으면 패스
+
+    const cloudProjs = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      const pd = data.projectData;
+      if (!pd) return;
+      pd.cloudId  = doc.id;
+      pd.isCloud  = true;
+      pd.collaborators = data.meta?.collaborators || [];
+      pd.owner         = data.meta?.owner || {};
+      cloudProjs.push(pd);
+    });
+    if (!cloudProjs.length) return;
+
+    // 로컬이 빈 상태면 클라우드로 완전 교체
+    const isLocalEmpty = localProjects.every(p => !p.processes?.length);
+    if (isLocalEmpty) {
+      state.projects = cloudProjs;
+    } else {
+      const existingIds = new Set(localProjects.map(p => p.cloudId).filter(Boolean));
+      for (const cp of cloudProjs) {
+        if (!existingIds.has(cp.cloudId)) state.projects.push(cp);
+      }
+    }
+    state.currentProjectId = state.projects[0]?.id || null;
+    save();
+    renderAll();
+    showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+
+    const first = state.projects[0];
+    if (first?.cloudId) {
+      _startCollabListener(first.cloudId);
+      updateCollabIndicator(first.collaborators||[], first.owner);
+    }
+  } catch(e) {
+    console.warn('Startup cloud sync failed:', e);
+  }
+}
 </script>
 </body>
 </html>
