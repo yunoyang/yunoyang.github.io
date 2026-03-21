@@ -4404,36 +4404,50 @@ function openFeedbackDialog() {
   document.getElementById('feedback-body').value = '';
   openDialog('dlg-feedback');
 }
+const _TG_TOKEN   = '8694197471:AAGbjCaooBAYWZGVMjG4PybkXHOWKg1jhI0';
+const _TG_CHAT_ID = '56258397';
+
 async function submitFeedback() {
   const title = document.getElementById('feedback-title').value.trim();
-  const body = document.getElementById('feedback-body').value.trim();
+  const body  = document.getElementById('feedback-body').value.trim();
   if (!title) { alert('제목을 입력해주세요.'); return; }
-  if (!body) { alert('내용을 입력해주세요.'); return; }
+  if (!body)  { alert('내용을 입력해주세요.'); return; }
   const btn = document.querySelector('#dlg-feedback .btn-primary');
   btn.disabled = true; btn.textContent = '전송 중...';
   try {
-    // 1) Firestore에 저장
+    // 1) Telegram 실시간 알림
+    const tgText =
+      `🔔 *새 피드백*\n\n` +
+      `*제목:* ${title}\n` +
+      `*내용:* ${body}\n\n` +
+      `👤 ${state.user?.name||'비로그인'} (${state.user?.email||'-'})\n` +
+      `🏗 ${getProject()?.name||'-'}`;
+    await fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: _TG_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
+    });
+
+    // 2) Firestore에도 기록
     if (_db) {
-      await _db.collection('vb_feedback').add({
+      _db.collection('vb_feedback').add({
         title, body,
         userEmail: state.user?.email || '비로그인',
-        userName: state.user?.name || '',
+        userName:  state.user?.name  || '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        projectId: getProject()?.id || '',
-      });
+        projectId: getProject()?.id  || '',
+      }).catch(()=>{});
     }
-    // 2) mailto 이메일
-    const subject = encodeURIComponent(`[Vibespace 피드백] ${title}`);
-    const mailBody = encodeURIComponent(`제목: ${title}\n내용: ${body}\n\n보낸 사람: ${state.user?.email||'비로그인'}`);
-    window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${mailBody}`, '_blank');
     closeDialog('dlg-feedback');
     showToastMessage('피드백이 전송되었습니다. 감사합니다! 🙏');
   } catch(e) {
-    console.error(e);
-    alert('피드백 저장 중 오류가 발생했습니다. 이메일로 직접 보내드립니다.');
-    const subject = encodeURIComponent(`[Vibespace 피드백] ${title}`);
-    const mailBody = encodeURIComponent(`제목: ${title}\n내용: ${body}`);
+    console.error('Feedback send failed:', e);
+    // fallback: mailto
+    const subject  = encodeURIComponent(`[Vibespace 피드백] ${title}`);
+    const mailBody = encodeURIComponent(`제목: ${title}\n\n내용:\n${body}\n\n보낸 사람: ${state.user?.email||'비로그인'}`);
     window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${mailBody}`, '_blank');
+    closeDialog('dlg-feedback');
+    showToastMessage('이메일 앱으로 연결됩니다.');
   } finally {
     btn.disabled = false; btn.textContent = '보내기';
   }
