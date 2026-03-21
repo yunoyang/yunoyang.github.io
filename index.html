@@ -478,6 +478,25 @@ button, input, textarea, select { font-family:var(--font); }
 .form-header h2 { font-size:18px; font-weight:700; }
 .form-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:28px; }
 .form-group { display:flex; flex-direction:column; gap:10px; }
+/* 평형 정확한 평수 입력 */
+.size-exact-wrap {
+  max-height:0; overflow:hidden;
+  transition:max-height .3s ease, opacity .3s ease;
+  opacity:0;
+}
+.size-exact-wrap.show {
+  max-height:80px; opacity:1;
+}
+.size-exact-inner {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; background:#f5f7fc; border-radius:10px; margin-top:8px;
+}
+.size-exact-label {
+  font-size:13px; font-weight:700; color:#666;
+}
+.size-exact-input {
+  padding:8px 12px !important;
+}
 .form-label { font-size:13px; font-weight:700; color:#666; }
 .checkbox-row { display:flex; gap:16px; flex-wrap:wrap; }
 .chk-item { display:flex; align-items:center; gap:8px; cursor:pointer; }
@@ -1002,6 +1021,93 @@ button, input, textarea, select { font-family:var(--font); }
 .account-row .row-left { display:flex; align-items:center; gap:10px; font-size:15px; }
 .account-row .row-left svg { width:17px; height:17px; color:#999; }
 .account-row .arow svg { width:15px; height:15px; color:#ccc; }
+
+/* ===== EXPORT / PRINT ===== */
+@media print {
+  body > .app { display:none !important; }
+  #print-frame { display:block !important; }
+}
+.export-doc {
+  background:#fff; max-width:720px; margin:0 auto;
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 2px 20px rgba(0,0,0,0.08);
+}
+.export-header {
+  background:linear-gradient(135deg,#1a56db 0%,#3176ff 100%);
+  padding:28px 28px 24px; color:#fff;
+}
+.export-header-logo { font-size:13px; font-weight:700; opacity:.7; letter-spacing:.5px; margin-bottom:10px; }
+.export-header-title { font-size:22px; font-weight:800; line-height:1.3; margin-bottom:16px; }
+.export-header-meta { display:flex; flex-wrap:wrap; gap:10px; }
+.export-meta-chip {
+  background:rgba(255,255,255,0.18); border-radius:20px;
+  padding:4px 12px; font-size:12px; font-weight:600;
+}
+.export-section { padding:24px 28px; border-bottom:1px solid #f0f2f5; }
+.export-section:last-child { border-bottom:none; }
+.export-section-title {
+  font-size:13px; font-weight:800; color:#888; letter-spacing:.8px;
+  text-transform:uppercase; margin-bottom:16px;
+  display:flex; align-items:center; gap:8px;
+}
+.export-section-title::after {
+  content:''; flex:1; height:1px; background:#f0f2f5;
+}
+.export-floorplan img {
+  width:100%; border-radius:10px; border:1px solid #eef0f5;
+}
+/* 주간 캘린더 테이블 (카페 스타일) */
+.export-cal-table {
+  width:100%; border-collapse:collapse;
+  font-size:12px; border-radius:8px; overflow:hidden;
+}
+.export-cal-table th {
+  background:#f5f7fc; padding:8px 4px;
+  text-align:center; font-weight:700; font-size:11px; color:#555;
+  border:1px solid #e8ecf2;
+}
+.export-cal-table th.sun { color:#e05050; background:#fff5f5; }
+.export-cal-table th.sat { color:#4a7abf; background:#f0f4ff; }
+.export-cal-table td {
+  vertical-align:top; border:1px solid #e8ecf2;
+  padding:6px 4px; min-height:60px; height:70px;
+}
+.export-cal-td-date {
+  font-size:11px; font-weight:700; color:#888;
+  text-align:right; margin-bottom:4px;
+}
+.export-cal-td-date.today { color:var(--primary); }
+.export-cal-td-item {
+  font-size:11px; font-weight:600; padding:2px 4px;
+  border-radius:3px; margin-bottom:2px; line-height:1.3;
+  word-break:keep-all;
+}
+/* 공정 카드 그리드 */
+.export-proc-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+}
+.export-proc-card {
+  border-radius:10px; overflow:hidden; border:1px solid #eef0f5;
+}
+.export-proc-head {
+  padding:10px 12px; font-size:13px; font-weight:700;
+  color:#fff; display:flex; align-items:center; justify-content:space-between;
+}
+.export-proc-date { font-size:11px; font-weight:500; opacity:.85; }
+.export-proc-body { padding:10px 12px; background:#fff; }
+.export-proc-cost { font-size:14px; font-weight:700; color:#333; margin-bottom:8px; }
+.export-detail-row {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding:5px 0; border-top:1px solid #f5f5f5; gap:8px;
+}
+.export-detail-desc { font-size:12px; color:#555; flex:1; }
+.export-detail-cost { font-size:12px; font-weight:600; color:#333; white-space:nowrap; }
+.export-detail-date { font-size:10px; color:var(--primary); background:rgba(49,118,255,0.1); padding:1px 6px; border-radius:4px; }
+.export-footer {
+  text-align:center; padding:20px 28px;
+  font-size:11px; color:#bbb; background:#fafbfd;
+}
 </style>
 </head>
 <body>
@@ -1127,6 +1233,9 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="dropdown-item" onclick="openShareDialog()">
       <i data-lucide="share-2"></i> 공유하기
     </button>
+    <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
+      <i data-lucide="file-down"></i> 공사계획 내보내기
+    </button>
     <button class="dropdown-item" onclick="openExpertDialog()">
       <i data-lucide="star"></i> 전문가 검토 받기<span class="menu-badge">준비 중</span>
     </button>
@@ -1162,14 +1271,24 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="form-group">
         <span class="form-label">평형 (1개 선택)</span>
         <div class="checkbox-row">
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s10" value="10평대" onchange="saveFormData()"><label for="f-s10">10평대</label></div>
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s20" value="20평대" onchange="saveFormData()"><label for="f-s20">20평대</label></div>
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s30" value="30평대" checked onchange="saveFormData()"><label for="f-s30">30평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s10" value="10평대" onchange="onSizeChange()"><label for="f-s10">10평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s20" value="20평대" onchange="onSizeChange()"><label for="f-s20">20평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s30" value="30평대" checked onchange="onSizeChange()"><label for="f-s30">30평대</label></div>
         </div>
         <div class="checkbox-row">
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s40" value="40평대" onchange="saveFormData()"><label for="f-s40">40평대</label></div>
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s50" value="50평대" onchange="saveFormData()"><label for="f-s50">50평대</label></div>
-          <div class="chk-item"><input type="radio" name="f-size" id="f-s60" value="60평대" onchange="saveFormData()"><label for="f-s60">60평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s40" value="40평대" onchange="onSizeChange()"><label for="f-s40">40평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s50" value="50평대" onchange="onSizeChange()"><label for="f-s50">50평대</label></div>
+          <div class="chk-item"><input type="radio" name="f-size" id="f-s60" value="60평대" onchange="onSizeChange()"><label for="f-s60">60평대</label></div>
+        </div>
+        <!-- 정확한 평수 입력 (평형 선택 시 노출) -->
+        <div class="size-exact-wrap" id="size-exact-wrap">
+          <div class="size-exact-inner">
+            <span class="size-exact-label">정확한 평수</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input class="addr-input size-exact-input" id="f-size-exact" type="number" min="1" max="200" placeholder="예: 31" oninput="saveFormData()" style="width:100px;text-align:right;">
+              <span style="font-size:15px;color:#555;font-weight:600;">평</span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -1467,6 +1586,35 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="dialog-actions" style="margin-top:20px;">
       <button class="btn-cancel" onclick="closeDialog('dlg-feedback')">취소</button>
       <button class="btn-primary" onclick="submitFeedback()">보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 공사계획 내보내기 ===== -->
+<div class="overlay" id="dlg-export" style="align-items:stretch;padding:0;">
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;background:#f0f2f7;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;padding-top:max(env(safe-area-inset-top,0px),16px);background:#fff;border-bottom:1px solid #eef0f5;flex-shrink:0;">
+      <div style="font-size:17px;font-weight:700;">공사계획 내보내기</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="printExportDoc()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">
+          <i data-lucide="printer" style="width:15px;height:15px;"></i> 인쇄 / PDF 저장
+        </button>
+        <button onclick="closeDialog('dlg-export')" style="width:36px;height:36px;border-radius:10px;border:1px solid #e4e9f2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Tip bar -->
+    <div style="padding:10px 20px;background:#fffbea;border-bottom:1px solid #fdecc8;font-size:12px;color:#b45309;display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0;"></i>
+      <span>💡 <b>인쇄 / PDF 저장</b>을 누르면 네이버 카페에 첨부할 수 있는 문서가 만들어져요. "PDF로 저장"을 선택하세요.</span>
+    </div>
+    <!-- Scrollable preview -->
+    <div style="flex:1;overflow-y:auto;padding:20px;" id="export-scroll">
+      <div id="export-doc-area">
+        <!-- generated by renderExportDoc() -->
+      </div>
     </div>
   </div>
 </div>
@@ -2889,6 +3037,14 @@ function loadFormData() {
     const el = document.getElementById('f-s'+s);
     if (el) el.checked = (sizeVal === s+'평대');
   });
+  // 정확한 평수
+  const exactWrap = document.getElementById('size-exact-wrap');
+  const exactInput = document.getElementById('f-size-exact');
+  if (exactInput) exactInput.value = f.sizeExact ? parseInt(f.sizeExact) || '' : '';
+  if (exactWrap) {
+    const sr2 = document.querySelector('input[name="f-size"]:checked');
+    if (sr2) exactWrap.classList.add('show'); else exactWrap.classList.remove('show');
+  }
   document.getElementById('f-self').checked = f.method.includes('반셀프');
   document.getElementById('f-turnkey').checked = false;
   document.getElementById('f-start').value = f.startDate || '';
@@ -2906,6 +3062,12 @@ function loadFormData() {
     if (pp) pp.style.display = 'flex';
   }
 }
+function onSizeChange() {
+  const wrap = document.getElementById('size-exact-wrap');
+  const sr = document.querySelector('input[name="f-size"]:checked');
+  if (wrap && sr) wrap.classList.add('show');
+  saveFormData();
+}
 function saveFormData() {
   const proj = getProject(); if (!proj) return;
   const f = proj.form;
@@ -2915,6 +3077,8 @@ function saveFormData() {
   f.type = typeRadio ? [typeRadio.value] : ['아파트'];
   const sr = document.querySelector('input[name="f-size"]:checked');
   f.size = sr ? [sr.value] : [];
+  const sizeExact = document.getElementById('f-size-exact')?.value.trim();
+  f.sizeExact = sizeExact ? parseInt(sizeExact) + '평' : '';
   f.method = [];
   if (document.getElementById('f-self').checked) f.method.push('반셀프');
   f.startDate = document.getElementById('f-start').value;
@@ -2949,6 +3113,241 @@ function searchAddress() {
       saveFormData();
     }
   }).open();
+}
+
+// ===== EXPORT DOC =====
+function openExportDialog() {
+  renderExportDoc();
+  openDialog('dlg-export');
+  setTimeout(lucide.createIcons, 80);
+}
+
+function printExportDoc() {
+  const content = document.getElementById('export-doc-area').innerHTML;
+  const win = window.open('', '_blank', 'width=800,height=900');
+  win.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>공사계획서 - Vibespace</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--primary:#3176ff;}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:#f0f2f7;padding:20px;}
+${_getExportCSS()}
+@media print{body{background:#fff;padding:0;}.export-doc{box-shadow:none;border-radius:0;max-width:100%;}}
+</style>
+</head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 500);
+}
+
+function _getExportCSS() {
+  // Inline the export CSS for the print window
+  const sheets = Array.from(document.styleSheets);
+  let css = '';
+  try {
+    for (const sheet of sheets) {
+      try {
+        const rules = Array.from(sheet.cssRules || []);
+        for (const rule of rules) {
+          if (rule.cssText && rule.cssText.includes('export-')) css += rule.cssText + '\n';
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
+  return css;
+}
+
+function renderExportDoc() {
+  const proj = getProject();
+  if (!proj) return;
+  const f = proj.form || {};
+  const area = document.getElementById('export-doc-area');
+  if (!area) return;
+
+  // ── Header info ──
+  const sizeLabel = f.size?.[0] || '';
+  const sizeExact = f.sizeExact || '';
+  const displaySize = sizeExact ? sizeExact : sizeLabel;
+  const periodStr = (f.startDate && f.endDate)
+    ? _fmtExportDate(f.startDate) + ' ~ ' + _fmtExportDate(f.endDate)
+    : (f.startDate ? _fmtExportDate(f.startDate) + ' ~' : '일정 미정');
+  const addrStr = [f.address, f.addressDetail].filter(Boolean).join(' ');
+  const typeStr = f.type?.[0] || '';
+  const totalCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d)=>a+(d.cost||0),0), 0);
+
+  // ── Floor plan ──
+  const fpHtml = proj.floorplanImage
+    ? `<div class="export-section export-floorplan">
+        <div class="export-section-title">도면</div>
+        <img src="${proj.floorplanImage}" alt="도면">
+       </div>`
+    : '';
+
+  // ── Weekly calendar (show all months with process data) ──
+  const calHtml = _buildExportCalendar(proj);
+
+  // ── Process cards ──
+  const procHtml = _buildExportProcessCards(proj);
+
+  // ── Memo ──
+  const memoHtml = f.memo
+    ? `<div class="export-section">
+        <div class="export-section-title">메모 / 특이사항</div>
+        <p style="font-size:13px;color:#444;line-height:1.7;white-space:pre-wrap;">${esc(f.memo)}</p>
+       </div>`
+    : '';
+
+  area.innerHTML = `
+  <div class="export-doc">
+    <div class="export-header">
+      <div class="export-header-logo">VIBESPACE · 공사계획서</div>
+      <div class="export-header-title">${esc(proj.name || '내 공사 계획')}</div>
+      <div class="export-header-meta">
+        ${typeStr ? `<span class="export-meta-chip">${esc(typeStr)}</span>` : ''}
+        ${displaySize ? `<span class="export-meta-chip">${esc(displaySize)}</span>` : ''}
+        ${addrStr ? `<span class="export-meta-chip">📍 ${esc(addrStr)}</span>` : ''}
+        ${periodStr ? `<span class="export-meta-chip">📅 ${esc(periodStr)}</span>` : ''}
+        ${totalCost ? `<span class="export-meta-chip">💰 ${totalCost.toLocaleString()}원</span>` : ''}
+      </div>
+    </div>
+    ${fpHtml}
+    ${calHtml}
+    ${procHtml}
+    ${memoHtml}
+    <div class="export-footer">Vibespace(vibespacekorea.com)로 작성된 공사계획서입니다.</div>
+  </div>`;
+}
+
+function _fmtExportDate(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${parseInt(m)}월 ${parseInt(d)}일`;
+}
+
+function _buildExportCalendar(proj) {
+  // Find date range from all processes
+  const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>p.scheduleStart);
+  const ends   = proj.processes.filter(p=>p.scheduleEnd).map(p=>p.scheduleEnd);
+  if (!starts.length) return '';
+
+  const minDate = starts.reduce((a,b)=>a<b?a:b);
+  const maxDate = ends.length ? ends.reduce((a,b)=>a>b?a:b) : minDate;
+  const startD  = new Date(minDate+'T00:00:00');
+  const endD    = new Date(maxDate+'T00:00:00');
+
+  // Build all weeks between start and end
+  const DOW_KO = ['일','월','화','수','목','금','토'];
+  // Go to Sunday of the start week
+  const cursor = new Date(startD);
+  cursor.setDate(cursor.getDate() - cursor.getDay());
+
+  const PROCESS_COLORS_LOCAL = {'철거':'#2563eb','샷시':'#16a34a','목공':'#f57c00','타일':'#9333ea','욕실':'#e91e63','도배':'#00838f','가구':'#ff8f00','전기':'#6d4c41'};
+  function hashCode(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
+  const C_PALETTE = ['#2563eb','#16a34a','#f57c00','#9333ea','#e91e63','#00838f','#ff8f00','#6d4c41'];
+  function procColor(p){return PROCESS_COLORS_LOCAL[p.type]||C_PALETTE[Math.abs(hashCode(p.name||''))%8];}
+
+  let weeksHtml = '';
+  let currentMonth = -1;
+
+  while (cursor <= endD) {
+    // Build one week (7 days)
+    const weekDays = [];
+    for (let i=0;i<7;i++) {
+      weekDays.push(new Date(cursor));
+      cursor.setDate(cursor.getDate()+1);
+    }
+
+    // Month header if month changes
+    const firstDay = weekDays[0];
+    if (firstDay.getMonth() !== currentMonth) {
+      currentMonth = firstDay.getMonth();
+      const mLabel = `${firstDay.getFullYear()}년 ${firstDay.getMonth()+1}월`;
+      weeksHtml += `
+      <table class="export-cal-table" style="margin-bottom:4px;">
+        <thead><tr>
+          <th class="sun">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="sat">토</th>
+        </tr></thead>
+      </table>
+      <div style="font-size:13px;font-weight:700;color:#333;margin:12px 0 6px;">${mLabel}</div>`;
+    }
+
+    weeksHtml += `<table class="export-cal-table" style="margin-bottom:2px;"><tbody><tr>`;
+    for (const day of weekDays) {
+      const isSun = day.getDay()===0, isSat = day.getDay()===6;
+      const dateStr = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+      const isInRange = day >= startD && day <= endD;
+      let cellContent = `<div class="export-cal-td-date">${day.getMonth()+1}/${day.getDate()}</div>`;
+
+      if (isInRange) {
+        const activeProcs = proj.processes.filter(p => {
+          if (!p.scheduleStart||!p.scheduleEnd) return false;
+          return dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd;
+        });
+        for (const p of activeProcs) {
+          const color = procColor(p);
+          const todayDetails = (p.details||[]).filter(d=>d.date===dateStr);
+          let names = esc(p.name);
+          if (todayDetails.length) names += ' · ' + todayDetails.map(d=>esc(d.desc)).join(', ');
+          cellContent += `<div class="export-cal-td-item" style="background:${color}20;color:${color};">${names}</div>`;
+        }
+      }
+
+      const bgStyle = !isInRange ? 'background:#fafafa;' : '';
+      const colorStyle = isSun ? 'color:#e05050;' : isSat ? 'color:#4a7abf;' : '';
+      weeksHtml += `<td style="${bgStyle}${colorStyle}">${cellContent}</td>`;
+    }
+    weeksHtml += `</tr></tbody></table>`;
+  }
+
+  return `<div class="export-section">
+    <div class="export-section-title">전체 일정</div>
+    ${weeksHtml}
+  </div>`;
+}
+
+function _buildExportProcessCards(proj) {
+  if (!proj.processes.length) return '';
+  const PROCESS_COLORS_LOCAL = {'철거':'#2563eb','샷시':'#16a34a','목공':'#f57c00','타일':'#9333ea','욕실':'#e91e63','도배':'#00838f','가구':'#ff8f00','전기':'#6d4c41'};
+  function hashCode(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
+  const C_PALETTE = ['#2563eb','#16a34a','#f57c00','#9333ea','#e91e63','#00838f','#ff8f00','#6d4c41'];
+  function procColor(p){return PROCESS_COLORS_LOCAL[p.type]||C_PALETTE[Math.abs(hashCode(p.name||''))%8];}
+
+  const cards = proj.processes.map(p => {
+    const color = procColor(p);
+    const periodStr = (p.scheduleStart && p.scheduleEnd)
+      ? _fmtExportDate(p.scheduleStart)+' ~ '+_fmtExportDate(p.scheduleEnd)
+      : (p.scheduleStart ? _fmtExportDate(p.scheduleStart)+' ~' : '');
+    const procCost = (p.details||[]).reduce((s,d)=>s+(d.cost||0),0);
+    const detailRows = (p.details||[]).map(d => `
+      <div class="export-detail-row">
+        <div style="flex:1;min-width:0;">
+          <div class="export-detail-desc">${esc(d.desc)}</div>
+          ${d.date ? `<span class="export-detail-date">${_fmtExportDate(d.date)}</span>` : ''}
+        </div>
+        <div class="export-detail-cost">${(d.cost||0)?((d.cost).toLocaleString()+'원'):'-'}</div>
+      </div>`).join('');
+    const companyHtml = (p.companyData?.name||p.company) ? `<div style="font-size:12px;color:#888;margin-bottom:6px;">🏢 ${esc(p.companyData?.name||p.company||'')}</div>` : '';
+    return `
+    <div class="export-proc-card">
+      <div class="export-proc-head" style="background:${color};">
+        <span>${esc(p.name)}</span>
+        <span class="export-proc-date">${esc(periodStr)}</span>
+      </div>
+      <div class="export-proc-body">
+        ${procCost ? `<div class="export-proc-cost">${procCost.toLocaleString()}원</div>` : ''}
+        ${companyHtml}
+        ${detailRows || '<div style="font-size:12px;color:#ccc;padding:6px 0;">상세내역 없음</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="export-section">
+    <div class="export-section-title">공정별 계획</div>
+    <div class="export-proc-grid">${cards}</div>
+  </div>`;
 }
 
 // ===== SHARE =====
