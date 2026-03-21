@@ -2005,13 +2005,68 @@ async function _autoUploadOnLogin() {
   if (!proj) return;
   const ok = await _initFirebase();
   if (!ok) return;
-  // 이미 클라우드 프로젝트면 리스너만 시작
+
+  // ── 이미 클라우드 프로젝트면 리스너만 재개 ──
   if (proj.isCloud && proj.cloudId) {
     _startCollabListener(proj.cloudId);
     updateCollabIndicator(proj.collaborators||[], proj.owner);
     return;
   }
-  // 처음 로그인 → 클라우드에 업로드
+
+  // ── 신규 기기: 클라우드에 내 데이터가 있는지 먼저 확인 ──
+  // 로컬이 빈 기본 프로젝트인지 판단 (이름이 기본값이고 공정이 0개면 빈 것으로 간주)
+  const isLocalEmpty = !proj.processes?.length;
+  showToastMessage('☁️ 클라우드 데이터 확인 중...');
+
+  try {
+    const snap = await _db.collection('vb_projects')
+      .where('meta.owner.email', '==', state.user.email)
+      .limit(20)
+      .get();
+
+    if (!snap.empty) {
+      // ── 클라우드에 데이터 있음 → 다운로드해서 덮어쓰기 ──
+      const cloudProjs = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        const pd = data.projectData;
+        if (!pd) return;
+        pd.cloudId = doc.id;
+        pd.isCloud = true;
+        pd.collaborators = data.meta?.collaborators || [];
+        pd.owner = data.meta?.owner || {};
+        cloudProjs.push(pd);
+      });
+
+      if (cloudProjs.length) {
+        if (isLocalEmpty) {
+          // 로컬이 비어있으면 클라우드 데이터로 완전 교체
+          state.projects = cloudProjs;
+        } else {
+          // 로컬에 실제 데이터가 있으면 클라우드 프로젝트 추가 (중복 제외)
+          const existingIds = new Set(state.projects.map(p => p.cloudId).filter(Boolean));
+          for (const cp of cloudProjs) {
+            if (!existingIds.has(cp.cloudId)) state.projects.push(cp);
+          }
+        }
+        state.currentProjectId = state.projects[0]?.id || null;
+        save();
+        renderAll();
+        showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+        const first = state.projects[0];
+        if (first?.cloudId) {
+          _startCollabListener(first.cloudId);
+          updateCollabIndicator(first.collaborators||[], first.owner);
+        }
+        return;
+      }
+    }
+  } catch(e) {
+    // 쿼리 실패(예: 인덱스 미생성)해도 업로드로 폴백
+    console.warn('Cloud fetch failed, falling back to upload:', e);
+  }
+
+  // ── 클라우드에 데이터 없음 → 로컬 데이터 업로드 ──
   proj.isCloud = true;
   proj.owner = { email: state.user.email, name: state.user.name };
   try {
