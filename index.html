@@ -77,8 +77,14 @@ button, input, textarea, select { font-family:var(--font); }
   cursor:pointer; border:none; font-family:var(--font); max-width:280px;
 }
 .project-badge .name {
-  color:#111; font-size:18px; font-weight:600;
+  color:#111; font-size:19px; font-weight:600;
   letter-spacing:-.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.beta-badge {
+  font-size:10px; font-weight:700; color:#fff;
+  background:var(--primary); border-radius:6px;
+  padding:2px 6px; letter-spacing:0; flex-shrink:0;
+  vertical-align:middle; margin-left:2px;
 }
 .project-badge .pchev { color:#888; transition:transform .2s; display:flex; }
 .project-badge.open .pchev { transform:rotate(180deg); }
@@ -156,16 +162,16 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding:0 20px; display:flex; align-items:center; background:#fff;
+  padding:0 24px; display:flex; align-items:center; background:#fff;
   border-bottom:1.5px solid #eef0f5;
 }
 .tab-toggle {
-  flex:1; display:flex; height:48px; background:transparent;
+  flex:1; display:flex; height:54px; background:transparent;
   border-radius:0; border:none; overflow:visible;
 }
 .tab-btn {
   flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-  font-size:14px; font-weight:500; color:#818590;
+  font-size:15px; font-weight:500; color:#818590;
   cursor:pointer; border:none; background:transparent; transition:all .2s;
   border-bottom:2.5px solid transparent; margin-bottom:-1.5px;
 }
@@ -294,10 +300,10 @@ button, input, textarea, select { font-family:var(--font); }
   font-family:var(--font);
 }
 .cal-month-table th,
-.cal-month-table td { border:1px solid #dde3ef; }
+.cal-month-table td { border:1px solid #E6ECF7; }
 
 /* Nav header cell */
-.cal-nav-td { padding:0; border:1px solid #dde3ef; }
+.cal-nav-td { padding:0; border:1px solid #E6ECF7; }
 .cal-nav-inner {
   display:flex; align-items:center; justify-content:space-between;
   padding:12px 16px;
@@ -963,6 +969,29 @@ button, input, textarea, select { font-family:var(--font); }
 .landing-btn-google:active { transform:scale(.97); }
 .landing-btn-google svg { width:17px; height:17px; }
 
+/* ===== LOGIN GATE ===== */
+.main-login-gate {
+  position:absolute; inset:0; z-index:20;
+  background:rgba(237,240,244,0.97);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; padding:40px 32px;
+}
+.main-login-gate-inner {
+  background:#fff; border-radius:20px; padding:32px 24px;
+  display:flex; flex-direction:column; align-items:center;
+  box-shadow:0 4px 24px rgba(0,0,0,0.08); width:100%; max-width:340px;
+}
+
+/* ===== FLOOR PLAN UPLOAD ===== */
+.floorplan-upload-area {
+  border:1.5px dashed #dde3ef; border-radius:12px;
+  min-height:120px; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; cursor:pointer; transition:border-color .2s;
+  position:relative; overflow:hidden; background:#fafbfd;
+}
+.floorplan-upload-area:hover { border-color:var(--primary); }
+#floorplan-placeholder { display:flex; flex-direction:column; align-items:center; padding:24px; }
+
 /* ===== ACCOUNT ===== */
 .account-card {
   background:#fff; border-radius:14px; padding:20px;
@@ -1009,6 +1038,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
+        <span class="beta-badge">beta</span>
         <span class="pchev"><i data-lucide="chevron-down" style="width:15px;height:15px;"></i></span>
       </button>
       <div class="project-dropdown" id="project-dropdown">
@@ -1072,6 +1102,16 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
 
+  <!-- Login Gate -->
+  <div id="main-login-gate" class="main-login-gate" style="display:none;">
+    <div class="main-login-gate-inner">
+      <div style="font-size:40px;margin-bottom:12px;">🔐</div>
+      <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:8px;">로그인이 필요합니다</div>
+      <div style="font-size:14px;color:#888;margin-bottom:24px;text-align:center;line-height:1.6;">공사 계획을 저장하고 관리하려면<br>로그인이 필요합니다</div>
+      <button class="btn-primary" onclick="closeAllMenus();openLoginDialog();" style="width:100%;height:48px;font-size:15px;">Google 계정으로 로그인</button>
+    </div>
+  </div>
+
   <!-- Floating: + 공정추가 (white) -->
   <div class="floating-group">
     <button class="floating-btn" onclick="openAddProcess()">
@@ -1089,6 +1129,9 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
     <button class="dropdown-item" onclick="openExpertDialog()">
       <i data-lucide="star"></i> 전문가 검토 받기<span class="menu-badge">준비 중</span>
+    </button>
+    <button class="dropdown-item" onclick="openFeedbackDialog();closeAllMenus();">
+      <i data-lucide="message-square"></i> 피드백 &amp; 아이디어
     </button>
     <div class="dropdown-sep"></div>
     <button class="dropdown-item" id="menu-login-btn" onclick="handleMenuLogin()">
@@ -1157,6 +1200,21 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="form-group">
         <span class="form-label">메모</span>
         <textarea class="textarea-field" id="f-memo" onchange="saveFormData()" placeholder="업체에 전달할 사항, 요청 사항 등을 메모해두세요"></textarea>
+      </div>
+      <div class="form-group" id="floorplan-group">
+        <span class="form-label">아파트 도면 이미지 <span style="font-weight:400;color:#aaa;font-size:11px;">(선택)</span></span>
+        <div class="floorplan-upload-area" id="floorplan-drop-area" onclick="document.getElementById('floorplan-input').click()">
+          <input type="file" id="floorplan-input" accept="image/*" style="display:none;" onchange="handleFloorplanUpload(event)">
+          <div id="floorplan-preview-wrap" style="display:none;">
+            <img id="floorplan-preview-img" style="width:100%;border-radius:8px;display:block;" alt="도면 이미지">
+            <button type="button" onclick="clearFloorplan(event)" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;">✕</button>
+          </div>
+          <div id="floorplan-placeholder">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <div style="font-size:13px;color:#bbb;margin-top:8px;">도면 이미지를 업로드하세요</div>
+            <div style="font-size:11px;color:#ddd;margin-top:4px;">JPG, PNG, PDF 등 이미지 파일</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-footer">
@@ -1350,27 +1408,29 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="share-social-row">
         <!-- 카카오톡 -->
         <button class="share-social-btn" onclick="shareAction('kakao')">
-          <div class="share-social-icon kakao-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 5C9.925 5 5 8.806 5 13.5c0 2.97 1.918 5.586 4.85 7.157l-1.02 3.81a.25.25 0 0 0 .384.272l4.636-3.082A13.5 13.5 0 0 0 16 21.999c6.075 0 11-3.806 11-8.5S22.075 5 16 5z" fill="#3C1E1E"/>
+          <div class="share-social-icon" style="background:#f5f5f5;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.54 1.524 4.782 3.857 6.175L4.5 20.5l4.857-2.268A11.5 11.5 0 0 0 12 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
             </svg>
           </div>
           <span class="share-social-label">카카오톡</span>
         </button>
         <!-- X (Twitter) -->
         <button class="share-social-btn" onclick="shareAction('twitter')">
-          <div class="share-social-icon x-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631 5.905-5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          <div class="share-social-icon" style="background:#f5f5f5;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4l16 16M4 20L20 4"/>
             </svg>
           </div>
           <span class="share-social-label">X</span>
         </button>
         <!-- Instagram -->
         <button class="share-social-btn" onclick="shareAction('instagram')">
-          <div class="share-social-icon ig-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          <div class="share-social-icon" style="background:#f5f5f5;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="5"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="#111" stroke="none"/>
             </svg>
           </div>
           <span class="share-social-label">인스타그램</span>
@@ -1385,6 +1445,28 @@ button, input, textarea, select { font-family:var(--font); }
 
     <div style="margin-top:16px;">
       <button class="btn-cancel" onclick="closeDialog('dlg-share')" style="width:100%;height:48px;border-radius:12px;font-size:15px;font-weight:600;border:none;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 피드백 다이얼로그 -->
+<div class="overlay" id="dlg-feedback">
+  <div class="dialog">
+    <h3>피드백 &amp; 아이디어</h3>
+    <p style="font-size:13px;color:#888;margin-top:-8px;margin-bottom:16px;">더 좋은 서비스를 위한 의견을 남겨주세요</p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#666;margin-bottom:6px;">제목</div>
+        <input class="addr-input" id="feedback-title" placeholder="피드백 제목을 입력하세요" style="width:100%;">
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#666;margin-bottom:6px;">내용</div>
+        <textarea class="textarea-field" id="feedback-body" placeholder="자세한 내용, 개선 아이디어, 버그 제보 등을 알려주세요" style="min-height:120px;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="dialog-actions" style="margin-top:20px;">
+      <button class="btn-cancel" onclick="closeDialog('dlg-feedback')">취소</button>
+      <button class="btn-primary" onclick="submitFeedback()">보내기</button>
     </div>
   </div>
 </div>
@@ -1683,14 +1765,21 @@ function handleMenuLogin() {
 }
 function updateLoginUI() {
   const btn = document.getElementById('menu-login-btn');
-  if (!btn) return;
-  if (state.loggedIn) {
-    btn.innerHTML = `<i data-lucide="log-out"></i> 로그아웃 (${state.user.name||'사용자'})`;
-    btn.classList.add('danger');
-  } else {
-    btn.innerHTML = `<i data-lucide="user"></i> 로그인`;
-    btn.classList.remove('danger');
+  if (btn) {
+    if (state.loggedIn) {
+      btn.innerHTML = `<i data-lucide="log-out"></i> 로그아웃 (${state.user.name||'사용자'})`;
+      btn.classList.add('danger');
+    } else {
+      btn.innerHTML = `<i data-lucide="user"></i> 로그인`;
+      btn.classList.remove('danger');
+    }
   }
+  // Show/hide landing Google login button
+  const googleBtn = document.querySelector('.landing-btn-google');
+  if (googleBtn) googleBtn.style.display = state.loggedIn ? 'none' : '';
+  // Show/hide login gate on main screen
+  const loginGate = document.getElementById('main-login-gate');
+  if (loginGate) loginGate.style.display = state.loggedIn ? 'none' : 'flex';
   lucide.createIcons();
 }
 function doLogout() {
@@ -2698,7 +2787,7 @@ function renderCalendar() {
     const hex = COLOR_HEX[firstCls] || '#3176ff';
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
     const bg = `rgba(${r},${g},${b},0.06)`;
-    return { html, bg };
+    return { html, bg, hex };
   }
 
   // DOW header row
@@ -2722,7 +2811,8 @@ function renderCalendar() {
       if (isEmpty) cls += (cls?' ':'')+'out';
       if (isToday) cls += (cls?' ':'')+'today-num';
       const bg = dayInfos[i].bg;
-      const bgStyle = bg && !isEmpty ? ` style="background:${bg}"` : '';
+      const hex = dayInfos[i].hex || '';
+      const bgStyle = bg && !isEmpty ? ` style="background:${bg};border-top:1px solid ${hex}"` : '';
       const click = d !== null ? ` onclick="openDayPopup(${year},${month},${d})"` : '';
       dateRow += `<td class="cal-date-td${cls?' '+cls:''}"${bgStyle}${click}>${d!==null ? d : ''}</td>`;
     });
@@ -2803,6 +2893,15 @@ function loadFormData() {
   document.getElementById('f-memo').value = f.memo || '';
   document.getElementById('f-address').value = f.address || '';
   document.getElementById('f-address-detail').value = f.addressDetail || '';
+  // Load floor plan
+  const fpImg = proj?.floorplanImage;
+  if (fpImg) _showFloorplanPreview(fpImg);
+  else {
+    const pw = document.getElementById('floorplan-preview-wrap');
+    const pp = document.getElementById('floorplan-placeholder');
+    if (pw) pw.style.display = 'none';
+    if (pp) pp.style.display = 'flex';
+  }
 }
 function saveFormData() {
   const proj = getProject(); if (!proj) return;
@@ -3493,6 +3592,78 @@ function showToastMessage(msg) {
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = '저장됨'; }, 2800);
+}
+
+// ===== FLOOR PLAN IMAGE =====
+function handleFloorplanUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('10MB 이하 이미지만 업로드 가능합니다.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const proj = getProject();
+    if (proj) { proj.floorplanImage = ev.target.result; save(); }
+    _showFloorplanPreview(ev.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+function _showFloorplanPreview(src) {
+  const placeholder = document.getElementById('floorplan-placeholder');
+  const previewWrap = document.getElementById('floorplan-preview-wrap');
+  const previewImg = document.getElementById('floorplan-preview-img');
+  if (!placeholder || !previewWrap || !previewImg) return;
+  previewImg.src = src;
+  placeholder.style.display = 'none';
+  previewWrap.style.display = 'block';
+}
+function clearFloorplan(e) {
+  e.stopPropagation();
+  const proj = getProject();
+  if (proj) { delete proj.floorplanImage; save(); }
+  document.getElementById('floorplan-preview-wrap').style.display = 'none';
+  document.getElementById('floorplan-placeholder').style.display = 'flex';
+  document.getElementById('floorplan-input').value = '';
+}
+
+// ===== FEEDBACK =====
+function openFeedbackDialog() {
+  document.getElementById('feedback-title').value = '';
+  document.getElementById('feedback-body').value = '';
+  openDialog('dlg-feedback');
+}
+async function submitFeedback() {
+  const title = document.getElementById('feedback-title').value.trim();
+  const body = document.getElementById('feedback-body').value.trim();
+  if (!title) { alert('제목을 입력해주세요.'); return; }
+  if (!body) { alert('내용을 입력해주세요.'); return; }
+  const btn = document.querySelector('#dlg-feedback .btn-primary');
+  btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    // 1) Firestore에 저장
+    if (_db) {
+      await _db.collection('vb_feedback').add({
+        title, body,
+        userEmail: state.user?.email || '비로그인',
+        userName: state.user?.name || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        projectId: getProject()?.id || '',
+      });
+    }
+    // 2) mailto 이메일
+    const subject = encodeURIComponent(`[Vibespace 피드백] ${title}`);
+    const mailBody = encodeURIComponent(`제목: ${title}\n내용: ${body}\n\n보낸 사람: ${state.user?.email||'비로그인'}`);
+    window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${mailBody}`, '_blank');
+    closeDialog('dlg-feedback');
+    showToastMessage('피드백이 전송되었습니다. 감사합니다! 🙏');
+  } catch(e) {
+    console.error(e);
+    alert('피드백 저장 중 오류가 발생했습니다. 이메일로 직접 보내드립니다.');
+    const subject = encodeURIComponent(`[Vibespace 피드백] ${title}`);
+    const mailBody = encodeURIComponent(`제목: ${title}\n내용: ${body}`);
+    window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${mailBody}`, '_blank');
+  } finally {
+    btn.disabled = false; btn.textContent = '보내기';
+  }
 }
 
 // ===== INIT =====
