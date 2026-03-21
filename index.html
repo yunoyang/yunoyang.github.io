@@ -1151,89 +1151,99 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== EXPORT / PRINT ===== */
 @media print {
   body > .app { display:none !important; }
-  #print-frame { display:block !important; }
+  .export-doc { border:none !important; box-shadow:none !important; }
+  .export-watermark { opacity:.04 !important; }
 }
+/* Document wrapper */
 .export-doc {
-  background:#fff; max-width:720px; margin:0 auto;
+  background:#fff; max-width:700px; margin:0 auto;
   font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
-  border-radius:16px; overflow:hidden;
-  box-shadow:0 2px 20px rgba(0,0,0,0.08);
+  color:#111; border:1px solid #ccc; position:relative; overflow:hidden;
 }
-.export-header {
-  background:linear-gradient(135deg,#1a56db 0%,#3176ff 100%);
-  padding:28px 28px 24px; color:#fff;
+/* ── Header ── */
+.export-doc-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 28px 16px; border-bottom:2.5px solid #111;
 }
-.export-header-logo { font-size:13px; font-weight:700; opacity:.7; letter-spacing:.5px; margin-bottom:10px; }
-.export-header-title { font-size:22px; font-weight:800; line-height:1.3; margin-bottom:16px; }
-.export-header-meta { display:flex; flex-wrap:wrap; gap:10px; }
-.export-meta-chip {
-  background:rgba(255,255,255,0.18); border-radius:20px;
-  padding:4px 12px; font-size:12px; font-weight:600;
-}
-.export-section { padding:24px 28px; border-bottom:1px solid #f0f2f5; }
+.export-logo-area { display:flex; align-items:center; height:30px; }
+.export-logo-area img { height:30px; width:auto; object-fit:contain; }
+.export-logo-text { font-size:20px; font-weight:900; color:#111; letter-spacing:-1px; }
+.export-doc-label { font-size:9px; font-weight:700; color:#aaa; letter-spacing:1.5px; text-transform:uppercase; }
+.export-doc-name { font-size:15px; font-weight:800; color:#111; margin-top:3px; text-align:right; max-width:340px; line-height:1.3; }
+/* ── Info table ── */
+.export-info-table { width:100%; border-collapse:collapse; font-size:13px; }
+.export-info-table td { padding:8px 12px; border:1px solid #e0e0e0; vertical-align:top; }
+.export-info-table td:first-child { font-weight:700; color:#555; width:88px; background:#f7f7f7; white-space:nowrap; }
+/* ── Sections ── */
+.export-section { padding:18px 28px; border-bottom:1px solid #e0e0e0; position:relative; }
 .export-section:last-child { border-bottom:none; }
 .export-section-title {
-  font-size:13px; font-weight:800; color:#888; letter-spacing:.8px;
-  text-transform:uppercase; margin-bottom:16px;
-  display:flex; align-items:center; gap:8px;
+  font-size:10px; font-weight:800; color:#444; letter-spacing:1.4px;
+  text-transform:uppercase; margin-bottom:14px; padding-bottom:7px;
+  border-bottom:1.5px solid #111;
 }
-.export-section-title::after {
-  content:''; flex:1; height:1px; background:#f0f2f5;
+/* ── Floor plan ── */
+.export-floorplan-img { width:100%; border:1px solid #ddd; display:block; }
+/* ── Process list (B&W) ── */
+.export-proc-item { margin-bottom:14px; break-inside:avoid; page-break-inside:avoid; }
+.export-proc-title-row {
+  display:flex; align-items:baseline; gap:8px;
+  padding:7px 10px; background:#f2f2f2; border-left:3px solid #111;
 }
-.export-floorplan img {
-  width:100%; border-radius:10px; border:1px solid #eef0f5;
+.export-proc-num { font-size:10px; font-weight:700; color:#888; flex-shrink:0; }
+.export-proc-name { font-size:13px; font-weight:800; color:#111; flex:1; }
+.export-proc-period { font-size:11px; color:#555; white-space:nowrap; }
+.export-proc-company-row {
+  padding:4px 10px 4px 23px; font-size:11px; color:#666;
+  background:#f9f9f9; border-left:3px solid #ddd; border-top:1px solid #e8e8e8;
 }
-/* 주간 캘린더 테이블 (카페 스타일) */
-.export-cal-table {
-  width:100%; border-collapse:collapse;
-  font-size:12px; border-radius:8px; overflow:hidden;
+.export-detail-table { width:100%; border-collapse:collapse; font-size:12px; }
+.export-detail-table th {
+  padding:5px 10px; background:#f5f5f5; border:1px solid #ddd;
+  font-size:10px; font-weight:700; color:#666; text-align:left; letter-spacing:.5px;
 }
+.export-detail-table td { padding:6px 10px; border:1px solid #e8e8e8; vertical-align:top; color:#333; }
+.export-detail-table td.date { color:#555; text-align:center; white-space:nowrap; width:60px; }
+.export-detail-table td.cost { font-weight:600; text-align:right; white-space:nowrap; width:90px; }
+.export-detail-table tr.subtotal td { background:#f5f5f5; font-weight:700; font-size:12px; border-top:1.5px solid #bbb; }
+/* ── Calendar (B&W) ── */
+.export-cal-month-title { font-size:13px; font-weight:700; color:#111; margin:14px 0 5px; }
+.export-cal-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:4px; }
 .export-cal-table th {
-  background:#f5f7fc; padding:8px 4px;
-  text-align:center; font-weight:700; font-size:11px; color:#555;
-  border:1px solid #e8ecf2;
+  background:#111; color:#fff; padding:6px 2px;
+  text-align:center; font-weight:700; border:1px solid #111;
 }
-.export-cal-table th.sun { color:#e05050; background:#fff5f5; }
-.export-cal-table th.sat { color:#4a7abf; background:#f0f4ff; }
-.export-cal-table td {
-  vertical-align:top; border:1px solid #e8ecf2;
-  padding:6px 4px; min-height:60px; height:70px;
-}
-.export-cal-td-date {
-  font-size:11px; font-weight:700; color:#888;
-  text-align:right; margin-bottom:4px;
-}
-.export-cal-td-date.today { color:var(--primary); }
+.export-cal-table td { vertical-align:top; border:1px solid #ccc; padding:3px; height:58px; }
+.export-cal-table td.out { background:#f9f9f9; }
+.export-cal-td-date { font-size:9px; font-weight:700; color:#888; text-align:right; margin-bottom:2px; }
 .export-cal-td-item {
-  font-size:11px; font-weight:600; padding:2px 4px;
-  border-radius:3px; margin-bottom:2px; line-height:1.3;
-  word-break:keep-all;
+  font-size:9.5px; font-weight:600; padding:1px 3px; margin-bottom:1px;
+  line-height:1.3; word-break:keep-all; background:#efefef; color:#222; border-radius:2px; display:block;
 }
-/* 공정 카드 그리드 */
-.export-proc-grid {
-  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+.export-cal-td-detail { font-size:9px; color:#666; padding:0 2px; line-height:1.3; display:block; }
+/* ── Watermark ── */
+.export-watermark {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-30deg);
+  font-size:80px; font-weight:900; color:#000; opacity:0.025;
+  pointer-events:none; white-space:nowrap; letter-spacing:-3px; z-index:0;
+  user-select:none;
 }
-.export-proc-card {
-  border-radius:10px; overflow:hidden; border:1px solid #eef0f5;
+.export-watermark-img {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-30deg);
+  opacity:0.04; pointer-events:none; z-index:0; user-select:none;
+  max-width:260px; max-height:120px;
 }
-.export-proc-head {
-  padding:10px 12px; font-size:13px; font-weight:700;
-  color:#fff; display:flex; align-items:center; justify-content:space-between;
+/* ── Footer ── */
+.export-doc-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 28px; border-top:1px solid #ddd; background:#fafafa;
+  font-size:10px; color:#aaa;
 }
-.export-proc-date { font-size:11px; font-weight:500; opacity:.85; }
-.export-proc-body { padding:10px 12px; background:#fff; }
-.export-proc-cost { font-size:14px; font-weight:700; color:#333; margin-bottom:8px; }
-.export-detail-row {
-  display:flex; align-items:flex-start; justify-content:space-between;
-  padding:5px 0; border-top:1px solid #f5f5f5; gap:8px;
-}
-.export-detail-desc { font-size:12px; color:#555; flex:1; }
-.export-detail-cost { font-size:12px; font-weight:600; color:#333; white-space:nowrap; }
-.export-detail-date { font-size:10px; color:var(--primary); background:rgba(49,118,255,0.1); padding:1px 6px; border-radius:4px; }
-.export-footer {
-  text-align:center; padding:20px 28px;
-  font-size:11px; color:#bbb; background:#fafbfd;
-}
+.export-footer-logo { display:flex; align-items:center; gap:6px; }
+.export-footer-logo img { height:16px; opacity:.4; }
+.export-footer-logo span { font-size:11px; font-weight:700; color:#bbb; letter-spacing:-.3px; }
 </style>
 </head>
 <body>
@@ -3305,7 +3315,7 @@ function printExportDoc() {
 :root{--primary:#3176ff;}
 body{font-family:'Pretendard',-apple-system,sans-serif;background:#f0f2f7;padding:20px;}
 ${_getExportCSS()}
-@media print{body{background:#fff;padding:0;}.export-doc{box-shadow:none;border-radius:0;max-width:100%;}}
+@media print{body{background:#fff!important;padding:0!important;}.export-doc{border:none!important;max-width:100%!important;page-break-inside:auto;}.export-proc-item{page-break-inside:avoid;}.export-watermark{opacity:.04!important;}}
 </style>
 </head><body>${content}</body></html>`);
   win.document.close();
@@ -3337,57 +3347,89 @@ function renderExportDoc() {
   const area = document.getElementById('export-doc-area');
   if (!area) return;
 
-  // ── Header info ──
   const sizeLabel = f.size?.[0] || '';
   const sizeExact = f.sizeExact || '';
-  const displaySize = sizeExact ? sizeExact : sizeLabel;
+  const displaySize = sizeExact || sizeLabel;
   const periodStr = (f.startDate && f.endDate)
     ? _fmtExportDate(f.startDate) + ' ~ ' + _fmtExportDate(f.endDate)
-    : (f.startDate ? _fmtExportDate(f.startDate) + ' ~' : '일정 미정');
+    : (f.startDate ? _fmtExportDate(f.startDate) + ' 시작' : '');
   const addrStr = [f.address, f.addressDetail].filter(Boolean).join(' ');
   const typeStr = f.type?.[0] || '';
-  const totalCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d)=>a+(d.cost||0),0), 0);
+  const totalCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d) => a+(d.cost||0), 0), 0);
+  const processCount = proj.processes.length;
+  const genDate = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'});
 
-  // ── Floor plan ──
+  // Logo: try localStorage (set by admin), fallback to text
+  const logoDataUrl = localStorage.getItem('vibespace_logo') || '';
+  const logoHtml = logoDataUrl
+    ? `<div class="export-logo-area"><img src="${logoDataUrl}" alt="Vibespace"></div>`
+    : `<div class="export-logo-area"><span class="export-logo-text">Vibespace</span></div>`;
+  const watermarkHtml = logoDataUrl
+    ? `<img class="export-watermark-img" src="${logoDataUrl}" alt="">`
+    : `<div class="export-watermark">Vibespace</div>`;
+  const footerLogoHtml = logoDataUrl
+    ? `<div class="export-footer-logo"><img src="${logoDataUrl}" alt=""><span>vibespacekorea.com</span></div>`
+    : `<div class="export-footer-logo"><span>Vibespace · vibespacekorea.com</span></div>`;
+
+  // Info table rows
+  const infoRows = [
+    ['프로젝트명', esc(proj.name || '-')],
+    ['시공 형태', [typeStr, displaySize].filter(Boolean).join(' · ') || '-'],
+    ['전체 일정', periodStr || '-'],
+    addrStr ? ['시공 주소', esc(addrStr)] : null,
+    processCount ? ['공정 수', `${processCount}개 공정`] : null,
+    totalCost ? ['예상 총 비용', `${totalCost.toLocaleString()}원`] : null,
+  ].filter(Boolean).map(([k,v]) =>
+    `<tr><td>${k}</td><td>${v}</td></tr>`
+  ).join('');
+
+  // Floor plan
   const fpHtml = proj.floorplanImage
-    ? `<div class="export-section export-floorplan">
+    ? `<div class="export-section">
         <div class="export-section-title">도면</div>
-        <img src="${proj.floorplanImage}" alt="도면">
+        <img class="export-floorplan-img" src="${proj.floorplanImage}" alt="도면">
        </div>`
     : '';
 
-  // ── Weekly calendar (show all months with process data) ──
+  // Processes
+  const procHtml = _buildExportProcesses(proj);
+
+  // Calendar
   const calHtml = _buildExportCalendar(proj);
 
-  // ── Process cards ──
-  const procHtml = _buildExportProcessCards(proj);
-
-  // ── Memo ──
+  // Memo
   const memoHtml = f.memo
     ? `<div class="export-section">
         <div class="export-section-title">메모 / 특이사항</div>
-        <p style="font-size:13px;color:#444;line-height:1.7;white-space:pre-wrap;">${esc(f.memo)}</p>
+        <p style="font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;margin:0;">${esc(f.memo)}</p>
        </div>`
     : '';
 
   area.innerHTML = `
   <div class="export-doc">
-    <div class="export-header">
-      <div class="export-header-logo">VIBESPACE · 공사계획서</div>
-      <div class="export-header-title">${esc(proj.name || '내 공사 계획')}</div>
-      <div class="export-header-meta">
-        ${typeStr ? `<span class="export-meta-chip">${esc(typeStr)}</span>` : ''}
-        ${displaySize ? `<span class="export-meta-chip">${esc(displaySize)}</span>` : ''}
-        ${addrStr ? `<span class="export-meta-chip">📍 ${esc(addrStr)}</span>` : ''}
-        ${periodStr ? `<span class="export-meta-chip">📅 ${esc(periodStr)}</span>` : ''}
-        ${totalCost ? `<span class="export-meta-chip">💰 ${totalCost.toLocaleString()}원</span>` : ''}
+    ${watermarkHtml}
+    <!-- Header -->
+    <div class="export-doc-header">
+      ${logoHtml}
+      <div>
+        <div class="export-doc-label">공사계획서</div>
+        <div class="export-doc-name">${esc(proj.name || '내 공사 계획')}</div>
       </div>
     </div>
+    <!-- Basic Info -->
+    <div class="export-section">
+      <div class="export-section-title">기본 정보</div>
+      <table class="export-info-table">${infoRows}</table>
+    </div>
     ${fpHtml}
-    ${calHtml}
     ${procHtml}
+    ${calHtml}
     ${memoHtml}
-    <div class="export-footer">Vibespace(vibespacekorea.com)로 작성된 공사계획서입니다.</div>
+    <!-- Footer -->
+    <div class="export-doc-footer">
+      ${footerLogoHtml}
+      <span>문서 생성: ${genDate}</span>
+    </div>
   </div>`;
 }
 
@@ -3398,7 +3440,6 @@ function _fmtExportDate(iso) {
 }
 
 function _buildExportCalendar(proj) {
-  // Find date range from all processes
   const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>p.scheduleStart);
   const ends   = proj.processes.filter(p=>p.scheduleEnd).map(p=>p.scheduleEnd);
   if (!starts.length) return '';
@@ -3408,115 +3449,111 @@ function _buildExportCalendar(proj) {
   const startD  = new Date(minDate+'T00:00:00');
   const endD    = new Date(maxDate+'T00:00:00');
 
-  // Build all weeks between start and end
-  const DOW_KO = ['일','월','화','수','목','금','토'];
-  // Go to Sunday of the start week
+  // Cursor: Sunday of the week containing startD
   const cursor = new Date(startD);
   cursor.setDate(cursor.getDate() - cursor.getDay());
 
-  const PROCESS_COLORS_LOCAL = {'철거':'#2563eb','샷시':'#16a34a','목공':'#f57c00','타일':'#9333ea','욕실':'#e91e63','도배':'#00838f','가구':'#ff8f00','전기':'#6d4c41'};
-  function hashCode(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
-  const C_PALETTE = ['#2563eb','#16a34a','#f57c00','#9333ea','#e91e63','#00838f','#ff8f00','#6d4c41'];
-  function procColor(p){return PROCESS_COLORS_LOCAL[p.type]||C_PALETTE[Math.abs(hashCode(p.name||''))%8];}
-
-  let weeksHtml = '';
+  let html = '';
   let currentMonth = -1;
+  let tableOpen = false;
 
   while (cursor <= endD) {
-    // Build one week (7 days)
     const weekDays = [];
-    for (let i=0;i<7;i++) {
-      weekDays.push(new Date(cursor));
-      cursor.setDate(cursor.getDate()+1);
-    }
+    for (let i = 0; i < 7; i++) { weekDays.push(new Date(cursor)); cursor.setDate(cursor.getDate()+1); }
 
-    // Month header if month changes
-    const firstDay = weekDays[0];
-    if (firstDay.getMonth() !== currentMonth) {
-      currentMonth = firstDay.getMonth();
-      const mLabel = `${firstDay.getFullYear()}년 ${firstDay.getMonth()+1}월`;
-      weeksHtml += `
-      <table class="export-cal-table" style="margin-bottom:4px;">
+    const firstVisible = weekDays.find(d => d >= startD && d <= endD);
+    if (!firstVisible) continue;
+
+    // Month header
+    const m = firstVisible.getMonth(), y = firstVisible.getFullYear();
+    if (m !== currentMonth) {
+      if (tableOpen) { html += `</tbody></table>`; tableOpen = false; }
+      currentMonth = m;
+      html += `<div class="export-cal-month-title">${y}년 ${m+1}월</div>
+      <table class="export-cal-table">
         <thead><tr>
-          <th class="sun">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="sat">토</th>
-        </tr></thead>
-      </table>
-      <div style="font-size:13px;font-weight:700;color:#333;margin:12px 0 6px;">${mLabel}</div>`;
+          <th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+        </tr></thead><tbody>`;
+      tableOpen = true;
     }
 
-    weeksHtml += `<table class="export-cal-table" style="margin-bottom:2px;"><tbody><tr>`;
+    html += '<tr>';
     for (const day of weekDays) {
-      const isSun = day.getDay()===0, isSat = day.getDay()===6;
       const dateStr = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
-      const isInRange = day >= startD && day <= endD;
-      let cellContent = `<div class="export-cal-td-date">${day.getMonth()+1}/${day.getDate()}</div>`;
+      const inRange = day >= startD && day <= endD;
+      const inMonth = day.getMonth() === currentMonth;
+      const cls = (!inMonth || !inRange) ? ' class="out"' : '';
 
-      if (isInRange) {
-        const activeProcs = proj.processes.filter(p => {
-          if (!p.scheduleStart||!p.scheduleEnd) return false;
-          return dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd;
-        });
+      let cellHtml = `<div class="export-cal-td-date">${day.getDate()}</div>`;
+      if (inRange) {
+        const activeProcs = proj.processes.filter(p =>
+          p.scheduleStart && p.scheduleEnd &&
+          dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd
+        );
         for (const p of activeProcs) {
-          const color = procColor(p);
           const todayDetails = (p.details||[]).filter(d=>d.date===dateStr);
-          let names = esc(p.name);
-          if (todayDetails.length) names += ' · ' + todayDetails.map(d=>esc(d.desc)).join(', ');
-          cellContent += `<div class="export-cal-td-item" style="background:${color}20;color:${color};">${names}</div>`;
+          cellHtml += `<span class="export-cal-td-item">${esc(p.name)}</span>`;
+          for (const d of todayDetails) {
+            cellHtml += `<span class="export-cal-td-detail">· ${esc(d.desc)}</span>`;
+          }
         }
       }
-
-      const bgStyle = !isInRange ? 'background:#fafafa;' : '';
-      const colorStyle = isSun ? 'color:#e05050;' : isSat ? 'color:#4a7abf;' : '';
-      weeksHtml += `<td style="${bgStyle}${colorStyle}">${cellContent}</td>`;
+      html += `<td${cls}>${cellHtml}</td>`;
     }
-    weeksHtml += `</tr></tbody></table>`;
+    html += '</tr>';
   }
+
+  if (tableOpen) html += `</tbody></table>`;
 
   return `<div class="export-section">
     <div class="export-section-title">전체 일정</div>
-    ${weeksHtml}
+    ${html}
   </div>`;
 }
 
-function _buildExportProcessCards(proj) {
+function _buildExportProcesses(proj) {
   if (!proj.processes.length) return '';
-  const PROCESS_COLORS_LOCAL = {'철거':'#2563eb','샷시':'#16a34a','목공':'#f57c00','타일':'#9333ea','욕실':'#e91e63','도배':'#00838f','가구':'#ff8f00','전기':'#6d4c41'};
-  function hashCode(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
-  const C_PALETTE = ['#2563eb','#16a34a','#f57c00','#9333ea','#e91e63','#00838f','#ff8f00','#6d4c41'];
-  function procColor(p){return PROCESS_COLORS_LOCAL[p.type]||C_PALETTE[Math.abs(hashCode(p.name||''))%8];}
 
-  const cards = proj.processes.map(p => {
-    const color = procColor(p);
+  const items = proj.processes.map((p, idx) => {
     const periodStr = (p.scheduleStart && p.scheduleEnd)
-      ? _fmtExportDate(p.scheduleStart)+' ~ '+_fmtExportDate(p.scheduleEnd)
-      : (p.scheduleStart ? _fmtExportDate(p.scheduleStart)+' ~' : '');
-    const procCost = (p.details||[]).reduce((s,d)=>s+(d.cost||0),0);
-    const detailRows = (p.details||[]).map(d => `
-      <div class="export-detail-row">
-        <div style="flex:1;min-width:0;">
-          <div class="export-detail-desc">${esc(d.desc)}</div>
-          ${d.date ? `<span class="export-detail-date">${_fmtExportDate(d.date)}</span>` : ''}
-        </div>
-        <div class="export-detail-cost">${(d.cost||0)?((d.cost).toLocaleString()+'원'):'-'}</div>
-      </div>`).join('');
-    const companyHtml = (p.companyData?.name||p.company) ? `<div style="font-size:12px;color:#888;margin-bottom:6px;">🏢 ${esc(p.companyData?.name||p.company||'')}</div>` : '';
+      ? _fmtExportDate(p.scheduleStart) + ' ~ ' + _fmtExportDate(p.scheduleEnd)
+      : (p.scheduleStart ? _fmtExportDate(p.scheduleStart) + ' ~' : '일정 미정');
+    const procCost = (p.details||[]).reduce((s,d) => s+(d.cost||0), 0);
+    const companyName = p.companyData?.name || p.company || '';
+    const companyRow = companyName
+      ? `<div class="export-proc-company-row">업체: ${esc(companyName)}</div>` : '';
+
+    const detailRows = (p.details||[]).map(d =>
+      `<tr>
+        <td>${esc(d.desc)}</td>
+        <td class="date">${d.date ? _fmtExportDate(d.date) : '-'}</td>
+        <td class="cost">${(d.cost||0) ? (d.cost).toLocaleString()+'원' : '-'}</td>
+       </tr>`
+    ).join('');
+
+    const detailTable = p.details?.length
+      ? `<table class="export-detail-table">
+          <thead><tr><th>작업 내용</th><th style="width:60px;text-align:center;">날짜</th><th style="width:90px;text-align:right;">비용</th></tr></thead>
+          <tbody>${detailRows}</tbody>
+          ${procCost ? `<tr class="subtotal"><td colspan="2">소계</td><td class="cost">${procCost.toLocaleString()}원</td></tr>` : ''}
+         </table>`
+      : `<table class="export-detail-table"><tbody><tr><td colspan="3" style="color:#aaa;text-align:center;padding:10px;">상세내역 없음</td></tr></tbody></table>`;
+
     return `
-    <div class="export-proc-card">
-      <div class="export-proc-head" style="background:${color};">
-        <span>${esc(p.name)}</span>
-        <span class="export-proc-date">${esc(periodStr)}</span>
+    <div class="export-proc-item">
+      <div class="export-proc-title-row">
+        <span class="export-proc-num">${String(idx+1).padStart(2,'0')}</span>
+        <span class="export-proc-name">${esc(p.name)}</span>
+        <span class="export-proc-period">${esc(periodStr)}</span>
       </div>
-      <div class="export-proc-body">
-        ${procCost ? `<div class="export-proc-cost">${procCost.toLocaleString()}원</div>` : ''}
-        ${companyHtml}
-        ${detailRows || '<div style="font-size:12px;color:#ccc;padding:6px 0;">상세내역 없음</div>'}
-      </div>
+      ${companyRow}
+      ${detailTable}
     </div>`;
   }).join('');
 
   return `<div class="export-section">
-    <div class="export-section-title">공정별 계획</div>
-    <div class="export-proc-grid">${cards}</div>
+    <div class="export-section-title">공정별 상세 계획</div>
+    ${items}
   </div>`;
 }
 
@@ -4301,6 +4338,20 @@ function initSession() {
   _checkSession();
 }
 
+// Fetch brand logo from Firestore → cache in localStorage for export doc
+async function _loadBrandLogo() {
+  try {
+    const ok = await _initFirebase();
+    if (!ok) return;
+    const snap = await _db.collection('vb_settings').doc('brand').get();
+    if (snap.exists) {
+      const logo = snap.data().logoDataUrl;
+      if (logo) localStorage.setItem('vibespace_logo', logo);
+      else localStorage.removeItem('vibespace_logo');
+    }
+  } catch(e) {}
+}
+
 // ===== INIT =====
 load();
 initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
@@ -4318,6 +4369,7 @@ window.addEventListener('load', () => {
   }
   // 공동작업 초대 처리
   _checkInviteOnLoad();
+  _loadBrandLogo();
   // 기존 cloud 프로젝트 리스너 복구
   const proj = getProject();
   if (proj && proj.isCloud && proj.cloudId) {

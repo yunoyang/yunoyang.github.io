@@ -537,6 +537,10 @@ tr:hover td { background:#fafbfe; }
       <div class="nav-item" onclick="showPage('settings',this)">
         <i data-lucide="settings"></i> 시스템 설정
       </div>
+      <div class="nav-item" id="nav-brand" onclick="showPage('brand',this)">
+        <i data-lucide="image"></i>
+        <span>브랜드 설정</span>
+      </div>
 
       <div style="margin-top:24px; padding:12px 10px;">
         <a href="index.html" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8fa3c4;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">
@@ -1099,6 +1103,51 @@ service cloud.firestore {
                 <button class="danger-btn" onclick="adminLogout()">로그아웃</button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BRAND SETTINGS PAGE ===== -->
+      <div class="page" id="page-brand">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">브랜드 설정</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">공사계획서 PDF에 사용될 Vibespace 로고를 관리합니다</p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;">
+          <!-- Logo Upload Card -->
+          <div class="chart-card" style="padding:24px;">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;">로고 이미지</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:16px;">PNG, SVG 권장 · 투명 배경 · 최대 2MB</p>
+            <!-- Current logo preview -->
+            <div id="brand-logo-preview" style="width:100%;height:100px;border:1.5px dashed #ddd;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:#fafafa;overflow:hidden;">
+              <span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>
+            </div>
+            <input type="file" id="brand-logo-input" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
+            <div style="display:flex;gap:8px;">
+              <button onclick="document.getElementById('brand-logo-input').click()" style="flex:1;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">
+                업로드
+              </button>
+              <button onclick="clearLogo()" style="padding:10px 14px;background:#f5f5f5;color:#666;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">
+                삭제
+              </button>
+            </div>
+          </div>
+          <!-- Preview Card -->
+          <div class="chart-card" style="padding:24px;">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;">PDF 미리보기</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:16px;">공사계획서 헤더에 이렇게 표시됩니다</p>
+            <div style="border:1px solid #ddd;border-radius:8px;padding:14px 18px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
+              <div id="brand-preview-logo" style="display:flex;align-items:center;height:28px;">
+                <span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:9px;font-weight:700;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;">공사계획서</div>
+                <div style="font-size:13px;font-weight:800;color:#111;margin-top:2px;">내 공사 계획</div>
+              </div>
+            </div>
+            <div id="brand-save-status" style="margin-top:12px;font-size:12px;color:#888;text-align:center;"></div>
           </div>
         </div>
       </div>
@@ -2223,6 +2272,7 @@ const pageTitles = {
   companies: ['업체 회원', '업체 파트너 관리 (Phase 2)'],
   analytics: ['통계 분석', '트래픽 및 행동 분석'],
   settings: ['시스템 설정', 'API 키 및 앱 설정'],
+  brand: ['브랜드 설정', '공사계획서 로고 관리'],
 };
 
 function showPage(name, navEl) {
@@ -2234,7 +2284,71 @@ function showPage(name, navEl) {
   document.getElementById('topbar-title').textContent = titles[0];
   document.getElementById('topbar-sub').textContent = titles[1];
   if (name === 'analytics') renderAnalytics();
+  if (name === 'brand') loadBrandSection();
   setTimeout(lucide.createIcons, 60);
+}
+
+// ===== BRAND / LOGO =====
+function loadBrandSection() {
+  const preview = document.getElementById('brand-logo-preview');
+  const placeholder = document.getElementById('brand-logo-placeholder');
+  const previewLogo = document.getElementById('brand-preview-logo');
+  const saved = localStorage.getItem('vibespace_logo_admin');
+  if (saved) {
+    if (placeholder) placeholder.style.display = 'none';
+    preview.innerHTML = `<img src="${saved}" style="max-height:90px;max-width:100%;object-fit:contain;">`;
+    previewLogo.innerHTML = `<img src="${saved}" style="height:28px;width:auto;object-fit:contain;">`;
+  }
+}
+
+function handleLogoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('2MB 이하 이미지만 업로드 가능합니다.'); return; }
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const dataUrl = ev.target.result;
+    // Save to localStorage for immediate use
+    localStorage.setItem('vibespace_logo_admin', dataUrl);
+    // Update UI
+    const preview = document.getElementById('brand-logo-preview');
+    const placeholder = document.getElementById('brand-logo-placeholder');
+    const previewLogo = document.getElementById('brand-preview-logo');
+    if (placeholder) placeholder.style.display = 'none';
+    preview.innerHTML = `<img src="${dataUrl}" style="max-height:90px;max-width:100%;object-fit:contain;">`;
+    previewLogo.innerHTML = `<img src="${dataUrl}" style="height:28px;width:auto;object-fit:contain;">`;
+    // Save to Firestore
+    const status = document.getElementById('brand-save-status');
+    if (status) status.textContent = '저장 중...';
+    try {
+      if (typeof firebase !== 'undefined' && firebase.apps.length) {
+        const db = firebase.firestore();
+        await db.collection('vb_settings').doc('brand').set({ logoDataUrl: dataUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      }
+      if (status) status.innerHTML = '<span style="color:#10b981;">✓ 저장 완료</span>';
+    } catch(err) {
+      if (status) status.innerHTML = '<span style="color:#ef4444;">저장 실패 (로컬에는 저장됨)</span>';
+      console.error(err);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function clearLogo() {
+  if (!confirm('로고를 삭제하시겠습니까?')) return;
+  localStorage.removeItem('vibespace_logo_admin');
+  const preview = document.getElementById('brand-logo-preview');
+  const previewLogo = document.getElementById('brand-preview-logo');
+  preview.innerHTML = '<span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>';
+  previewLogo.innerHTML = '<span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>';
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+      const db = firebase.firestore();
+      await db.collection('vb_settings').doc('brand').update({ logoDataUrl: firebase.firestore.FieldValue.delete() });
+    }
+    const status = document.getElementById('brand-save-status');
+    if (status) status.innerHTML = '<span style="color:#10b981;">✓ 삭제 완료</span>';
+  } catch(e) { console.error(e); }
 }
 
 // ===== TOAST =====
