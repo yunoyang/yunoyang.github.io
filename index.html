@@ -200,11 +200,11 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* Project dropdown */
 .project-dropdown {
-  position:absolute; top:calc(100% + 8px); left:0;
-  min-width:260px; max-width:340px;
+  position:fixed; top:0; left:0;          /* JS에서 좌표 계산 */
+  min-width:260px; max-width:calc(100vw - 32px);
   background:#fff; border-radius:14px;
   box-shadow:0 8px 28px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07);
-  padding:6px; z-index:50; display:none;
+  padding:6px; z-index:9999; display:none;
 }
 .project-dropdown.active { display:block; }
 .pd-item {
@@ -2246,8 +2246,22 @@ function toggleProjectDropdown(e) {
   closeAllMenus();
   if (!wasActive) {
     renderProjectDropdownList();
+    // position:fixed 이므로 버튼의 viewport 기준 좌표로 배치
+    const rect = btn.getBoundingClientRect();
+    const margin = 16;
+    let left = rect.left;
+    // 화면 우측 overflow 방지
+    dd.style.left = '0'; dd.style.top = '0'; dd.style.display = 'block';
+    const ddWidth = dd.offsetWidth;
+    dd.style.display = '';
+    if (left + ddWidth > window.innerWidth - margin) {
+      left = window.innerWidth - ddWidth - margin;
+    }
+    dd.style.top  = (rect.bottom + 8) + 'px';
+    dd.style.left = Math.max(margin, left) + 'px';
     dd.classList.add('active');
     btn.classList.add('open');
+    lucide.createIcons();
   }
 }
 function renderProjectDropdownList() {
@@ -4457,11 +4471,18 @@ async function _syncFromCloudOnStartup() {
 
     // processes 수로 풍부도 비교 → 클라우드가 더 많거나 같으면 교체
     cloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
-    const cloudTotal = cloudProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
+
+    // 데이터 있는 프로젝트가 하나라도 있으면 빈 프로젝트(processes=0) 제거
+    const hasRealData = cloudProjs.some(p => (p.processes?.length||0) > 0);
+    const filteredProjs = hasRealData
+      ? cloudProjs.filter(p => (p.processes?.length||0) > 0)
+      : cloudProjs;
+
+    const cloudTotal = filteredProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
     const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
 
     if (cloudTotal >= localTotal) {
-      state.projects = cloudProjs;
+      state.projects = filteredProjs;
       state.currentProjectId = state.projects[0]?.id || null;
       save();
       renderAll();
