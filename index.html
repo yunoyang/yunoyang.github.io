@@ -2489,13 +2489,15 @@ function toggleCardMenu(e, procId, procType) {
 }
 
 function cardMenuDelete() {
+  const procId = _cardMenuProcId;  // closeCardMenu() 전에 저장
   closeCardMenu();
-  deleteProcess(_cardMenuProcId);
+  deleteProcess(procId);
 }
 
 function cardMenuTip() {
+  const procType = _cardMenuProcType;  // closeCardMenu() 전에 저장
   closeCardMenu();
-  showProcessTip(_cardMenuProcType);
+  showProcessTip(procType);
 }
 
 function closeCardMenu() {
