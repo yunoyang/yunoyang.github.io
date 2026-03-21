@@ -1573,6 +1573,7 @@ let saveTimer = null;
 let _lastSaveTime = 0;
 function save() {
   localStorage.setItem('vibespace', JSON.stringify(state));
+  if (state.loggedIn) _updateLastActivity();
   showToast();
   _lastSaveTime = Date.now();
   const proj = getProject();
@@ -1707,6 +1708,7 @@ function handleGoogleResponse(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     state.loggedIn = true;
     state.user = { name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
+    _createSession(); // 새 세션 발급 (30일 만료 + 활동시간 초기화)
     save();
     trackUserLogin(state.user);
     trackEvent('auth', 'login', 'google');
@@ -1785,6 +1787,7 @@ function updateLoginUI() {
 function doLogout() {
   state.loggedIn = false;
   state.user = {email:'', name:''};
+  localStorage.removeItem('vibespace_session'); // 세션 완전 삭제
   save();
   closeAllMenus();
   updateLoginUI();
@@ -3666,8 +3669,72 @@ async function submitFeedback() {
   }
 }
 
+// ===== SESSION MANAGEMENT =====
+const SESSION_KEY = 'vibespace_session';
+const SESSION_LOGIN_MAX  = 30 * 24 * 60 * 60 * 1000; // 30일 절대 만료
+const SESSION_IDLE_MAX   =  7 * 24 * 60 * 60 * 1000; // 7일 미사용 만료
+let _sessionTimer = null;
+
+function _getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || '{}'); } catch(e) { return {}; }
+}
+function _createSession() {
+  const now = Date.now();
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    loginAt:        now,
+    loginExpiry:    now + SESSION_LOGIN_MAX,
+    lastActivityAt: now,
+  }));
+}
+function _updateLastActivity() {
+  const sess = _getSession();
+  if (!sess.loginAt) return;
+  sess.lastActivityAt = Date.now();
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+}
+function _checkSession() {
+  if (!state.loggedIn) return;
+  const sess = _getSession();
+  const now  = Date.now();
+  // 30일 절대 만료
+  if (sess.loginExpiry && now > sess.loginExpiry) {
+    _forceLogout('30일이 경과하여 보안을 위해 자동 로그아웃 되었습니다.\n다시 로그인해 주세요.'); return;
+  }
+  // 7일 미사용 만료
+  if (sess.lastActivityAt && (now - sess.lastActivityAt) > SESSION_IDLE_MAX) {
+    _forceLogout('7일간 사용 기록이 없어 자동 로그아웃 되었습니다.\n다시 로그인해 주세요.'); return;
+  }
+  // 세션 레코드 없으면 재생성 (이전 버전 기존 로그인 유저 호환)
+  if (!sess.loginAt) _createSession();
+  // 5분 후 재확인
+  clearTimeout(_sessionTimer);
+  _sessionTimer = setTimeout(_checkSession, 5 * 60 * 1000);
+}
+function _forceLogout(msg) {
+  clearTimeout(_sessionTimer);
+  state.loggedIn = false;
+  state.user = { email: '', name: '' };
+  localStorage.setItem('vibespace', JSON.stringify(state));
+  localStorage.removeItem(SESSION_KEY);
+  updateLoginUI();
+  goTo('landing');
+  setTimeout(() => {
+    // 네이티브 alert 대신 토스트 스타일 알림 표시
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-size:14px;font-weight:600;padding:14px 22px;border-radius:14px;z-index:9999;text-align:center;line-height:1.5;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }, 400);
+}
+function initSession() {
+  if (!state.loggedIn) { localStorage.removeItem(SESSION_KEY); return; }
+  _checkSession();
+}
+
 // ===== INIT =====
 load();
+initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
