@@ -200,13 +200,13 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* Project dropdown */
 .project-dropdown {
-  position:fixed; top:0; left:0;          /* JS에서 좌표 계산 */
+  position:fixed; top:0; left:0;
   min-width:260px; max-width:calc(100vw - 32px);
   background:#fff; border-radius:14px;
   box-shadow:0 8px 28px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07);
   padding:6px; z-index:9999; display:none;
 }
-.project-dropdown.active { display:block; }
+.project-dropdown.active { display:block; animation:menuSlideDown .22s cubic-bezier(0.22,1,0.36,1) forwards; }
 .pd-item {
   display:flex; align-items:center; justify-content:space-between;
   padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .15s;
@@ -318,6 +318,26 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card {
   background:#fff; border-radius:16px; padding:24px;
   border:1px solid var(--card-border); box-shadow:var(--card-shadow);
+  will-change:transform;
+}
+@keyframes menuSlideDown {
+  from { opacity:0; transform:translateY(-10px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes ovFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes dlgSlideUp {
+  from { transform:translateY(48px); opacity:0.5; }
+  to   { transform:translateY(0);    opacity:1; }
+}
+@keyframes cardSlideInRight {
+  from { opacity:0; transform:translateX(48px) scale(0.97); }
+  to   { opacity:1; transform:translateX(0) scale(1); }
+}
+.work-card-entering {
+  animation:cardSlideInRight .32s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 .work-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
 .work-card-title { font-size:18px; font-weight:600; }
@@ -336,10 +356,15 @@ button, input, textarea, select { font-family:var(--font); }
   position:fixed; z-index:500; background:#fff; border-radius:12px;
   box-shadow:0 4px 20px rgba(0,0,0,0.15); border:1px solid #eef0f6;
   overflow:hidden; min-width:140px;
-  opacity:0; pointer-events:none; transform:scale(0.95) translateY(-4px);
-  transition:all .15s ease;
+  opacity:0; pointer-events:none;
+  transform:scale(0.88) translateY(-10px);
+  transform-origin:top right;
+  transition:opacity .18s cubic-bezier(0.22,1,0.36,1), transform .18s cubic-bezier(0.22,1,0.36,1);
 }
-.card-more-menu.open { opacity:1; pointer-events:all; transform:scale(1) translateY(0); }
+.card-more-menu.open {
+  opacity:1; pointer-events:all;
+  transform:scale(1) translateY(0);
+}
 .card-menu-item {
   display:flex; align-items:center; gap:10px; padding:12px 16px;
   font-size:14px; font-weight:500; color:#333333; cursor:pointer; background:none; border:none;
@@ -563,7 +588,7 @@ button, input, textarea, select { font-family:var(--font); }
   box-shadow:0 8px 28px rgba(0,0,0,0.13);
   padding:6px; z-index:30; min-width:220px; display:none;
 }
-.dropdown.active { display:flex; flex-direction:column; }
+.dropdown.active { display:flex; flex-direction:column; animation:menuSlideDown .22s cubic-bezier(0.22,1,0.36,1) forwards; }
 .dropdown-item {
   display:flex; align-items:center; gap:10px; padding:11px 14px;
   font-size:14px; color:#333; cursor:pointer; border-radius:8px;
@@ -672,7 +697,8 @@ button, input, textarea, select { font-family:var(--font); }
   background:rgba(0,0,0,.48); display:none; align-items:flex-end; justify-content:center;
   z-index:100;
 }
-.overlay.active { display:flex; }
+.overlay.active { display:flex; animation:ovFadeIn .22s ease forwards; }
+.overlay.active .dialog { animation:dlgSlideUp .3s cubic-bezier(0.22,1,0.36,1) forwards; }
 .dialog {
   background:#fff; border-radius:22px 22px 0 0; padding:24px; width:100%; max-width:600px;
   display:flex; flex-direction:column; gap:16px; max-height:90vh; overflow-y:auto;
@@ -2591,6 +2617,8 @@ function clearCompanyManual() {
 
 // ===== WORK CARDS =====
 let editingProcessId = null, editingFieldKey = null;
+let _pendingNewProcId = null;
+
 function renderWorkCards() {
   const proj = getProject(); if (!proj) return;
   const container = document.getElementById('work-cards');
@@ -2605,13 +2633,21 @@ function renderWorkCards() {
   const noSched = originalOrder.filter(x => !x.p.scheduleStart);
   const sorted = [...withSched, ...noSched].map(x => x.p);
 
+  // FLIP: 기존 카드 위치 기록
+  const oldRects = {};
+  container.querySelectorAll('.work-card[data-proc-id]').forEach(card => {
+    oldRects[card.dataset.procId] = card.getBoundingClientRect();
+  });
+  const newProcId = _pendingNewProcId;
+  _pendingNewProcId = null;
+
   container.innerHTML = sorted.map(p => {
     const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
     const schedDisplay = (p.scheduleStart && p.scheduleEnd)
       ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd)
       : '일정 선택';
     return `
-    <div class="work-card">
+    <div class="work-card" data-proc-id="${p.id}">
       <div class="work-card-header" style="position:relative;">
         <span class="work-card-title">${esc(p.name)}</span>
         <button class="card-more-btn" onclick="toggleCardMenu(event,'${p.id}','${esc(p.type||p.name)}')">···</button>
@@ -2663,6 +2699,28 @@ function renderWorkCards() {
         </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
     </div>`;
   }).join('');
+
+  // FLIP: 기존 카드 위치 애니메이션
+  container.querySelectorAll('.work-card[data-proc-id]').forEach(card => {
+    const id = card.dataset.procId;
+    if (id === newProcId) {
+      card.classList.add('work-card-entering');
+      return;
+    }
+    if (oldRects[id]) {
+      const newRect = card.getBoundingClientRect();
+      const dx = oldRects[id].left - newRect.left;
+      const dy = oldRects[id].top  - newRect.top;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        card.style.transition = 'none';
+        card.style.transform = `translate(${dx}px,${dy}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          card.style.transition = 'transform .38s cubic-bezier(0.22,1,0.36,1)';
+          card.style.transform = '';
+        }));
+      }
+    }
+  });
 }
 
 function editField(procId, key, label) {
@@ -2984,9 +3042,11 @@ function confirmAddProcess() {
   const custom = document.getElementById('custom-process-input').value.trim();
   const name = custom || selectedProcessType;
   if (!name) { alert('공정 유형을 선택하거나 이름을 입력하세요.'); return; }
-  getProject().processes.push({ id:'proc_'+Date.now(), name, type:selectedProcessType||name, scheduleStart:'', scheduleEnd:'', company:'', details:[] });
+  const _newProcId = 'proc_'+Date.now();
+  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, scheduleStart:'', scheduleEnd:'', company:'', details:[] });
   gtag('event', 'add_process', { process_type: name, is_custom: !!custom });
   trackEvent('process', 'add_process', name);
+  _pendingNewProcId = _newProcId;
   save(); renderAll();
   closeDialog('dlg-add-process');
 }
