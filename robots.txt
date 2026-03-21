@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# Naver
+User-agent: Yeti
+Allow: /
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+Sitemap: https://vibespacekorea.com/sitemap.xml

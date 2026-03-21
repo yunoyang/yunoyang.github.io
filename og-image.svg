@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e2d4a"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3176ff"/>
+      <stop offset="100%" style="stop-color:#60a5fa"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Top accent bar -->
+  <rect width="1200" height="3" fill="url(#bar)"/>
+
+  <!-- Left content -->
+  <!-- Beta badge -->
+  <rect x="60" y="180" width="70" height="28" rx="6" fill="#3176ff" opacity="0.9"/>
+  <text x="95" y="199" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="700" fill="white">beta</text>
+
+  <!-- Main logo -->
+  <text x="60" y="300" font-family="'Helvetica Neue',Arial,sans-serif" font-size="86" font-weight="800" fill="white" letter-spacing="-2">Vibespace</text>
+
+  <!-- Tagline -->
+  <text x="60" y="355" font-family="'Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="600" fill="#93c5fd">처음 하는 반셀프인테리어, 혼자 하지 않아도 됩니다</text>
+
+  <!-- Sub-tagline -->
+  <text x="60" y="400" font-family="'Helvetica Neue',Arial,sans-serif" font-size="20" fill="#64748b">공정 계획  ·  예산 관리  ·  업체 연결  ·  일정 캘린더</text>
+
+  <!-- Domain -->
+  <text x="60" y="560" font-family="'Helvetica Neue',Arial,sans-serif" font-size="18" fill="#475569">vibespacekorea.com</text>
+
+  <!-- Right side: process chips 2x2 -->
+  <!-- Chip 1: 철거 #2563eb -->
+  <rect x="760" y="200" width="160" height="80" rx="14" fill="#2563eb" opacity="0.9"/>
+  <text x="840" y="249" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">철거</text>
+
+  <!-- Chip 2: 목공 #f57c00 -->
+  <rect x="940" y="200" width="160" height="80" rx="14" fill="#f57c00" opacity="0.9"/>
+  <text x="1020" y="249" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">목공</text>
+
+  <!-- Chip 3: 타일 #9333ea -->
+  <rect x="760" y="300" width="160" height="80" rx="14" fill="#9333ea" opacity="0.9"/>
+  <text x="840" y="349" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">타일</text>
+
+  <!-- Chip 4: 도배 #00838f -->
+  <rect x="940" y="300" width="160" height="80" rx="14" fill="#00838f" opacity="0.9"/>
+  <text x="1020" y="349" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">도배</text>
+
+  <!-- Chip 5: 욕실 #e91e63 -->
+  <rect x="760" y="400" width="160" height="80" rx="14" fill="#e91e63" opacity="0.9"/>
+  <text x="840" y="449" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">욕실</text>
+
+  <!-- Chip 6: 가구 #ff8f00 -->
+  <rect x="940" y="400" width="160" height="80" rx="14" fill="#ff8f00" opacity="0.9"/>
+  <text x="1020" y="449" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="white">가구</text>
+</svg>
