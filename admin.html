@@ -541,6 +541,10 @@ tr:hover td { background:#fafbfe; }
         <i data-lucide="image"></i>
         <span>브랜드 설정</span>
       </div>
+      <div class="nav-item" id="nav-contractors" onclick="showPage('contractors',this)">
+        <i data-lucide="hard-hat"></i>
+        <span>업체 DB</span>
+      </div>
 
       <div style="margin-top:24px; padding:12px 10px;">
         <a href="index.html" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8fa3c4;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">
@@ -1103,6 +1107,70 @@ service cloud.firestore {
                 <button class="danger-btn" onclick="adminLogout()">로그아웃</button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CONTRACTOR DB PAGE ===== -->
+      <div class="page" id="page-contractors">
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h1 class="section-title">업체 DB</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">앱에서 업체 입력 시 추천되는 시공 업체 데이터베이스</p>
+          </div>
+          <button onclick="openAddContractorDialog()" style="padding:10px 18px;background:var(--primary);color:#fff;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <i data-lucide="plus" style="width:15px;height:15px;"></i> 업체 추가
+          </button>
+        </div>
+
+        <!-- 필터 -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="contractor-filter-btns">
+          <button onclick="filterContractors('all',this)" class="c-filter-btn active" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#222;">전체</button>
+          <button onclick="filterContractors('전기',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">전기</button>
+          <button onclick="filterContractors('설비',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">설비</button>
+          <button onclick="filterContractors('타일',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">타일</button>
+          <button onclick="filterContractors('도배',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">도배</button>
+          <button onclick="filterContractors('기타',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">기타</button>
+        </div>
+
+        <!-- 업체 목록 -->
+        <div id="contractor-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+
+      <!-- 업체 추가/수정 다이얼로그 -->
+      <div id="dlg-add-contractor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;">
+          <h3 style="font-size:17px;font-weight:700;margin-bottom:16px;" id="add-contractor-title">업체 추가</h3>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">업체명 *</label>
+              <input id="ct-name" type="text" placeholder="예) 집수리스타" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">카테고리 *</label>
+                <select id="ct-category" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;">
+                  <option value="기타">기타</option><option value="철거">철거</option><option value="목공">목공</option>
+                  <option value="타일">타일</option><option value="도배">도배</option><option value="전기">전기</option>
+                  <option value="설비">설비</option><option value="샷시">샷시</option><option value="마루">마루</option>
+                  <option value="페인트">페인트</option><option value="욕실">욕실</option><option value="청소">청소</option>
+                </select></div>
+              <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">지역</label>
+                <input id="ct-area" type="text" placeholder="예) 죽전동" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">전화번호</label>
+                <input id="ct-phone" type="tel" placeholder="010-xxxx-xxxx" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+              <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">평점</label>
+                <input id="ct-rating" type="number" step="0.1" min="0" max="5" placeholder="4.9" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+              <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">후기수</label>
+                <input id="ct-reviews" type="number" placeholder="100" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+            </div>
+            <div><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">설명</label>
+              <textarea id="ct-desc" rows="2" placeholder="업체 소개 (선택)" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;resize:vertical;"></textarea></div>
+            <div><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">출처 URL (당근마켓 등)</label>
+              <input id="ct-url" type="url" placeholder="https://www.daangn.com/..." style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button onclick="closeCTDialog()" style="padding:10px 18px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;background:#fff;color:#555;cursor:pointer;">취소</button>
+            <button onclick="saveContractor()" style="padding:10px 18px;background:var(--primary);color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">저장</button>
           </div>
         </div>
       </div>
@@ -2273,6 +2341,7 @@ const pageTitles = {
   analytics: ['통계 분석', '트래픽 및 행동 분석'],
   settings: ['시스템 설정', 'API 키 및 앱 설정'],
   brand: ['브랜드 설정', '공사계획서 로고 관리'],
+  contractors: ['업체 DB', '시공 업체 데이터베이스 관리'],
 };
 
 function showPage(name, navEl) {
@@ -2285,7 +2354,157 @@ function showPage(name, navEl) {
   document.getElementById('topbar-sub').textContent = titles[1];
   if (name === 'analytics') renderAnalytics();
   if (name === 'brand') loadBrandSection();
+  if (name === 'contractors') loadContractorPage();
   setTimeout(lucide.createIcons, 60);
+}
+
+// ===== CONTRACTOR DB =====
+let _adminContractors = [];
+let _contractorFilter = 'all';
+let _editContractorId = null;
+
+async function loadContractorPage() {
+  const list = document.getElementById('contractor-list');
+  if (!list) return;
+  list.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;">불러오는 중...</div>';
+  try {
+    const snap = await db.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
+    _adminContractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!_adminContractors.length) {
+      // 시드 데이터 자동 추가
+      await _adminSeedContractors();
+    }
+    renderContractorList();
+  } catch(e) {
+    list.innerHTML = `<div style="color:#e05050;text-align:center;padding:30px;">로드 실패: ${e.message}</div>`;
+  }
+}
+
+const _ADMIN_CONTRACTOR_SEED = [
+  {name:'집수리스타',category:'기타',originalCategory:'주택수리종합',area:'죽전동',rating:4.9,reviews:319,description:'타일, 페인트, 마루, 벽지, 수전 등 종합 집수리',source:'daangn'},
+  {name:'홈크린조프로',category:'기타',originalCategory:'주택수리종합',area:'죽전동',rating:5.0,reviews:82,description:'MBC TV 출연. 타일교체/보수, 욕실수리, 수전교체',source:'daangn'},
+  {name:'수지 출장집수리',category:'기타',originalCategory:'주택수리',area:'상현동',rating:4.9,reviews:215,description:'용인 수지 출장 집수리 전문',source:'daangn'},
+  {name:'누수랩',category:'설비',originalCategory:'누수탐지/수리',area:'오포읍',rating:5.0,reviews:125,description:'누수탐지 및 배관 수선, 마감까지 책임 시공',source:'daangn'},
+  {name:'볼트홈케어',category:'타일',originalCategory:'줄눈시공',area:'풍덕천동',rating:5.0,reviews:16,description:'SBS 고수열전 출연. 3000세대 이상 줄눈시공',source:'daangn'},
+  {name:'리라이팅',category:'전기',originalCategory:'조명/전기',area:'동천동',rating:4.6,reviews:35,description:'부분/전체 인테리어, LED 교체, 누전공사, 콘센트 교체',source:'daangn'},
+  {name:'에어컨설치 10프로할인',category:'설비',originalCategory:'에어컨설치',area:'오포읍',rating:4.9,reviews:175,description:'삼성·LG 설치 자격증. 설치 후 1년 A/S 보장',source:'daangn'},
+  {name:'겨울왕국에어컨설치',category:'설비',originalCategory:'에어컨설치',area:'모현읍',rating:4.9,reviews:495,description:'에어컨 설치 20% 할인, LG·삼성 자격증 보유',source:'daangn'},
+  {name:'에어컨청소 전문 백결클린',category:'청소',originalCategory:'에어컨청소',area:'죽전동',rating:5.0,reviews:98,description:'서울/경기권 에어컨 청소 전문',source:'daangn'},
+  {name:'바른에어컨청소',category:'청소',originalCategory:'에어컨청소',area:'신봉동',rating:5.0,reviews:72,description:'깔끔함과 세심함. 에어컨 청소 전문',source:'daangn'},
+];
+
+async function _adminSeedContractors() {
+  const batch = db.batch();
+  for (const c of _ADMIN_CONTRACTOR_SEED) {
+    const ref = db.collection('vb_contractors').doc();
+    batch.set(ref, { ...c, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+  await batch.commit();
+  const snap = await db.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
+  _adminContractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+function filterContractors(cat, btn) {
+  _contractorFilter = cat;
+  document.querySelectorAll('.c-filter-btn').forEach(b => {
+    b.style.background = '#fff'; b.style.color = '#555'; b.style.borderColor = '#dde3ef';
+  });
+  btn.style.background = 'var(--primary)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--primary)';
+  renderContractorList();
+}
+
+function renderContractorList() {
+  const list = document.getElementById('contractor-list');
+  if (!list) return;
+  const items = _contractorFilter === 'all' ? _adminContractors
+    : _adminContractors.filter(c => c.category === _contractorFilter);
+  if (!items.length) {
+    list.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;">업체가 없습니다</div>';
+    return;
+  }
+  const catColors = {전기:'#f59e0b',설비:'#3b82f6',타일:'#8b5cf6',도배:'#10b981',기타:'#6b7280',청소:'#06b6d4',마루:'#f97316',페인트:'#ec4899',욕실:'#14b8a6',철거:'#ef4444',목공:'#a16207'};
+  list.innerHTML = items.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:700;color:#111;">${c.name}</span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:${catColors[c.category]||'#888'}20;color:${catColors[c.category]||'#888'};">${c.category}</span>
+          ${c.source==='daangn'?'<span style="font-size:10px;background:#ff6f0f;color:#fff;border-radius:4px;padding:1px 5px;">당근</span>':''}
+        </div>
+        <div style="font-size:12px;color:#888;">${c.area||''} · ${c.originalCategory||''} · ⭐${c.rating||'-'} · 후기 ${c.reviews||0}</div>
+        ${c.description?`<div style="font-size:12px;color:#aaa;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.description}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openEditContractorDialog('${c.id}')" style="padding:6px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:12px;background:#fff;cursor:pointer;color:#555;">수정</button>
+        <button onclick="deleteContractor('${c.id}')" style="padding:6px 12px;border:1px solid #fee2e2;border-radius:8px;font-size:12px;background:#fff;cursor:pointer;color:#ef4444;">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddContractorDialog() {
+  _editContractorId = null;
+  document.getElementById('add-contractor-title').textContent = '업체 추가';
+  ['ct-name','ct-area','ct-phone','ct-desc','ct-url'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ct-category').value = '기타';
+  document.getElementById('ct-rating').value = '';
+  document.getElementById('ct-reviews').value = '';
+  document.getElementById('dlg-add-contractor').style.display = 'flex';
+}
+
+function openEditContractorDialog(id) {
+  const c = _adminContractors.find(x => x.id === id);
+  if (!c) return;
+  _editContractorId = id;
+  document.getElementById('add-contractor-title').textContent = '업체 수정';
+  document.getElementById('ct-name').value = c.name || '';
+  document.getElementById('ct-category').value = c.category || '기타';
+  document.getElementById('ct-area').value = c.area || '';
+  document.getElementById('ct-phone').value = c.phone || '';
+  document.getElementById('ct-rating').value = c.rating || '';
+  document.getElementById('ct-reviews').value = c.reviews || '';
+  document.getElementById('ct-desc').value = c.description || '';
+  document.getElementById('ct-url').value = c.sourceUrl || '';
+  document.getElementById('dlg-add-contractor').style.display = 'flex';
+}
+
+function closeCTDialog() {
+  document.getElementById('dlg-add-contractor').style.display = 'none';
+}
+
+async function saveContractor() {
+  const name = document.getElementById('ct-name').value.trim();
+  if (!name) { alert('업체명을 입력하세요.'); return; }
+  const data = {
+    name, category: document.getElementById('ct-category').value,
+    area: document.getElementById('ct-area').value.trim(),
+    phone: document.getElementById('ct-phone').value.trim(),
+    rating: parseFloat(document.getElementById('ct-rating').value) || 0,
+    reviews: parseInt(document.getElementById('ct-reviews').value) || 0,
+    description: document.getElementById('ct-desc').value.trim(),
+    sourceUrl: document.getElementById('ct-url').value.trim(),
+    source: 'manual', updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (_editContractorId) {
+      await db.collection('vb_contractors').doc(_editContractorId).update(data);
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('vb_contractors').doc().set(data);
+    }
+    closeCTDialog();
+    showToast(_editContractorId ? '업체가 수정되었습니다' : '업체가 추가되었습니다');
+    loadContractorPage();
+  } catch(e) { alert('저장 실패: ' + e.message); }
+}
+
+async function deleteContractor(id) {
+  if (!confirm('이 업체를 삭제하시겠습니까?')) return;
+  try {
+    await db.collection('vb_contractors').doc(id).delete();
+    showToast('업체가 삭제되었습니다');
+    loadContractorPage();
+  } catch(e) { alert('삭제 실패: ' + e.message); }
 }
 
 // ===== BRAND / LOGO =====

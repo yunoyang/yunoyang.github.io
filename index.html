@@ -1620,18 +1620,36 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- Company Manual Input -->
 <div class="overlay" id="dlg-company-search">
-  <div class="dialog">
+  <div class="dialog" style="max-height:90vh;overflow-y:auto;">
     <div class="comp-header">
       <h3>담당 업체 연결</h3>
       <span class="comp-proc-badge" id="comp-proc-badge">업체 정보</span>
     </div>
+
+    <!-- 추천 업체 섹션 (당근 DB) -->
+    <div id="comp-suggest-section" style="margin-top:12px;display:none;">
+      <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+        <span style="background:#ff6f0f;color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;">당근</span> 내 주변 추천 업체
+      </div>
+      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- 구분선 -->
+    <div id="comp-divider" style="display:none;margin:14px 0;display:flex;align-items:center;gap:8px;">
+      <div style="flex:1;height:1px;background:#eee;"></div>
+      <span style="font-size:12px;color:#bbb;">직접 입력</span>
+      <div style="flex:1;height:1px;background:#eee;"></div>
+    </div>
+
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
-      <div>
+      <div style="position:relative;">
         <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">업체명 <span style="color:#e05050;">*</span></label>
         <input id="comp-manual-name" type="text" placeholder="예) 홍길동 인테리어"
           style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
-          oninput="this.style.borderColor='var(--primary)'"
+          oninput="this.style.borderColor='var(--primary)';_compNameAutocomplete(this.value)"
           onkeydown="if(event.key==='Enter')document.getElementById('comp-manual-phone').focus()">
+        <!-- 자동완성 드롭다운 -->
+        <div id="comp-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dde3ef;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.10);z-index:200;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
       </div>
       <div>
         <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">전화번호</label>
@@ -2714,6 +2732,119 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
+// ===== CONTRACTOR DB =====
+let _contractors = [];
+
+const _CONTRACTOR_CATEGORY_MAP = {
+  '철거':'기타', '목공':'기타', '타일':'타일', '도배':'도배', '전기':'전기',
+  '설비':'설비', '샷시':'기타', '마루':'마루', '페인트':'페인트', '욕실':'욕실',
+  '가구':'기타', '청소':'청소', '기타':'기타'
+};
+const _CONTRACTOR_MULTI_MATCH = {
+  '욕실': ['욕실','타일','설비'],
+  '인테리어': ['기타','타일','도배','마루','페인트'],
+};
+
+const _CONTRACTOR_SEED = [
+  {name:'집수리스타',category:'기타',originalCategory:'주택수리종합',area:'죽전동',rating:4.9,reviews:319,description:'타일, 페인트, 마루, 벽지, 콘센트, 수전 등 종합 집수리',source:'daangn'},
+  {name:'홈크린조프로',category:'기타',originalCategory:'주택수리종합',area:'죽전동',rating:5.0,reviews:82,description:'MBC TV 출연. 타일교체/보수, 욕실수리, 수전교체, 싱크대수리',source:'daangn'},
+  {name:'수지 출장집수리',category:'기타',originalCategory:'주택수리',area:'상현동',rating:4.9,reviews:215,description:'용인 수지 출장 집수리 전문. 수지구 전체 및 광교·보정동 가능',source:'daangn'},
+  {name:'누수랩',category:'설비',originalCategory:'누수탐지/수리',area:'오포읍',rating:5.0,reviews:125,description:'누수탐지 및 배관 수선, 마감까지 책임 시공. 365일 24시 상담',source:'daangn'},
+  {name:'볼트홈케어',category:'타일',originalCategory:'줄눈시공',area:'풍덕천동',rating:5.0,reviews:16,description:'SBS 고수열전 출연. 3000세대 이상 줄눈시공. 1년 이상 A/S 보장',source:'daangn'},
+  {name:'리라이팅',category:'전기',originalCategory:'조명/전기',area:'동천동',rating:4.6,reviews:35,description:'부분/전체 인테리어, LED 교체, 누전공사, 콘센트·스위치 교체',source:'daangn'},
+  {name:'에어컨설치 10프로할인',category:'설비',originalCategory:'에어컨설치',area:'오포읍',rating:4.9,reviews:175,description:'삼성·LG 설치 자격증. 설치 후 1년 A/S 보장',source:'daangn'},
+  {name:'겨울왕국에어컨설치',category:'설비',originalCategory:'에어컨설치',area:'모현읍',rating:4.9,reviews:495,description:'에어컨 설치 20% 할인, LG·삼성 자격증 보유',source:'daangn'},
+  {name:'에어컨청소 전문 백결클린',category:'청소',originalCategory:'에어컨청소',area:'죽전동',rating:5.0,reviews:98,description:'서울/경기권 에어컨 청소 전문. 24시간 문의 가능',source:'daangn'},
+  {name:'바른에어컨청소',category:'청소',originalCategory:'에어컨청소',area:'신봉동',rating:5.0,reviews:72,description:'깔끔함과 세심함. 에어컨 청소 전문',source:'daangn'},
+];
+
+async function _loadContractors() {
+  // 1) Firestore에서 로드
+  try {
+    const ok = await _initFirebase();
+    if (ok && _db) {
+      const snap = await _db.collection('vb_contractors').orderBy('rating','desc').limit(100).get();
+      if (!snap.empty) {
+        _contractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return;
+      }
+      // Firestore에 없으면 seed 데이터 저장
+      await _seedContractors();
+    }
+  } catch(e) { console.warn('contractor load:', e); }
+  // fallback: 로컬 seed 사용
+  _contractors = _CONTRACTOR_SEED.map((c,i) => ({ id: 'seed_'+i, ...c }));
+}
+
+async function _seedContractors() {
+  if (!_db) return;
+  const batch = _db.batch();
+  for (const c of _CONTRACTOR_SEED) {
+    const ref = _db.collection('vb_contractors').doc();
+    batch.set(ref, { ...c, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+  try { await batch.commit(); } catch(e) {}
+  _contractors = _CONTRACTOR_SEED.map((c,i) => ({ id:'seed_'+i, ...c }));
+}
+
+function _getContractorSuggestions(procType) {
+  if (!procType || !_contractors.length) return [];
+  const mappedCat = _CONTRACTOR_CATEGORY_MAP[procType] || '기타';
+  const multiCats = _CONTRACTOR_MULTI_MATCH[procType] || [mappedCat];
+  return _contractors
+    .filter(c => multiCats.includes(c.category) || c.category === mappedCat || c.category === '기타')
+    .sort((a, b) => ((b.rating||0) * Math.log(1+(b.reviews||0))) - ((a.rating||0) * Math.log(1+(a.reviews||0))))
+    .slice(0, 5);
+}
+
+function _compNameAutocomplete(val) {
+  const ac = document.getElementById('comp-autocomplete');
+  if (!ac) return;
+  if (!val.trim()) { ac.style.display = 'none'; return; }
+  const matches = _contractors.filter(c => c.name.includes(val) || (c.description||'').includes(val));
+  if (!matches.length) { ac.style.display = 'none'; return; }
+  ac.style.display = 'block';
+  ac.innerHTML = matches.slice(0,6).map(c => `
+    <div onclick="_selectContractor(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background .15s;"
+      onmouseover="this.style.background='#f5f7ff'" onmouseout="this.style.background=''">
+      <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}</div>
+      <div style="font-size:12px;color:#888;margin-top:2px;">${c.area||''} · ⭐${c.rating||''} · ${c.originalCategory||c.category||''}</div>
+    </div>
+  `).join('');
+}
+
+function _selectContractor(c) {
+  document.getElementById('comp-manual-name').value = c.name;
+  document.getElementById('comp-manual-phone').value = c.phone || '';
+  document.getElementById('comp-autocomplete').style.display = 'none';
+}
+
+function _renderContractorSuggestions(procType) {
+  const sugg = _getContractorSuggestions(procType);
+  const sec = document.getElementById('comp-suggest-section');
+  const list = document.getElementById('comp-suggest-list');
+  const div = document.getElementById('comp-divider');
+  if (!sugg.length || !sec) return;
+  sec.style.display = 'block';
+  if (div) div.style.display = 'flex';
+  list.innerHTML = sugg.map(c => `
+    <div onclick="_selectContractor(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+      style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8f9fc;border-radius:10px;cursor:pointer;border:1px solid #eee;transition:all .15s;"
+      onmouseover="this.style.background='#eef1ff';this.style.borderColor='var(--primary)'"
+      onmouseout="this.style.background='#f8f9fc';this.style.borderColor='#eee'">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#222;">${esc(c.name)}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+        <div style="font-size:12px;font-weight:700;color:#f59e0b;">⭐ ${c.rating||'-'}</div>
+        <div style="font-size:11px;color:#aaa;">후기 ${c.reviews||0}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // ===== COMPANY MANUAL INPUT =====
 function openCompanySearch(procId) {
   _compSearchProcId = procId;
@@ -2721,6 +2852,12 @@ function openCompanySearch(procId) {
   document.getElementById('comp-proc-badge').textContent = `${proc?.type||proc?.name||''} 업체`;
   document.getElementById('comp-manual-name').value = proc?.companyData?.name || proc?.company || '';
   document.getElementById('comp-manual-phone').value = proc?.companyData?.phone || '';
+  // 추천 업체 표시
+  const sec = document.getElementById('comp-suggest-section');
+  const div = document.getElementById('comp-divider');
+  if (sec) sec.style.display = 'none';
+  if (div) div.style.display = 'none';
+  _renderContractorSuggestions(proc?.type || proc?.name);
   // 기존 정보 표시
   const cur = document.getElementById('comp-current-info');
   if (proc?.companyData?.name) {
@@ -4694,6 +4831,7 @@ window.addEventListener('load', () => {
   // 공동작업 초대 처리
   _checkInviteOnLoad();
   _loadBrandLogo();
+  _loadContractors(); // 업체 DB 로드
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
 });
