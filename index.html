@@ -2119,7 +2119,19 @@ async function _autoUploadOnLogin() {
   if (!ok) return;
   _notifyNewUserIfNeeded(); // 신규/재로그인 텔레그램 알림 (비동기, 논블로킹)
 
-  // ── 클라우드 전체 프로젝트 조회 (ownerEmail + meta.owner.email 두 방식 모두 시도) ──
+  // Firebase Auth 세션이 완전히 준비될 때까지 최대 3초 대기
+  await new Promise(resolve => {
+    let waited = 0;
+    const check = setInterval(() => {
+      waited += 200;
+      try {
+        const user = firebase.auth().currentUser;
+        if (user || waited >= 3000) { clearInterval(check); resolve(); }
+      } catch(e) { clearInterval(check); resolve(); }
+    }, 200);
+  });
+
+  // ── 클라우드 전체 프로젝트 조회 ──
   showToastMessage('☁️ 클라우드 데이터 확인 중...');
   const allCloudProjs = await _fetchAllMyCloudProjects();
 
@@ -4692,9 +4704,17 @@ async function _syncFromCloudOnStartup() {
   const ok = await _initFirebase();
   if (!ok) return;
 
-  // PC: 기존 cloudId를 vb_users 인덱스에 백필 (모바일이 찾을 수 있도록)
+  // PC 시작 시: 기존 cloudId 문서에 ownerEmail 백필 + vb_users 인덱스 저장
+  // → 모바일이 이메일로 프로젝트를 찾을 수 있게 됨
   for (const p of (state.projects || [])) {
-    if (p.cloudId) _saveUserIndex(p.cloudId);
+    if (p.cloudId && state.user?.email) {
+      // vb_projects 문서에 ownerEmail 직접 기입 (가장 확실한 방법)
+      _db.collection('vb_projects').doc(p.cloudId)
+        .update({ ownerEmail: state.user.email })
+        .catch(() => {});
+      // vb_users 인덱스에도 저장
+      _saveUserIndex(p.cloudId);
+    }
   }
 
   try {
