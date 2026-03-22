@@ -2814,17 +2814,24 @@ function _compNameAutocomplete(val) {
   const matches = _contractors.filter(c => c.name.includes(val) || (c.description||'').includes(val));
   if (!matches.length) { ac.style.display = 'none'; return; }
   ac.style.display = 'block';
-  ac.innerHTML = matches.slice(0,6).map(c => `
-    <div onclick="_selectContractor(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+  ac.innerHTML = matches.slice(0,6).map(c => {
+    const cJson = JSON.stringify(c).replace(/"/g,'&quot;');
+    const linkCount = c.reviewLinks?.length || 0;
+    return `
+    <div onclick="_selectContractor('${cJson}')"
       style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background .15s;"
       onmouseover="this.style.background='#f5f7ff'" onmouseout="this.style.background=''">
-      <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}</div>
+        ${linkCount ? `<span style="font-size:11px;color:var(--primary);font-weight:600;">후기링크 ${linkCount}개</span>` : ''}
+      </div>
       <div style="font-size:12px;color:#888;margin-top:2px;">${c.area||''} · ⭐${c.rating||''} · ${c.originalCategory||c.category||''}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-function _selectContractor(c) {
+function _selectContractor(cOrJson) {
+  const c = typeof cOrJson === 'string' ? JSON.parse(cOrJson) : cOrJson;
   document.getElementById('comp-manual-name').value = c.name;
   document.getElementById('comp-manual-phone').value = c.phone || '';
   document.getElementById('comp-autocomplete').style.display = 'none';
@@ -2838,21 +2845,35 @@ function _renderContractorSuggestions(procType) {
   if (!sugg.length || !sec) return;
   sec.style.display = 'block';
   if (div) div.style.display = 'flex';
-  list.innerHTML = sugg.map(c => `
-    <div onclick="_selectContractor(${JSON.stringify(c).replace(/"/g,'&quot;')})"
-      style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8f9fc;border-radius:10px;cursor:pointer;border:1px solid #eee;transition:all .15s;"
+  list.innerHTML = sugg.map(c => {
+    const cJson = JSON.stringify(c).replace(/"/g,'&quot;');
+    const linkCount = c.reviewLinks?.length || 0;
+    const reviewLinksHtml = linkCount
+      ? c.reviewLinks.map((url, i) => `
+          <a href="${esc(url)}" target="_blank" rel="noopener"
+            onclick="event.stopPropagation()"
+            style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--primary);background:#eef1ff;border-radius:6px;padding:2px 8px;text-decoration:none;white-space:nowrap;">
+            후기${i+1} ↗
+          </a>`).join('')
+      : '';
+    return `
+    <div onclick="_selectContractor(&quot;${cJson.replace(/&quot;/g,"\\&quot;")}&quot;)"
+      style="padding:10px 12px;background:#f8f9fc;border-radius:10px;cursor:pointer;border:1px solid #eee;transition:all .15s;"
       onmouseover="this.style.background='#eef1ff';this.style.borderColor='var(--primary)'"
       onmouseout="this.style.background='#f8f9fc';this.style.borderColor='#eee'">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:#222;">${esc(c.name)}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#222;">${esc(c.name)}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+          <div style="font-size:12px;font-weight:700;color:#f59e0b;">⭐ ${c.rating||'-'}</div>
+          <div style="font-size:11px;color:#aaa;">후기 ${c.reviews||0}${linkCount ? `<span style="color:var(--primary);font-weight:600;"> · 링크 ${linkCount}개</span>` : ''}</div>
+        </div>
       </div>
-      <div style="text-align:right;flex-shrink:0;margin-left:8px;">
-        <div style="font-size:12px;font-weight:700;color:#f59e0b;">⭐ ${c.rating||'-'}</div>
-        <div style="font-size:11px;color:#aaa;">후기 ${c.reviews||0}</div>
-      </div>
-    </div>
-  `).join('');
+      ${reviewLinksHtml ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${reviewLinksHtml}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 // ===== COMPANY MANUAL INPUT =====

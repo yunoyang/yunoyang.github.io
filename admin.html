@@ -1184,6 +1184,18 @@ service cloud.firestore {
               <textarea id="ct-desc" rows="2" placeholder="업체 소개 (선택)" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;resize:vertical;"></textarea></div>
             <div><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">출처 URL (당근마켓 등)</label>
               <input id="ct-url" type="url" placeholder="https://www.daangn.com/..." style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
+            <!-- 후기 링크 -->
+            <div>
+              <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">
+                후기 링크 <span style="font-weight:400;color:#bbb;">(최대 5개 · 네이버/카카오/당근 등)</span>
+              </label>
+              <div id="ct-review-links" style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input type="url" class="ct-review-link-input" placeholder="https://..." style="flex:1;padding:9px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;">
+                  <button onclick="addReviewLinkField()" style="padding:8px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:18px;background:#fff;color:#555;cursor:pointer;line-height:1;">+</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
             <button onclick="closeCTDialog()" style="padding:10px 18px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;background:#fff;color:#555;cursor:pointer;">취소</button>
@@ -2455,7 +2467,9 @@ function renderContractorList() {
           <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:${catColors[c.category]||'#888'}20;color:${catColors[c.category]||'#888'};">${c.category}</span>
           ${c.source==='daangn'?'<span style="font-size:10px;background:#ff6f0f;color:#fff;border-radius:4px;padding:1px 5px;">당근</span>':''}
         </div>
-        <div style="font-size:12px;color:#888;">${c.area||''} · ${c.originalCategory||''} · ⭐${c.rating||'-'} · 후기 ${c.reviews||0}</div>
+        <div style="font-size:12px;color:#888;">${c.area||''} · ${c.originalCategory||''} · ⭐${c.rating||'-'} · 후기 ${c.reviews||0}
+          ${c.reviewLinks?.length ? `<span style="margin-left:6px;background:#eef1ff;color:var(--primary);padding:1px 7px;border-radius:6px;font-size:11px;font-weight:600;">후기링크 ${c.reviewLinks.length}개</span>` : ''}
+        </div>
         ${c.description?`<div style="font-size:12px;color:#aaa;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.description}</div>`:''}
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -2466,6 +2480,44 @@ function renderContractorList() {
   `).join('');
 }
 
+function _resetReviewLinkFields(links = []) {
+  const wrap = document.getElementById('ct-review-links');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const toAdd = links.length ? links : [''];
+  toAdd.forEach((url, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    row.innerHTML = `
+      <input type="url" class="ct-review-link-input" value="${url||''}" placeholder="https://..."
+        style="flex:1;padding:9px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;">
+      ${i === 0
+        ? `<button onclick="addReviewLinkField()" style="padding:8px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:18px;background:#fff;color:#555;cursor:pointer;line-height:1;">+</button>`
+        : `<button onclick="this.parentElement.remove()" style="padding:8px 12px;border:1px solid #fee2e2;border-radius:8px;font-size:16px;background:#fff;color:#ef4444;cursor:pointer;line-height:1;">✕</button>`
+      }
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function addReviewLinkField() {
+  const wrap = document.getElementById('ct-review-links');
+  if (!wrap || wrap.querySelectorAll('.ct-review-link-input').length >= 5) return;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;';
+  row.innerHTML = `
+    <input type="url" class="ct-review-link-input" placeholder="https://..."
+      style="flex:1;padding:9px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;">
+    <button onclick="this.parentElement.remove()" style="padding:8px 12px;border:1px solid #fee2e2;border-radius:8px;font-size:16px;background:#fff;color:#ef4444;cursor:pointer;line-height:1;">✕</button>
+  `;
+  wrap.appendChild(row);
+}
+
+function _getReviewLinks() {
+  return Array.from(document.querySelectorAll('.ct-review-link-input'))
+    .map(inp => inp.value.trim()).filter(v => v.length > 0);
+}
+
 function openAddContractorDialog() {
   _editContractorId = null;
   document.getElementById('add-contractor-title').textContent = '업체 추가';
@@ -2473,6 +2525,7 @@ function openAddContractorDialog() {
   document.getElementById('ct-category').value = '기타';
   document.getElementById('ct-rating').value = '';
   document.getElementById('ct-reviews').value = '';
+  _resetReviewLinkFields([]);
   document.getElementById('dlg-add-contractor').style.display = 'flex';
 }
 
@@ -2489,6 +2542,7 @@ function openEditContractorDialog(id) {
   document.getElementById('ct-reviews').value = c.reviews || '';
   document.getElementById('ct-desc').value = c.description || '';
   document.getElementById('ct-url').value = c.sourceUrl || '';
+  _resetReviewLinkFields(c.reviewLinks || []);
   document.getElementById('dlg-add-contractor').style.display = 'flex';
 }
 
@@ -2499,6 +2553,7 @@ function closeCTDialog() {
 async function saveContractor() {
   const name = document.getElementById('ct-name').value.trim();
   if (!name) { alert('업체명을 입력하세요.'); return; }
+  const reviewLinks = _getReviewLinks();
   const data = {
     name, category: document.getElementById('ct-category').value,
     area: document.getElementById('ct-area').value.trim(),
@@ -2507,6 +2562,7 @@ async function saveContractor() {
     reviews: parseInt(document.getElementById('ct-reviews').value) || 0,
     description: document.getElementById('ct-desc').value.trim(),
     sourceUrl: document.getElementById('ct-url').value.trim(),
+    reviewLinks,  // 후기 링크 배열
     source: 'manual', updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
   if (!_adminDb) initFirestoreAdmin();
