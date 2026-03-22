@@ -2166,40 +2166,82 @@ async function _autoUploadOnLogin() {
   }
 }
 
-// ── 내 모든 클라우드 프로젝트 조회 (ownerEmail / meta.owner.email 두 쿼리 병행) ──
+// ── 유저 인덱스 저장: vb_users/{email} 에 projectId 기록 ──
+async function _saveUserIndex(cloudId) {
+  if (!_db || !state.user?.email || !cloudId) return;
+  try {
+    await _db.collection('vb_users').doc(state.user.email).set({
+      email: state.user.email,
+      projectIds: firebase.firestore.FieldValue.arrayUnion(cloudId),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch(e) { console.warn('User index save failed:', e); }
+}
+
+// ── 내 모든 클라우드 프로젝트 조회 (3단계 전략) ──
 async function _fetchAllMyCloudProjects() {
   if (!_db || !state.user?.email) return [];
   const seenIds = new Set();
   const result = [];
 
-  function _parseSnap(snap) {
-    snap.forEach(doc => {
-      if (seenIds.has(doc.id)) return;
-      seenIds.add(doc.id);
-      const data = doc.data();
-      const pd = data.projectData;
-      if (!pd) return;
-      pd.cloudId = doc.id;
-      pd.isCloud = true;
-      pd.collaborators = data.meta?.collaborators || [];
-      pd.owner = data.meta?.owner || {};
-      result.push(pd);
-    });
+  function _parseDoc(doc) {
+    if (!doc.exists || seenIds.has(doc.id)) return;
+    seenIds.add(doc.id);
+    const data = doc.data();
+    const pd = data.projectData;
+    if (!pd) return;
+    pd.cloudId = doc.id;
+    pd.isCloud = true;
+    pd.collaborators = data.meta?.collaborators || [];
+    pd.owner = data['meta.owner'] || data.meta?.owner || {};
+    result.push(pd);
   }
 
-  // 1) ownerEmail 쿼리 (새 문서)
-  try {
-    const s1 = await _db.collection('vb_projects')
-      .where('ownerEmail', '==', state.user.email).limit(20).get();
-    _parseSnap(s1);
-  } catch(e) { console.warn('ownerEmail query failed:', e); }
+  function _parseSnap(snap) { snap.forEach(doc => _parseDoc(doc)); }
 
-  // 2) meta.owner.email 쿼리 (구버전 문서 — 자동 인덱스로 동작)
+  // 전략 1: vb_users 인덱스로 직접 ID 조회 (가장 신뢰)
   try {
-    const s2 = await _db.collection('vb_projects')
-      .where('meta.owner.email', '==', state.user.email).limit(20).get();
-    _parseSnap(s2);
-  } catch(e) { console.warn('meta.owner.email query failed:', e); }
+    const userDoc = await _db.collection('vb_users').doc(state.user.email).get();
+    if (userDoc.exists) {
+      const ids = userDoc.data().projectIds || [];
+      await Promise.all(ids.map(async id => {
+        try {
+          const snap = await _db.collection('vb_projects').doc(id).get();
+          _parseDoc(snap);
+        } catch(e) {}
+      }));
+    }
+  } catch(e) { console.warn('User index fetch failed:', e); }
+
+  // 전략 2: ownerEmail 쿼리 (신규 문서)
+  if (!result.length) {
+    try {
+      const s1 = await _db.collection('vb_projects')
+        .where('ownerEmail', '==', state.user.email).limit(20).get();
+      _parseSnap(s1);
+    } catch(e) { console.warn('ownerEmail query failed:', e); }
+  }
+
+  // 전략 3: meta.owner.email 쿼리 (구버전 문서)
+  if (!result.length) {
+    try {
+      const s2 = await _db.collection('vb_projects')
+        .where('meta.owner.email', '==', state.user.email).limit(20).get();
+      _parseSnap(s2);
+    } catch(e) { console.warn('meta.owner.email query failed:', e); }
+  }
+
+  // 전략 4: 로컬에 cloudId 있으면 직접 조회 (PC→Mobile 최후 수단)
+  if (!result.length) {
+    const localIds = (state.projects || []).map(p => p.cloudId).filter(Boolean);
+    await Promise.all(localIds.map(async id => {
+      if (seenIds.has(id)) return;
+      try {
+        const snap = await _db.collection('vb_projects').doc(id).get();
+        _parseDoc(snap);
+      } catch(e) {}
+    }));
+  }
 
   return result;
 }
@@ -4019,6 +4061,7 @@ async function _pushProjToCloud(proj) {
   };
   try {
     await _db.collection('vb_projects').doc(proj.cloudId).set(payload, { merge: true });
+    _saveUserIndex(proj.cloudId); // 유저 인덱스 업데이트 (논블로킹)
     return proj.cloudId;
   } catch(e) { console.error('push failed', e); return null; }
 }
@@ -4649,8 +4692,13 @@ async function _syncFromCloudOnStartup() {
   const ok = await _initFirebase();
   if (!ok) return;
 
+  // PC: 기존 cloudId를 vb_users 인덱스에 백필 (모바일이 찾을 수 있도록)
+  for (const p of (state.projects || [])) {
+    if (p.cloudId) _saveUserIndex(p.cloudId);
+  }
+
   try {
-    // ownerEmail + meta.owner.email 두 쿼리로 구버전·신버전 문서 모두 조회
+    // 3단계 전략으로 클라우드 데이터 조회
     const cloudProjs = await _fetchAllMyCloudProjects();
 
     if (!cloudProjs.length) {
