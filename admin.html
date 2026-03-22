@@ -2367,11 +2367,16 @@ async function loadContractorPage() {
   const list = document.getElementById('contractor-list');
   if (!list) return;
   list.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;">불러오는 중...</div>';
+  // _adminDb 초기화 확인
+  if (!_adminDb) initFirestoreAdmin();
+  if (!_adminDb) {
+    list.innerHTML = '<div style="color:#e05050;text-align:center;padding:30px;">Firebase 초기화 실패. 페이지를 새로고침해주세요.</div>';
+    return;
+  }
   try {
-    const snap = await db.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
+    const snap = await _adminDb.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
     _adminContractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (!_adminContractors.length) {
-      // 시드 데이터 자동 추가
       await _adminSeedContractors();
     }
     renderContractorList();
@@ -2394,13 +2399,13 @@ const _ADMIN_CONTRACTOR_SEED = [
 ];
 
 async function _adminSeedContractors() {
-  const batch = db.batch();
+  const batch = _adminDb.batch();
   for (const c of _ADMIN_CONTRACTOR_SEED) {
-    const ref = db.collection('vb_contractors').doc();
+    const ref = _adminDb.collection('vb_contractors').doc();
     batch.set(ref, { ...c, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   }
   await batch.commit();
-  const snap = await db.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
+  const snap = await _adminDb.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
   _adminContractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
@@ -2485,12 +2490,13 @@ async function saveContractor() {
     sourceUrl: document.getElementById('ct-url').value.trim(),
     source: 'manual', updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
+  if (!_adminDb) initFirestoreAdmin();
   try {
     if (_editContractorId) {
-      await db.collection('vb_contractors').doc(_editContractorId).update(data);
+      await _adminDb.collection('vb_contractors').doc(_editContractorId).update(data);
     } else {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection('vb_contractors').doc().set(data);
+      await _adminDb.collection('vb_contractors').doc().set(data);
     }
     closeCTDialog();
     showToast(_editContractorId ? '업체가 수정되었습니다' : '업체가 추가되었습니다');
@@ -2500,8 +2506,9 @@ async function saveContractor() {
 
 async function deleteContractor(id) {
   if (!confirm('이 업체를 삭제하시겠습니까?')) return;
+  if (!_adminDb) initFirestoreAdmin();
   try {
-    await db.collection('vb_contractors').doc(id).delete();
+    await _adminDb.collection('vb_contractors').doc(id).delete();
     showToast('업체가 삭제되었습니다');
     loadContractorPage();
   } catch(e) { alert('삭제 실패: ' + e.message); }
