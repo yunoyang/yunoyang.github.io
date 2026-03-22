@@ -1950,18 +1950,41 @@ function triggerGoogleLogin() {
       google.accounts.id.prompt((notification) => {
         restore();
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // iOS Safari 등 One Tap 차단 → 안내
-          showToastMessage('로그인 팝업이 차단되었습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+          // One Tap 차단(iOS Safari 등) → OAuth redirect 방식으로 fallback
+          _googleOAuthRedirect();
         }
       });
-    } catch(e) {
-      restore();
-      showToastMessage('Google 로그인을 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.');
-    }
+    } catch(e) { restore(); _googleOAuthRedirect(); }
   } else {
     restore();
     showToastMessage('Google 로그인 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
   }
+}
+function _googleOAuthRedirect() {
+  // One Tap 차단 시 → Google OAuth 리디렉션 (등록된 redirect_uri 필요)
+  const nonce = Math.random().toString(36).slice(2);
+  localStorage.setItem('oauth_nonce', nonce);
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: 'https://vibespacekorea.com/',
+    response_type: 'id_token',
+    scope: 'openid email profile',
+    nonce,
+    prompt: 'select_account',
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+function _checkOAuthRedirect() {
+  // 페이지 로드 시 URL hash에서 id_token 확인 (OAuth redirect 후 복귀 시)
+  if (!window.location.hash) return;
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const idToken = hash.get('id_token');
+  if (!idToken) return;
+  // hash 제거 (뒤로가기 방지)
+  window.history.replaceState({}, '', window.location.pathname);
+  // 기존 handleGoogleResponse와 동일하게 처리
+  showToastMessage('로그인 중...');
+  handleGoogleResponse({ credential: idToken });
 }
 function _renderGoogleButton() {
   // PC에서만 GSI 렌더 버튼으로 교체 (모바일은 커스텀 버튼 사용)
@@ -2034,8 +2057,11 @@ function handleGoogleResponse(response) {
     gtag('event', 'login', { method: 'google', user_name: state.user.name });
     closeDialog('dlg-login');
     updateLoginUI();
-    // GSI credential → Firebase Auth 세션 연결 후 클라우드 업로드
-    _signInToFirebaseAuth(response.credential).then(() => _autoUploadOnLogin());
+    // GSI credential → Firebase Auth 세션 연결 후 클라우드 업로드 + 신규 가입자 알림
+    _signInToFirebaseAuth(response.credential).then(async () => {
+      await _autoUploadOnLogin();
+      _notifyNewUserIfNeeded();
+    });
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
   } catch(e) { alert('로그인 오류가 발생했습니다.'); }
 }
@@ -4601,6 +4627,8 @@ goTo('landing');
 updateLoginUI();
 window.addEventListener('load', () => {
   lucide.createIcons();
+  // OAuth redirect 복귀 처리 (가장 먼저 — 로그인 완료시킴)
+  _checkOAuthRedirect();
   if (typeof google !== 'undefined' && google.accounts &&
       GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
     try {
