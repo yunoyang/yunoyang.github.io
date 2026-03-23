@@ -1188,16 +1188,6 @@ service cloud.firestore {
             <!-- 이메일 -->
             <div><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">이메일</label>
               <input id="ct-email" type="email" placeholder="contact@example.com" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;"></div>
-            <!-- 사진 업로드 -->
-            <div>
-              <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:8px;">사진 <span style="font-weight:400;color:#bbb;">(최대 10장 · Firebase Storage)</span></label>
-              <div id="ct-photos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-height:0;"></div>
-              <label id="ct-photo-upload-label" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1.5px dashed #dde3ef;border-radius:10px;cursor:pointer;font-size:13px;color:#888;background:#fafbfc;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                사진 업로드
-                <input type="file" id="ct-photo-input" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(this)">
-              </label>
-            </div>
             <!-- 프리미엄 -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f9fc;border-radius:10px;gap:12px;">
               <div>

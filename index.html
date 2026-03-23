@@ -608,6 +608,10 @@ button, input, textarea, select { font-family:var(--font); }
 .cal-day-proc.c5 .cal-day-pname { color:#00838f; }
 .cal-day-proc.c6 .cal-day-pname { color:#ff8f00; }
 .cal-day-proc.c7 .cal-day-pname { color:#6d4c41; }
+.cal-day-proc.c8 .cal-day-pname { color:#0891b2; }
+.cal-day-proc.c9 .cal-day-pname { color:#7c3aed; }
+.cal-day-proc.c10 .cal-day-pname { color:#059669; }
+.cal-day-proc.c11 .cal-day-pname { color:#db2777; }
 
 /* ===== DAY BOTTOM POPUP ===== */
 #dlg-day-popup {
@@ -1150,6 +1154,10 @@ button, input, textarea, select { font-family:var(--font); }
 .cal-proc-card.c5 { background:#edfcfd; border-left-color:#00838f; }
 .cal-proc-card.c6 { background:#fffceb; border-left-color:#ff8f00; }
 .cal-proc-card.c7 { background:#fdf7f0; border-left-color:#6d4c41; }
+.cal-proc-card.c8 { background:#ecfeff; border-left-color:#0891b2; }
+.cal-proc-card.c9 { background:#f5f3ff; border-left-color:#7c3aed; }
+.cal-proc-card.c10 { background:#ecfdf5; border-left-color:#059669; }
+.cal-proc-card.c11 { background:#fdf2f8; border-left-color:#db2777; }
 .pcard-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; gap:8px; }
 .pcard-type-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
 .pcard-type-badge.c0 { background:#dbeafe; color:#1d4ed8; }
@@ -1160,6 +1168,48 @@ button, input, textarea, select { font-family:var(--font); }
 .pcard-type-badge.c5 { background:#e0f7fa; color:#0e7490; }
 .pcard-type-badge.c6 { background:#fff8e1; color:#b45309; }
 .pcard-type-badge.c7 { background:#efebe9; color:#78350f; }
+.pcard-type-badge.c8 { background:#cffafe; color:#0e7490; }
+.pcard-type-badge.c9 { background:#ede9fe; color:#6d28d9; }
+.pcard-type-badge.c10 { background:#d1fae5; color:#065f46; }
+.pcard-type-badge.c11 { background:#fce7f3; color:#9d174d; }
+
+/* ===== TIP PAGE ===== */
+.tip-page-hero {
+  padding:20px; display:flex; flex-direction:column; gap:6px;
+  border-bottom:1px solid var(--divider); flex-shrink:0;
+}
+.tip-page-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;
+  align-self:flex-start;
+}
+.tip-page-hero h1 { font-size:22px; font-weight:800; color:var(--text-primary); }
+.tip-page-hero p { font-size:14px; color:#666; line-height:1.6; }
+.tip-meta-row { display:flex; gap:12px; margin-top:4px; flex-wrap:wrap; }
+.tip-meta-chip {
+  display:flex; align-items:center; gap:5px;
+  font-size:12px; color:#888; background:#f4f5f8; border-radius:8px; padding:5px 10px;
+}
+.tip-section { padding:16px 20px; border-bottom:1px solid var(--divider); }
+.tip-section:last-child { border-bottom:none; }
+.tip-section-title {
+  font-size:12px; font-weight:700; color:#999; letter-spacing:.06em;
+  text-transform:uppercase; margin-bottom:12px;
+}
+.tip-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:11px 0; border-bottom:1px solid #f4f5f8;
+}
+.tip-item:last-child { border-bottom:none; }
+.tip-item-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.tip-item-text { font-size:14px; color:#333; line-height:1.65; }
+.tip-warn-item {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 14px; background:#fff8f0; border-radius:10px;
+  border-left:3px solid #f97316; margin-bottom:8px;
+}
+.tip-warn-item:last-child { margin-bottom:0; }
+.tip-warn-item span { font-size:13px; color:#7c2d12; line-height:1.6; }
 .pcard-date { font-size:11px; color:#aaa; font-weight:500; }
 .pcard-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:3px; }
 .pcard-company { font-size:12px; color:#888; margin-bottom:6px; }
@@ -1617,6 +1667,19 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- ===== TIP PAGE ===== -->
+<div class="screen" id="screen-tip">
+  <div class="form-screen-inner">
+    <div class="form-header" id="tip-page-header">
+      <button class="back-btn" onclick="goTo('main')"><i data-lucide="arrow-left"></i></button>
+      <h2 id="tip-page-title">시공팁</h2>
+    </div>
+    <div class="screen-scroll" id="tip-page-content">
+      <!-- dynamically filled by showProcessTip() -->
+    </div>
+  </div>
+</div>
+
 </div><!-- /.app -->
 
 <!-- Toast -->
@@ -2008,9 +2071,9 @@ const GOOGLE_PLACES_KEY = 'YOUR_GOOGLE_PLACES_KEY';
 // 네이버: CORS 제한으로 지도 앱 딥링크로 연결
 
 // ===== CONSTANTS =====
-const PROCESS_TYPES = ['철거','샷시','목공','타일','욕실','도배','가구','전기'];
-const PROCESS_COLORS = {'철거':'c0','샷시':'c1','목공':'c2','타일':'c3','욕실':'c4','도배':'c5','가구':'c6','전기':'c7'};
-const COLOR_HEX = {c0:'#2563eb',c1:'#16a34a',c2:'#f57c00',c3:'#9333ea',c4:'#e91e63',c5:'#00838f',c6:'#ff8f00',c7:'#6d4c41'};
+const PROCESS_TYPES = ['실측','도면설계','철거','샷시','목공','타일','욕실','도배','가구','전기','입주청소','이삿짐정리'];
+const PROCESS_COLORS = {'실측':'c8','도면설계':'c9','철거':'c0','샷시':'c1','목공':'c2','타일':'c3','욕실':'c4','도배':'c5','가구':'c6','전기':'c7','입주청소':'c10','이삿짐정리':'c11'};
+const COLOR_HEX = {c0:'#2563eb',c1:'#16a34a',c2:'#f57c00',c3:'#9333ea',c4:'#e91e63',c5:'#00838f',c6:'#ff8f00',c7:'#6d4c41',c8:'#0891b2',c9:'#7c3aed',c10:'#059669',c11:'#db2777'};
 
 // ===== STATE =====
 let state = {
@@ -2565,6 +2628,9 @@ function goTo(screen) {
     document.getElementById('acct-name').textContent = state.user.name || '사용자';
     document.getElementById('acct-email').textContent = state.user.email || '-';
   }
+  if (screen === 'tip') {
+    document.getElementById('tip-page-content').scrollTop = 0;
+  }
   setTimeout(lucide.createIcons, 40);
 }
 
@@ -2701,6 +2767,20 @@ function switchMainTab(tab, btn) {
 
 // ===== PROCESS TIPS =====
 const PROCESS_TIPS = {
+  '실측': [
+    '📐 실측은 모든 공사의 출발점 — 오차 1cm가 예산 수백만 원 차이를 낳습니다',
+    '📏 방 치수는 벽 두께 포함/제외 여부를 명확히 해두세요',
+    '🚪 문틀·창틀·몰딩 두께를 포함한 순 실내 치수 따로 기록 필수',
+    '📸 각 방향별 사진을 함께 찍어두면 나중에 도면 설계에 큰 도움이 됩니다',
+    '🔌 콘센트·스위치·배관 위치도 함께 기록해 두세요',
+  ],
+  '도면설계': [
+    '🖥️ 3D 도면 시뮬레이션으로 공사 전 미리 시각화해보세요',
+    '🪟 채광·동선·수납 계획은 도면 단계에서 결정해야 공사 중 변경 비용 없음',
+    '🔌 전기·설비 도면을 전기/설비 업체와 공유해 선 계획 수립',
+    '📋 도면 확정 전 가족 모두 동선 시뮬레이션 필수',
+    '💡 조명 위치는 가구 배치 도면 확정 후 결정해야 낭비 없음',
+  ],
   '철거': [
     '🏗️ 구조벽(내력벽) 철거 전 반드시 전문가 확인 필수',
     '🔌 철거 전 전기·수도·가스 차단 여부 확인',
@@ -2785,6 +2865,20 @@ const PROCESS_TIPS = {
     '🔋 LED 등급 및 수명 확인 (50,000시간 이상 권장)',
     '📐 간접 조명 홈 깊이 최소 15cm 이상 확보',
   ],
+  '입주청소': [
+    '🧹 입주청소는 이사 전 날 또는 이사 당일 오전 진행 권장',
+    '🪟 창문 유리·새시 홈 청소는 전문 업체가 확실히 더 깨끗합니다',
+    '🛁 욕실 줄눈·실리콘 곰팡이 제거 별도 서비스 여부 확인',
+    '🔍 바닥재 보호 필름 제거 후 상태 확인 — 스크래치 있으면 입주청소 전에 처리',
+    '📋 청소 완료 후 하자 사진 촬영 필수 (AS 요청 증빙)',
+  ],
+  '이삿짐정리': [
+    '📦 짐은 방별·카테고리별로 라벨링해서 짐이 정확한 방에 들어오게',
+    '🛋️ 대형 가구는 반입 동선 사전 확인 (계단 폭·엘리베이터 크기)',
+    '🔌 에어컨·세탁기·냉장고 설치는 이사 당일 전문 기사 예약 필수',
+    '📸 기존 짐 정리 전 각 방 사진을 먼저 찍어두면 배치 계획에 도움',
+    '🗑️ 이사 후 발생하는 포장재 폐기물 처리 계획 미리 세우기',
+  ],
 };
 
 function getTipsForProcess(typeName) {
@@ -2861,21 +2955,174 @@ function closeCardMenu() {
   _hideMenuBackdrop();
 }
 
+// ===== PROCESS DETAIL DATA =====
+const PROCESS_DETAIL = {
+  '실측': {
+    icon:'📐', summary:'모든 공사의 출발점. 정확한 실측이 예산과 자재 발주의 정확도를 결정합니다.',
+    duration:'반나절~1일', cost:'무료 ~ 30만원',
+    sections:[
+      { title:'측정 항목', warn:false, items:['각 방·거실·주방 가로×세로×높이 (cm 단위)', '창문·문틀 규격 및 위치 (개구부 폭·높이)', '천장 높이 — 보 위치 포함 별도 측정', '현관·복도 폭 (대형 가구 반입 가능 여부)', '베란다·발코니 확장 공간 치수'] },
+      { title:'꼭 함께 기록할 것', warn:false, items:['콘센트·스위치·배관 돌출 위치', '기존 하자 — 균열·습기·곰팡이 부위 사진', '각 공간 4방향 사진 촬영 (이후 도면과 비교용)', '층고 단차 여부 (수평 체크)'] },
+      { title:'주의사항', warn:true, items:['1mm 오차가 타일·가구에서 수백만 원 차이를 낳습니다', '벽 두께 포함/제외 여부를 업체와 미리 확인하세요', '셀프 실측 시 줄자 2인 1조로 진행 권장'] },
+    ]
+  },
+  '도면설계': {
+    icon:'🖼️', summary:'동선·채광·수납·인테리어 스타일을 공사 전에 시각화해 불필요한 변경 비용을 막습니다.',
+    duration:'3일~2주', cost:'50만원 ~ 300만원 (업체 포함 시 별도)',
+    sections:[
+      { title:'설계 시 결정해야 할 것', warn:false, items:['각 방 용도 배치 및 동선', '창·문 위치 변경 여부 (건물 구조 확인 필수)', '주방·욕실 배관 변경 계획', '수납 공간 설계 — 빌트인 vs 이동형 가구', '조명 종류·위치 (목공 전에 확정)'] },
+      { title:'도면 종류', warn:false, items:['평면도 — 기본 공간 배치', '입면도 — 벽 마감·수납 계획', '전기 도면 — 콘센트·조명 위치', '3D 렌더링 — 시각적 최종 확인'] },
+      { title:'주의사항', warn:true, items:['도면 확정 후 변경 시 업체 별도 비용 발생', '전기·설비 업체와 도면 공유 후 협의 필수', '가구 치수를 먼저 확정한 뒤 도면에 반영하세요'] },
+    ]
+  },
+  '철거': {
+    icon:'🏗️', summary:'인테리어의 첫 공정. 구조벽 확인과 폐기물 처리 계획이 핵심이며, 이후 모든 공정의 기초가 됩니다.',
+    duration:'2~5일', cost:'평당 15~25만원',
+    sections:[
+      { title:'주요 작업 범위', warn:false, items:['바닥재(마루·타일) 제거', '기존 도배·페인트·석고보드 제거', '천장재 제거 및 기존 조명 철거', '주방·욕실 전체 철거', '문틀·창틀 교체 전 철거'] },
+      { title:'핵심 체크포인트', warn:false, items:['구조벽(내력벽) 여부 — 도면 확인 또는 전문가 조언', '석면 포함 자재 여부 (2005년 이전 건물 필수)', '전기·수도·가스 차단 확인 후 시작', '폐기물 처리 비용 견적 포함 여부', '층간소음 발생 시간 — 보통 09:00~18:00'] },
+      { title:'주의사항', warn:true, items:['내력벽 철거 시 건물 붕괴 위험 — 절대 임의 철거 금지', '석면 검출 시 전문 처리 업체 별도 선정 (법적 의무)', '인접 세대 소음 사전 안내 필수'] },
+    ]
+  },
+  '샷시': {
+    icon:'🪟', summary:'단열·방음·기밀 성능이 냉난방비와 생활 쾌적도를 결정합니다. 브랜드·등급·색상을 공사 전에 확정해야 합니다.',
+    duration:'1~3일', cost:'창호 규격·수량·제품에 따라 크게 상이',
+    sections:[
+      { title:'제품 선택 기준', warn:false, items:['단열 성능 등급 — 1등급(최고) 권장, 남향·고층은 2등급도 가능', '복층유리 vs 삼중유리 — 층수·방향·예산 고려', '색상·프레임 — 색상 샘플 실제 확인 후 결정', '브랜드 A/S 기간 및 센터 위치 확인', '방풍재·기밀 시공 방식 확인'] },
+      { title:'시공 시 확인 사항', warn:false, items:['기존 창틀 교체 vs 기존 창틀 유지(씌우기 방식) 선택', '방수·코킹 처리 꼼꼼히 확인', '엘리베이터 없는 경우 자재 반입비 별도', '발코니 확장 여부에 따라 허가 필요 여부 확인'] },
+      { title:'주의사항', warn:true, items:['색상·규격 확정 후 변경 불가 (제작 후 취소 어려움)', '시공 직후 창이 뻑뻑한 건 정상 (1~2주 후 안정화)', '결로 방지를 위해 창틀 주변 단열 충진재 필수 확인'] },
+    ]
+  },
+  '목공': {
+    icon:'🪵', summary:'공간의 뼈대를 만드는 공정. 합판·석고보드 선택, 천장 구조, 수납장 프레임이 이 단계에서 결정됩니다.',
+    duration:'3~10일', cost:'평당 20~40만원',
+    sections:[
+      { title:'자재 기준', warn:false, items:['합판 두께 — 9T(일반), 12T(바닥·하중 높은 곳)', '석고보드 — 12.5T 기본, 방화 구간은 2겹', '방습지·방습 처리 — 외벽·바닥 접촉면 필수', '몰딩 — 직접 광원 방향으로 그림자 확인'] },
+      { title:'주요 작업 범위', warn:false, items:['천장 프레임(달대) 설치 및 평탄 작업', '파티션·벽 신설', '빌트인 가구 프레임 제작', '조명 박스·에어컨 슬리브 설치', '문틀·문선 설치'] },
+      { title:'다른 공정과의 연계', warn:false, items:['⚡ 전기 배선 — 목공 전 또는 목공 중 동시 진행', '💡 다운라이트 위치 목공 전에 최종 확정', '🔌 콘센트·스위치 위치 도면 공유 필수'] },
+      { title:'주의사항', warn:true, items:['천장 높이 확보 — 슬라브 하단~완성 천장 높이 미리 계산', '무거운 수납장은 합판 보강 필수 (석고만으론 부족)', '곡선·특수 형태는 인건비 대폭 증가 — 사전 협의'] },
+    ]
+  },
+  '타일': {
+    icon:'🧱', summary:'욕실·주방·현관의 마감을 완성하는 공정. 줄눈 색상, 패턴, 방수 순서가 품질을 결정합니다.',
+    duration:'3~7일', cost:'평당 10~25만원 (자재별 상이)',
+    sections:[
+      { title:'자재 선택', warn:false, items:['규격 — 클수록 고급스럽지만 시공비↑, 작은 공간엔 중소형 권장', '논슬립 타일 — 욕실 바닥·현관 필수', '줄눈 색상 — 밝은 색은 청소 어려움, 어두운 색은 무거운 느낌', '로스율 10~15% 여유 발주 필수', '포세린 vs 세라믹 vs 대리석 패턴 차이 확인'] },
+      { title:'시공 순서', warn:false, items:['방수 시공 완료 → 최소 72시간 건조 → 타일 시공', '벽 타일 먼저 → 바닥 타일 순서', '줄눈은 타일 시공 후 24~48시간 후 시공'] },
+      { title:'주의사항', warn:true, items:['방수 전 타일 금지 — 누수 시 전체 재시공 필요', '타일 시공 전 바닥 수평 확인 (기울기 허용치 3/1000)', '냉장고·가전 이동 후 부분 교체 시 색상 차이 발생 가능'] },
+    ]
+  },
+  '욕실': {
+    icon:'🚿', summary:'방수·배관·위생기구가 모두 연계되는 복합 공정. 위치 변경은 배관 공사가 따르므로 사전에 완전히 확정해야 합니다.',
+    duration:'5~10일', cost:'일반 300~600만원, 고급 600만원~',
+    sections:[
+      { title:'사전 결정 필수 항목', warn:false, items:['변기·세면대·욕조·샤워부스 위치 (배관 결정)', '수전·샤워기 타입 — 매립형 vs 노출형', '욕실장·거울·선반 위치', '환풍기 위치·용량 (CMH — 욕실 체적 기준)', '바닥 배수구 위치 (구배 방향 결정)'] },
+      { title:'공정 순서', warn:false, items:['철거 → 배관 수정 → 방수(2회 이상) → 72h 건조 → 타일 → 위생기구 설치', '온수기·보일러 배관 계획 동시 확인', 'LED 방습 조명 선택 (방습 등급 IP44 이상)'] },
+      { title:'주의사항', warn:true, items:['방수 2회 이상 + 물 채워 48시간 누수 테스트 필수', '코너·배관 관통부 방수 취약 — 보강 시공 확인', '입주 후 1~2년간 실리콘 재시공 필요할 수 있음'] },
+    ]
+  },
+  '도배': {
+    icon:'🎨', summary:'벽·천장 마감을 완성하는 공정. 초배 처리와 합지·실크 선택이 내구성과 품질을 가릅니다.',
+    duration:'2~4일', cost:'30평 기준 80~200만원',
+    sections:[
+      { title:'벽지 종류', warn:false, items:['합지 — 가격 저렴, 얇음, 긁힘에 약함 (아이 방 비추)', '실크 — 내구성·청소 용이, 습기에 강함, 가격↑', '천연 소재 — 한지·황토 등 친환경, 시공 난이도↑', '패브릭·우드·벽돌 포인트 벽지 — 1면만 적용 권장'] },
+      { title:'시공 순서 및 품질 포인트', warn:false, items:['기존 벽지 완전 제거 → 퍼티 처리(면 고르기) → 초배 → 정배', '초배(밑 작업) 포함 여부 견적에 명시', '이음새·모서리·콘센트 주변 꼼꼼히 확인'] },
+      { title:'주의사항', warn:true, items:['시공 후 24~48시간 창문 닫고 건조 (찬바람 금지)', '겨울 시공 시 실내 온도 5°C 이상 유지 필수', '흡연·요리 냄새 배임 빠른 합지보다 실크 강력 추천'] },
+    ]
+  },
+  '가구': {
+    icon:'🛋️', summary:'공간 활용도와 생활 편의를 결정하는 마감 공정. 실측 후 제작·설치하므로 치수 확정이 최우선입니다.',
+    duration:'제작 2~4주, 설치 1~3일', cost:'제품·자재·브랜드에 따라 크게 상이',
+    sections:[
+      { title:'자재 선택', warn:false, items:['상판 — LPM(일반), 하이그로시(광택), 세라믹(고급·내열)', '경첩·서랍 슬라이드 — 블룸(Blum)·헤팔레 권장 (내구성)', '도어 소재 — 우레탄 도장 / 시트지 / 필름지 차이', '내부 마감 — 화이트 or 멜라민 (내부도 품질 확인)'] },
+      { title:'설치 시 확인 사항', warn:false, items:['콘센트·조명 위치 가구 제작 전 완전 확정', '레인지후드·식기세척기 빌트인 치수 사전 확인', '냉장고·오븐 규격 미리 공유 (시공 전)', 'A/S 기간 및 보증 내용 계약서에 명시'] },
+      { title:'주의사항', warn:true, items:['현장 실측 없이 도면만으로 제작 시 오차 발생 위험', '설치 후 하자는 업체 책임 — 완료 즉시 점검 필수', '문 열림 방향·서랍 방향 설치 전 최종 확인'] },
+    ]
+  },
+  '전기': {
+    icon:'⚡', summary:'모든 전기·조명·인터넷 배선이 이 공정에서 결정됩니다. 목공 전 배선 계획이 완성되어야 나중에 벽을 뜯는 일이 없습니다.',
+    duration:'2~5일', cost:'기본 100~200만원, 분전반 교체·증설 시 추가',
+    sections:[
+      { title:'사전 확인 항목', warn:false, items:['분전반 용량(A) — 부족 시 증설 여부 판단 (40A→60A)', '콘센트 위치·수량 — 가구 배치도 기준으로 결정', '다운라이트·간접조명 위치 — 목공 전에 확정', '인터넷·TV·CCTV 배선 계획 동시 수립', '스위치 위치·회로 구성 — 방별·기능별 분리'] },
+      { title:'필수 확인 사항', warn:false, items:['전기안전관리자 점검 및 사용전검검 발급 여부', 'EV 충전기·드레스룸 난방·욕실 전열기 회로 별도 여부', 'LED 디밍(조광) 스위치 호환 전구인지 확인'] },
+      { title:'주의사항', warn:true, items:['전기 공사는 전기기사 자격자만 시공 가능 (법적 의무)', '분전반 위치 변경 시 별도 허가 필요 여부 확인', '콘센트 위치는 타일·목공 후 변경 불가 — 사전 확정 필수'] },
+    ]
+  },
+  '입주청소': {
+    icon:'🧹', summary:'이사 전 마지막 점검. 공사 분진부터 유리창까지 전문 업체를 통해 완벽하게 마무리합니다.',
+    duration:'4~8시간', cost:'30평 기준 30~80만원',
+    sections:[
+      { title:'청소 범위', warn:false, items:['천장 몰딩·환풍기 내부 먼지 제거', '창문 유리·새시 홈 청소 (공사 분진 제거)', '욕실 줄눈·실리콘 곰팡이 제거 (별도 서비스)', '주방 후드·가스레인지 내부 청소', '바닥 보호 필름 제거 및 광택 작업'] },
+      { title:'진행 순서 권장', warn:false, items:['이사 1~2일 전 또는 이사 당일 오전 진행', '청소 완료 후 하자 사진 촬영 (AS 요청 증빙)', '가전·가구 반입 전 완료가 가장 효율적'] },
+      { title:'주의사항', warn:true, items:['바닥재 보호 필름은 청소 전에 반드시 확인 (스크래치 여부)', '대리석·천연석 바닥은 전용 세제 필요 — 사전 고지', '입주청소 후 빠른 환기 필수 (세제 냄새 제거)'] },
+    ]
+  },
+  '이삿짐정리': {
+    icon:'📦', summary:'공사의 마지막 단계. 가구·가전 반입과 짐 정리를 체계적으로 계획하면 이사 당일 혼란을 최소화할 수 있습니다.',
+    duration:'1~2일', cost:'이삿짐 규모·거리에 따라 상이',
+    sections:[
+      { title:'사전 준비', warn:false, items:['대형 가구 반입 동선 사전 확인 (계단 폭·엘리베이터 크기)', '에어컨·세탁기·냉장고 설치 기사 이사 당일 예약', '방별·카테고리별 짐 라벨링 (정확한 방 배치)', '반입 전 각 방 사진 촬영 (배치 계획 참고용)', '포장재 폐기물 처리 계획 미리 수립'] },
+      { title:'이사 당일 확인', warn:false, items:['가전 설치 후 작동 테스트 (냉장고·세탁기·에어컨)', '인터넷·TV 개통 일정 확인', '엘리베이터 보양재 설치 (건물 관리소 사전 협의)', '이삿짐 완료 후 집 구석구석 하자 재확인'] },
+      { title:'주의사항', warn:true, items:['대형 소파·침대는 분해 가능 여부 사전 확인 (반입 불가 시 발생)', '새 아파트 엘리베이터 보양 필수 — 미시공 시 손해배상 청구 가능', '짐 정리 완료 직후 하자 발생 시 이삿짐 업체·공사 업체 책임 구분 어려움 — 즉시 사진 촬영'] },
+    ]
+  },
+};
+
 function showProcessTip(typeName) {
   const tips = getTipsForProcess(typeName);
-  const body = document.getElementById('tip-dialog-body');
-  const title = document.getElementById('tip-dialog-title');
-  title.textContent = `💡 ${typeName} 시공팁`;
-  if (!tips) {
-    body.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb;font-size:14px;">해당 공정의 팁이 준비 중입니다.</div>';
+  const detail = PROCESS_DETAIL[typeName] || null;
+  const colorCls = PROCESS_COLORS[typeName] || 'c0';
+  const hex = COLOR_HEX[colorCls] || '#3176ff';
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const heroBg = `rgba(${r},${g},${b},0.07)`;
+  const badgeBg = `rgba(${r},${g},${b},0.13)`;
+
+  let html = '';
+
+  // Hero section
+  if (detail) {
+    html += `<div class="tip-page-hero" style="background:${heroBg}">
+      <span class="tip-page-badge" style="background:${badgeBg};color:${hex};">
+        ${detail.icon} ${typeName}
+      </span>
+      <h1>${typeName} 시공팁</h1>
+      <p>${detail.summary}</p>
+      <div class="tip-meta-row">
+        <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 예상 기간: ${detail.duration}</div>
+        <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> 비용: ${detail.cost}</div>
+      </div>
+    </div>`;
+
+    // Detail sections
+    detail.sections.forEach(sec => {
+      if (sec.warn) {
+        html += `<div class="tip-section">
+          <div class="tip-section-title">⚠️ ${sec.title}</div>
+          ${sec.items.map(item => `<div class="tip-warn-item"><span>⚠️</span><span>${item}</span></div>`).join('')}
+        </div>`;
+      } else {
+        html += `<div class="tip-section">
+          <div class="tip-section-title">${sec.title}</div>
+          ${sec.items.map(item => `<div class="tip-item"><span class="tip-item-icon">${item.slice(0,2)}</span><span class="tip-item-text">${item.slice(2).trim()}</span></div>`).join('')}
+        </div>`;
+      }
+    });
+  } else if (tips) {
+    // Fallback for processes without PROCESS_DETAIL
+    html += `<div class="tip-page-hero" style="background:#f8f9fc">
+      <h1>${typeName} 시공팁</h1>
+    </div>
+    <div class="tip-section">
+      <div class="tip-section-title">핵심 체크포인트</div>
+      ${tips.map(tip => `<div class="tip-item"><span class="tip-item-icon">${tip.slice(0,2)}</span><span class="tip-item-text">${tip.slice(2).trim()}</span></div>`).join('')}
+    </div>`;
   } else {
-    body.innerHTML = tips.map((tip, i) => `
-      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:${i%2===0?'#f8f9fc':'#fff'};border-radius:10px;border:1px solid #eef0f6;">
-        <span style="font-size:16px;flex-shrink:0;margin-top:1px;">${tip.slice(0,2)}</span>
-        <span style="font-size:14px;color:#333;line-height:1.6;">${tip.slice(2).trim()}</span>
-      </div>`).join('');
+    html += `<div style="text-align:center;padding:40px;color:#bbb;font-size:14px;">해당 공정의 팁이 준비 중입니다.</div>`;
   }
-  openDialog('dlg-proc-tip');
+
+  document.getElementById('tip-page-title').textContent = `${typeName} 시공팁`;
+  document.getElementById('tip-page-content').innerHTML = html;
+  goTo('tip');
 }
 
 // 카드 메뉴 외부 클릭 시 닫기 (메뉴 내부 클릭은 제외)
@@ -2892,9 +3139,9 @@ let _contractors = [];
 
 // 공정명과 같은 카테고리를 가진 업체만 표시 (완전 직접 매칭)
 const _CONTRACTOR_CATEGORY_MAP = {
-  '철거':'철거','목공':'목공','타일':'타일','도배':'도배','전기':'전기',
+  '실측':'기타','도면설계':'기타','철거':'철거','목공':'목공','타일':'타일','도배':'도배','전기':'전기',
   '설비':'설비','샷시':'샷시','마루':'마루','페인트':'페인트','욕실':'욕실',
-  '가구':'가구','청소':'청소','기타':'기타'
+  '가구':'가구','청소':'청소','입주청소':'청소','이삿짐정리':'기타','기타':'기타'
 };
 
 const _CONTRACTOR_SEED = [
@@ -3800,7 +4047,7 @@ function renderCalendar() {
       if (isToday) cls += (cls?' ':'')+'today-num';
       const bg = dayInfos[i].bg;
       const hex = dayInfos[i].hex || '';
-      const bgStyle = bg && !isEmpty ? ` style="background:${bg};border-top:1px solid ${hex}"` : '';
+      const bgStyle = bg && !isEmpty ? ` style="background:${bg};border-top:2px solid ${hex}"` : '';
       const click = d !== null ? ` onclick="openDayPopup(${year},${month},${d})"` : '';
       dateRow += `<td class="cal-date-td${cls?' '+cls:''}"${bgStyle}${click}>${d!==null ? d : ''}</td>`;
     });
