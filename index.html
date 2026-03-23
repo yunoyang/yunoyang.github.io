@@ -324,6 +324,10 @@ button, input, textarea, select { font-family:var(--font); }
   from { opacity:0; transform:translateY(-10px) scale(0.97); }
   to   { opacity:1; transform:translateY(0) scale(1); }
 }
+@keyframes menuSlideUp {
+  from { transform:translateY(100%); }
+  to   { transform:translateY(0); }
+}
 @keyframes ovFadeIn {
   from { opacity:0; }
   to   { opacity:1; }
@@ -331,6 +335,57 @@ button, input, textarea, select { font-family:var(--font); }
 @keyframes dlgSlideUp {
   from { transform:translateY(48px); opacity:0.5; }
   to   { transform:translateY(0);    opacity:1; }
+}
+
+/* ── 모바일 메뉴 백드롭 ── */
+#menu-backdrop {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.42); z-index:98;
+  animation:ovFadeIn .22s ease forwards;
+}
+#menu-backdrop.active { display:block; }
+
+/* ── 모바일: 드롭다운 + 카드메뉴 → 바텀시트 ── */
+@media (max-width:599px) {
+  .dropdown {
+    position:fixed !important;
+    bottom:0 !important; left:0 !important; right:0 !important; top:auto !important;
+    border-radius:20px 20px 0 0; min-width:unset; width:100% !important;
+    padding:10px 8px calc(16px + env(safe-area-inset-bottom));
+    z-index:99; box-shadow:0 -4px 24px rgba(0,0,0,0.13);
+  }
+  .dropdown.active { animation:menuSlideUp .28s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+  .card-more-menu {
+    position:fixed !important;
+    bottom:0 !important; left:0 !important; right:0 !important; top:auto !important;
+    border-radius:20px 20px 0 0; min-width:unset; width:100% !important;
+    padding:10px 8px calc(16px + env(safe-area-inset-bottom));
+    z-index:99; box-shadow:0 -4px 24px rgba(0,0,0,0.13);
+    transform:none !important; /* JS transform 무력화 */
+  }
+  .card-more-menu.open {
+    opacity:1 !important; pointer-events:all !important;
+    animation:menuSlideUp .28s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+
+  /* 메뉴 핸들 바 */
+  .dropdown::before, .card-more-menu::before {
+    content:''; display:block; width:36px; height:4px;
+    background:#ddd; border-radius:2px; margin:0 auto 10px;
+  }
+
+  /* 폰트 + 아이콘 +1pt */
+  .dropdown-item {
+    font-size:16px !important; padding:14px 18px !important;
+  }
+  .dropdown-item svg { width:18px !important; height:18px !important; }
+
+  .card-menu-item {
+    font-size:16px !important; padding:14px 18px !important;
+  }
+  .card-menu-item i,
+  .card-menu-item svg { width:18px !important; height:18px !important; }
 }
 @keyframes cardSlideInRight {
   from { opacity:0; transform:translateX(48px) scale(0.97); }
@@ -1814,6 +1869,9 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- 모바일 메뉴 백드롭 -->
+<div id="menu-backdrop" onclick="closeAllMenus()"></div>
+
 <!-- Card More Menu (shared, positioned via JS) -->
 <div id="card-more-menu" class="card-more-menu">
   <button class="card-menu-item" id="card-menu-tip" onclick="cardMenuTip()">
@@ -2677,7 +2735,17 @@ function toggleCardMenu(e, procId, procType) {
   const tipBtn = document.getElementById('card-menu-tip');
   if (delBtn) delBtn.dataset.procId = procId;
   if (tipBtn) tipBtn.dataset.procType = procType;
-  // 위치 계산
+  // 모바일: CSS fixed bottom 처리 (위치 계산 불필요)
+  if (_isMobile()) {
+    menu.style.top = ''; menu.style.left = '';
+    const hasTip2 = !!getTipsForProcess(_cardMenuProcType);
+    if (tipBtn) tipBtn.style.display = hasTip2 ? '' : 'none';
+    menu.classList.add('open');
+    if (_isMobile()) _showMenuBackdrop();
+    setTimeout(() => lucide.createIcons({ nodes: [menu] }), 10);
+    return;
+  }
+  // PC: 위치 계산
   const menuW = 150, menuH = 90;
   let top = rect.bottom + 4;
   let left = rect.right - menuW;
@@ -2689,6 +2757,7 @@ function toggleCardMenu(e, procId, procType) {
   const hasTip = !!getTipsForProcess(_cardMenuProcType);
   if (tipBtn) tipBtn.style.display = hasTip ? '' : 'none';
   menu.classList.add('open');
+  if (_isMobile()) _showMenuBackdrop();
   setTimeout(() => lucide.createIcons({ nodes: [menu] }), 10);
 }
 
@@ -2710,6 +2779,7 @@ function cardMenuTip() {
 function closeCardMenu() {
   document.getElementById('card-more-menu').classList.remove('open');
   _cardMenuProcId = null;
+  _hideMenuBackdrop();
 }
 
 function showProcessTip(typeName) {
@@ -4093,17 +4163,31 @@ function _updateShareLinkBox() {
 // ===== DIALOGS =====
 function openDialog(id) { document.getElementById(id).classList.add('active'); setTimeout(lucide.createIcons, 40); }
 function closeDialog(id) { document.getElementById(id).classList.remove('active'); }
+function _isMobile() { return window.innerWidth < 600; }
+function _showMenuBackdrop() {
+  const bd = document.getElementById('menu-backdrop');
+  if (bd) bd.classList.add('active');
+}
+function _hideMenuBackdrop() {
+  const bd = document.getElementById('menu-backdrop');
+  if (bd) bd.classList.remove('active');
+}
 function toggleMainMenu(e) {
   e.stopPropagation();
   const menu = document.getElementById('main-menu');
   const wasActive = menu.classList.contains('active');
   closeAllMenus();
-  if (!wasActive) { menu.classList.add('active'); setTimeout(lucide.createIcons, 30); }
+  if (!wasActive) {
+    menu.classList.add('active');
+    if (_isMobile()) _showMenuBackdrop();
+    setTimeout(lucide.createIcons, 30);
+  }
 }
 function closeAllMenus() {
   document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
   document.querySelectorAll('.project-dropdown').forEach(d => d.classList.remove('active'));
   document.querySelectorAll('.project-badge').forEach(b => b.classList.remove('open'));
+  _hideMenuBackdrop();
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('.dropdown') && !e.target.closest('.icon-btn') && !e.target.closest('.profile-avatar-btn') && !e.target.closest('.project-selector'))
