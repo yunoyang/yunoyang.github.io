@@ -1618,52 +1618,57 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
-<!-- Company Manual Input -->
+<!-- Company Input Dialog (탭 구조) -->
 <div class="overlay" id="dlg-company-search">
-  <div class="dialog" style="max-height:90vh;overflow-y:auto;">
-    <div class="comp-header">
-      <h3>담당 업체 연결</h3>
+  <div class="dialog" style="max-height:90vh;overflow-y:auto;padding-bottom:0;">
+    <!-- 헤더 -->
+    <div class="comp-header" style="margin-bottom:0;">
+      <h3>업체 입력</h3>
       <span class="comp-proc-badge" id="comp-proc-badge">업체 정보</span>
     </div>
 
-    <!-- 추천 업체 섹션 (당근 DB) -->
-    <div id="comp-suggest-section" style="margin-top:12px;display:none;">
-      <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
-        <span style="background:#ff6f0f;color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;">당근</span> 내 주변 추천 업체
-      </div>
-      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;"></div>
+    <!-- 탭 -->
+    <div class="share-tabs" style="margin-top:14px;">
+      <button class="share-tab-btn active" id="ctab-manual-btn" onclick="switchCompTab('manual')">직접입력</button>
+      <button class="share-tab-btn" id="ctab-select-btn" onclick="switchCompTab('select')">업체선택</button>
     </div>
 
-    <!-- 구분선 -->
-    <div id="comp-divider" style="display:none;margin:14px 0;display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;height:1px;background:#eee;"></div>
-      <span style="font-size:12px;color:#bbb;">직접 입력</span>
-      <div style="flex:1;height:1px;background:#eee;"></div>
+    <!-- ── 직접입력 탭 ── -->
+    <div id="ctab-manual-pane" style="padding-bottom:16px;">
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+        <div style="position:relative;">
+          <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">업체명 <span style="color:#e05050;">*</span></label>
+          <input id="comp-manual-name" type="text" placeholder="예) 홍길동 인테리어"
+            style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+            oninput="this.style.borderColor='var(--primary)';_compNameAutocomplete(this.value)"
+            onkeydown="if(event.key==='Enter')document.getElementById('comp-manual-phone').focus()">
+          <div id="comp-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dde3ef;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.10);z-index:200;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">전화번호</label>
+          <input id="comp-manual-phone" type="tel" placeholder="예) 010-1234-5678"
+            style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+            oninput="this.style.borderColor='var(--primary)'"
+            onkeydown="if(event.key==='Enter')saveCompanyManual()">
+        </div>
+        <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;color:#555;line-height:1.7;"></div>
+      </div>
+      <div class="dialog-actions split" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
+        <button class="btn-confirm" onclick="saveCompanyManual()">등록</button>
+      </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
-      <div style="position:relative;">
-        <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">업체명 <span style="color:#e05050;">*</span></label>
-        <input id="comp-manual-name" type="text" placeholder="예) 홍길동 인테리어"
-          style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
-          oninput="this.style.borderColor='var(--primary)';_compNameAutocomplete(this.value)"
-          onkeydown="if(event.key==='Enter')document.getElementById('comp-manual-phone').focus()">
-        <!-- 자동완성 드롭다운 -->
-        <div id="comp-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dde3ef;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.10);z-index:200;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
+    <!-- ── 업체선택 탭 ── -->
+    <div id="ctab-select-pane" style="display:none;padding-bottom:16px;">
+      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;max-height:55vh;overflow-y:auto;"></div>
+      <div id="comp-suggest-empty" style="display:none;text-align:center;padding:32px 0;color:#bbb;font-size:14px;">
+        이 공정에 등록된 업체가 없습니다.<br><span style="font-size:12px;">어드민에서 업체를 추가해주세요.</span>
       </div>
-      <div>
-        <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">전화번호</label>
-        <input id="comp-manual-phone" type="tel" placeholder="예) 010-1234-5678"
-          style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
-          oninput="this.style.borderColor='var(--primary)'"
-          onkeydown="if(event.key==='Enter')saveCompanyManual()">
+      <div class="dialog-actions split" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
+        <button class="btn-confirm" id="comp-select-confirm-btn" onclick="confirmContractorSelect()" disabled style="opacity:0.4;">선택완료</button>
       </div>
-      <!-- 기존 업체 표시 -->
-      <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;color:#555;line-height:1.7;"></div>
-    </div>
-    <div class="dialog-actions split" style="margin-top:16px;">
-      <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
-      <button class="btn-confirm" onclick="saveCompanyManual()">저장</button>
     </div>
   </div>
 </div>
@@ -2736,21 +2741,11 @@ document.addEventListener('click', (e) => {
 // ===== CONTRACTOR DB =====
 let _contractors = [];
 
-// 공정 타입 → 매칭할 contractor 카테고리 (직접 매칭 우선, 기타 포함)
+// 공정명과 같은 카테고리를 가진 업체만 표시 (완전 직접 매칭)
 const _CONTRACTOR_CATEGORY_MAP = {
-  '철거':  ['철거','기타'],
-  '목공':  ['목공','기타'],
-  '타일':  ['타일','욕실','기타'],
-  '도배':  ['도배','기타'],
-  '전기':  ['전기','기타'],
-  '설비':  ['설비','욕실','기타'],
-  '샷시':  ['샷시','기타'],
-  '마루':  ['마루','기타'],
-  '페인트':['페인트','기타'],
-  '욕실':  ['욕실','타일','설비','기타'],
-  '가구':  ['가구','기타'],
-  '청소':  ['청소','기타'],
-  '기타':  ['기타'],
+  '철거':'철거','목공':'목공','타일':'타일','도배':'도배','전기':'전기',
+  '설비':'설비','샷시':'샷시','마루':'마루','페인트':'페인트','욕실':'욕실',
+  '가구':'가구','청소':'청소','기타':'기타'
 };
 
 const _CONTRACTOR_SEED = [
@@ -2796,17 +2791,108 @@ async function _seedContractors() {
   _contractors = _CONTRACTOR_SEED.map((c,i) => ({ id:'seed_'+i, ...c }));
 }
 
+let _selectedContractorObj = null; // 업체선택 탭에서 선택된 업체
+
 function _getContractorSuggestions(procType) {
-  if (!_contractors.length) return [];
-  const cats = (procType && _CONTRACTOR_CATEGORY_MAP[procType]) || ['기타'];
-  // 직접 카테고리 매칭 → 점수순 정렬
+  if (!_contractors.length) return { direct:[], all:[] };
   const score = c => (c.rating||0) * Math.log(1 + (c.reviews||0));
-  const direct = _contractors.filter(c => c.category === procType || cats.includes(c.category));
-  // 직접 매칭이 없으면 전체에서 상위 추천
-  const pool = direct.length ? direct : _contractors;
-  return pool.sort((a,b) => score(b) - score(a)).slice(0, 5);
+  const cat = _CONTRACTOR_CATEGORY_MAP[procType] || procType;
+  // 해당 공정 카테고리와 완전히 일치하는 업체만
+  const direct = _contractors.filter(c => c.category === cat).sort((a,b) => score(b)-score(a));
+  return { direct, all: direct }; // 완전 직접 매칭만 사용
 }
 
+// 업체선택 탭: 카드 렌더링
+function _renderContractorSelectList(procType) {
+  const list = document.getElementById('comp-suggest-list');
+  const empty = document.getElementById('comp-suggest-empty');
+  const confirmBtn = document.getElementById('comp-select-confirm-btn');
+  if (!list) return;
+  _selectedContractorObj = null;
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '0.4'; }
+  const { direct } = _getContractorSuggestions(procType);
+  if (!direct.length) {
+    list.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  list.innerHTML = direct.map(c => {
+    const cId = c.id || c.name;
+    const linkCount = c.reviewLinks?.length || 0;
+    const reviewLinksHtml = linkCount
+      ? c.reviewLinks.map((url, i) => `
+          <a href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+            style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--primary);background:#eef1ff;border-radius:6px;padding:3px 10px;text-decoration:none;">
+            후기${i+1} ↗</a>`).join('')
+      : '';
+    return `
+    <div id="ccard-${esc(cId)}" onclick="_selectContractorCard(this, '${esc(cId)}')"
+      style="padding:14px 16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all .15s;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-size:15px;font-weight:700;color:#111;">${esc(c.name)}</span>
+            <span style="font-size:11px;color:#999;background:#f0f0f0;border-radius:5px;padding:1px 7px;font-weight:500;">미인증업체</span>
+          </div>
+          <div style="font-size:13px;color:#888;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
+          ${c.description ? `<div style="font-size:12px;color:#aaa;margin-top:4px;line-height:1.5;">${esc(c.description)}</div>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${c.rating ? `<div style="font-size:13px;font-weight:700;color:#333;">${c.rating}</div>` : ''}
+          <div style="font-size:12px;color:#aaa;">후기 ${c.reviews||0}${linkCount?`<span style="color:var(--primary);font-weight:600;"> · 링크${linkCount}</span>`:''}
+          </div>
+        </div>
+      </div>
+      ${reviewLinksHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${reviewLinksHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function _selectContractorCard(el, cId) {
+  // 이전 선택 해제
+  document.querySelectorAll('#comp-suggest-list > div').forEach(d => {
+    d.style.borderColor = 'transparent';
+    d.style.background = '#f8f9fc';
+  });
+  // 현재 선택
+  el.style.borderColor = 'var(--primary)';
+  el.style.background = '#eef1ff';
+  _selectedContractorObj = _contractors.find(c => (c.id||c.name) === cId);
+  const btn = document.getElementById('comp-select-confirm-btn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function confirmContractorSelect() {
+  if (!_selectedContractorObj) return;
+  const c = _selectedContractorObj;
+  const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
+  if (proc) {
+    proc.company = c.name;
+    proc.companyData = { name: c.name, phone: c.phone||'', source: c.source||'db', area: c.area||'', rating: c.rating||0 };
+    save(); renderAll();
+  }
+  closeDialog('dlg-company-search');
+}
+
+function switchCompTab(tab) {
+  const manualPane = document.getElementById('ctab-manual-pane');
+  const selectPane = document.getElementById('ctab-select-pane');
+  const manualBtn  = document.getElementById('ctab-manual-btn');
+  const selectBtn  = document.getElementById('ctab-select-btn');
+  if (tab === 'manual') {
+    manualPane.style.display = 'block'; selectPane.style.display = 'none';
+    manualBtn.classList.add('active'); selectBtn.classList.remove('active');
+    setTimeout(() => document.getElementById('comp-manual-name')?.focus(), 100);
+  } else {
+    manualPane.style.display = 'none'; selectPane.style.display = 'block';
+    manualBtn.classList.remove('active'); selectBtn.classList.add('active');
+    const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
+    _renderContractorSelectList(proc?.type || proc?.name);
+  }
+}
+
+// 직접입력 탭 자동완성
 function _compNameAutocomplete(val) {
   const ac = document.getElementById('comp-autocomplete');
   if (!ac) return;
@@ -2816,64 +2902,23 @@ function _compNameAutocomplete(val) {
   ac.style.display = 'block';
   ac.innerHTML = matches.slice(0,6).map(c => {
     const cJson = JSON.stringify(c).replace(/"/g,'&quot;');
-    const linkCount = c.reviewLinks?.length || 0;
     return `
-    <div onclick="_selectContractor('${cJson}')"
-      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background .15s;"
+    <div onclick="_selectContractorToManual('${cJson}')"
+      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;"
       onmouseover="this.style.background='#f5f7ff'" onmouseout="this.style.background=''">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}</div>
-        ${linkCount ? `<span style="font-size:11px;color:var(--primary);font-weight:600;">후기링크 ${linkCount}개</span>` : ''}
+      <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}
+        <span style="font-size:11px;color:#999;background:#f0f0f0;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:400;">미인증</span>
       </div>
-      <div style="font-size:12px;color:#888;margin-top:2px;">${c.area||''} · ⭐${c.rating||''} · ${c.originalCategory||c.category||''}</div>
+      <div style="font-size:12px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
     </div>`;
   }).join('');
 }
 
-function _selectContractor(cOrJson) {
-  const c = typeof cOrJson === 'string' ? JSON.parse(cOrJson) : cOrJson;
+function _selectContractorToManual(cJson) {
+  const c = JSON.parse(cJson);
   document.getElementById('comp-manual-name').value = c.name;
   document.getElementById('comp-manual-phone').value = c.phone || '';
   document.getElementById('comp-autocomplete').style.display = 'none';
-}
-
-function _renderContractorSuggestions(procType) {
-  const sugg = _getContractorSuggestions(procType);
-  const sec = document.getElementById('comp-suggest-section');
-  const list = document.getElementById('comp-suggest-list');
-  const div = document.getElementById('comp-divider');
-  if (!sugg.length || !sec) return;
-  sec.style.display = 'block';
-  if (div) div.style.display = 'flex';
-  list.innerHTML = sugg.map(c => {
-    const cJson = JSON.stringify(c).replace(/"/g,'&quot;');
-    const linkCount = c.reviewLinks?.length || 0;
-    const reviewLinksHtml = linkCount
-      ? c.reviewLinks.map((url, i) => `
-          <a href="${esc(url)}" target="_blank" rel="noopener"
-            onclick="event.stopPropagation()"
-            style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--primary);background:#eef1ff;border-radius:6px;padding:2px 8px;text-decoration:none;white-space:nowrap;">
-            후기${i+1} ↗
-          </a>`).join('')
-      : '';
-    return `
-    <div onclick="_selectContractor(&quot;${cJson.replace(/&quot;/g,"\\&quot;")}&quot;)"
-      style="padding:10px 12px;background:#f8f9fc;border-radius:10px;cursor:pointer;border:1px solid #eee;transition:all .15s;"
-      onmouseover="this.style.background='#eef1ff';this.style.borderColor='var(--primary)'"
-      onmouseout="this.style.background='#f8f9fc';this.style.borderColor='#eee'">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#222;">${esc(c.name)}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;margin-left:8px;">
-          <div style="font-size:12px;font-weight:700;color:#f59e0b;">⭐ ${c.rating||'-'}</div>
-          <div style="font-size:11px;color:#aaa;">후기 ${c.reviews||0}${linkCount ? `<span style="color:var(--primary);font-weight:600;"> · 링크 ${linkCount}개</span>` : ''}</div>
-        </div>
-      </div>
-      ${reviewLinksHtml ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${reviewLinksHtml}</div>` : ''}
-    </div>`;
-  }).join('');
 }
 
 // ===== COMPANY MANUAL INPUT =====
@@ -2883,22 +2928,15 @@ function openCompanySearch(procId) {
   document.getElementById('comp-proc-badge').textContent = `${proc?.type||proc?.name||''} 업체`;
   document.getElementById('comp-manual-name').value = proc?.companyData?.name || proc?.company || '';
   document.getElementById('comp-manual-phone').value = proc?.companyData?.phone || '';
-  // 추천 업체 표시
-  const sec = document.getElementById('comp-suggest-section');
-  const div = document.getElementById('comp-divider');
-  if (sec) sec.style.display = 'none';
-  if (div) div.style.display = 'none';
-  _renderContractorSuggestions(proc?.type || proc?.name);
-  // 기존 정보 표시
+  // 기존 업체 표시
   const cur = document.getElementById('comp-current-info');
   if (proc?.companyData?.name) {
     cur.style.display = 'block';
-    cur.innerHTML = `<span style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:3px;">현재 등록 업체</span>${esc(proc.companyData.name)}${proc.companyData.phone ? ' · ' + esc(proc.companyData.phone) : ''}`;
-  } else {
-    cur.style.display = 'none';
-  }
+    cur.innerHTML = `<span style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:3px;">현재 등록 업체</span>${esc(proc.companyData.name)}${proc.companyData.phone ? ' · '+esc(proc.companyData.phone) : ''}`;
+  } else { cur.style.display = 'none'; }
+  // 항상 직접입력 탭으로 시작
+  switchCompTab('manual');
   openDialog('dlg-company-search');
-  setTimeout(() => document.getElementById('comp-manual-name').focus(), 100);
 }
 
 function saveCompanyManual() {
