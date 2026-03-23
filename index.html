@@ -2984,6 +2984,7 @@ function _renderContractorSelectList(procType) {
             <span style="font-size:15px;font-weight:700;color:#111;">${esc(c.name)}</span>
             <span style="font-size:11px;color:#999;background:#f0f0f0;border-radius:5px;padding:1px 7px;font-weight:500;">미인증</span>
             ${c.sourceUrl ? `<a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;color:var(--primary);background:#eef1ff;border-radius:5px;padding:1px 8px;text-decoration:none;font-weight:500;">홈페이지 ↗</a>` : ''}
+            ${c.id ? `<a href="contractor.html?id=${esc(c.id)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;color:#059669;background:#d1fae5;border-radius:5px;padding:1px 8px;text-decoration:none;font-weight:500;">프로필 ↗</a>` : ''}
           </div>
           <div style="font-size:13px;color:#888;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
           ${c.description ? `<div style="font-size:12px;color:#aaa;margin-top:4px;line-height:1.5;">${esc(c.description)}</div>` : ''}
