@@ -1124,6 +1124,47 @@ service cloud.firestore {
           </button>
         </div>
 
+        <!-- 구글 시트 동기화 -->
+        <div style="background:#f0f6ff;border:1.5px solid #c7dffe;border-radius:14px;padding:18px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            <span style="font-size:14px;font-weight:700;color:#1d4ed8;">구글 시트에서 업체 가져오기</span>
+          </div>
+          <div style="font-size:12.5px;color:#64748b;margin-bottom:14px;line-height:1.6;">
+            구글 시트 URL만 붙여넣으면 업체 데이터를 자동으로 불러와 Firestore에 저장합니다.<br>
+            시트는 <b>공유 설정 → 링크 있는 누구나 보기</b>로 설정해야 합니다.
+          </div>
+
+          <!-- 컬럼 가이드 -->
+          <div style="background:#fff;border:1px solid #dde3ef;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11.5px;color:#888;overflow-x:auto;">
+            <div style="font-weight:700;color:#555;margin-bottom:5px;">📋 시트 헤더 (1행) 형식</div>
+            <code style="white-space:nowrap;color:#3176ff;">name | category | area | phone | rating | reviews | description | sourceUrl | contactEmail | reviewLink1 | reviewLink2</code>
+            <div style="margin-top:5px;color:#aaa;">※ 카테고리 값: 철거 / 목공 / 타일 / 도배 / 전기 / 설비 / 샷시 / 마루 / 페인트 / 욕실 / 가구 / 청소 / 기타</div>
+          </div>
+
+          <!-- URL 입력 + 버튼 -->
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <input id="sheets-url-input" type="url"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              style="flex:1;padding:10px 13px;border:1.5px solid #c7dffe;border-radius:9px;font-size:13px;font-family:var(--font);outline:none;background:#fff;"
+              onkeydown="if(event.key==='Enter')syncFromGoogleSheet()">
+            <button onclick="syncFromGoogleSheet()" id="sheets-sync-btn"
+              style="padding:10px 18px;background:#2563eb;color:#fff;border-radius:9px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+              동기화
+            </button>
+          </div>
+
+          <!-- 상태 + 옵션 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px;">
+            <div id="sheets-sync-status" style="font-size:13px;min-height:20px;"></div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#64748b;cursor:pointer;">
+              <input type="checkbox" id="sheets-replace-all" style="accent-color:#2563eb;">
+              기존 DB 전체 삭제 후 교체
+            </label>
+          </div>
+        </div>
+
         <!-- 필터 -->
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="contractor-filter-btns">
           <button onclick="filterContractors('all',this)" class="c-filter-btn active" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;border-color:var(--primary);">전체</button>
@@ -2409,6 +2450,10 @@ async function loadContractorPage() {
   const list = document.getElementById('contractor-list');
   if (!list) return;
   list.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;">불러오는 중...</div>';
+  // 저장된 시트 URL 복원
+  const savedUrl = localStorage.getItem('vb_sheets_url');
+  const urlInput = document.getElementById('sheets-url-input');
+  if (savedUrl && urlInput && !urlInput.value) urlInput.value = savedUrl;
   // _adminDb 초기화 확인
   if (!_adminDb) initFirestoreAdmin();
   if (!_adminDb) {
@@ -2658,6 +2703,143 @@ async function deleteContractor(id) {
     showToast('업체가 삭제되었습니다');
     loadContractorPage();
   } catch(e) { alert('삭제 실패: ' + e.message); }
+}
+
+// ===== GOOGLE SHEETS SYNC =====
+function _convertToCSVUrl(url) {
+  const match = url.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (!match) return null;
+  const id = match[1];
+  const gidMatch = url.match(/[?&#]gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+}
+
+function _parseCSV(text) {
+  const rows = []; let row = [], cell = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], nx = text[i+1];
+    if (inQ) {
+      if (ch==='"' && nx==='"') { cell+='"'; i++; }
+      else if (ch==='"') { inQ=false; }
+      else { cell+=ch; }
+    } else {
+      if (ch==='"') { inQ=true; }
+      else if (ch===',') { row.push(cell); cell=''; }
+      else if (ch==='\n'||(ch==='\r'&&nx==='\n')) {
+        if(ch==='\r')i++; row.push(cell); cell=''; rows.push(row); row=[];
+      } else { cell+=ch; }
+    }
+  }
+  if(cell||row.length){row.push(cell);rows.push(row);}
+  return rows;
+}
+
+async function syncFromGoogleSheet() {
+  const input = document.getElementById('sheets-url-input');
+  const status = document.getElementById('sheets-sync-status');
+  const replaceAll = document.getElementById('sheets-replace-all').checked;
+  const btn = document.getElementById('sheets-sync-btn');
+  const url = input.value.trim();
+
+  if (!url) { status.innerHTML = '<span style="color:#ef4444;">❌ URL을 입력하세요</span>'; return; }
+  const csvUrl = _convertToCSVUrl(url);
+  if (!csvUrl) { status.innerHTML = '<span style="color:#ef4444;">❌ 올바른 구글 시트 URL이 아닙니다</span>'; return; }
+
+  btn.disabled = true;
+  status.innerHTML = '<span style="color:#2563eb;">⏳ 시트 데이터를 불러오는 중...</span>';
+
+  try {
+    const res = await fetch(csvUrl, { credentials: 'include' });
+    if (!res.ok) throw new Error(`시트를 불러올 수 없습니다 (HTTP ${res.status}) — 시트 공유 설정을 확인하세요`);
+    const csvText = await res.text();
+    const rows = _parseCSV(csvText);
+    if (rows.length < 2) throw new Error('데이터가 없습니다 (헤더 + 최소 1행 필요)');
+
+    // Header mapping (case-insensitive, common aliases)
+    const ALIAS = {
+      '업체명':'name','업체이름':'name','이름':'name',
+      '카테고리':'category','분류':'category',
+      '지역':'area','주소':'area','동':'area',
+      '전화':'phone','전화번호':'phone','연락처':'phone',
+      '평점':'rating','별점':'rating',
+      '후기수':'reviews','리뷰수':'reviews','후기':'reviews',
+      '설명':'description','소개':'description','내용':'description',
+      '홈페이지':'sourceUrl','홈페이지url':'sourceUrl','sourceurl':'sourceUrl','source_url':'sourceUrl',
+      '이메일':'contactEmail','email':'contactEmail','contactemail':'contactEmail',
+      '후기링크1':'reviewLink1','reviewlink1':'reviewLink1',
+      '후기링크2':'reviewLink2','reviewlink2':'reviewLink2',
+      '후기링크3':'reviewLink3','reviewlink3':'reviewLink3',
+      '후기링크4':'reviewLink4','reviewlink4':'reviewLink4',
+      '후기링크5':'reviewLink5','reviewlink5':'reviewLink5',
+      '프리미엄':'isPremium','premium':'isPremium','ispremium':'isPremium',
+    };
+    const rawHeaders = rows[0].map(h => h.trim());
+    const headers = rawHeaders.map(h => ALIAS[h.toLowerCase()] || ALIAS[h] || h);
+
+    const get = (row, key) => {
+      const idx = headers.indexOf(key);
+      return idx >= 0 ? (row[idx] || '').trim() : '';
+    };
+
+    const contractors = rows.slice(1)
+      .filter(row => row.some(c => c.trim()))
+      .map(row => ({
+        name: get(row,'name'),
+        category: get(row,'category') || '기타',
+        area: get(row,'area'),
+        phone: get(row,'phone'),
+        rating: parseFloat(get(row,'rating')) || 0,
+        reviews: parseInt(get(row,'reviews')) || 0,
+        description: get(row,'description'),
+        sourceUrl: get(row,'sourceUrl'),
+        contactEmail: get(row,'contactEmail'),
+        reviewLinks: ['reviewLink1','reviewLink2','reviewLink3','reviewLink4','reviewLink5']
+          .map(k => get(row,k)).filter(Boolean),
+        isPremium: ['true','1','yes','y','프리미엄'].includes(get(row,'isPremium').toLowerCase()),
+        source: 'sheets',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }))
+      .filter(c => c.name);
+
+    if (!contractors.length) throw new Error('업체명(name)이 있는 행이 없습니다');
+
+    const msg = replaceAll
+      ? `기존 업체 DB를 모두 삭제하고\n시트의 ${contractors.length}개 업체로 교체하겠습니까?`
+      : `시트의 ${contractors.length}개 업체를 기존 DB에 추가하겠습니까?`;
+    if (!confirm(msg)) { status.innerHTML = '취소됨'; btn.disabled=false; return; }
+
+    if (!_adminDb) initFirestoreAdmin();
+    status.innerHTML = `<span style="color:#2563eb;">⏳ Firestore에 저장 중...</span>`;
+
+    // Replace-all: delete existing
+    if (replaceAll) {
+      const existing = await _adminDb.collection('vb_contractors').get();
+      const delBatch = _adminDb.batch();
+      existing.docs.forEach(d => delBatch.delete(d.ref));
+      await delBatch.commit();
+    }
+
+    // Batch write (max 400/batch)
+    let saved = 0;
+    for (let i = 0; i < contractors.length; i += 400) {
+      const batch = _adminDb.batch();
+      contractors.slice(i, i+400).forEach(c => {
+        batch.set(_adminDb.collection('vb_contractors').doc(), c);
+      });
+      await batch.commit();
+      saved += Math.min(400, contractors.length - i);
+    }
+
+    localStorage.setItem('vb_sheets_url', url);
+    status.innerHTML = `<span style="color:#16a34a;">✅ ${saved}개 업체 ${replaceAll?'교체':'추가'} 완료!</span>`;
+    loadContractorPage();
+  } catch(e) {
+    status.innerHTML = `<span style="color:#ef4444;">❌ ${e.message}</span>`;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ===== BRAND / LOGO =====
