@@ -11,6 +11,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<!-- SheetJS — 엑셀/TSV/CSV 파싱 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ===== ROOT ===== */
 :root {
@@ -1138,16 +1140,17 @@ service cloud.firestore {
             <div style="margin:6px 0;background:#f4f6fb;border-radius:6px;padding:7px 10px;overflow-x:auto;">
               <code style="white-space:nowrap;color:#3176ff;font-size:11.5px;">name, category, area, phone, rating, reviews, description, sourceUrl, contactEmail, reviewLink1, reviewLink2</code>
             </div>
-            <div>② 구글 시트 상단 메뉴: <b>파일 → 다운로드 → 탭으로 구분된 값(.tsv)</b> 또는 쉼표로 구분된 값(.csv)</div>
-            <div>③ 아래에서 파일 업로드 → "전체 교체 저장" 클릭 → Firestore 자동 업데이트</div>
+            <div>② 구글 시트 상단 메뉴: <b>파일 → 다운로드 → Microsoft Excel(.xlsx)</b></div>
+            <div style="color:#888;font-size:11.5px;margin-left:12px;">xlsx로 받으면 시트 전체(모든 탭)를 한 번에 가져옵니다</div>
+            <div>③ 아래에서 파일 업로드 → "전체 교체 저장" → Firestore 자동 업데이트</div>
             <div style="margin-top:6px;color:#aaa;font-size:11.5px;">카테고리: 철거 / 목공 / 타일 / 도배 / 전기 / 설비 / 샷시 / 마루 / 페인트 / 욕실 / 가구 / 청소 / 기타</div>
           </div>
 
           <!-- 파일 업로드 (메인) -->
           <label id="csv-upload-label" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border:2px dashed #93c5fd;border-radius:10px;cursor:pointer;background:#f8fbff;margin-bottom:10px;transition:background .15s;" onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='#f8fbff'">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span style="font-size:14px;font-weight:600;color:#2563eb;" id="csv-upload-label-text">TSV / CSV 파일 선택 또는 여기에 드래그</span>
-            <input type="file" id="csv-file-input" accept=".tsv,.csv,text/tab-separated-values,text/csv" style="display:none;" onchange="handleCSVFileSelect(this)">
+            <span style="font-size:14px;font-weight:600;color:#2563eb;" id="csv-upload-label-text">xlsx / tsv / csv 파일 선택 또는 드래그</span>
+            <input type="file" id="csv-file-input" accept=".xlsx,.tsv,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/tab-separated-values,text/csv" style="display:none;" onchange="handleCSVFileSelect(this)">
           </label>
 
           <!-- 옵션 + 상태 -->
@@ -2729,12 +2732,38 @@ function handleCSVFileSelect(input) {
   const label = document.getElementById('csv-upload-label-text');
   const status = document.getElementById('sheets-sync-status');
   const importBtn = document.getElementById('sheets-sync-btn');
+  const isXLSX = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
 
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const text = e.target.result;
-      const rows = _detectAndParse(text, file.name);
+      let rows;
+      let sheetInfo = '';
+
+      if (isXLSX) {
+        // SheetJS: 모든 시트 합산
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const allRows = [];
+        let headerRow = null;
+        wb.SheetNames.forEach((name, si) => {
+          const ws = wb.Sheets[name];
+          const sheetRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+          if (!sheetRows.length) return;
+          if (si === 0) {
+            headerRow = sheetRows[0]; // 첫 시트의 1행을 헤더로 사용
+            allRows.push(...sheetRows); // 헤더 포함
+          } else {
+            // 다른 시트들은 헤더 제외하고 데이터만 추가
+            allRows.push(...sheetRows.slice(1));
+          }
+        });
+        rows = allRows;
+        sheetInfo = `(${wb.SheetNames.length}개 시트 합산)`;
+      } else {
+        // TSV / CSV
+        const text = e.target.result;
+        rows = _detectAndParse(text, file.name);
+      }
       if (rows.length < 2) throw new Error('데이터가 없습니다 (헤더 + 최소 1행 필요)');
 
       const ALIAS = {
@@ -2778,8 +2807,8 @@ function handleCSVFileSelect(input) {
 
       if (!_parsedCSVContractors.length) throw new Error('업체명(name) 컬럼이 있는 행이 없습니다');
 
-      label.textContent = `✅ ${file.name} (${_parsedCSVContractors.length}개 업체 인식됨)`;
-      status.innerHTML = `<span style="color:#16a34a;">📄 ${_parsedCSVContractors.length}개 업체를 읽었습니다. "Firestore에 저장" 버튼을 눌러 저장하세요.</span>`;
+      label.textContent = `✅ ${file.name} — ${_parsedCSVContractors.length}개 업체 인식됨 ${sheetInfo}`;
+      status.innerHTML = `<span style="color:#16a34a;">📄 ${_parsedCSVContractors.length}개 업체를 읽었습니다 ${sheetInfo}. "전체 교체 저장" 버튼을 눌러 저장하세요.</span>`;
       importBtn.style.opacity = '1';
       importBtn.style.pointerEvents = 'auto';
     } catch(err) {
@@ -2789,7 +2818,8 @@ function handleCSVFileSelect(input) {
       importBtn.style.pointerEvents = 'none';
     }
   };
-  reader.readAsText(file, 'UTF-8');
+  if (isXLSX) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file, 'UTF-8');
 }
 
 async function importCSVToFirestore() {
