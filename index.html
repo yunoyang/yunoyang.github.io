@@ -1372,55 +1372,57 @@ button, input, textarea, select { font-family:var(--font); }
 .export-logo-text { font-size:20px; font-weight:900; color:#111; letter-spacing:-1px; }
 .export-doc-label { font-size:9px; font-weight:700; color:#aaa; letter-spacing:1.5px; text-transform:uppercase; }
 .export-doc-name { font-size:15px; font-weight:800; color:#111; margin-top:3px; text-align:right; max-width:340px; line-height:1.3; }
-/* ── Info table ── */
+/* ── Info table — 미니멀 key:value ── */
 .export-info-table { width:100%; border-collapse:collapse; font-size:13px; }
-.export-info-table td { padding:8px 12px; border:1px solid #e0e0e0; vertical-align:top; }
-.export-info-table td:first-child { font-weight:700; color:#555; width:88px; background:#f7f7f7; white-space:nowrap; }
+.export-info-table td { padding:5px 0; border:none; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+.export-info-table td:first-child { font-weight:700; color:#888; width:82px; background:none; white-space:nowrap; }
+.export-info-table tr:last-child td { border-bottom:none; }
 /* ── Sections ── */
-.export-section { padding:18px 28px; border-bottom:1px solid #e0e0e0; position:relative; }
+.export-section { padding:14px 24px; border-bottom:1px solid #ebebeb; position:relative; }
 .export-section:last-child { border-bottom:none; }
 .export-section-title {
-  font-size:10px; font-weight:800; color:#444; letter-spacing:1.4px;
-  text-transform:uppercase; margin-bottom:14px; padding-bottom:7px;
-  border-bottom:1.5px solid #111;
+  font-size:9.5px; font-weight:800; color:#999; letter-spacing:1.6px;
+  text-transform:uppercase; margin-bottom:10px;
 }
 /* ── Floor plan ── */
 .export-floorplan-img { width:100%; border:1px solid #ddd; display:block; }
-/* ── Process list (B&W) ── */
-.export-proc-item { margin-bottom:14px; break-inside:avoid; page-break-inside:avoid; }
+/* ── Process list ── */
+.export-proc-item { margin-bottom:10px; break-inside:avoid; page-break-inside:avoid; }
 .export-proc-title-row {
   display:flex; align-items:baseline; gap:8px;
-  padding:7px 10px; background:#f2f2f2; border-left:3px solid #111;
+  padding:6px 10px; background:#f6f6f6; border-left:3px solid #ccc;
 }
-.export-proc-num { font-size:10px; font-weight:700; color:#888; flex-shrink:0; }
+.export-proc-num { font-size:10px; font-weight:700; color:#aaa; flex-shrink:0; }
 .export-proc-name { font-size:13px; font-weight:800; color:#111; flex:1; }
-.export-proc-period { font-size:11px; color:#555; white-space:nowrap; }
+.export-proc-period { font-size:11px; color:#777; white-space:nowrap; }
 .export-proc-company-row {
-  padding:4px 10px 4px 23px; font-size:11px; color:#666;
-  background:#f9f9f9; border-left:3px solid #ddd; border-top:1px solid #e8e8e8;
+  padding:3px 10px 3px 23px; font-size:11px; color:#888;
+  border-left:3px solid #ddd;
 }
+/* ── Detail table — 라인만 ── */
 .export-detail-table { width:100%; border-collapse:collapse; font-size:12px; }
 .export-detail-table th {
-  padding:5px 10px; background:#f5f5f5; border:1px solid #ddd;
-  font-size:10px; font-weight:700; color:#666; text-align:left; letter-spacing:.5px;
+  padding:4px 8px; border:none; border-bottom:1.5px solid #ddd;
+  font-size:10px; font-weight:700; color:#aaa; text-align:left; letter-spacing:.5px; background:none;
 }
-.export-detail-table td { padding:6px 10px; border:1px solid #e8e8e8; vertical-align:top; color:#333; }
-.export-detail-table td.date { color:#555; text-align:center; white-space:nowrap; width:60px; }
-.export-detail-table td.cost { font-weight:600; text-align:right; white-space:nowrap; width:90px; }
-.export-detail-table tr.subtotal td { background:#f5f5f5; font-weight:700; font-size:12px; border-top:1.5px solid #bbb; }
-/* ── Calendar (B&W) ── */
-.export-cal-month-title { font-size:13px; font-weight:700; color:#111; margin:14px 0 5px; }
-.export-cal-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:4px; }
+.export-detail-table td { padding:5px 8px; border:none; border-bottom:1px solid #f2f2f2; vertical-align:top; color:#333; }
+.export-detail-table td.date { color:#888; text-align:center; white-space:nowrap; width:56px; }
+.export-detail-table td.cost { font-weight:600; text-align:right; white-space:nowrap; width:88px; }
+.export-detail-table tr.subtotal td { font-weight:700; font-size:12px; border-top:1px solid #ddd; color:#111; }
+/* ── Calendar with color ── */
+.export-cal-month-title { font-size:12px; font-weight:700; color:#111; margin:12px 0 4px; }
+.export-cal-table { width:100%; border-collapse:collapse; font-size:10px; margin-bottom:4px; }
 .export-cal-table th {
-  background:#111; color:#fff; padding:6px 2px;
-  text-align:center; font-weight:700; border:1px solid #111;
+  background:#333; color:#fff; padding:5px 2px;
+  text-align:center; font-weight:700; font-size:9.5px;
 }
-.export-cal-table td { vertical-align:top; border:1px solid #ccc; padding:3px; height:58px; }
-.export-cal-table td.out { background:#f9f9f9; }
-.export-cal-td-date { font-size:9px; font-weight:700; color:#888; text-align:right; margin-bottom:2px; }
+.export-cal-table td { vertical-align:top; border:1px solid #e0e0e0; padding:3px; height:52px; }
+.export-cal-table td.out { background:#fafafa; opacity:.5; }
+.export-cal-td-date { font-size:9px; font-weight:700; color:#aaa; text-align:right; margin-bottom:2px; }
 .export-cal-td-item {
-  font-size:9.5px; font-weight:600; padding:1px 3px; margin-bottom:1px;
-  line-height:1.3; word-break:keep-all; background:#efefef; color:#222; border-radius:2px; display:block;
+  font-size:9px; font-weight:700; padding:1px 3px; margin-bottom:1px;
+  line-height:1.3; word-break:keep-all; border-radius:2px; display:block;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }
 .export-cal-td-detail { font-size:9px; color:#666; padding:0 2px; line-height:1.3; display:block; }
 /* ── Watermark ── */
@@ -4368,6 +4370,7 @@ function printExportDoc() {
 :root{--primary:#3176ff;}
 body{font-family:'Pretendard',-apple-system,sans-serif;background:#f0f2f7;padding:20px;}
 ${_getExportCSS()}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 @media print{body{background:#fff!important;padding:0!important;}.export-doc{border:none!important;max-width:100%!important;page-break-inside:auto;}.export-proc-item{page-break-inside:avoid;}.export-watermark{opacity:.04!important;}}
 </style>
 </head><body>${content}</body></html>`);
@@ -4535,23 +4538,35 @@ function _buildExportCalendar(proj) {
       const dateStr = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
       const inRange = day >= startD && day <= endD;
       const inMonth = day.getMonth() === currentMonth;
-      const cls = (!inMonth || !inRange) ? ' class="out"' : '';
+      const isOut = !inMonth || !inRange;
+      const cls = isOut ? ' class="out"' : '';
+
+      const activeProcs = (!isOut) ? proj.processes.filter(p =>
+        p.scheduleStart && p.scheduleEnd &&
+        dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd
+      ) : [];
+
+      // 셀 배경: 첫 번째 공정 컬러 틴트 + top stroke
+      let tdStyle = '';
+      if (activeProcs.length) {
+        const fc = activeProcs[0];
+        const fCls = PROCESS_COLORS[fc.type] || ('c'+(Math.abs(hashCode(fc.name||''))%12));
+        const fHex = COLOR_HEX[fCls] || '#3176ff';
+        const fr = parseInt(fHex.slice(1,3),16), fg = parseInt(fHex.slice(3,5),16), fb = parseInt(fHex.slice(5,7),16);
+        tdStyle = ` style="background:rgba(${fr},${fg},${fb},0.07);border-top:2px solid ${fHex};-webkit-print-color-adjust:exact;print-color-adjust:exact;"`;
+      }
 
       let cellHtml = `<div class="export-cal-td-date">${day.getDate()}</div>`;
-      if (inRange) {
-        const activeProcs = proj.processes.filter(p =>
-          p.scheduleStart && p.scheduleEnd &&
-          dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd
-        );
-        for (const p of activeProcs) {
-          const todayDetails = (p.details||[]).filter(d=>d.date===dateStr);
-          cellHtml += `<span class="export-cal-td-item">${esc(p.name)}</span>`;
-          for (const d of todayDetails) {
-            cellHtml += `<span class="export-cal-td-detail">· ${esc(d.desc)}</span>`;
-          }
+      for (const p of activeProcs) {
+        const pCls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name||''))%12));
+        const pHex = COLOR_HEX[pCls] || '#3176ff';
+        const pr = parseInt(pHex.slice(1,3),16), pg = parseInt(pHex.slice(3,5),16), pb = parseInt(pHex.slice(5,7),16);
+        cellHtml += `<span class="export-cal-td-item" style="background:rgba(${pr},${pg},${pb},0.13);color:${pHex};-webkit-print-color-adjust:exact;print-color-adjust:exact;">${esc(p.name)}</span>`;
+        for (const d of (p.details||[]).filter(d=>d.date===dateStr)) {
+          cellHtml += `<span class="export-cal-td-detail" style="color:#666;">· ${esc(d.desc)}</span>`;
         }
       }
-      html += `<td${cls}>${cellHtml}</td>`;
+      html += `<td${cls}${tdStyle}>${cellHtml}</td>`;
     }
     html += '</tr>';
   }
@@ -4576,6 +4591,12 @@ function _buildExportProcesses(proj) {
     const companyRow = companyName
       ? `<div class="export-proc-company-row">업체: ${esc(companyName)}</div>` : '';
 
+    // 공정 컬러
+    const pCls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name||''))%12));
+    const pHex = COLOR_HEX[pCls] || '#555';
+    const pr = parseInt(pHex.slice(1,3),16), pg = parseInt(pHex.slice(3,5),16), pb = parseInt(pHex.slice(5,7),16);
+    const pBg = `rgba(${pr},${pg},${pb},0.07)`;
+
     const detailRows = (p.details||[]).map(d =>
       `<tr>
         <td>${esc(d.desc)}</td>
@@ -4586,17 +4607,17 @@ function _buildExportProcesses(proj) {
 
     const detailTable = p.details?.length
       ? `<table class="export-detail-table">
-          <thead><tr><th>작업 내용</th><th style="width:60px;text-align:center;">날짜</th><th style="width:90px;text-align:right;">비용</th></tr></thead>
+          <thead><tr><th>작업 내용</th><th style="width:56px;text-align:center;">날짜</th><th style="width:88px;text-align:right;">비용</th></tr></thead>
           <tbody>${detailRows}</tbody>
           ${procCost ? `<tr class="subtotal"><td colspan="2">소계</td><td class="cost">${procCost.toLocaleString()}원</td></tr>` : ''}
          </table>`
-      : `<table class="export-detail-table"><tbody><tr><td colspan="3" style="color:#aaa;text-align:center;padding:10px;">상세내역 없음</td></tr></tbody></table>`;
+      : '';
 
     return `
     <div class="export-proc-item">
-      <div class="export-proc-title-row">
+      <div class="export-proc-title-row" style="background:${pBg};border-left-color:${pHex};-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="export-proc-num">${String(idx+1).padStart(2,'0')}</span>
-        <span class="export-proc-name">${esc(p.name)}</span>
+        <span class="export-proc-name" style="color:${pHex};">${esc(p.name)}</span>
         <span class="export-proc-period">${esc(periodStr)}</span>
       </div>
       ${companyRow}
