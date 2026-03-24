@@ -158,7 +158,7 @@ body { font-family:var(--font); background:var(--bg); min-height:100vh; }
 button, input, textarea, select { font-family:var(--font); }
 
 /* ===== APP ===== */
-.app { width:100%; height:100vh; background:var(--bg); position:relative; overflow:hidden; }
+.app { width:100%; height:100vh; height:100svh; background:var(--bg); position:relative; overflow:hidden; }
 .screen {
   position:absolute; top:0; left:0; right:0; bottom:0;
   display:flex; flex-direction:column;
@@ -514,7 +514,7 @@ button, input, textarea, select { font-family:var(--font); }
 .btn-danger:hover { background:#ffe0e0; }
 
 /* ===== FLOATING ===== */
-.floating-group { position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:20px; z-index:10; }
+.floating-group { position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:20px; z-index:200; -webkit-transform:translateZ(0); transform:translateZ(0); }
 .floating-btn {
   display:flex; align-items:center; justify-content:center; gap:7px;
   padding:13px 22px; border-radius:26px; background:#fff;
@@ -1285,7 +1285,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-radius:2px; margin:4px 0;
 }
 .landing-bottom {
-  padding:0 24px 48px; display:flex; flex-direction:column; gap:10px;
+  padding:0 24px calc(env(safe-area-inset-bottom,0px) + 48px); display:flex; flex-direction:column; gap:10px;
   width:100%; box-sizing:border-box;
 }
 .landing-btn {
@@ -1719,6 +1719,54 @@ button, input, textarea, select { font-family:var(--font); }
   </button>
 </div>
 
+<!-- ===== 업체 상세 시트 ===== -->
+<div class="overlay" id="contractor-detail-sheet" style="z-index:9500;" onclick="if(event.target===this)_closeContractorDetail()">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0;flex-shrink:0;"></div>
+    <!-- 헤더: 업체명 + 닫기 -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 20px 10px;flex-shrink:0;">
+      <div style="flex:1;min-width:0;">
+        <div id="cdetail-name" style="font-size:18px;font-weight:700;color:#222;margin-bottom:6px;line-height:1.3;"></div>
+        <div id="cdetail-meta" style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+      <button onclick="_closeContractorDetail()" style="background:none;border:none;cursor:pointer;padding:4px;color:#999;flex-shrink:0;margin-left:8px;margin-top:-2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- 사진 영역 (사진 없으면 숨김) -->
+    <div id="cdetail-photos" style="display:none;padding:0 20px 12px;flex-shrink:0;">
+      <div id="cdetail-photos-inner" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;"></div>
+    </div>
+    <!-- 스크롤 콘텐츠 -->
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 12px;">
+      <div id="cdetail-desc" style="font-size:14px;color:#555;line-height:1.65;margin-bottom:16px;"></div>
+      <button id="cdetail-more-btn" onclick="_openContractorMoreSheet()" style="display:none;background:#f5f7fc;border:1px solid #eef0f6;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:500;color:#555;cursor:pointer;width:100%;text-align:center;font-family:var(--font);">더보기 →</button>
+    </div>
+    <!-- 하단 버튼 -->
+    <div id="cdetail-footer" style="flex-shrink:0;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #f0f2f5;display:flex;gap:10px;">
+      <button id="cdetail-sms-btn" onclick="_contactContractorSMS()" style="flex:1;padding:14px;background:#fff;border:1.5px solid #dde3ef;border-radius:12px;font-size:15px;font-weight:600;color:#333;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        업체 문의하기
+      </button>
+      <button id="cdetail-select-btn" onclick="_selectFromDetail()" style="display:none;flex:1;padding:14px;background:var(--primary);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);">이 업체로 선택</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 업체 더보기 시트 ===== -->
+<div class="overlay" id="contractor-more-sheet" style="z-index:9600;" onclick="if(event.target===this)_closeContractorMoreSheet()">
+  <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 10px;border-bottom:1px solid #f0f2f5;">
+      <span style="font-size:16px;font-weight:700;color:#222;">업체 정보</span>
+      <button onclick="_closeContractorMoreSheet()" style="background:none;border:none;cursor:pointer;padding:4px;color:#999;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="contractor-more-content" style="padding:8px 20px 8px;"></div>
+  </div>
+</div>
+
 </div><!-- /.app -->
 
 <!-- Toast -->
@@ -1852,13 +1900,12 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ── 업체선택 탭 ── -->
     <div id="ctab-select-pane" style="display:none;padding-bottom:16px;">
-      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;max-height:55vh;overflow-y:auto;"></div>
+      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:10px;margin-top:0;max-height:55vh;overflow-y:auto;"></div>
       <div id="comp-suggest-empty" style="display:none;text-align:center;padding:32px 0;color:#bbb;font-size:14px;">
         이 공정에 등록된 업체가 없습니다.<br><span style="font-size:12px;">어드민에서 업체를 추가해주세요.</span>
       </div>
-      <div class="dialog-actions split" style="margin-top:16px;">
+      <div class="dialog-actions" style="margin-top:16px;">
         <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
-        <button class="btn-confirm" id="comp-select-confirm-btn" onclick="confirmContractorSelect()" disabled style="opacity:0.4;">선택완료</button>
       </div>
     </div>
   </div>
@@ -2685,6 +2732,7 @@ function toggleProjectDropdown(e) {
   closeAllMenus();
   if (!wasActive) {
     renderProjectDropdownList();
+    _showMenuBackdrop();
     // position:fixed 이므로 버튼의 viewport 기준 좌표로 배치
     const rect = btn.getBoundingClientRect();
     const margin = 16;
@@ -3332,8 +3380,8 @@ function _renderContractorSelectList(procType) {
   list.innerHTML = direct.map(c => {
     const cId = c.id || c.name;
     return `
-    <div id="ccard-${esc(cId)}" onclick="_selectContractorCard(this, '${esc(cId)}')"
-      style="padding:20px 16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all .15s;">
+    <div id="ccard-${esc(cId)}" onclick="_openContractorDetail('${esc(cId)}')"
+      style="padding:20px 16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:1px solid #eef0f6;transition:all .15s;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <div style="flex:1;min-width:0;">
           <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description ? 3 : 5}px;">${esc(c.name)}</div>
@@ -3343,7 +3391,7 @@ function _renderContractorSelectList(procType) {
             <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
           </div>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>`;
   }).join('');
@@ -3380,13 +3428,16 @@ function switchCompTab(tab) {
   const selectPane = document.getElementById('ctab-select-pane');
   const manualBtn  = document.getElementById('ctab-manual-btn');
   const selectBtn  = document.getElementById('ctab-select-btn');
+  const tabsBar = document.getElementById('dlg-company-search')?.querySelector('.share-tabs');
   if (tab === 'manual') {
     manualPane.style.display = 'block'; selectPane.style.display = 'none';
     manualBtn.classList.add('active'); selectBtn.classList.remove('active');
+    if (tabsBar) tabsBar.style.marginBottom = '16px';
     setTimeout(() => document.getElementById('comp-manual-name')?.focus(), 100);
   } else {
     manualPane.style.display = 'none'; selectPane.style.display = 'block';
     manualBtn.classList.remove('active'); selectBtn.classList.add('active');
+    if (tabsBar) tabsBar.style.marginBottom = '0';
     const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
     _renderContractorSelectList(proc?.type || proc?.name);
   }
@@ -3406,9 +3457,7 @@ function _compNameAutocomplete(val) {
     <div onclick="_selectContractorToManual('${cJson}')"
       style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;"
       onmouseover="this.style.background='#f5f7ff'" onmouseout="this.style.background=''">
-      <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}
-        <span style="font-size:11px;color:#999;background:#f0f0f0;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:400;">미인증</span>
-      </div>
+      <div style="font-size:14px;font-weight:600;color:#222;">${esc(c.name)}</div>
       <div style="font-size:12px;color:#888;margin-top:2px;">${c.area||''} · ${c.originalCategory||c.category||''}</div>
     </div>`;
   }).join('');
@@ -3424,6 +3473,7 @@ function _selectContractorToManual(cJson) {
 // ===== COMPANY MANUAL INPUT =====
 function openCompanySearch(procId) {
   _compSearchProcId = procId;
+  _contractorDetailFromSearch = true;
   const proc = getProject()?.processes.find(p => p.id === procId);
   document.getElementById('comp-proc-badge').textContent = `${proc?.type||proc?.name||''} 업체`;
   document.getElementById('comp-manual-name').value = proc?.companyData?.name || proc?.company || '';
@@ -4657,6 +4707,94 @@ function _showMenuBackdrop() {
 function _hideMenuBackdrop() {
   const bd = document.getElementById('menu-backdrop');
   if (bd) bd.classList.remove('active');
+}
+
+// ===== 업체 상세 =====
+let _currentContractorDetail = null;
+let _contractorDetailFromSearch = false;
+
+function _openContractorDetail(cId) {
+  const c = _contractors.find(cd => (cd.id||cd.name) === cId);
+  if (!c) return;
+  _currentContractorDetail = c;
+
+  document.getElementById('cdetail-name').textContent = c.name;
+
+  // 지역 + 카테고리
+  const metaEl = document.getElementById('cdetail-meta');
+  metaEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#888;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>`;
+
+  // 설명
+  const descEl = document.getElementById('cdetail-desc');
+  descEl.textContent = c.description || '';
+  descEl.style.display = c.description ? 'block' : 'none';
+
+  // 사진 (photos 필드 있을 때만)
+  const photosEl = document.getElementById('cdetail-photos');
+  const photosInner = document.getElementById('cdetail-photos-inner');
+  if (c.photos && c.photos.length) {
+    photosInner.innerHTML = c.photos.map(url => `<img src="${esc(url)}" style="height:120px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="">`).join('');
+    photosEl.style.display = 'block';
+  } else {
+    photosEl.style.display = 'none';
+  }
+
+  // 더보기 버튼 (전화번호나 평점이 있을 때)
+  const moreBtn = document.getElementById('cdetail-more-btn');
+  moreBtn.style.display = (c.phone || c.rating || c.website) ? 'block' : 'none';
+
+  // 문의하기 버튼
+  const smsBtn = document.getElementById('cdetail-sms-btn');
+  smsBtn.style.display = c.phone ? 'flex' : 'none';
+
+  // 선택하기 버튼 (업체 선택 탭에서 온 경우만)
+  const selectBtn = document.getElementById('cdetail-select-btn');
+  selectBtn.style.display = _contractorDetailFromSearch ? 'flex' : 'none';
+
+  // footer display
+  const footer = document.getElementById('cdetail-footer');
+  const hasFooterBtn = c.phone || _contractorDetailFromSearch;
+  footer.style.display = hasFooterBtn ? 'flex' : 'none';
+
+  openDialog('contractor-detail-sheet');
+}
+
+function _closeContractorDetail() {
+  closeDialog('contractor-detail-sheet');
+}
+
+function _contactContractorSMS() {
+  if (!_currentContractorDetail?.phone) return;
+  const phone = _currentContractorDetail.phone.replace(/[^0-9+]/g, '');
+  const name = _currentContractorDetail.name || '';
+  const text = encodeURIComponent(`안녕하세요, 바이브스페이스 앱을 통해 인테리어 공사 관련 문의드립니다. ${name} 업체 견적을 받아보고 싶습니다.`);
+  window.location.href = `sms:${phone}?body=${text}`;
+}
+
+function _selectFromDetail() {
+  if (!_currentContractorDetail) return;
+  _selectedContractorObj = _currentContractorDetail;
+  confirmContractorSelect();
+  _closeContractorDetail();
+}
+
+function _openContractorMoreSheet() {
+  if (!_currentContractorDetail) return;
+  const c = _currentContractorDetail;
+  const content = document.getElementById('contractor-more-content');
+  const row = (label, val, extra='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:14px;color:#888;">${label}</span>${extra || `<span style="font-size:14px;font-weight:600;color:#222;">${val}</span>`}</div>`;
+  let html = '';
+  if (c.phone) html += row('전화번호', esc(c.phone), `<a href="tel:${esc(c.phone)}" style="font-size:14px;font-weight:600;color:var(--primary);text-decoration:none;">${esc(c.phone)}</a>`);
+  if (c.rating) html += row('평점', `★ ${c.rating}${c.reviews ? ` (${c.reviews}건)` : ''}`);
+  if (c.area) html += row('지역', esc(c.area));
+  if (c.originalCategory || c.category) html += row('시공분야', esc(c.originalCategory||c.category));
+  if (c.website) html += row('홈페이지', '', `<a href="${esc(c.website)}" target="_blank" style="font-size:14px;font-weight:600;color:var(--primary);text-decoration:none;">바로가기 →</a>`);
+  content.innerHTML = html || '<p style="text-align:center;color:#bbb;padding:20px 0;font-size:14px;">추가 정보가 없습니다</p>';
+  openDialog('contractor-more-sheet');
+}
+
+function _closeContractorMoreSheet() {
+  closeDialog('contractor-more-sheet');
 }
 function toggleMainMenu(e) {
   e.stopPropagation();
