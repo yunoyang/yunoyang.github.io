@@ -2800,8 +2800,6 @@ function handleCSVFileSelect(input) {
             .map(k=>get(row,k)).filter(Boolean),
           isPremium: ['true','1','yes','y','프리미엄'].includes(get(row,'isPremium').toLowerCase()),
           source: 'sheets',
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         }))
         .filter(c => c.name);
 
@@ -2839,16 +2837,21 @@ async function importCSVToFirestore() {
   try {
     if (!_adminDb) initFirestoreAdmin();
     if (replaceAll) {
+      // 500개 제한 우회: 400개씩 나눠서 삭제
       const existing = await _adminDb.collection('vb_contractors').get();
-      const delBatch = _adminDb.batch();
-      existing.docs.forEach(d => delBatch.delete(d.ref));
-      await delBatch.commit();
+      for (let i = 0; i < existing.docs.length; i += 400) {
+        const delBatch = _adminDb.batch();
+        existing.docs.slice(i, i+400).forEach(d => delBatch.delete(d.ref));
+        await delBatch.commit();
+        status.innerHTML = `<span style="color:#2563eb;">⏳ 기존 데이터 삭제 중... ${Math.min(i+400, existing.docs.length)}/${existing.docs.length}</span>`;
+      }
     }
+    const ts = firebase.firestore.FieldValue.serverTimestamp();
     let saved = 0;
     for (let i = 0; i < _parsedCSVContractors.length; i += 400) {
       const batch = _adminDb.batch();
       _parsedCSVContractors.slice(i, i+400).forEach(c => {
-        batch.set(_adminDb.collection('vb_contractors').doc(), c);
+        batch.set(_adminDb.collection('vb_contractors').doc(), { ...c, updatedAt: ts, createdAt: ts });
       });
       await batch.commit();
       saved += Math.min(400, _parsedCSVContractors.length - i);
@@ -2860,7 +2863,8 @@ async function importCSVToFirestore() {
     importBtn.style.pointerEvents = 'none';
     loadContractorPage();
   } catch(e) {
-    status.innerHTML = `<span style="color:#ef4444;">❌ 저장 실패: ${e.message}</span>`;
+    console.error('importCSVToFirestore error:', e);
+    status.innerHTML = `<span style="color:#ef4444;">❌ 저장 실패: ${e.message || e.code || String(e)}</span>`;
   } finally {
     importBtn.disabled = false;
   }
