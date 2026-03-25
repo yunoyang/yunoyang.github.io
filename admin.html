@@ -2783,12 +2783,12 @@ function handleCSVFileSelect(input) {
         '후기링크5':'reviewLink5','reviewlink5':'reviewLink5',
         '프리미엄':'isPremium','premium':'isPremium','ispremium':'isPremium',
       };
-      const rawHeaders = rows[0].map(h => h.trim());
+      const rawHeaders = rows[0].map(h => String(h??'').trim());
       const headers = rawHeaders.map(h => ALIAS[h.toLowerCase()] || ALIAS[h] || h);
-      const get = (row, key) => { const idx=headers.indexOf(key); return idx>=0?(row[idx]||'').trim():''; };
+      const get = (row, key) => { const idx=headers.indexOf(key); return idx>=0?String(row[idx]??'').trim():''; };
 
       _parsedCSVContractors = rows.slice(1)
-        .filter(row => row.some(c => c.trim()))
+        .filter(row => row.some(c => String(c??'').trim()))
         .map(row => ({
           name: get(row,'name'), category: get(row,'category')||'기타',
           area: get(row,'area'), phone: get(row,'phone'),
@@ -2963,16 +2963,16 @@ async function syncFromGoogleSheet() {
       '후기링크5':'reviewLink5','reviewlink5':'reviewLink5',
       '프리미엄':'isPremium','premium':'isPremium','ispremium':'isPremium',
     };
-    const rawHeaders = rows[0].map(h => h.trim());
+    const rawHeaders = rows[0].map(h => String(h??'').trim());
     const headers = rawHeaders.map(h => ALIAS[h.toLowerCase()] || ALIAS[h] || h);
 
     const get = (row, key) => {
       const idx = headers.indexOf(key);
-      return idx >= 0 ? (row[idx] || '').trim() : '';
+      return idx >= 0 ? String(row[idx]??'').trim() : '';
     };
 
     const contractors = rows.slice(1)
-      .filter(row => row.some(c => c.trim()))
+      .filter(row => row.some(c => String(c??'').trim()))
       .map(row => ({
         name: get(row,'name'),
         category: get(row,'category') || '기타',
