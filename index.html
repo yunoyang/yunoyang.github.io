@@ -212,9 +212,9 @@ button, input, textarea, select { font-family:var(--font); }
   padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .15s;
 }
 .pd-item:hover { background:#f5f7fc; }
-.pd-item.current { background:var(--primary-bg); }
+.pd-item.current { background:#f5f7fc; }
 .pd-item .pd-name { font-size:14px; font-weight:600; color:var(--text-primary); }
-.pd-item.current .pd-name { color:var(--primary); }
+.pd-item.current .pd-name { color:#222; }
 .pd-del { color:#ccc; cursor:pointer; padding:3px; border-radius:4px; display:flex; line-height:1; }
 .pd-del:hover { background:#fee; color:var(--danger); }
 .pd-divider { height:1px; background:#f0f2f5; margin:4px 0; }
@@ -406,8 +406,14 @@ button, input, textarea, select { font-family:var(--font); }
     content:''; display:block; width:40px; height:4px;
     background:#e0e0e0; border-radius:2px; margin:4px auto 12px; flex-shrink:0;
   }
-  .pd-item { padding:14px 16px !important; font-size:16px !important; }
-  .pd-new  { padding:14px 16px !important; font-size:16px !important; }
+  .pd-item {
+    padding:16px 20px !important; border-radius:0 !important;
+    border-bottom:1px solid #f2f2f2 !important;
+  }
+  .pd-item:last-of-type { border-bottom:none !important; }
+  .pd-item .pd-name { font-size:15px !important; font-weight:500 !important; }
+  .pd-item.current .pd-name { font-weight:600 !important; }
+  .pd-new  { padding:16px 20px !important; font-size:15px !important; border-radius:0 !important; }
 
   /* 백드롭도 z-index 조정 */
   #menu-backdrop { z-index:999 !important; }
