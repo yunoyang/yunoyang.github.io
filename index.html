@@ -1498,13 +1498,6 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="beta-badge">beta</span>
         <span class="pchev"><i data-lucide="chevron-down" style="width:15px;height:15px;"></i></span>
       </button>
-      <div class="project-dropdown" id="project-dropdown">
-        <div id="project-dropdown-list"></div>
-        <div class="pd-divider"></div>
-        <div class="pd-new" onclick="promptNewProject()">
-          <i data-lucide="plus" style="width:16px;height:16px;"></i> 새 프로젝트
-        </div>
-      </div>
     </div>
     <div class="header-actions">
       <button id="profile-avatar-btn" class="profile-avatar-btn" onclick="handleAvatarClick(event)" title="메뉴"></button>
@@ -2106,6 +2099,15 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- 모바일 메뉴 백드롭 -->
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
+
+<!-- ===== 프로젝트 드롭다운 (transform 스태킹 컨텍스트 밖 배치) ===== -->
+<div class="project-dropdown" id="project-dropdown">
+  <div id="project-dropdown-list"></div>
+  <div class="pd-divider"></div>
+  <div class="pd-new" onclick="promptNewProject()">
+    <i data-lucide="plus" style="width:16px;height:16px;"></i> 새 프로젝트
+  </div>
+</div>
 
 <!-- Card More Menu (shared, positioned via JS) -->
 <div id="card-more-menu" class="card-more-menu">
