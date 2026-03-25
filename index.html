@@ -153,12 +153,12 @@
   --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; }
-body { font-family:var(--font); background:var(--bg); min-height:100vh; }
+html, body { height:100%; overflow:hidden; }
+body { font-family:var(--font); background:var(--bg); }
 button, input, textarea, select { font-family:var(--font); }
 
 /* ===== APP ===== */
-.app { width:100%; height:100vh; background:var(--bg); position:relative; overflow:hidden; }
+.app { width:100%; height:100vh; height:100dvh; background:var(--bg); position:relative; overflow:hidden; }
 .screen {
   position:absolute; top:0; left:0; right:0; bottom:0;
   display:flex; flex-direction:column;
@@ -1275,7 +1275,7 @@ button, input, textarea, select { font-family:var(--font); }
   color:var(--primary);
 }
 .landing-main-copy {
-  font-size:15px; font-weight:400; color:#666;
+  font-size:15px; font-weight:400; color:#444444;
   text-align:center; line-height:1.7; letter-spacing:-.1px;
   margin-top:4px;
 }
@@ -1284,8 +1284,8 @@ button, input, textarea, select { font-family:var(--font); }
   border-radius:2px; margin:4px 0;
 }
 .landing-bottom {
-  padding:0 24px calc(env(safe-area-inset-bottom,0px) + 48px); display:flex; flex-direction:column; gap:10px;
-  width:100%; box-sizing:border-box;
+  padding:0 24px calc(env(safe-area-inset-bottom,0px) + 28px); display:flex; flex-direction:column; gap:10px;
+  width:100%; box-sizing:border-box; flex-shrink:0;
 }
 .landing-btn {
   width:100%; padding:16px; background:var(--btn-blue); color:#fff; border:none;
@@ -1459,7 +1459,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="landing-center">
     <div class="landing-logo">Vibe<span>space</span></div>
     <div class="landing-divider"></div>
-    <div class="landing-main-copy">막막한 반셀프 인테리어 과정,<br>바이브스페이스와 함께 하세요</div>
+    <div class="landing-main-copy">극J들의 행복한 인테리어 여정.</div>
   </div>
 
   <!-- 하단 버튼 -->
