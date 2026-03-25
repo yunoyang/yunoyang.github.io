@@ -2775,19 +2775,23 @@ function toggleProjectDropdown(e) {
   if (!wasActive) {
     renderProjectDropdownList();
     _showMenuBackdrop();
-    // position:fixed 이므로 버튼의 viewport 기준 좌표로 배치
-    const rect = btn.getBoundingClientRect();
-    const margin = 16;
-    let left = rect.left;
-    // 화면 우측 overflow 방지
-    dd.style.left = '0'; dd.style.top = '0'; dd.style.display = 'block';
-    const ddWidth = dd.offsetWidth;
-    dd.style.display = '';
-    if (left + ddWidth > window.innerWidth - margin) {
-      left = window.innerWidth - ddWidth - margin;
+    if (_isMobile()) {
+      // 모바일: 바텀시트 — inline style 초기화하여 CSS media query가 완전히 제어
+      dd.style.top = ''; dd.style.left = ''; dd.style.right = ''; dd.style.width = '';
+    } else {
+      // 데스크탑: viewport 기준 좌표로 배치
+      const rect = btn.getBoundingClientRect();
+      const margin = 16;
+      let left = rect.left;
+      dd.style.left = '0'; dd.style.top = '0'; dd.style.display = 'block';
+      const ddWidth = dd.offsetWidth;
+      dd.style.display = '';
+      if (left + ddWidth > window.innerWidth - margin) {
+        left = window.innerWidth - ddWidth - margin;
+      }
+      dd.style.top  = (rect.bottom + 8) + 'px';
+      dd.style.left = Math.max(margin, left) + 'px';
     }
-    dd.style.top  = (rect.bottom + 8) + 'px';
-    dd.style.left = Math.max(margin, left) + 'px';
     dd.classList.add('active');
     btn.classList.add('open');
     lucide.createIcons();
