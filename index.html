@@ -310,7 +310,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== CARDS ===== */
 .cards-area {
-  padding:16px 20px;
+  padding:16px 20px 92px;
   display:grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap:16px;
@@ -514,16 +514,15 @@ button, input, textarea, select { font-family:var(--font); }
 .btn-danger:hover { background:#ffe0e0; }
 
 /* ===== FLOATING ===== */
-.floating-group { position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:20px; z-index:200; -webkit-transform:translateZ(0); transform:translateZ(0); }
+.floating-group { position:fixed; bottom:0; left:0; right:0; z-index:200; padding:12px 20px; padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)); background:#fff; border-top:1px solid #f0f2f5; }
 .floating-btn {
-  display:flex; align-items:center; justify-content:center; gap:7px;
-  padding:13px 22px; border-radius:26px; background:#fff;
-  box-shadow:0 4px 18px rgba(0,0,0,0.15); border:1px solid var(--border-light);
-  cursor:pointer; font-size:15px; font-weight:700; color:#333;
-  letter-spacing:-.3px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; padding:15px 22px; border-radius:14px; background:var(--primary);
+  border:none; cursor:pointer; font-size:16px; font-weight:700; color:#fff;
+  letter-spacing:-.3px; font-family:var(--font);
 }
 .floating-btn svg { width:18px; height:18px; }
-.floating-btn:hover { box-shadow:0 6px 22px rgba(0,0,0,0.2); }
+.floating-btn:active { opacity:0.9; }
 
 /* ===== ADD BTN BOTTOM ===== */
 .add-btn-bottom {
@@ -1729,23 +1728,28 @@ button, input, textarea, select { font-family:var(--font); }
     <h2 id="cdetail-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></h2>
     <div style="width:30px;"></div>
   </div>
-  <!-- 사진 영역 (사진 없으면 숨김) -->
-  <div id="cdetail-photos" style="display:none;padding:12px 20px 0;flex-shrink:0;">
+  <!-- 사진 영역 최대 5장 (사진 없으면 숨김) -->
+  <div id="cdetail-photos" style="display:none;padding:0 20px 12px;flex-shrink:0;">
     <div id="cdetail-photos-inner" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;"></div>
   </div>
   <!-- 스크롤 콘텐츠 -->
-  <div class="screen-scroll" style="padding:16px 20px;">
-    <div id="cdetail-meta" style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;margin-bottom:14px;"></div>
-    <div id="cdetail-desc" style="font-size:14px;color:#555;line-height:1.65;margin-bottom:16px;"></div>
-    <button id="cdetail-more-btn" onclick="_openContractorMoreSheet()" style="display:none;background:#f5f7fc;border:1px solid #eef0f6;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:500;color:#555;cursor:pointer;width:100%;text-align:center;font-family:var(--font);">더보기 →</button>
+  <div class="screen-scroll" style="padding:0;">
+    <!-- 전화번호 -->
+    <div id="cdetail-phone-row" style="display:none;padding:14px 20px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:10px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 12 19.79 19.79 0 0 1 1.21 3.18 2 2 0 0 1 3.22 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span id="cdetail-phone-text" style="font-size:15px;color:#333;font-weight:500;"></span>
+    </div>
+    <!-- 지역 + 카테고리 -->
+    <div id="cdetail-meta" style="display:flex;align-items:center;gap:6px;padding:14px 20px;border-bottom:1px solid #f0f2f5;font-size:14px;color:#555;"></div>
+    <!-- 설명 -->
+    <div id="cdetail-desc" style="font-size:14px;color:#555;line-height:1.7;padding:16px 20px;"></div>
   </div>
-  <!-- 하단 버튼 -->
-  <div id="cdetail-footer" style="flex-shrink:0;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #f0f2f5;display:flex;gap:10px;">
-    <button id="cdetail-sms-btn" onclick="_contactContractorSMS()" style="flex:1;padding:14px;background:#fff;border:1.5px solid #dde3ef;border-radius:12px;font-size:15px;font-weight:600;color:#333;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      업체 문의하기
+  <!-- 하단 버튼: 업체 문의하기만 -->
+  <div id="cdetail-footer" style="display:none;flex-shrink:0;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #f0f2f5;">
+    <button id="cdetail-sms-btn" onclick="_contactContractorSMS()" style="width:100%;padding:15px;background:var(--primary);border:none;border-radius:14px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      업체에 문의하기
     </button>
-    <button id="cdetail-select-btn" onclick="_selectFromDetail()" style="display:none;flex:1;padding:14px;background:var(--primary);border:none;border-radius:12px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);">이 업체로 선택</button>
   </div>
 </div>
 
@@ -3377,35 +3381,54 @@ function _renderContractorSelectList(procType) {
   list.innerHTML = direct.map(c => {
     const cId = c.id || c.name;
     return `
-    <div id="ccard-${esc(cId)}" onclick="_selectContractorCard(this,'${esc(cId)}')"
-      style="padding:20px 16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:1px solid #eef0f6;transition:all .15s;display:flex;align-items:center;gap:8px;">
+    <div id="ccard-${esc(cId)}" onclick="_toggleContractorCard(this,'${esc(cId)}')"
+      data-selected="0"
+      style="padding:16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:flex-start;gap:8px;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description ? 3 : 5}px;">${esc(c.name)}</div>
+        <div style="display:flex;align-items:center;gap:1px;margin-bottom:${c.description ? 4 : 6}px;">
+          <span style="font-size:16px;font-weight:700;color:#222;">${esc(c.name)}</span>
+          <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:2px 4px;display:inline-flex;align-items:center;color:#aaa;flex-shrink:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
         ${c.description ? `<div style="font-size:13px;color:#555;margin-bottom:5px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.description)}</div>` : ''}
         <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#888;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#aaa;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
           <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
         </div>
       </div>
-      <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:6px;flex-shrink:0;display:flex;align-items:center;color:#555;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
+      <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;margin-top:2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+      </div>
     </div>`;
   }).join('');
 }
 
-function _selectContractorCard(el, cId) {
-  // 이전 선택 해제
+function _toggleContractorCard(el, cId) {
+  const isSelected = el.dataset.selected === '1';
+  const UNCHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
+  const CHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--primary)" stroke="none"/><polyline points="8 12 11 15 16 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // 모든 카드 초기화
   document.querySelectorAll('#comp-suggest-list > div').forEach(d => {
-    d.style.borderColor = 'transparent';
+    d.dataset.selected = '0';
+    d.style.borderColor = '#eef0f6';
     d.style.background = '#f8f9fc';
+    const chk = d.querySelector('.ccard-check');
+    if (chk) chk.innerHTML = UNCHECKED_SVG;
   });
-  // 현재 선택
-  el.style.borderColor = 'var(--primary)';
-  el.style.background = '#eef1ff';
-  _selectedContractorObj = _contractors.find(c => (c.id||c.name) === cId);
   const btn = document.getElementById('comp-select-confirm-btn');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (!isSelected) {
+    el.dataset.selected = '1';
+    el.style.borderColor = 'var(--primary)';
+    el.style.background = '#eef1ff';
+    const chk = el.querySelector('.ccard-check');
+    if (chk) chk.innerHTML = CHECKED_SVG;
+    _selectedContractorObj = _contractors.find(c => (c.id||c.name) === cId);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  } else {
+    _selectedContractorObj = null;
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
+  }
 }
 
 function confirmContractorSelect() {
@@ -4715,49 +4738,48 @@ function _openContractorDetail(cId) {
   if (!c) return;
   _currentContractorDetail = c;
 
+  // 업체명
   document.getElementById('cdetail-name').textContent = c.name;
+
+  // 전화번호
+  const phoneRow = document.getElementById('cdetail-phone-row');
+  const phoneText = document.getElementById('cdetail-phone-text');
+  if (c.phone) {
+    phoneText.textContent = c.phone;
+    phoneRow.style.display = 'flex';
+  } else {
+    phoneRow.style.display = 'none';
+  }
 
   // 지역 + 카테고리
   const metaEl = document.getElementById('cdetail-meta');
   metaEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#888;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>`;
+  metaEl.style.display = (c.area || c.category) ? 'flex' : 'none';
 
   // 설명
   const descEl = document.getElementById('cdetail-desc');
   descEl.textContent = c.description || '';
   descEl.style.display = c.description ? 'block' : 'none';
 
-  // 사진 (photos 필드 있을 때만)
+  // 사진 최대 5장 (없으면 숨김)
   const photosEl = document.getElementById('cdetail-photos');
   const photosInner = document.getElementById('cdetail-photos-inner');
   if (c.photos && c.photos.length) {
-    photosInner.innerHTML = c.photos.map(url => `<img src="${esc(url)}" style="height:120px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="">`).join('');
+    const photos = c.photos.slice(0, 5);
+    photosInner.innerHTML = photos.map(url => `<img src="${esc(url)}" style="height:130px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="">`).join('');
     photosEl.style.display = 'block';
   } else {
     photosEl.style.display = 'none';
   }
 
-  // 더보기 버튼
-  const moreBtn = document.getElementById('cdetail-more-btn');
-  moreBtn.style.display = (c.phone || c.rating || c.website) ? 'block' : 'none';
-
-  // 문의하기 버튼
-  const smsBtn = document.getElementById('cdetail-sms-btn');
-  smsBtn.style.display = c.phone ? 'flex' : 'none';
-
-  // 선택하기 버튼 (업체 선택 탭에서 온 경우만)
-  const selectBtn = document.getElementById('cdetail-select-btn');
-  selectBtn.style.display = _contractorDetailFromSearch ? 'flex' : 'none';
-
-  // footer
+  // 하단 문의하기 버튼 (전화번호 있을 때만)
   const footer = document.getElementById('cdetail-footer');
-  const hasFooterBtn = c.phone || _contractorDetailFromSearch;
-  footer.style.display = hasFooterBtn ? 'flex' : 'none';
+  footer.style.display = c.phone ? 'block' : 'none';
 
   // 슬라이드업 스크린 표시
   const scr = document.getElementById('screen-contractor-detail');
   scr.style.transform = 'translateY(0)';
   scr.style.pointerEvents = 'all';
-  setTimeout(lucide.createIcons, 40);
 }
 
 function _closeContractorDetail() {
