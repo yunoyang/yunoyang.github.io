@@ -1187,17 +1187,20 @@ service cloud.firestore {
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="contractor-filter-btns">
           <button onclick="filterContractors('all',this)" class="c-filter-btn active" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff;border-color:var(--primary);">전체</button>
           <button onclick="filterContractors('철거',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">철거</button>
-          <button onclick="filterContractors('목공',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">목공</button>
-          <button onclick="filterContractors('타일',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">타일</button>
-          <button onclick="filterContractors('도배',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">도배</button>
-          <button onclick="filterContractors('전기',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">전기</button>
-          <button onclick="filterContractors('설비',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">설비</button>
           <button onclick="filterContractors('샷시',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">샷시</button>
+          <button onclick="filterContractors('목공',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">목공</button>
+          <button onclick="filterContractors('전기',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">전기</button>
+          <button onclick="filterContractors('타일',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">타일</button>
+          <button onclick="filterContractors('싱크',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">싱크</button>
           <button onclick="filterContractors('마루',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">마루</button>
-          <button onclick="filterContractors('페인트',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">페인트</button>
+          <button onclick="filterContractors('도배',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">도배</button>
+          <button onclick="filterContractors('필름',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">필름</button>
+          <button onclick="filterContractors('동의서 및 보양',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">동의서 및 보양</button>
           <button onclick="filterContractors('욕실',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">욕실</button>
           <button onclick="filterContractors('가구',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">가구</button>
+          <button onclick="filterContractors('설비',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">설비</button>
           <button onclick="filterContractors('청소',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">청소</button>
+          <button onclick="filterContractors('입주청소',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">입주청소</button>
           <button onclick="filterContractors('기타',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">기타</button>
         </div>
 
@@ -1216,17 +1219,21 @@ service cloud.firestore {
               <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">카테고리 *</label>
                 <select id="ct-category" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;">
                   <option value="철거">철거</option>
-                  <option value="목공">목공</option>
-                  <option value="타일">타일</option>
-                  <option value="도배">도배</option>
-                  <option value="전기">전기</option>
-                  <option value="설비">설비</option>
                   <option value="샷시">샷시</option>
+                  <option value="목공">목공</option>
+                  <option value="전기">전기</option>
+                  <option value="타일">타일</option>
+                  <option value="싱크">싱크</option>
                   <option value="마루">마루</option>
-                  <option value="페인트">페인트</option>
+                  <option value="도배">도배</option>
+                  <option value="필름">필름</option>
+                  <option value="동의서 및 보양">동의서 및 보양</option>
                   <option value="욕실">욕실</option>
                   <option value="가구">가구</option>
+                  <option value="설비">설비</option>
+                  <option value="페인트">페인트</option>
                   <option value="청소">청소</option>
+                  <option value="입주청소">입주청소</option>
                   <option value="기타" selected>기타</option>
                 </select></div>
               <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">지역</label>
