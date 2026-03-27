@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibespace Design Guide</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root {
+  --primary: #3176ff;
+  --primary-bg: rgba(49,118,255,0.08);
+  --bg: #f5f6fa;
+  --white: #fff;
+  --text: #1a1a1a;
+  --text-secondary: #444;
+  --text-muted: #888;
+  --border: #e4e9f2;
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+/* Layout */
+.page { max-width:960px; margin:0 auto; padding:48px 24px 100px; }
+.section { margin-bottom:64px; }
+.section-title {
+  font-size:13px; font-weight:700; color:var(--primary);
+  letter-spacing:.12em; text-transform:uppercase;
+  margin-bottom:24px; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.grid { display:grid; gap:16px; }
+.grid-2 { grid-template-columns:repeat(auto-fill, minmax(400px, 1fr)); }
+.grid-3 { grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); }
+
+/* Card */
+.card {
+  background:#fff; border-radius:16px; border:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.04); overflow:hidden;
+}
+.card-head { padding:18px 20px 14px; border-bottom:1px solid #f0f2f5; }
+.card-body { padding:20px; }
+.card-label {
+  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text-muted); margin-bottom:6px;
+}
+.card-desc { font-size:13px; color:#666; line-height:1.6; margin-top:8px; }
+
+/* Hero */
+.hero {
+  text-align:center; padding:56px 24px 48px;
+  background:linear-gradient(135deg,#eef3ff 0%,#f8f0ff 100%);
+  border-radius:20px; margin-bottom:56px; border:1px solid #e0e8ff;
+}
+.hero-logo { font-size:28px; font-weight:800; color:var(--primary); letter-spacing:-.5px; margin-bottom:8px; }
+.hero-sub { font-size:15px; color:#6b7fa8; font-weight:500; }
+.hero-badge {
+  display:inline-block; background:var(--primary); color:#fff;
+  font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px;
+  letter-spacing:.05em; margin-bottom:16px;
+}
+
+/* Typography samples */
+.type-row {
+  display:flex; align-items:baseline; gap:20px;
+  padding:14px 0; border-bottom:1px solid #f5f5f5;
+}
+.type-row:last-child { border-bottom:none; }
+.type-meta { flex-shrink:0; width:120px; }
+.type-name { font-size:12px; font-weight:700; color:var(--primary); }
+.type-spec { font-size:11px; color:#aaa; margin-top:2px; }
+.type-sample { flex:1; }
+.type-usage { font-size:11px; color:#aaa; margin-top:4px; }
+
+/* Color Swatches */
+.swatch-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
+.swatch { border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,0.06); }
+.swatch-color { height:64px; }
+.swatch-info { padding:10px 12px; background:#fff; }
+.swatch-name { font-size:12px; font-weight:700; color:#333; }
+.swatch-hex  { font-size:11px; color:#aaa; margin-top:2px; font-family:monospace; }
+
+/* Component Preview */
+.comp-preview {
+  background:#f8f9fc; border-radius:12px; padding:20px;
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+  border:1px solid #eef0f5; margin-bottom:12px;
+}
+.comp-spec { font-size:12px; color:#888; line-height:1.8; }
+.comp-spec code {
+  background:#f0f0f0; border-radius:4px; padding:1px 6px;
+  font-size:11px; color:#555; font-family:monospace;
+}
+
+/* Button samples */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:none; cursor:pointer; font-family:var(--font); transition:all .15s; }
+.btn-primary { background:var(--primary); color:#fff; border-radius:14px; padding:14px 28px; font-size:16px; font-weight:700; }
+.btn-cancel { background:#f0f2f5; color:#444; border-radius:14px; padding:14px 28px; font-size:16px; font-weight:600; }
+.btn-ghost { background:none; border:1.5px solid var(--border); color:#555; border-radius:10px; padding:9px 18px; font-size:14px; font-weight:600; }
+.btn-danger { background:#fff0f0; color:#e03535; border-radius:10px; padding:9px 18px; font-size:14px; font-weight:600; }
+.btn-sm { padding:7px 16px; font-size:13px; font-weight:600; border-radius:8px; background:var(--primary); color:#fff; }
+
+/* Field samples */
+.field-demo { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; width:100%; }
+.field-row { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid #f0f2f5; }
+.field-row:last-child { border-bottom:none; }
+.field-label { font-size:16px; font-weight:500; color:#888; }
+.field-value { font-size:16px; font-weight:700; color:#444; }
+.field-value.placeholder { color:#bbb; font-weight:400; }
+.field-value.primary { color:var(--primary); }
+
+/* Card sample */
+.work-card-demo {
+  background:#fff; border-radius:16px; border:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow:hidden;
+}
+.work-card-row-demo { display:flex; align-items:center; padding:18px 20px; gap:8px; }
+.work-card-title-demo { font-size:18px; font-weight:700; color:#1a1a1a; flex:1; }
+.work-card-cost-demo { font-size:16px; font-weight:700; color:var(--primary); }
+.work-card-body-demo { border-top:1px solid #f0f2f5; padding:4px 20px 16px; }
+
+/* Tab sample */
+.tab-demo { display:flex; border-bottom:1.5px solid #eef0f5; background:#fff; border-radius:12px 12px 0 0; overflow:hidden; }
+.tab-btn-demo { flex:1; padding:16px 0; font-size:16px; font-weight:500; color:#818590; border:none; background:none; font-family:var(--font); border-bottom:2.5px solid transparent; margin-bottom:-1.5px; cursor:pointer; }
+.tab-btn-demo.active { color:#222; font-weight:600; border-bottom-color:var(--primary); }
+
+/* Contractor card sample */
+.ccard-demo {
+  background:#f8f9fc; border-radius:12px; border:2px solid #eef0f6;
+  display:flex; align-items:stretch; overflow:hidden;
+}
+.ccard-left { flex:1; padding:14px 12px 14px 16px; display:flex; align-items:center; gap:10px; }
+.ccard-circle { width:22px; height:22px; border-radius:50%; border:2px solid #d0d5e0; flex-shrink:0; }
+.ccard-name { font-size:16px; font-weight:700; color:#222; }
+.ccard-desc { font-size:13px; color:#555; font-weight:500; margin-top:2px; }
+.ccard-area { font-size:13px; color:#888; font-weight:500; margin-top:3px; }
+.ccard-divider { width:1px; background:#eef0f6; flex-shrink:0; margin:10px 0; }
+.ccard-more { padding:0 16px; font-size:13px; font-weight:500; color:#888; background:none; border:none; font-family:var(--font); cursor:pointer; }
+
+/* Bottom sheet sample */
+.sheet-demo { background:#fff; border-radius:20px; border:1px solid var(--border); overflow:hidden; }
+.sheet-handle { width:40px; height:4px; background:#e0e0e0; border-radius:2px; margin:14px auto 8px; }
+.sheet-item { display:flex; align-items:center; gap:12px; padding:16px 20px; font-size:16px; font-weight:500; color:#333; border-bottom:1px solid #f2f2f2; }
+.sheet-item:last-child { border-bottom:none; }
+.sheet-item.danger { color:#e03535; }
+
+/* Dialog sample */
+.dialog-demo { background:#fff; border-radius:20px; border:1px solid var(--border); padding:24px; }
+.dialog-title { font-size:18px; font-weight:700; color:#1a1a1a; margin-bottom:8px; }
+.dialog-sub { font-size:13px; color:#888; margin-bottom:20px; }
+.dialog-input-demo { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; font-size:16px; font-family:var(--font); color:#222; outline:none; margin-bottom:12px; }
+.dialog-actions { display:flex; gap:10px; margin-top:4px; }
+.dialog-actions .btn { flex:1; }
+
+/* Summary sample */
+.summary-demo { background:#fff; border-radius:16px; border:1px solid var(--border); overflow:hidden; }
+.summary-toggle { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; cursor:pointer; }
+.summary-toggle-text { font-size:16px; font-weight:500; color:#333; }
+.summary-body { padding:0 18px 14px; }
+.summary-row { display:flex; align-items:center; justify-content:space-between; height:32px; }
+.summary-label { font-size:16px; font-weight:500; color:#888; }
+.summary-value { font-size:16px; font-weight:700; color:#333; }
+
+/* Spacing */
+.sp { height:12px; }
+.mt8 { margin-top:8px; }
+.mt16 { margin-top:16px; }
+
+/* Naming label */
+.name-tag {
+  display:inline-block; font-size:10px; font-weight:700;
+  background:#f0f0f0; color:#888; border-radius:4px;
+  padding:2px 7px; letter-spacing:.04em; margin-left:6px;
+  vertical-align:middle;
+}
+.name-tag.primary { background:var(--primary-bg); color:var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">Design Guide v1.0</div>
+    <div class="hero-logo">Vibespace</div>
+    <div class="hero-sub">Typography · Colors · Components · Naming</div>
+  </div>
+
+
+  <!-- ─── 01. TYPOGRAPHY ─── -->
+  <div class="section">
+    <div class="section-title">01 · Typography</div>
+    <div class="card">
+      <div class="card-body">
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">H1</div>
+            <div class="type-spec">20px · 700</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:20px;font-weight:700;color:#1a1a1a;">강남구 리모델링 2025</div>
+            <div class="type-usage">프로젝트명, 페이지 상단 주요 타이틀</div>
+          </div>
+        </div>
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">H2</div>
+            <div class="type-spec">18px · 700</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:18px;font-weight:700;color:#1a1a1a;">철거 공사</div>
+            <div class="type-usage">카드 시공명, 폼 헤더, 다이얼로그 타이틀, 시공 상세 스크린 타이틀</div>
+          </div>
+        </div>
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">Body-M</div>
+            <div class="type-spec">16px · 500</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:16px;font-weight:500;color:#888;">예상 일정 · 담당 업체</div>
+            <div class="type-usage">필드 라벨, 탭 텍스트, 토글 헤더, 바텀시트 타이틀, 요약 라벨</div>
+          </div>
+        </div>
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">Body-B</div>
+            <div class="type-spec">16px · 700</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:16px;font-weight:700;color:#444;">2025.03.10 ~ 2025.03.20</div>
+            <div class="type-usage">필드 값(filled), 예상 견적 금액, 상세내역 항목명·금액, 업체 선택 카드 업체명</div>
+          </div>
+        </div>
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">Caption-B</div>
+            <div class="type-spec">14px · 600</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:14px;font-weight:600;color:#555;">상세보기 →</div>
+            <div class="type-usage">링크성 버튼, 액션 텍스트, 메뉴 아이템</div>
+          </div>
+        </div>
+
+        <div class="type-row">
+          <div class="type-meta">
+            <div class="type-name">Caption-M</div>
+            <div class="type-spec">13px · 500</div>
+          </div>
+          <div class="type-sample">
+            <div style="font-size:13px;font-weight:500;color:#888;">서울 강남 · 타일 전문</div>
+            <div class="type-usage">업체 카드 description·지역·카테고리, 더보기 버튼, 보조 안내 텍스트</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── 02. COLOR ─── -->
+  <div class="section">
+    <div class="section-title">02 · Color Tokens</div>
+    <div class="swatch-grid">
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#3176ff;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Primary</div>
+          <div class="swatch-hex">--primary · #3176FF</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:rgba(49,118,255,0.08);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Primary BG</div>
+          <div class="swatch-hex">--primary-bg · #3176FF 08%</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1a1a1a;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Primary</div>
+          <div class="swatch-hex">--text-primary · #111</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#444;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Secondary</div>
+          <div class="swatch-hex">--text-secondary · #444</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#888;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Muted</div>
+          <div class="swatch-hex">--text-muted · #888</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#bbb;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Placeholder</div>
+          <div class="swatch-hex">--text-placeholder · #BBB</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f8f9fc;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background</div>
+          <div class="swatch-hex">--bg · #F8F9FC</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e4e9f2;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Card Border</div>
+          <div class="swatch-hex">--card-border · #E4E9F2</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f0f2f5;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Divider</div>
+          <div class="swatch-hex">--divider · #F0F2F5</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ff3b30;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Danger</div>
+          <div class="swatch-hex">--danger · #FF3B30</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#818590;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Tab Inactive</div>
+          <div class="swatch-hex">#818590</div>
+        </div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#555555;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Caption Color</div>
+          <div class="swatch-hex">#555555</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ─── 03. COMPONENTS ─── -->
+  <div class="section">
+    <div class="section-title">03 · Components</div>
+    <div class="grid grid-2">
+
+
+      <!-- 공정 카드 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Work Card <span class="name-tag primary">.work-card</span></div>
+          공정 계획 카드 — 접기/펼기 구조
+        </div>
+        <div class="card-body">
+          <div class="work-card-demo">
+            <!-- 접힌 상태 -->
+            <div class="work-card-row-demo">
+              <div class="work-card-title-demo">철거 공사</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="work-card-cost-demo">850,000원</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <!-- 펼친 상태 (항상 노출) -->
+            <div class="work-card-body-demo">
+              <div class="field-row" style="padding:10px 0;">
+                <span class="field-label">예상 견적</span>
+                <span class="field-value primary">850,000원</span>
+              </div>
+              <div style="height:1px;background:#f0f2f5;"></div>
+              <div class="field-row" style="padding:10px 0;">
+                <span class="field-label">예상 일정</span>
+                <span class="field-value">03.10 ~ 03.12</span>
+              </div>
+              <div style="height:1px;background:#f0f2f5;"></div>
+              <div class="field-row" style="padding:10px 0;">
+                <span class="field-label">담당 업체</span>
+                <span class="field-value">다일공사</span>
+              </div>
+              <div style="height:1px;background:#f0f2f5;"></div>
+              <div style="font-size:16px;font-weight:500;color:#888;padding:10px 0 4px;">상세내역</div>
+              <div style="font-size:16px;font-weight:700;color:#444;padding:4px 0;">바닥 철거 <span style="float:right;color:#444;">300,000원</span></div>
+              <div style="height:1px;background:#f5f5fb;margin:12px 0 4px;"></div>
+              <div style="text-align:right;padding:4px 0;">
+                <span style="font-size:14px;font-weight:600;color:#555;">상세보기 ›</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-desc">
+            <strong>접힌 상태</strong>: 시공명 + 총 금액(Primary) + 펼치기 화살표<br>
+            <strong>펼친 상태</strong>: 예상견적·일정·업체·상세내역 (READ-ONLY) + 상세보기 버튼<br>
+            시공명 클릭 → 펼치기/접기 토글 · 상세보기 클릭 → 시공 상세 스크린
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 필드 영역 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Form Field <span class="name-tag primary">.work-field</span></div>
+          라벨 + 값 구조의 기본 입력 필드
+        </div>
+        <div class="card-body">
+          <div class="field-demo">
+            <div class="field-row">
+              <span class="field-label">예상 일정 <span class="name-tag">.f-label</span></span>
+              <span class="field-value">2025.03.10</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">담당 업체</span>
+              <span class="field-value placeholder">업체 미설정</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">예상 견적</span>
+              <span class="field-value primary">850,000원 <span class="name-tag primary">.readonly</span></span>
+            </div>
+          </div>
+          <div class="card-desc">
+            <code>.f-label</code> 16px/500 · #888 — 라벨<br>
+            <code>.f-value</code> 16px/700 · #bbb(빈값) / #444(filled)<br>
+            <code>.f-value.primary</code> 16px/700 · Primary (견적 등 읽기전용)<br>
+            <code>.field-divider</code> 1px · #F0F2F5 — 구분선
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 탭 바 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Tab Bar <span class="name-tag primary">.tab-section</span></div>
+          화면 상단 탭 네비게이션
+        </div>
+        <div class="card-body">
+          <div class="tab-demo">
+            <button class="tab-btn-demo active">공정 계획</button>
+            <button class="tab-btn-demo">일정 캘린더</button>
+            <button class="tab-btn-demo">시공팁</button>
+          </div>
+          <div class="card-desc mt8">
+            비활성: 16px/500 · #818590<br>
+            활성: 16px/600 · #222 + Primary 하단 border 2.5px<br>
+            높이 58px · 하단 구분선 1.5px #EEF0F5
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 업체 선택 카드 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Contractor Card <span class="name-tag primary">#ccard-{id}</span></div>
+          업체 선택 리스트 카드
+        </div>
+        <div class="card-body">
+          <div class="ccard-demo">
+            <div class="ccard-left">
+              <div class="ccard-circle"></div>
+              <div>
+                <div class="ccard-name">다일공사 <span class="name-tag">16px/700</span></div>
+                <div class="ccard-desc">타일 전문 시공업체 <span class="name-tag">13px/500</span></div>
+                <div class="ccard-area">📍 서울 강남 · 타일 <span class="name-tag">13px/500</span></div>
+              </div>
+            </div>
+            <div class="ccard-divider"></div>
+            <div class="ccard-more">더보기 › <span class="name-tag">13px/500</span></div>
+          </div>
+          <div class="card-desc">
+            좌측: 라디오 체크 + 업체명(16/700) + desc(13/500) + 지역·카테고리(13/500)<br>
+            우측: 더보기 버튼(13/500) — stopPropagation으로 선택과 분리<br>
+            선택 시 border Primary, 배경 #EEF1FF, 체크 Primary fill
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 버튼 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Buttons <span class="name-tag primary">.btn-*</span></div>
+          액션 버튼 시스템
+        </div>
+        <div class="card-body">
+          <div class="comp-preview">
+            <button class="btn btn-primary">선택완료</button>
+            <button class="btn btn-cancel">취소</button>
+            <button class="btn btn-ghost">더보기</button>
+            <button class="btn btn-danger">삭제</button>
+            <button class="btn btn-sm">추가</button>
+          </div>
+          <div class="comp-spec">
+            <code>.btn-primary</code> Primary bg · 16px/700 · 흰색 · radius 14px · pad 14px 28px<br>
+            <code>.btn-cancel</code> #F0F2F5 bg · 16px/600 · #444 · radius 14px<br>
+            <code>.btn-ghost</code> 테두리 · 14px/600 · #555 · radius 10px<br>
+            <code>.btn-danger</code> #FFF0F0 bg · 14px/600 · #E03535 · radius 10px<br>
+            다이얼로그 바텀버튼: 5:5 flex 비율 (<code>.dialog-actions.split</code>)
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 요약 카드 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Summary Card <span class="name-tag primary">.summary-unified</span></div>
+          공사 한눈에 보기 토글 카드
+        </div>
+        <div class="card-body">
+          <div class="summary-demo">
+            <div class="summary-toggle">
+              <span class="summary-toggle-text">공사 한눈에 보기 <span class="name-tag">16px/500</span></span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="summary-body">
+              <div class="summary-row">
+                <span class="summary-label">예상 총비용</span>
+                <span class="summary-value">3,200,000원</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">전체 공사기간</span>
+                <span class="summary-value">14일</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-desc mt8">
+            토글 헤더: 16px/500 · 화살표 회전 애니메이션<br>
+            라벨: 16px/500 · #888 &nbsp;|&nbsp; 값: 16px/700 · #333
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 바텀시트 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Bottom Sheet <span class="name-tag primary">.overlay (sheet)</span></div>
+          액션 선택용 바텀시트
+        </div>
+        <div class="card-body">
+          <div class="sheet-demo">
+            <div class="sheet-handle"></div>
+            <div class="sheet-item">✏️ 수정하기</div>
+            <div class="sheet-item danger">🗑 삭제하기</div>
+          </div>
+          <div class="card-desc mt8">
+            핸들: 40×4px · #E0E0E0 · 상단 14px 마진<br>
+            아이템: 16px/500 · 패딩 16px 20px · 구분선 #F2F2F2<br>
+            Danger: #E03535 · 딤 영역 클릭으로 닫기
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 다이얼로그 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Dialog <span class="name-tag primary">.dialog</span></div>
+          확인·입력용 팝업 다이얼로그
+        </div>
+        <div class="card-body">
+          <div class="dialog-demo">
+            <div class="dialog-title">상세내역 추가 <span class="name-tag">H2 · 18px/700</span></div>
+            <div class="dialog-sub">작업내용과 금액을 입력하세요</div>
+            <input class="dialog-input-demo" placeholder="작업내용 (예: 바닥철거)">
+            <input class="dialog-input-demo" placeholder="금액">
+            <div class="dialog-actions">
+              <button class="btn btn-cancel" style="flex:1;">취소</button>
+              <button class="btn btn-primary" style="flex:1;">확인</button>
+            </div>
+          </div>
+          <div class="card-desc mt8">
+            타이틀: H2 18px/700 · 인풋: 16px border radius 10px<br>
+            바텀버튼: 5:5 flex 비율 (<code>split</code>)
+          </div>
+        </div>
+      </div>
+
+
+    </div><!-- /grid -->
+  </div>
+
+
+  <!-- ─── 04. SCREEN HIERARCHY ─── -->
+  <div class="section">
+    <div class="section-title">04 · Screen & Z-index Hierarchy</div>
+    <div class="card">
+      <div class="card-body">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#f8f9fc;">
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">레이어</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">Z-index</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">역할</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">열기/닫기</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f5f5f5;">
+              <td style="padding:10px 14px;font-weight:600;">Main Screens</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">2</td>
+              <td style="padding:10px 14px;color:#555;">.screen.active — 탭 화면들</td>
+              <td style="padding:10px 14px;color:#888;">showScreen()</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f5f5f5;">
+              <td style="padding:10px 14px;font-weight:600;">Form Screens</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">100</td>
+              <td style="padding:10px 14px;color:#555;">공사정보 입력 등 풀스크린 폼</td>
+              <td style="padding:10px 14px;color:#888;">position:fixed, translateX</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f5f5f5;">
+              <td style="padding:10px 14px;font-weight:600;">Proc Detail Screen</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">8,500</td>
+              <td style="padding:10px 14px;color:#555;">#screen-proc-detail — 시공 상세</td>
+              <td style="padding:10px 14px;color:#888;">openProcDetailScreen()</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f5f5f5;">
+              <td style="padding:10px 14px;font-weight:600;">Overlays / Dialogs</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">9,000</td>
+              <td style="padding:10px 14px;color:#555;">.overlay — 다이얼로그, 바텀시트</td>
+              <td style="padding:10px 14px;color:#888;">openDialog() / closeDialog()</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f5f5f5;">
+              <td style="padding:10px 14px;font-weight:600;">Contractor Detail</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">9,500</td>
+              <td style="padding:10px 14px;color:#555;">#screen-contractor-detail</td>
+              <td style="padding:10px 14px;color:#888;">_openContractorDetail()</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;">Delete Sheet</td>
+              <td style="padding:10px 14px;color:var(--primary);font-weight:700;">9,600</td>
+              <td style="padding:10px 14px;color:#555;">#dlg-proc-del-sheet</td>
+              <td style="padding:10px 14px;color:#888;">_openProcDetailDeleteMenu()</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── 05. NAMING MAP ─── -->
+  <div class="section">
+    <div class="section-title">05 · UI Naming Map</div>
+    <div class="grid grid-2">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">공정 계획 탭 영역</div>
+        </div>
+        <div class="card-body" style="font-size:13px;line-height:2;color:#444;">
+          <b>Header</b> — .header<br>
+          <b>프로젝트명</b> — .project-badge .name (H1)<br>
+          <b>프로젝트 드롭다운</b> — .project-dropdown<br>
+          <b>공사 한눈에 보기</b> — .summary-unified<br>
+          <b>탭 바</b> — .tab-section<br>
+          <b>공정 카드 목록</b> — .cards-area<br>
+          <b>공정 카드</b> — .work-card[data-proc-id]<br>
+          <b>카드 헤더 행</b> — .work-card-row<br>
+          <b>시공명 영역</b> — .work-card-name-area<br>
+          <b>시공명 텍스트</b> — .work-card-title (H2)<br>
+          <b>헤더 우측 금액</b> — .work-card-cost-sm<br>
+          <b>펼치기 버튼</b> — .work-card-fold-btn<br>
+          <b>카드 바디</b> — .work-card-body<br>
+          <b>상세보기 버튼</b> — .proc-detail-link
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">시공 상세 스크린</div>
+        </div>
+        <div class="card-body" style="font-size:13px;line-height:2;color:#444;">
+          <b>상세 스크린</b> — #screen-proc-detail<br>
+          <b>스크린 타이틀</b> — #proc-detail-screen-title (H2)<br>
+          <b>삭제 메뉴 버튼</b> — .card-more-btn (···)<br>
+          <b>탭 바</b> — #ptab-btn-info / #ptab-btn-tip<br>
+          <b>시공 상세내역 탭</b> — #ptab-info<br>
+          <b>시공팁 탭</b> — #ptab-tip<br>
+          <b>삭제 바텀시트</b> — #dlg-proc-del-sheet<br>
+          <b>필드 행</b> — .work-field<br>
+          <b>필드 라벨</b> — .f-label (Body-M)<br>
+          <b>필드 값</b> — .f-value / .f-value.filled (Body-B)<br>
+          <b>상세내역 헤더</b> — .detail-header<br>
+          <b>상세내역 항목</b> — .detail-item<br>
+          <b>항목 설명</b> — .d-desc (Body-B)<br>
+          <b>항목 금액</b> — .d-cost (Body-B)
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">업체 입력 다이얼로그</div>
+        </div>
+        <div class="card-body" style="font-size:13px;line-height:2;color:#444;">
+          <b>업체 입력 다이얼로그</b> — #dlg-company<br>
+          <b>탭: 직접입력</b> — #ctab-btn-manual<br>
+          <b>탭: 업체선택</b> — #ctab-btn-suggest<br>
+          <b>업체 선택 리스트</b> — #comp-suggest-list<br>
+          <b>업체 카드</b> — #ccard-{id}<br>
+          <b>업체 라디오 체크</b> — .ccard-check<br>
+          <b>업체명</b> — inline div 16px/700<br>
+          <b>업체 설명</b> — inline div 13px/500<br>
+          <b>지역·카테고리</b> — inline span 13px/500<br>
+          <b>더보기 버튼</b> — inline button 13px/500<br>
+          <b>선택완료 버튼</b> — #comp-select-confirm-btn<br>
+          <b>업체 상세 스크린</b> — #screen-contractor-detail<br>
+          <b>업체 상세 타이틀</b> — #cdetail-name (H2)
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">다이얼로그 / 공통</div>
+        </div>
+        <div class="card-body" style="font-size:13px;line-height:2;color:#444;">
+          <b>공정 추가</b> — #dlg-add-process<br>
+          <b>일정 설정</b> — #dlg-schedule<br>
+          <b>상세내역 추가</b> — #dlg-add-detail<br>
+          <b>상세내역 수정</b> — #dlg-edit-detail<br>
+          <b>피드백</b> — #dlg-feedback<br>
+          <b>다이얼로그 타이틀</b> — .dialog h3 (H2 18px/700)<br>
+          <b>다이얼로그 인풋</b> — .dialog-input<br>
+          <b>바텀버튼 영역</b> — .dialog-actions.split (5:5)<br>
+          <b>확인 버튼</b> — .btn-primary<br>
+          <b>취소 버튼</b> — .btn-cancel<br>
+          <b>플로팅 추가 버튼</b> — .floating-btn<br>
+          <b>자동저장 토스트</b> — #autosave-toast<br>
+          <b>폼 헤더</b> — .form-header (.form-header h2 = H2)
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ─── 06. SPACING & RADIUS ─── -->
+  <div class="section">
+    <div class="section-title">06 · Spacing & Radius</div>
+    <div class="card">
+      <div class="card-body">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#f8f9fc;">
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">항목</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">값</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #eef0f5;">적용 위치</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">radius-xl</td><td style="padding:10px 14px;color:var(--primary);">20px</td><td style="padding:10px 14px;color:#555;">바텀시트, 다이얼로그</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">radius-lg</td><td style="padding:10px 14px;color:var(--primary);">16px</td><td style="padding:10px 14px;color:#555;">카드, 요약 카드, 인풋</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">radius-md</td><td style="padding:10px 14px;color:var(--primary);">14px</td><td style="padding:10px 14px;color:#555;">메인 버튼 (btn-primary)</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">radius-sm</td><td style="padding:10px 14px;color:var(--primary);">10~12px</td><td style="padding:10px 14px;color:#555;">업체 카드, 고스트 버튼, 인풋</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">field-padding</td><td style="padding:10px 14px;color:var(--primary);">13px 0</td><td style="padding:10px 14px;color:#555;">.work-field 위아래</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">card-padding</td><td style="padding:10px 14px;color:var(--primary);">18px 20px</td><td style="padding:10px 14px;color:#555;">.work-card-row</td></tr>
+            <tr style="border-bottom:1px solid #f5f5f5;"><td style="padding:10px 14px;font-weight:600;">screen-pad-h</td><td style="padding:10px 14px;color:var(--primary);">20px</td><td style="padding:10px 14px;color:#555;">화면 좌우 패딩</td></tr>
+            <tr><td style="padding:10px 14px;font-weight:600;">cards-gap</td><td style="padding:10px 14px;color:var(--primary);">8px</td><td style="padding:10px 14px;color:#555;">.cards-area gap</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <div style="text-align:center;padding-top:32px;font-size:12px;color:#bbb;">
+    Vibespace Design Guide · Updated 2026-03-27 · vibespacekorea.com
+  </div>
+
+</div>
+</body>
+</html>
