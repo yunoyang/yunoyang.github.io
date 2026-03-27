@@ -316,10 +316,34 @@ button, input, textarea, select { font-family:var(--font); }
   gap:16px;
 }
 .work-card {
-  background:#fff; border-radius:16px; padding:24px;
+  background:#fff; border-radius:16px;
   border:1px solid var(--card-border); box-shadow:var(--card-shadow);
-  will-change:transform;
+  will-change:transform; overflow:hidden;
 }
+.work-card-row {
+  display:flex; align-items:center; padding:18px 20px; gap:8px; min-height:60px;
+}
+.work-card-name-area {
+  display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer;
+}
+.work-card-name-area:active { opacity:.7; }
+.work-card-nav-chev { width:16px; height:16px; color:#aaa; flex-shrink:0; }
+.work-card-fold-area {
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.work-card-cost-sm { font-size:15px; font-weight:700; color:var(--primary); }
+.work-card-fold-btn {
+  background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:#bbb;
+}
+.work-card-fold-chev { width:18px; height:18px; transition:transform .2s; }
+.work-card.expanded .work-card-fold-chev { transform:rotate(180deg); }
+.work-card-body { display:none; border-top:1px solid #f0f2f5; padding:4px 20px 16px; }
+.work-card.expanded .work-card-body { display:block; }
+.work-card-body .work-field { pointer-events:none; }
+.work-card-body .f-value { cursor:default !important; }
+.work-card-body .detail-add-btn { display:none; }
+.work-card-body .detail-item { pointer-events:none; }
+.work-card-body .d-chev { display:none; }
 @keyframes menuSlideDown {
   from { opacity:0; transform:translateY(-10px) scale(0.97); }
   to   { opacity:1; transform:translateY(0) scale(1); }
@@ -530,6 +554,7 @@ button, input, textarea, select { font-family:var(--font); }
 .d-cost { font-size:15px; font-weight:500; white-space:nowrap; }
 .d-chev { color:#d0d5e0; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
+.proc-detail-link { display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:12px 0 0; font-size:14px; font-weight:600; color:var(--primary); cursor:pointer; background:none; border:none; font-family:var(--font); }
 /* 상세내역 다이얼로그 날짜 영역 */
 .detail-date-section { margin-top:4px; }
 .detail-date-label { font-size:12px; color:#888; margin-bottom:5px; }
@@ -1797,6 +1822,33 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- ===== 시공 상세 스크린 ===== -->
+<div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+  <div class="form-header" style="background:#fff;flex-shrink:0;">
+    <button class="back-btn" onclick="_closeProcDetailScreen()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h2 id="proc-detail-screen-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;"></h2>
+    <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
+  </div>
+  <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:44px;">
+    <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);">시공 상세 내역</button>
+    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);">시공팁</button>
+  </div>
+  <div id="ptab-info" class="screen-scroll" style="flex:1;padding-top:12px;"></div>
+  <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;"></div>
+</div>
+<!-- ===== 시공 삭제 바텀시트 ===== -->
+<div class="overlay" id="dlg-proc-del-sheet" onclick="if(event.target===this)closeDialog('dlg-proc-del-sheet')" style="z-index:9600;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 8px;"></div>
+    <button onclick="_deleteProcFromDetail()" style="width:100%;background:none;border:none;padding:16px 24px;text-align:left;font-size:16px;font-weight:500;color:#e03535;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:12px;border-bottom:1px solid #f5f5f5;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      삭제하기
+    </button>
+    <button onclick="closeDialog('dlg-proc-del-sheet')" style="width:100%;background:none;border:none;padding:16px 24px;text-align:center;font-size:15px;color:#999;cursor:pointer;font-family:var(--font);">취소</button>
+  </div>
+</div>
 </div><!-- /.app -->
 
 <!-- Toast -->
@@ -1824,7 +1876,8 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="dlg-add-detail">
   <div class="dialog">
     <h3>상세내역 추가</h3>
-    <input class="dialog-input" id="detail-desc" placeholder="작업 내용 (예: 욕실 철거, 방수)">
+    <input class="dialog-input" id="detail-desc" placeholder="작업내용 (예: 바닥철거)">
+    <input class="dialog-input" id="detail-subdesc" placeholder="상세내용 (예: 폴리싱, 포세린타일)" style="margin-top:0;">
     <input class="dialog-input" id="detail-cost" type="number" placeholder="비용 (원)">
     <div class="detail-date-section">
       <div class="detail-date-label">날짜 <span style="color:#bbb;font-size:11px;">(선택)</span></div>
@@ -1842,7 +1895,8 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="dlg-edit-detail">
   <div class="dialog">
     <h3>상세내역 수정</h3>
-    <input class="dialog-input" id="edit-detail-desc" placeholder="작업 내용">
+    <input class="dialog-input" id="edit-detail-desc" placeholder="작업내용">
+    <input class="dialog-input" id="edit-detail-subdesc" placeholder="상세내용 (예: 폴리싱, 포세린타일)" style="margin-top:0;">
     <input class="dialog-input" id="edit-detail-cost" type="number" placeholder="비용 (원)">
     <div class="detail-date-section">
       <div class="detail-date-label">날짜 <span style="color:#bbb;font-size:11px;">(선택)</span></div>
@@ -2889,14 +2943,16 @@ function switchMainTab(tab, btn) {
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
-      const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>new Date(p.scheduleStart+'T00:00:00'));
-      if (starts.length) {
-        const minD = new Date(Math.min(...starts));
-        calMonth = { year: minD.getFullYear(), month: minD.getMonth() };
+      // 1순위: 공사정보 시작일, 2순위: 개별 공정 최소 시작일, 3순위: 오늘
+      let defaultD = null;
+      if (proj.form?.startDate) {
+        defaultD = new Date(proj.form.startDate + 'T00:00:00');
       } else {
-        const now = new Date();
-        calMonth = { year: now.getFullYear(), month: now.getMonth() };
+        const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>new Date(p.scheduleStart+'T00:00:00'));
+        if (starts.length) defaultD = new Date(Math.min(...starts));
       }
+      if (!defaultD || isNaN(defaultD)) defaultD = new Date();
+      calMonth = { year: defaultD.getFullYear(), month: defaultD.getMonth() };
     }
     renderCalendar();
   }
@@ -3497,25 +3553,29 @@ function _renderContractorSelectList(procType) {
   list.innerHTML = direct.map(c => {
     const cId = c.id || c.name;
     return `
-    <div id="ccard-${esc(cId)}" onclick="_toggleContractorCard(this,'${esc(cId)}')"
-      data-selected="0"
-      style="padding:16px;background:#f8f9fc;border-radius:12px;cursor:pointer;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:flex-start;gap:8px;">
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:1px;margin-bottom:${c.description ? 4 : 6}px;">
-          <span style="font-size:16px;font-weight:700;color:#222;">${esc(c.name)}</span>
-          <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:2px 4px;display:inline-flex;align-items:center;color:#aaa;flex-shrink:0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+    <div id="ccard-${esc(cId)}" data-selected="0"
+      style="background:#f8f9fc;border-radius:12px;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:stretch;overflow:hidden;">
+      <!-- 좌: 선택 영역 -->
+      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:16px 12px 16px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+        <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
         </div>
-        ${c.description ? `<div style="font-size:13px;color:#555;margin-bottom:5px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.description)}</div>` : ''}
-        <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#aaa;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description?3:0}px;">${esc(c.name)}</div>
+          ${c.description ? `<div style="font-size:13px;color:#555;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.description)}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#888;margin-top:3px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
+          </div>
         </div>
       </div>
-      <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;margin-top:2px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-      </div>
+      <!-- 세로선 -->
+      <div style="width:1px;background:#eef0f6;flex-shrink:0;margin:10px 0;"></div>
+      <!-- 우: 더보기 버튼 -->
+      <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:#888;flex-shrink:0;font-family:var(--font);">
+        더보기
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>`;
   }).join('');
 }
@@ -3641,6 +3701,7 @@ function saveCompanyManual() {
   }
   closeDialog('dlg-company-search');
   clearCompanyManual();
+  _refreshProcDetailIfOpen();
 }
 
 function clearCompanyManual() {
@@ -3679,61 +3740,50 @@ function renderWorkCards() {
   container.innerHTML = sorted.map(p => {
     const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
     const schedDisplay = (p.scheduleStart && p.scheduleEnd)
-      ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd)
-      : '일정 선택';
+      ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 미설정';
+    const compDisplay = p.companyData?.name || p.company || '업체 미설정';
+    const isExpanded = _expandedCards.has(p.id);
     return `
-    <div class="work-card" data-proc-id="${p.id}">
-      <div class="work-card-header" style="position:relative;">
-        <span class="work-card-title">${esc(p.name)}</span>
-        <button class="card-more-btn" onclick="toggleCardMenu(event,'${p.id}','${esc(p.type||p.name)}')">···</button>
+    <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
+      <div class="work-card-row">
+        <div class="work-card-name-area" onclick="openProcDetailScreen('${p.id}')">
+          <span class="work-card-title" style="font-size:17px;font-weight:700;color:#1a1a1a;">${esc(p.name)}</span>
+          <svg class="work-card-nav-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="work-card-fold-area">
+          ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
+          <button class="work-card-fold-btn" onclick="event.stopPropagation();toggleCardExpand('${p.id}')">
+            <svg class="work-card-fold-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="work-field">
-        <span class="f-label">예상견적</span>
-        <span class="f-value ${totalCost>0?'readonly':''}">
-          ${totalCost>0 ? totalCost.toLocaleString()+'원' : '내역 입력 시 자동계산'}
-        </span>
+      <div class="work-card-body">
+        <div class="work-field" style="padding:8px 0;">
+          <span class="f-label">예상 일정</span>
+          <span class="f-value${p.scheduleStart ? ' filled' : ''}" style="font-size:14px;">${esc(schedDisplay)}</span>
+        </div>
+        <div class="field-divider"></div>
+        <div class="work-field" style="padding:8px 0;">
+          <span class="f-label">담당 업체</span>
+          <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}" style="font-size:14px;">${esc(compDisplay)}</span>
+        </div>
+        ${p.details.length ? `<div class="field-divider"></div>
+        <div class="detail-header" style="padding:8px 0 4px;">
+          <span class="d-label">상세내역</span>
+        </div>
+        <div class="details-list">
+          ${p.details.slice(0,3).map(d => `
+          <div class="detail-item" style="padding:5px 0;">
+            <div class="d-left">
+              <span class="d-desc" style="font-size:14px;">${esc(d.desc)}</span>
+              ${d.subDesc ? `<span style="font-size:12px;color:#aaa;">${esc(d.subDesc)}</span>` : ''}
+            </div>
+            <div class="d-right">
+              <span class="d-cost" style="font-size:14px;">${(d.cost||0).toLocaleString()}원</span>
+            </div>
+          </div>`).join('')}
+        </div>` : ''}
       </div>
-      <div class="field-divider"></div>
-      <div class="work-field">
-        <span class="f-label">예상 일정</span>
-        <span class="f-value ${p.scheduleStart?'filled':''}" onclick="openScheduleDialog('${p.id}')">
-          ${esc(schedDisplay)}
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333333"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </span>
-      </div>
-      <div class="field-divider"></div>
-      <div class="work-field">
-        <span class="f-label">담당 업체</span>
-        <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
-          ${p.companyData ? `<div class="f-company-selected">
-            <span class="f-company-name">${esc(p.companyData.name)}</span>
-          </div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
-          ${(p.companyData || p.company)
-            ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>`
-            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
-          }
-        </span>
-      </div>
-      <div class="field-divider"></div>
-      <div class="detail-header">
-        <span class="d-label">상세내역</span>
-        <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-      </div>
-      ${p.details.length ? `<div class="details-list${p.details.length >= 3 ? ' scrollable' : ''}">` : ''}
-      ${p.details.length ? p.details.map(d => `
-        <div class="detail-item" onclick="openEditDetail('${p.id}','${d.id}')">
-          <div class="d-left">
-            <span class="d-desc">${esc(d.desc)}</span>
-            ${d.date ? `<span class="d-date">${formatDetailDate(d.date)}</span>` : ''}
-          </div>
-          <div class="d-right">
-            <span class="d-cost">${(d.cost||0).toLocaleString()}원</span>
-            <svg class="d-chev" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
-        </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
-      ${p.details.length ? '</div>' : ''}
     </div>`;
   }).join('');
 
@@ -3781,6 +3831,7 @@ function deleteProcess(procId) {
   const before = proj.processes.length;
   proj.processes = proj.processes.filter(p => p.id !== procId);
   if (proj.processes.length === before) { console.warn('deleteProcess: procId not found', procId); return; }
+  _closeProcDetailScreen();
   save(); renderAll();
 }
 function deleteDetail(procId, detailId) {
@@ -3893,6 +3944,131 @@ function _selectCompany(idx) {
   proc.companyData = { name:item.name, phone:item.phone, address:item.address, url:item.url, source:item.source, placeId:item.placeId };
   save(); renderAll();
   closeDialog('dlg-company-search');
+}
+
+// ===== 시공 상세 슬라이드업 스크린 =====
+let _currentProcDetailId = null;
+function openProcDetailScreen(procId) {
+  _currentProcDetailId = procId;
+  _renderProcDetailContent(procId);
+  const scr = document.getElementById('screen-proc-detail');
+  scr.style.transform = 'translateY(0)';
+  scr.style.pointerEvents = 'all';
+  switchProcDetailTab('info', document.getElementById('ptab-btn-info'));
+}
+function _closeProcDetailScreen() {
+  const scr = document.getElementById('screen-proc-detail');
+  scr.style.transform = 'translateY(100%)';
+  scr.style.pointerEvents = 'none';
+}
+function switchProcDetailTab(tab, btn) {
+  document.getElementById('ptab-info').style.display = tab === 'info' ? '' : 'none';
+  document.getElementById('ptab-tip').style.display  = tab === 'tip'  ? '' : 'none';
+  ['ptab-btn-info','ptab-btn-tip'].forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.style.borderBottomColor = 'transparent';
+    b.style.color = '#818590'; b.style.fontWeight = '500';
+  });
+  const activeId = tab === 'info' ? 'ptab-btn-info' : 'ptab-btn-tip';
+  const a = document.getElementById(activeId);
+  if (a) { a.style.borderBottomColor = 'var(--primary)'; a.style.color = '#222'; a.style.fontWeight = '600'; }
+}
+function _renderProcDetailContent(procId) {
+  const proj = getProject();
+  const p = proj?.processes.find(x => x.id === procId);
+  if (!p) return;
+  document.getElementById('proc-detail-screen-title').textContent = p.name;
+  const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
+  const schedDisplay = (p.scheduleStart && p.scheduleEnd)
+    ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
+  document.getElementById('ptab-info').innerHTML = `
+    <div style="background:#fff;padding:20px 20px 8px;">
+      <div class="work-field">
+        <span class="f-label">예상견적</span>
+        <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="work-field">
+        <span class="f-label">예상 일정</span>
+        <span class="f-value ${p.scheduleStart?'filled':''}" onclick="openScheduleDialog('${p.id}')" style="cursor:pointer;">
+          ${esc(schedDisplay)}
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="work-field">
+        <span class="f-label">담당 업체</span>
+        <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
+          ${p.companyData ? `<div class="f-company-selected"><span class="f-company-name">${esc(p.companyData.name)}</span></div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
+          ${(p.companyData||p.company) ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
+        </span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="detail-header">
+        <span class="d-label">상세내역</span>
+        <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      ${p.details.length ? '<div class="details-list">' : ''}
+      ${p.details.length ? p.details.map(d => `
+        <div class="detail-item" onclick="openEditDetail('${p.id}','${d.id}')">
+          <div class="d-left">
+            <span class="d-desc">${esc(d.desc)}</span>
+            ${d.subDesc ? `<span style="font-size:12px;color:#aaa;margin-top:1px;">${esc(d.subDesc)}</span>` : ''}
+            ${d.date ? `<span class="d-date">${formatDetailDate(d.date)}</span>` : ''}
+          </div>
+          <div class="d-right">
+            <span class="d-cost">${(d.cost||0).toLocaleString()}원</span>
+            <svg class="d-chev" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
+      ${p.details.length ? '</div>' : ''}
+    </div>`;
+  const tipHtml = _buildProcTipHtml(p.type || p.name);
+  document.getElementById('ptab-tip').innerHTML = tipHtml;
+}
+function _refreshProcDetailIfOpen() {
+  if (!_currentProcDetailId) return;
+  const scr = document.getElementById('screen-proc-detail');
+  if (scr && scr.style.pointerEvents === 'all') _renderProcDetailContent(_currentProcDetailId);
+}
+function _openProcDetailDeleteMenu() {
+  if (!_currentProcDetailId) return;
+  openDialog('dlg-proc-del-sheet');
+}
+function _deleteProcFromDetail() {
+  closeDialog('dlg-proc-del-sheet');
+  const id = _currentProcDetailId;
+  setTimeout(() => { _closeProcDetailScreen(); setTimeout(() => deleteProcess(id), 380); }, 100);
+}
+function _buildProcTipHtml(typeName) {
+  const detail = PROCESS_DETAIL[typeName] || null;
+  if (!detail) return `<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁이 준비 중입니다.</div>`;
+  const colorCls = PROCESS_COLORS[typeName] || 'c0';
+  const hex = COLOR_HEX[colorCls] || '#3176ff';
+  let html = `<div style="background:#fff;padding:20px;"><span class="tip-page-badge" style="background:${hex}22;color:${hex};display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;">${detail.icon} ${typeName}</span>
+    <div style="font-size:16px;font-weight:700;color:#222;line-height:1.4;margin-bottom:6px;">${detail.summary}</div>
+    <div style="display:flex;gap:12px;">${detail.duration?`<span style="font-size:12px;color:#888;"><b style="color:#555;">기간</b> ${detail.duration}</span>`:''}${detail.cost?`<span style="font-size:12px;color:#888;"><b style="color:#555;">비용</b> ${detail.cost}</span>`:''}</div></div>`;
+  (detail.sections||[]).forEach(sec => {
+    html += `<div style="background:#fff;margin-top:8px;padding:16px 20px;"><div class="tip-section-title">${sec.title}</div>`;
+    (sec.items||[]).forEach(item => {
+      if (item.warn) html += `<div class="tip-warn-item"><span style="font-size:18px;line-height:1;">${item.icon||'⚠️'}</span><div><div style="font-size:13px;font-weight:700;color:#c2410c;">${item.title}</div><div style="font-size:12px;color:#7c2d12;margin-top:2px;line-height:1.5;">${item.desc||''}</div></div></div>`;
+      else html += `<div class="tip-item"><span style="font-size:20px;line-height:1;flex-shrink:0;">${item.icon||'•'}</span><div><div style="font-size:13px;font-weight:600;color:#222;">${item.title}</div><div style="font-size:12px;color:#666;margin-top:2px;line-height:1.5;">${item.desc||''}</div></div></div>`;
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+// ===== COLLAPSIBLE CARDS =====
+const _expandedCards = new Set();
+function toggleCardExpand(procId) {
+  const card = document.querySelector(`.work-card[data-proc-id="${procId}"]`);
+  if (!card) return;
+  if (_expandedCards.has(procId)) { _expandedCards.delete(procId); card.classList.remove('expanded'); }
+  else { _expandedCards.add(procId); card.classList.add('expanded'); }
 }
 
 // ===== SCHEDULE DIALOG + CUSTOM DATE PICKER =====
@@ -4059,6 +4235,7 @@ function confirmSchedule() {
   trackEvent('schedule', 'set_schedule', proc.name);
   save(); renderAll();
   closeDialog('dlg-schedule');
+  _refreshProcDetailIfOpen();
 }
 function formatDate(iso) {
   if (!iso) return '';
@@ -4118,6 +4295,7 @@ function _setDetailDateRange(inputEl, hintEl, proc) {
 function openAddDetail(procId) {
   addDetailProcessId = procId;
   document.getElementById('detail-desc').value = '';
+  document.getElementById('detail-subdesc').value = '';
   document.getElementById('detail-cost').value = '';
   document.getElementById('detail-date').value = '';
   const proc = getProject()?.processes.find(p => p.id === procId);
@@ -4132,12 +4310,13 @@ function openAddDetail(procId) {
 
 function confirmAddDetail() {
   const desc = document.getElementById('detail-desc').value.trim();
+  const subDesc = document.getElementById('detail-subdesc').value.trim();
   const cost = parseInt(document.getElementById('detail-cost').value) || 0;
   const date = document.getElementById('detail-date').value || '';
   if (!desc) { alert('작업 내용을 입력하세요.'); return; }
   const proc = getProject()?.processes.find(p => p.id === addDetailProcessId);
   if (proc) {
-    proc.details.push({ id:'d_'+Date.now(), desc, cost, date });
+    proc.details.push({ id:'d_'+Date.now(), desc, subDesc, cost, date });
     save(); renderAll();
   }
   closeDialog('dlg-add-detail');
@@ -4149,6 +4328,7 @@ function openEditDetail(procId, detailId) {
   const detail = proc?.details.find(d => d.id === detailId);
   if (!detail) return;
   document.getElementById('edit-detail-desc').value = detail.desc || '';
+  document.getElementById('edit-detail-subdesc').value = detail.subDesc || '';
   document.getElementById('edit-detail-cost').value = detail.cost || '';
   document.getElementById('edit-detail-date').value = detail.date || '';
   _setDetailDateRange(
@@ -4162,12 +4342,13 @@ function openEditDetail(procId, detailId) {
 
 function confirmEditDetail() {
   const desc = document.getElementById('edit-detail-desc').value.trim();
+  const subDesc = document.getElementById('edit-detail-subdesc').value.trim();
   const cost = parseInt(document.getElementById('edit-detail-cost').value) || 0;
   const date = document.getElementById('edit-detail-date').value || '';
   if (!desc) { alert('작업 내용을 입력하세요.'); return; }
   const proc = getProject()?.processes.find(p => p.id === editDetailProcId);
   const detail = proc?.details.find(d => d.id === editDetailId);
-  if (detail) { detail.desc = desc; detail.cost = cost; detail.date = date; save(); renderAll(); }
+  if (detail) { detail.desc = desc; detail.subDesc = subDesc; detail.cost = cost; detail.date = date; save(); renderAll(); }
   closeDialog('dlg-edit-detail');
 }
 
