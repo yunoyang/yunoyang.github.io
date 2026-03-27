@@ -561,7 +561,7 @@ button, input, textarea, select { font-family:var(--font); }
 .d-cost { font-size:17px; font-weight:500; white-space:nowrap; }
 .d-chev { color:#d0d5e0; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
-.proc-detail-link { display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:12px 0 0; font-size:14px; font-weight:600; color:var(--primary); cursor:pointer; background:none; border:none; font-family:var(--font); width:100%; }
+.proc-detail-link { display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:8px 0; font-size:14px; font-weight:600; color:#818590; cursor:pointer; background:none; border:none; font-family:var(--font); width:100%; }
 /* 상세내역 다이얼로그 날짜 영역 */
 .detail-date-section { margin-top:4px; }
 .detail-date-label { font-size:12px; color:#888; margin-bottom:5px; }
@@ -1842,8 +1842,8 @@ button, input, textarea, select { font-family:var(--font); }
     <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">시공 상세 내역</button>
     <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">시공팁</button>
   </div>
-  <div id="ptab-info" class="screen-scroll" style="flex:1;padding-top:12px;"></div>
-  <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;"></div>
+  <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
+  <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
 </div>
 <!-- ===== 시공 삭제 바텀시트 ===== -->
 <div class="overlay" id="dlg-proc-del-sheet" onclick="if(event.target===this)closeDialog('dlg-proc-del-sheet')" style="z-index:9600;">
@@ -3560,7 +3560,7 @@ function _renderContractorSelectList(procType) {
     <div id="ccard-${esc(cId)}" data-selected="0"
       style="background:#f8f9fc;border-radius:12px;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:stretch;overflow:hidden;">
       <!-- 좌: 선택 영역 -->
-      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:16px 12px 16px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:12px 12px 12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
         <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
         </div>
@@ -3754,24 +3754,23 @@ function renderWorkCards() {
           <span class="work-card-title" style="font-size:17px;font-weight:700;color:#1a1a1a;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
-          ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
           <button class="work-card-fold-btn" onclick="event.stopPropagation();toggleCardExpand('${p.id}')">
             <svg class="work-card-fold-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
       <div class="work-card-body">
-        ${totalCost > 0 ? `<div class="work-field" style="padding:10px 0;">
-          <span class="f-label" style="font-weight:600;color:#555;">예상 견적</span>
-          <span class="f-value readonly" style="font-size:16px;font-weight:700;">${totalCost.toLocaleString()}원</span>
+        ${totalCost > 0 ? `<div class="work-field" style="padding:12px 0;">
+          <span class="f-label">예상 견적</span>
+          <span class="f-value filled" style="font-size:16px;">${totalCost.toLocaleString()}원</span>
         </div>
         <div class="field-divider"></div>` : ''}
-        <div class="work-field" style="padding:10px 0;">
+        <div class="work-field" style="padding:12px 0;">
           <span class="f-label">예상 일정</span>
           <span class="f-value${p.scheduleStart ? ' filled' : ''}" style="font-size:16px;">${esc(schedDisplay)}</span>
         </div>
         <div class="field-divider"></div>
-        <div class="work-field" style="padding:10px 0;">
+        <div class="work-field" style="padding:12px 0;">
           <span class="f-label">담당 업체</span>
           <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}" style="font-size:16px;">${esc(compDisplay)}</span>
         </div>
@@ -3792,6 +3791,7 @@ function renderWorkCards() {
           </div>`).join('')}
           ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#bbb;letter-spacing:2px;">···</div>` : ''}
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
+        <div style="border-top:1px solid #F5F5FB;margin:4px -20px;"></div>
         <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
     </div>`;
@@ -3993,7 +3993,7 @@ function _renderProcDetailContent(procId) {
   const schedDisplay = (p.scheduleStart && p.scheduleEnd)
     ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
   document.getElementById('ptab-info').innerHTML = `
-    <div style="background:#fff;padding:20px 20px 8px;">
+    <div style="background:#fff;padding:12px 20px 8px;">
       <div class="work-field">
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
@@ -5123,6 +5123,7 @@ function _openContractorMoreSheet() {
   const content = document.getElementById('contractor-more-content');
   const row = (label, val, extra='') => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:14px;color:#888;">${label}</span>${extra || `<span style="font-size:14px;font-weight:600;color:#222;">${val}</span>`}</div>`;
   let html = '';
+  if (c.description) html += `<div style="font-size:14px;color:#555;line-height:1.7;padding:14px 0;border-bottom:1px solid #f5f5f5;">${esc(c.description)}</div>`;
   if (c.phone) html += row('전화번호', esc(c.phone), `<a href="tel:${esc(c.phone)}" style="font-size:14px;font-weight:600;color:var(--primary);text-decoration:none;">${esc(c.phone)}</a>`);
   if (c.rating) html += row('평점', `★ ${c.rating}${c.reviews ? ` (${c.reviews}건)` : ''}`);
   if (c.area) html += row('지역', esc(c.area));
