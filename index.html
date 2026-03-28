@@ -347,7 +347,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-top:1px solid #f0f2f5;
 }
 .work-card-body .work-field { pointer-events:none; }
-.work-card-body .f-label { font-size:16px; }
+.work-card-body .f-label { font-size:16px; font-weight:400; color:#aaa; }
 .work-card-body .f-value { cursor:default !important; font-size:16px !important; font-weight:700 !important; }
 .work-card-body .f-value.readonly { color:var(--primary) !important; }
 .work-card-body .detail-add-btn { display:none; }
@@ -521,7 +521,7 @@ button, input, textarea, select { font-family:var(--font); }
 .mobile-sheet-item.danger { color:#e03535; }
 .mobile-sheet-item.danger svg, .mobile-sheet-item.danger i { color:#e03535; }
 
-.work-field { display:flex; align-items:center; justify-content:space-between; padding:15px 0; }
+.work-field { display:flex; align-items:center; justify-content:space-between; padding:17px 0; }
 .f-label { font-size:16px; font-weight:500; color:#888; flex-shrink:0; }
 .f-value {
   display:flex; align-items:center; gap:5px; font-size:16px; font-weight:700;
@@ -3765,20 +3765,17 @@ function renderWorkCards() {
       <div class="work-card-body">
         ${totalCost > 0 ? `<div class="work-field" style="padding:14px 0;">
           <span class="f-label">예상 견적</span>
-          <span class="f-value filled" style="font-size:16px;">${totalCost.toLocaleString()}원</span>
-        </div>
-        <div class="field-divider"></div>` : ''}
+          <span class="f-value readonly" style="font-size:16px;">${totalCost.toLocaleString()}원</span>
+        </div>` : ''}
         <div class="work-field" style="padding:14px 0;">
           <span class="f-label">예상 일정</span>
           <span class="f-value${p.scheduleStart ? ' filled' : ''}" style="font-size:16px;">${esc(schedDisplay)}</span>
         </div>
-        <div class="field-divider"></div>
         <div class="work-field" style="padding:14px 0;">
           <span class="f-label">담당 업체</span>
           <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}" style="font-size:16px;">${esc(compDisplay)}</span>
         </div>
-        <div class="field-divider"></div>
-        <div class="detail-header" style="padding:10px 0 4px;">
+        <div class="detail-header" style="padding:14px 0 4px;">
           <span class="d-label">상세내역</span>
         </div>
         ${p.details.length ? `<div class="details-list">
@@ -3792,7 +3789,7 @@ function renderWorkCards() {
               <span class="d-cost" style="font-size:16px;">${(d.cost||0).toLocaleString()}원</span>
             </div>
           </div>`).join('')}
-          ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#bbb;letter-spacing:2px;">···</div>` : ''}
+          ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#555555;letter-spacing:2px;">···</div>` : ''}
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
         <div style="border-top:1px solid #F5F5FB;margin:4px -20px;"></div>
         <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -4001,7 +3998,6 @@ function _renderProcDetailContent(procId) {
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
       </div>
-      <div class="field-divider"></div>
       <div class="work-field">
         <span class="f-label">예상 일정</span>
         <span class="f-value ${p.scheduleStart?'filled':''}" onclick="openScheduleDialog('${p.id}')" style="cursor:pointer;">
@@ -4009,7 +4005,6 @@ function _renderProcDetailContent(procId) {
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </span>
       </div>
-      <div class="field-divider"></div>
       <div class="work-field">
         <span class="f-label">담당 업체</span>
         <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
@@ -4017,7 +4012,7 @@ function _renderProcDetailContent(procId) {
           ${(p.companyData||p.company) ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
         </span>
       </div>
-      <div class="field-divider"></div>
+      <div style="padding-top:4px;"></div>
       <div class="detail-header">
         <span class="d-label">상세내역</span>
         <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
