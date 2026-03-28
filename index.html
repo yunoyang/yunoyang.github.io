@@ -123,7 +123,12 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){ dataLayer.push(arguments); }
   gtag('js', new Date());
-  gtag('config', 'G-Y2TYTSSQNW', { page_title: 'Vibespace' });
+  gtag('config', 'G-Y2TYTSSQNW', {
+    page_title: 'Vibespace',
+    send_page_view: true,
+    cookie_flags: 'SameSite=None;Secure',
+    debug_mode: false
+  });
 </script>
 <!-- ========================== -->
 
@@ -2454,6 +2459,11 @@ function handleGoogleResponse(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     state.loggedIn = true;
     state.user = { name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
+    // GA4 user_id 설정 (이메일 해시 기반)
+    if (typeof gtag !== 'undefined') {
+      gtag('set', 'user_id', btoa(state.user.email).replace(/[^a-zA-Z0-9]/g,'').slice(0,16));
+      gtag('set', 'user_properties', { login_method: 'google', user_type: 'registered' });
+    }
     _createSession(); // 새 세션 발급 (30일 만료 + 활동시간 초기화)
     save();
     trackUserLogin(state.user);

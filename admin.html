@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -647,6 +648,28 @@ tr:hover td { background:#fafbfe; }
 
         <!-- GA4 Status Banner -->
         <div id="ga4-status-banner" style="margin-bottom:20px;border-radius:14px;overflow:hidden;border:1px solid var(--card-border);"></div>
+
+        <!-- GA4 Data Panel -->
+        <div style="background:#fff;border-radius:14px;border:1px solid var(--card-border);padding:20px;margin-bottom:20px;" id="ga4-panel-wrap">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#3176ff,#5b8fff);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+              <i data-lucide="bar-chart-2" style="width:16px;height:16px;color:#fff;"></i>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;">Google Analytics 4</div>
+              <div style="font-size:12px;color:#888;">실제 방문자 및 이벤트 데이터</div>
+            </div>
+          </div>
+          <div id="ga4-data-panel">
+            <div style="padding:24px;text-align:center;">
+              <div style="font-size:13px;color:#888;margin-bottom:12px;">GA4 데이터를 가져오려면 Google 계정으로 인증하세요<br><span style="font-size:11px;color:#aaa;">설정에서 GA4 Property ID 입력 필요</span></div>
+              <button onclick="requestGA4Auth()" style="padding:10px 20px;background:#3176ff;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                GA4 데이터 가져오기
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Realtime + Recent -->
         <div class="realtime-grid" style="margin-bottom:20px;">
@@ -1343,6 +1366,9 @@ const VB_SETTINGS_KEY = 'vb_admin_settings';
 const DEFAULT_EMAIL = 'admin@vibespace.kr';
 const DEFAULT_PW = 'vibespace2024';
 
+const GA4_MEASUREMENT_ID = 'G-Y2TYTSSQNW';
+const GA4_OAUTH_CLIENT_ID = '685508900620-08naghsqb4nfepjkse84tbg0b8nq1en8.apps.googleusercontent.com';
+
 // Chart instances
 let visitorChartInst = null;
 let userTypeChartInst = null;
@@ -1442,6 +1468,8 @@ function initFirestoreAdmin() {
     }, () => {});
 
   _unsubs.push(unsubProj, unsubInv, unsubUsers);
+  // GA4 OAuth 클라이언트 초기화
+  setTimeout(initGA4TokenClient, 1000);
 }
 
 function setFbStatus(status, count) {
@@ -2236,7 +2264,7 @@ function loadSettings() {
   document.getElementById('set-kakao-key').value = settings.kakaoKey || '';
   document.getElementById('set-google-key').value = settings.googleKey || '';
   document.getElementById('set-google-client').value = settings.googleClient || '';
-  document.getElementById('set-ga4-id').value = settings.ga4Id || '';
+  document.getElementById('set-ga4-id').value = settings.ga4Id || GA4_MEASUREMENT_ID;
   document.getElementById('set-ga4-prop').value = settings.ga4PropId || '';
   // Firebase config
   const fbEl = document.getElementById('set-firebase-config');
@@ -2249,10 +2277,10 @@ function loadSettings() {
   }
   updateKeyStatus('kakao-key-status', settings.kakaoKey);
   updateKeyStatus('google-key-status', settings.googleKey);
-  updateKeyStatus('ga4-key-status', settings.ga4Id);
+  updateKeyStatus('ga4-key-status', settings.ga4Id || GA4_MEASUREMENT_ID);
   updateFirebaseStatus(settings.firebaseConfig);
-  renderGa4Links(settings.ga4Id, settings.ga4PropId);
-  renderGa4Banner(settings.ga4Id);
+  renderGa4Links(settings.ga4Id || GA4_MEASUREMENT_ID, settings.ga4PropId);
+  renderGa4Banner(settings.ga4Id || GA4_MEASUREMENT_ID);
 
   const creds = JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null');
   document.getElementById('set-admin-email').value = creds?.email || DEFAULT_EMAIL;
@@ -2287,6 +2315,170 @@ function updateFirebaseStatus(cfgStr) {
     el.innerHTML = '<i data-lucide="alert-circle" style="width:12px;height:12px;"></i> 미설정 — 공동작업 불가';
   }
   setTimeout(lucide.createIcons, 50);
+}
+
+// ===== GA4 DATA API =====
+let _ga4Token = null;
+let _ga4TokenClient = null;
+let _ga4Loaded = false;
+
+function initGA4TokenClient() {
+  if (typeof google === 'undefined' || !google.accounts?.oauth2) {
+    setTimeout(initGA4TokenClient, 500);
+    return;
+  }
+  _ga4TokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GA4_OAUTH_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    callback: async (resp) => {
+      if (resp.error) { showToast('GA4 인증 오류: ' + resp.error); return; }
+      _ga4Token = resp.access_token;
+      await fetchGA4Data();
+    }
+  });
+}
+
+function requestGA4Auth() {
+  if (!_ga4TokenClient) { showToast('잠시 후 다시 시도해주세요.'); return; }
+  const settings = getSettings();
+  if (!settings.ga4PropId) {
+    showToast('설정에서 GA4 Property ID(숫자)를 먼저 입력해주세요.');
+    showPage('settings', document.querySelectorAll('.nav-item')[4]);
+    return;
+  }
+  _ga4TokenClient.requestAccessToken();
+}
+
+async function fetchGA4Data() {
+  const settings = getSettings();
+  const propId = settings.ga4PropId;
+  if (!propId) return;
+  if (!_ga4Token) { requestGA4Auth(); return; }
+
+  const el = document.getElementById('ga4-data-panel');
+  if (el) el.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:13px;">GA4 데이터 불러오는 중...</div>';
+
+  try {
+    // 1) 30일 일별 추이
+    const [trendRes, summaryRes, eventRes] = await Promise.all([
+      fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
+        method:'POST', headers:{'Authorization':`Bearer ${_ga4Token}`,'Content-Type':'application/json'},
+        body: JSON.stringify({
+          dateRanges:[{startDate:'29daysAgo',endDate:'today'}],
+          metrics:[{name:'activeUsers'},{name:'sessions'},{name:'screenPageViews'}],
+          dimensions:[{name:'date'}],
+          orderBys:[{dimension:{dimensionName:'date'}}]
+        })
+      }),
+      fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
+        method:'POST', headers:{'Authorization':`Bearer ${_ga4Token}`,'Content-Type':'application/json'},
+        body: JSON.stringify({
+          dateRanges:[{startDate:'29daysAgo',endDate:'today'},{startDate:'59daysAgo',endDate:'30daysAgo'}],
+          metrics:[{name:'activeUsers'},{name:'newUsers'},{name:'sessions'},{name:'averageSessionDuration'},{name:'screenPageViews'}]
+        })
+      }),
+      fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`, {
+        method:'POST', headers:{'Authorization':`Bearer ${_ga4Token}`,'Content-Type':'application/json'},
+        body: JSON.stringify({
+          dateRanges:[{startDate:'29daysAgo',endDate:'today'}],
+          metrics:[{name:'eventCount'}],
+          dimensions:[{name:'eventName'}],
+          orderBys:[{metric:{metricName:'eventCount'},desc:true}],
+          limit:10
+        })
+      })
+    ]);
+
+    if (trendRes.status === 401 || summaryRes.status === 401) {
+      _ga4Token = null;
+      showToast('GA4 토큰 만료. 재인증이 필요합니다.');
+      renderGA4Panel(null, null, null);
+      return;
+    }
+
+    const trend   = trendRes.ok   ? await trendRes.json()   : null;
+    const summary = summaryRes.ok ? await summaryRes.json() : null;
+    const events  = eventRes.ok   ? await eventRes.json()   : null;
+    renderGA4Panel(trend, summary, events);
+    _ga4Loaded = true;
+  } catch(e) {
+    console.error('GA4 fetch error', e);
+    showToast('GA4 데이터 오류: ' + e.message);
+    renderGA4Panel(null, null, null);
+  }
+}
+
+function renderGA4Panel(trend, summary, events) {
+  const el = document.getElementById('ga4-data-panel');
+  if (!el) return;
+
+  if (!trend && !summary) {
+    el.innerHTML = `<div style="padding:24px;text-align:center;">
+      <div style="font-size:13px;color:#888;margin-bottom:12px;">GA4 데이터를 가져오려면 Google 계정으로 인증하세요</div>
+      <button onclick="requestGA4Auth()" style="padding:10px 20px;background:#3176ff;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        GA4 데이터 가져오기
+      </button>
+    </div>`;
+    return;
+  }
+
+  // Summary KPIs
+  const cur = summary?.rows?.[0]?.metricValues || [];
+  const prev = summary?.rows?.[1]?.metricValues || [];
+  const fmtN = n => Number(n||0).toLocaleString('ko-KR');
+  const fmtDur = s => { const m=Math.floor(s/60); return m>0?`${m}분 ${Math.round(s%60)}초`:`${Math.round(s)}초`; };
+  const delta = (c,p) => { const d=parseFloat(p||0); if(!d) return ''; const pct=Math.round((parseFloat(c||0)-d)/d*100); return pct>0?`<span style="color:#10b981">▲${pct}%</span>`:`<span style="color:#ef4444">▼${Math.abs(pct)}%</span>`; };
+
+  const kpiHtml = [
+    {label:'활성 사용자', val:fmtN(cur[0]?.value), d:delta(cur[0]?.value,prev[0]?.value), icon:'users'},
+    {label:'신규 사용자', val:fmtN(cur[1]?.value), d:delta(cur[1]?.value,prev[1]?.value), icon:'user-plus'},
+    {label:'세션',        val:fmtN(cur[2]?.value), d:delta(cur[2]?.value,prev[2]?.value), icon:'activity'},
+    {label:'평균 체류시간',val:fmtDur(parseFloat(cur[3]?.value||0)), d:'', icon:'clock'},
+    {label:'페이지뷰',    val:fmtN(cur[4]?.value), d:delta(cur[4]?.value,prev[4]?.value), icon:'eye'},
+  ].map(k=>`
+    <div style="background:#f8f9fc;border-radius:10px;padding:14px 16px;flex:1;min-width:110px;">
+      <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${k.label}</div>
+      <div style="font-size:20px;font-weight:800;color:#1a1a1a;">${k.val}</div>
+      <div style="font-size:12px;margin-top:4px;">${k.d||'<span style="color:#aaa">—</span>'}</div>
+    </div>`).join('');
+
+  // Event table
+  const eventRows = (events?.rows||[]).map(r=>`
+    <tr>
+      <td style="padding:8px 12px;font-size:13px;font-weight:500;color:#333;">${r.dimensionValues?.[0]?.value||''}</td>
+      <td style="padding:8px 12px;font-size:13px;font-weight:700;color:#3176ff;text-align:right;">${fmtN(r.metricValues?.[0]?.value)}</td>
+    </tr>`).join('');
+
+  // Sparkline data (last 30 days active users)
+  const sparkData = (trend?.rows||[]).map(r=>parseInt(r.metricValues?.[0]?.value||0));
+  const maxSpark = Math.max(...sparkData, 1);
+  const sparkBars = sparkData.map(v=>`<div style="flex:1;background:rgba(49,118,255,0.15);border-radius:2px 2px 0 0;height:${Math.round(v/maxSpark*40)+2}px;align-self:flex-end;" title="${v}명"></div>`).join('');
+
+  el.innerHTML = `
+    <div style="padding:0 0 8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:14px;font-weight:700;color:#1a1a1a;">최근 30일 GA4 리포트</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="fetchGA4Data()" style="padding:6px 14px;background:#f0f4ff;color:#3176ff;border:1px solid #c7d7ff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">새로고침</button>
+          <a href="https://analytics.google.com" target="_blank" style="padding:6px 14px;background:#3176ff;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;display:inline-block;">GA4 콘솔 →</a>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">${kpiHtml}</div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;">30일 방문자 추이</div>
+        <div style="display:flex;gap:2px;align-items:flex-end;height:44px;background:#f8f9fc;border-radius:8px;padding:2px 8px;">${sparkBars||'<div style="color:#aaa;font-size:12px;padding:10px;">데이터 없음</div>'}</div>
+      </div>
+      ${eventRows ? `
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;">이벤트 TOP 10</div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #f0f2f5;border-radius:8px;overflow:hidden;">
+          <thead><tr style="background:#f8f9fc;"><th style="padding:8px 12px;font-size:12px;font-weight:700;color:#555;text-align:left;">이벤트</th><th style="padding:8px 12px;font-size:12px;font-weight:700;color:#555;text-align:right;">횟수</th></tr></thead>
+          <tbody>${eventRows}</tbody>
+        </table>
+      </div>` : ''}
+    </div>
+  `;
 }
 
 // ===== GA4 =====
