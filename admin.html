@@ -1398,7 +1398,7 @@ const FIREBASE_CONFIG = {
 };
 
 let _adminDb = null, _adminStorage = null;
-let _fbData = { projects: [], invites: [], loaded: false };
+let _fbData = { projects: [], invites: [], users: [], loaded: false };
 let _unsubs = [];
 
 function initFirestoreAdmin() {
@@ -1433,7 +1433,15 @@ function initFirestoreAdmin() {
       refreshAllWithFirestore();
     }, () => {});
 
-  _unsubs.push(unsubProj, unsubInv);
+  // 실시간 리스너 — vb_users (신규 가입자 직접 추적)
+  const unsubUsers = _adminDb.collection('vb_users')
+    .orderBy('firstLoginAt', 'desc')
+    .onSnapshot(snap => {
+      _fbData.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      refreshAllWithFirestore();
+    }, () => {});
+
+  _unsubs.push(unsubProj, unsubInv, unsubUsers);
 }
 
 function setFbStatus(status, count) {
@@ -1455,8 +1463,26 @@ function getFbDerived() {
   const today = new Date().toISOString().slice(0, 10);
   const d30ago = new Date(Date.now() - 30*86400000).toISOString().slice(0,10);
 
-  // 고유 사용자 (owner 기준)
+  // ── 고유 사용자: vb_users 우선, vb_projects 보완 ──
   const ownerMap = {};
+
+  // 1) vb_users 컬렉션 (신규 가입자 직접 기록)
+  _fbData.users.forEach(u => {
+    const firstAt = u.firstLoginAt?.toDate?.()?.toISOString() || null;
+    const lastAt  = u.lastLoginAt?.toDate?.()?.toISOString()  || null;
+    ownerMap[u.email] = {
+      email: u.email,
+      name: u.name || u.email?.split('@')[0] || '(이름없음)',
+      picture: u.picture || '',
+      projects: [],
+      firstSeen: firstAt,
+      lastSeen:  lastAt,
+      loginCount: u.loginCount || 1,
+      source: 'vb_users',
+    };
+  });
+
+  // 2) vb_projects에서 ownerMap 보완 (프로젝트 카운트 + vb_users에 없는 과거 유저)
   projects.forEach(doc => {
     const owner = doc.meta?.owner;
     if (!owner?.email) return;
@@ -1464,9 +1490,7 @@ function getFbDerived() {
       ownerMap[owner.email] = {
         email: owner.email,
         name: owner.name || owner.email.split('@')[0],
-        projects: [],
-        firstSeen: null,
-        lastSeen: null,
+        projects: [], firstSeen: null, lastSeen: null, source: 'vb_projects',
       };
     }
     ownerMap[owner.email].projects.push(doc);
@@ -1477,12 +1501,11 @@ function getFbDerived() {
       if (!ownerMap[owner.email].lastSeen || updAt > ownerMap[owner.email].lastSeen)
         ownerMap[owner.email].lastSeen = updAt;
     }
-    // collaborators도 사용자로 추가
     (doc.meta?.collaborators || []).forEach(c => {
       if (!c.email || ownerMap[c.email]) return;
       ownerMap[c.email] = {
         email: c.email, name: c.name || c.email.split('@')[0],
-        projects: [], firstSeen: c.joinedAt || null, lastSeen: c.joinedAt || null, isCollab: true,
+        projects: [], firstSeen: c.joinedAt || null, lastSeen: c.joinedAt || null, isCollab: true, source: 'collab',
       };
     });
   });
@@ -1609,7 +1632,11 @@ function renderKPIs() {
   if (_fbData.loaded) {
     const d = getFbDerived();
     totalUsers    = d.users.length;
-    newToday      = d.todayNew;
+    // 오늘 신규 가입자: vb_users.firstLoginAt 기준
+    newToday = _fbData.users.filter(u => {
+      const t = u.firstLoginAt?.toDate?.()?.toISOString();
+      return t && t.slice(0,10) === today;
+    }).length;
     totalProjects = d.projects.length;
     activeCount   = d.activeProjects.length;
     collabCount   = d.collabProjects.length;
@@ -1865,11 +1892,17 @@ function renderRecentLists() {
   // ── 최근 가입자: Firestore 우선 ──
   const ulEl = document.getElementById('recent-users-list');
   if (_fbData.loaded) {
-    const d = getFbDerived();
-    const users = [...d.users]
-      .sort((a,b) => new Date(b.firstSeen||0) - new Date(a.firstSeen||0))
+    // vb_users 우선 (firstLoginAt 기준), 없으면 project 파생 유저로 보완
+    const vbUsers = [..._fbData.users]
+      .sort((a,b) => (b.firstLoginAt?.seconds||0) - (a.firstLoginAt?.seconds||0))
       .slice(0,5);
-    ulEl.innerHTML = users.length ? users.map(u => `
+    const displayUsers = vbUsers.length > 0 ? vbUsers.map(u => ({
+      name: u.name || u.email?.split('@')[0],
+      firstSeen: u.firstLoginAt?.toDate?.()?.toISOString() || null,
+    })) : [...getFbDerived().users]
+      .sort((a,b) => new Date(b.firstSeen||0) - new Date(a.firstSeen||0))
+      .slice(0,5).map(u => ({ name: u.name, firstSeen: u.firstSeen }));
+    ulEl.innerHTML = displayUsers.length ? displayUsers.map(u => `
       <div class="realtime-item">
         <div class="realtime-dot" style="background:#3176ff;animation:none;"></div>
         <span class="realtime-name">${u.name}</span>
