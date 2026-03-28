@@ -460,35 +460,11 @@ button, input, textarea, select { font-family:var(--font); }
   #menu-backdrop { z-index:999 !important; }
 }
 
-/* ===== PC 중앙 정렬 (Threads 스타일) ===== */
+/* ===== PC 풀너비 + 카드 1열 ===== */
 @media (min-width: 600px) {
-  html, body {
-    height:100%; overflow:hidden;
-    background:#d8dce6;
-  }
-  body {
-    display:flex; justify-content:center; align-items:flex-start;
-    min-height:100vh; min-height:100dvh;
-  }
-  .app {
-    max-width:480px; width:100%;
-    height:100vh; height:100dvh;
-    box-shadow:0 0 0 1px rgba(0,0,0,0.06), 0 8px 60px rgba(0,0,0,0.18);
-    position:relative; overflow:hidden;
-    border-radius:0;
-  }
-  /* 플로팅 버튼: 앱 우측 20px 유지 */
-  .floating-group {
-    right: calc(50% - 220px);
-  }
-  /* 카드 1열 고정 → 옆 카드 영향 없음 */
+  /* 카드 1열 고정 → 펼칠 때 옆 카드 영향 없음 */
   .cards-area {
     grid-template-columns: 1fr;
-  }
-  /* fixed 요소들 앱 너비 기준으로 클램핑 */
-  .overlay > div,
-  .overlay > form {
-    max-width: 480px;
   }
 }
 @keyframes cardSlideInRight {
