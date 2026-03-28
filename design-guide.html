@@ -102,7 +102,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
 
 /* Field samples */
 .field-demo { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; width:100%; }
-.field-row { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid #f0f2f5; }
+.field-row { display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid #f0f2f5; }
 .field-row:last-child { border-bottom:none; }
 .field-label { font-size:16px; font-weight:500; color:#888; }
 .field-value { font-size:16px; font-weight:700; color:#444; }
@@ -165,6 +165,45 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
 .sp { height:12px; }
 .mt8 { margin-top:8px; }
 .mt16 { margin-top:16px; }
+
+/* Main Header demo */
+.main-header-demo {
+  background:#fff; border-radius:14px; border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px;
+}
+.mh-left { display:flex; align-items:center; gap:6px; }
+.mh-project-name { font-size:20px; font-weight:700; color:#111; letter-spacing:-.5px; }
+.mh-chev { color:#888; display:flex; }
+.mh-actions { display:flex; align-items:center; gap:8px; }
+.mh-icon-btn {
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid #e4e9f2; display:flex; align-items:center;
+  justify-content:center; background:#fff; color:#555;
+}
+
+/* Detail Page Header demo */
+.detail-header-demo {
+  background:#fff; border-radius:14px; border:1px solid var(--border);
+  display:flex; align-items:center; gap:10px; padding:16px 20px;
+}
+.dh-back { width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:#555; flex-shrink:0; }
+.dh-title { flex:1; font-size:18px; font-weight:700; color:#1a1a1a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dh-more { font-size:20px; font-weight:700; color:#555; padding:4px 6px; letter-spacing:2px; flex-shrink:0; }
+
+/* 시공 상세 내역 리스트 */
+.detail-list-demo { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; }
+.di-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px 8px; }
+.di-header-label { font-size:16px; font-weight:500; color:#888; }
+.di-add-btn { width:26px; height:26px; border-radius:50%; background:var(--primary-bg); color:var(--primary); border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; }
+.detail-item-demo { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #f5f5f5; }
+.di-left { display:flex; flex-direction:column; gap:2px; }
+.di-desc { font-size:16px; font-weight:700; color:#333; }
+.di-subdesc { font-size:14px; font-weight:400; color:#aaa; line-height:1.4; }
+.di-date { font-size:12px; color:#bbb; }
+.di-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.di-cost { font-size:16px; font-weight:700; color:#333; }
+.di-chev { color:#ccc; }
 
 /* Naming label */
 .name-tag {
@@ -412,8 +451,9 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
               <div style="font-size:16px;font-weight:500;color:#888;padding:10px 0 4px;">상세내역</div>
               <div style="font-size:16px;font-weight:700;color:#444;padding:4px 0;">바닥 철거 <span style="float:right;color:#444;">300,000원</span></div>
               <div style="height:1px;background:#f5f5fb;margin:12px 0 4px;"></div>
-              <div style="text-align:right;padding:4px 0;">
-                <span style="font-size:14px;font-weight:600;color:#555;">상세보기 ›</span>
+              <div style="display:flex;align-items:center;justify-content:center;padding:6px 0;">
+                <span style="font-size:14px;font-weight:600;color:#555;">상세보기</span>
+                <svg style="margin-left:4px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
             </div>
           </div>
@@ -603,6 +643,140 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
           <div class="card-desc mt8">
             타이틀: H2 18px/700 · 인풋: 16px border radius 10px<br>
             바텀버튼: 5:5 flex 비율 (<code>split</code>)
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Main Header -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Main Header <span class="name-tag primary">.header</span></div>
+          메인 화면 상단 헤더 — 프로젝트명 + 액션 아이콘
+        </div>
+        <div class="card-body">
+          <div class="main-header-demo">
+            <div class="mh-left">
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="mh-project-name">강남구 리모델링 2025</span>
+                  <span class="mh-chev">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="mh-actions">
+              <div class="mh-icon-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+              <div class="mh-icon-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="card-desc mt8">
+            프로젝트명: H1 · 20px/700 · #111 <code>.project-badge .name</code><br>
+            드롭다운 화살표: #888 · 클릭 시 프로젝트 목록 드롭다운<br>
+            우측 아이콘 버튼: 40×40px · radius 10px · border #E4E9F2 <code>.icon-btn</code><br>
+            배경 #fff · 하단 구분선 1px #F0F2F5 · safe-area-inset-top 반영
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Detail Page Header -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Detail Page Header <span class="name-tag primary">.form-header</span></div>
+          상세/폼 화면 헤더 — 뒤로가기 + 타이틀 + 액션
+        </div>
+        <div class="card-body">
+          <!-- 시공 상세 스크린 헤더 -->
+          <div style="margin-bottom:10px;font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;">시공 상세 스크린</div>
+          <div class="detail-header-demo" style="margin-bottom:16px;">
+            <div class="dh-back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="dh-title">철거 공사</div>
+            <div class="dh-more">···</div>
+          </div>
+          <!-- 공사정보 폼 헤더 -->
+          <div style="margin-bottom:10px;font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;">공사정보 / 폼 화면</div>
+          <div class="detail-header-demo">
+            <div class="dh-back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="dh-title">공사 정보 입력</div>
+          </div>
+          <div class="card-desc mt8">
+            타이틀: H2 · 18px/700 · #1A1A1A <code>.form-header h2</code> / <code>#proc-detail-screen-title</code><br>
+            뒤로가기: 22×22px 화살표 <code>.back-btn</code> · 패딩 4px · #555<br>
+            ··· 버튼(시공상세만): <code>.card-more-btn</code> → 삭제 바텀시트 트리거<br>
+            배경 #fff · 패딩 20px · 하단 구분선 1px #F0F2F5
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 시공 상세 내역 리스트 -->
+      <div class="card" style="grid-column:1/-1;">
+        <div class="card-head">
+          <div class="card-label">Detail Item List <span class="name-tag primary">.detail-item</span></div>
+          시공 상세 내역 리스트 — 상세내역 추가/수정 가능 항목
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+            <!-- 프리뷰 -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">컴포넌트 프리뷰</div>
+              <div class="detail-list-demo">
+                <div class="di-header">
+                  <span class="di-header-label">상세내역 <span class="name-tag">.d-label · 16px/500</span></span>
+                  <div class="di-add-btn">+</div>
+                </div>
+                <div class="detail-item-demo">
+                  <div class="di-left">
+                    <span class="di-desc">바닥 철거 <span class="name-tag">16px/700</span></span>
+                    <span class="di-subdesc">폴리싱, 포세린타일 <span class="name-tag">14px/400</span></span>
+                    <span class="di-date">2025.03.10</span>
+                  </div>
+                  <div class="di-right">
+                    <span class="di-cost">300,000원</span>
+                    <svg class="di-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="detail-item-demo">
+                  <div class="di-left">
+                    <span class="di-desc">벽체 철거</span>
+                  </div>
+                  <div class="di-right">
+                    <span class="di-cost">200,000원</span>
+                    <svg class="di-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="detail-item-demo" style="opacity:.45;">
+                  <div class="di-left">
+                    <span style="font-size:14px;color:#bbb;">+ 버튼으로 내역 추가</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 스펙 -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">명세</div>
+              <div class="comp-spec" style="line-height:2.2;">
+                <code>.detail-item</code> 전체 행 · 클릭 시 수정 다이얼로그 오픈<br>
+                <code>.d-desc</code> 작업명 · 16px/<b>700</b> · #333<br>
+                <code>.d-subdesc</code> 상세내용 · 14px/<b>400</b> · #AAA (얇게)<br>
+                <code>.d-date</code> 날짜 · 12px/400 · #BBB<br>
+                <code>.d-cost</code> 금액 · 16px/<b>700</b> · #333<br>
+                <code>.d-chev</code> 편집 화살표 · 14px · #CCC<br>
+                구분선 · 1px · #F5F5F5 (연한 세퍼레이터)<br>
+                패딩 · 12px 16px<br>
+                <code>.detail-add-btn</code> · 상세페이지에서만 노출 (카드 내 숨김)
+              </div>
+            </div>
           </div>
         </div>
       </div>
