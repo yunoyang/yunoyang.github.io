@@ -2499,21 +2499,11 @@ async function _notifyNewUserIfNeeded() {
         body: JSON.stringify({ chat_id:_TG_CHAT_ID, text:tgText, parse_mode:'Markdown' })
       });
     } else {
-      // ── 기존 유저 재로그인 ──
+      // ── 기존 유저 재로그인 (알림 없음) ──
       const loginCount = (doc.data().loginCount || 1) + 1;
       await userRef.update({
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
         loginCount,
-      });
-      const tgText =
-        `🔄 *재로그인*\n\n` +
-        `👤 ${state.user.name}\n` +
-        `📧 ${state.user.email}\n` +
-        `🕐 ${dateStr}\n` +
-        `📊 총 로그인 ${loginCount}회`;
-      fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ chat_id:_TG_CHAT_ID, text:tgText, parse_mode:'Markdown' })
       });
     }
   } catch(e) { console.warn('User notify failed:', e); }
