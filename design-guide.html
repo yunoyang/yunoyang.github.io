@@ -1158,6 +1158,211 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
   </div>
 
 
+  <!-- ─── 08. ICONS ─── -->
+  <div class="section">
+    <div class="section-title">08 · Icon System</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div class="card-label">Icon Library</div>
+        Lucide Icons (SVG 인라인) — stroke-width 2~2.5 · 현재 컬러 상속
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+
+      <!-- 네비게이션 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Navigation Icons</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">arrow-left</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.back-btn → 뒤로가기</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">chevron-right</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.f-value → 필드 이동 화살표</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">chevron-down</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.work-card-fold-btn · .sum-chev → 펼치기</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">chevron-right (primary)</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.proc-detail-link → 상세보기</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <span style="font-size:22px;font-weight:700;letter-spacing:1px;color:#555;line-height:1;">···</span>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">더보기 (···)</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.card-more-btn → 액션 메뉴 열기 / color:#555</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 액션 아이콘 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Action Icons</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">plus</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.detail-add-btn · .floating-btn → 추가</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e03535" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">trash-2</div><div style="font-size:11px;color:#aaa;font-family:monospace;">#dlg-proc-del-sheet → 삭제하기 · color:#E03535</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">edit-2</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.detail-item → 수정 액션</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">search</div><div style="font-size:11px;color:#aaa;font-family:monospace;">#comp-search → 업체 검색</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">trash</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.mobile-sheet-item.danger → 삭제</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 상태 / 폼 아이콘 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Status & Form Icons</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">calendar</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.f-value (일정 필드) → 날짜 선택</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">check</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.ccard-check (selected) → 업체 선택됨</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">map-pin</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.ccard-area → 업체 지역 표시</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.06 6.06l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">phone</div><div style="font-size:11px;color:#aaa;font-family:monospace;">#cdetail-sms-btn → 업체 연락</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">info</div><div style="font-size:11px;color:#aaa;font-family:monospace;">시공팁 섹션 → 정보 표시</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 탭 네비게이션 아이콘 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Tab Bar Icons <span class="name-tag primary">Lucide (20×20)</span></div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">home</div><div style="font-size:11px;color:#aaa;font-family:monospace;">탭: 메인 홈 (공정 계획)</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">calendar (탭)</div><div style="font-size:11px;color:#aaa;font-family:monospace;">탭: 일정 캘린더</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">info-circle</div><div style="font-size:11px;color:#aaa;font-family:monospace;">탭: 시공팁</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">user</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.header → 프로젝트 메뉴</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 업체 / 공정 관련 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Contractor & Process Icons</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">briefcase</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.ccard-left → 업체 카드 아이콘</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">award</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.comp-proc-badge → 담당 공정 뱃지</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">dollar-sign</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.d-cost → 상세내역 금액</div></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <div><div style="font-size:13px;font-weight:700;color:#333;">file-text</div><div style="font-size:11px;color:#aaa;font-family:monospace;">.export → 내보내기 / 견적서</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 아이콘 사용 규칙 -->
+      <div class="card">
+        <div class="card-head"><div class="card-label">Icon Usage Rules</div></div>
+        <div class="card-body">
+          <div class="comp-spec" style="line-height:2.2;">
+            <b>기본 크기</b><br>
+            탭바 아이콘: <code>20×20</code><br>
+            헤더/액션 아이콘: <code>22×22</code><br>
+            필드 내 아이콘: <code>16~17×16~17</code><br>
+            인라인 아이콘: <code>13~15×13~15</code><br><br>
+            <b>stroke-width</b><br>
+            메인 아이콘: <code>2</code><br>
+            강조 아이콘 (back, chevron): <code>2.5</code><br><br>
+            <b>컬러 규칙</b><br>
+            기본: <code>#555</code> (currentColor 상속)<br>
+            강조 / 선택됨: <code>var(--primary) #3176FF</code><br>
+            위험 액션: <code>#E03535</code><br>
+            비활성 / 플레이스홀더: <code>#BBB</code><br><br>
+            <b>라이브러리</b><br>
+            <code>lucide-react</code> / CDN 인라인 SVG 병행 사용
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
   <!-- Footer -->
   <div style="text-align:center;padding-top:32px;font-size:12px;color:#bbb;">
     Vibespace Design Guide · Updated 2026-03-28 · vibespacekorea.com
