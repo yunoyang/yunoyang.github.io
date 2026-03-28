@@ -2464,7 +2464,6 @@ function handleGoogleResponse(response) {
     // GSI credential → Firebase Auth 세션 연결 후 클라우드 업로드 + 신규 가입자 알림
     _signInToFirebaseAuth(response.credential).then(async () => {
       await _autoUploadOnLogin();
-      _notifyNewUserIfNeeded();
       _loadContractors(); // 로그인 후 업체 DB 재로드 (Firestore 권한 확보 후)
     });
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
@@ -2472,8 +2471,13 @@ function handleGoogleResponse(response) {
 }
 
 async function _notifyNewUserIfNeeded() {
-  if (!_db || !state.user?.email) return;
+  if (!state.user?.email) return;
   try {
+    // _db 없으면 직접 초기화
+    if (!_db) {
+      const ok = await _initFirebase();
+      if (!ok || !_db) return;
+    }
     const userRef = _db.collection('vb_users').doc(state.user.email.replace(/\./g,'_'));
     const doc = await userRef.get();
     const now = new Date();
@@ -2494,10 +2498,11 @@ async function _notifyNewUserIfNeeded() {
         `👤 ${state.user.name}\n` +
         `📧 ${state.user.email}\n` +
         `🕐 ${dateStr}`;
-      fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ chat_id:_TG_CHAT_ID, text:tgText, parse_mode:'Markdown' })
       });
+      if (!res.ok) console.warn('TG notify failed:', res.status, await res.text());
     } else {
       // ── 기존 유저 재로그인 (알림 없음) ──
       const loginCount = (doc.data().loginCount || 1) + 1;
@@ -2512,7 +2517,6 @@ async function _notifyNewUserIfNeeded() {
 async function _autoUploadOnLogin() {
   const ok = await _initFirebase();
   if (!ok) return;
-  _notifyNewUserIfNeeded(); // 신규/재로그인 텔레그램 알림 (비동기, 논블로킹)
 
   // Firebase Auth 세션이 완전히 준비될 때까지 최대 3초 대기
   await new Promise(resolve => {
@@ -2525,6 +2529,9 @@ async function _autoUploadOnLogin() {
       } catch(e) { clearInterval(check); resolve(); }
     }, 200);
   });
+
+  // Auth 준비 완료 후 신규 가입자 알림 (Firestore 인증 필요)
+  _notifyNewUserIfNeeded();
 
   // ── 클라우드 전체 프로젝트 조회 ──
   showToastMessage('☁️ 클라우드 데이터 확인 중...');
