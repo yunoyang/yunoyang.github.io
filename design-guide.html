@@ -968,9 +968,199 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
   </div>
 
 
+  <!-- ─── 07. CALENDAR ─── -->
+  <div class="section">
+    <div class="section-title">07 · Calendar Component</div>
+
+    <!-- 컬러 팔레트 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div class="card-label">Process Color Palette <span class="name-tag primary">COLOR_HEX / .cal-day-proc.cX</span></div>
+        시공 공정별 랜덤 컬러 스펙트럼 (8색 순환)
+      </div>
+      <div class="card-body">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#EDF1FF;border-left:4px solid #5084FF;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#5084FF;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#5084FF;">블루</div><div style="font-size:11px;color:#888;font-family:monospace;">#5084FF · c0, c8</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#F0EEFF;border-left:4px solid #725CFF;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#725CFF;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#725CFF;">바이올렛</div><div style="font-size:11px;color:#888;font-family:monospace;">#725CFF · c1, c9</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#E6FFFE;border-left:4px solid #04D5C7;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#04D5C7;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#04D5C7;">틸</div><div style="font-size:11px;color:#888;font-family:monospace;">#04D5C7 · c2, c10</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#FFECEC;border-left:4px solid #FF8989;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#FF8989;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#FF8989;">레드</div><div style="font-size:11px;color:#888;font-family:monospace;">#FF8989 · c3, c11</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#FFF5E0;border-left:4px solid #FFB446;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#FFB446;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#FFB446;">옐로우</div><div style="font-size:11px;color:#888;font-family:monospace;">#FFB446 · c4, c12</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#E9ECFF;border-left:4px solid #162BE6;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#162BE6;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#162BE6;">다크블루</div><div style="font-size:11px;color:#888;font-family:monospace;">#162BE6 · c5, c13</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#EDEAFF;border-left:4px solid #4834C7;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#4834C7;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#4834C7;">다크바이올렛</div><div style="font-size:11px;color:#888;font-family:monospace;">#4834C7 · c6, c14</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:#FFF1E0;border-left:4px solid #F07800;min-width:160px;flex:1;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#F07800;flex-shrink:0;"></span>
+            <div><div style="font-size:13px;font-weight:700;color:#F07800;">오렌지</div><div style="font-size:11px;color:#888;font-family:monospace;">#F07800 · c7, c15</div></div>
+          </div>
+        </div>
+        <div class="comp-spec">컬러 할당 방식: <code>PROCESS_COLORS</code> 맵 (공정 타입 → cX 클래스) / 미지정 공정은 <code>hashCode(name) % 8</code> 랜덤 순환</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+
+      <!-- 캘린더 그리드 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Calendar Grid <span class="name-tag primary">#cal-table</span></div>
+          월간 캘린더 — 날짜·공정 표시
+        </div>
+        <div class="card-body">
+          <div style="background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;">
+            <!-- 헤더 -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f2f5;">
+              <button style="width:28px;height:28px;border-radius:8px;border:1.5px solid #e4e9f2;background:#fff;font-size:13px;cursor:pointer;">‹</button>
+              <span style="font-size:17px;font-weight:700;color:#1a1a1a;">2025년 3월 <span class="name-tag">.cal-th-title · 17px/700</span></span>
+              <button style="width:28px;height:28px;border-radius:8px;border:1.5px solid #e4e9f2;background:#fff;font-size:13px;cursor:pointer;">›</button>
+            </div>
+            <!-- 요일 헤더 -->
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+              <thead>
+                <tr>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#e05050;background:#fff5f5;">일</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#555;background:#f8f9fc;">월</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#555;background:#f8f9fc;">화</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#555;background:#f8f9fc;">수</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#555;background:#f8f9fc;">목</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#555;background:#f8f9fc;">금</th>
+                  <th style="text-align:center;padding:8px 4px;font-size:13px;font-weight:700;color:#4a7abf;background:#f0f4ff;">토</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#ccc;border:1px solid #f0f2f5;height:24px;vertical-align:top;">23</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#444;border:1px solid #f0f2f5;height:24px;vertical-align:top;">24</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#444;border:1px solid #f0f2f5;height:24px;vertical-align:top;">25</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#444;border:1px solid #f0f2f5;height:24px;vertical-align:top;">26</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#444;border:1px solid #f0f2f5;height:24px;vertical-align:top;">27</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#444;border:1px solid #f0f2f5;height:24px;vertical-align:top;">28</td>
+                  <td style="text-align:right;padding:5px 8px 2px;font-size:13px;color:#4a7abf;border:1px solid #f0f2f5;height:24px;vertical-align:top;background:#f5f8ff;">1</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;">
+                    <div style="font-size:11px;font-weight:700;color:#5084FF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">철거</div>
+                  </td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;">
+                    <div style="font-size:11px;font-weight:700;color:#5084FF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">철거</div>
+                    <div style="font-size:10px;color:#725CFF;font-weight:700;">타일</div>
+                  </td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;">
+                    <div style="font-size:11px;font-weight:700;color:#725CFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">타일</div>
+                  </td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;"></td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;"></td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;"></td>
+                  <td style="border:1px solid #f0f2f5;vertical-align:top;height:72px;padding:4px 6px;background:#f5f8ff;"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-desc mt8">
+            <code>.cal-dow-th</code> 13px/700 · padding 8px 4px<br>
+            <code>.cal-date-td</code> 13px/500 · height 24px<br>
+            <code>.cal-content-td</code> height 72px<br>
+            <code>.cal-day-pname</code> 11px/700 · 공정 컬러 적용
+          </div>
+        </div>
+      </div>
+
+      <!-- 주간 공정 카드 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Process Week Cards <span class="name-tag primary">.cal-proc-card</span></div>
+          캘린더 하단 주간 공정 상세 카드
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+
+            <!-- 블루 카드 (active) -->
+            <div style="border-radius:12px;padding:12px 14px;background:#EDF1FF;border-left:4px solid #5084FF;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#D8E4FF;color:#5084FF;">철거</span>
+                <span style="font-size:12px;font-weight:600;color:#5084FF;">03.10 ~ 03.12</span>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">철거 공사 <span style="font-size:11px;color:#bbb;font-weight:400;">active</span></div>
+              <div style="font-size:12px;color:#666;">담당: 다일공사</div>
+            </div>
+
+            <!-- 바이올렛 카드 (inactive) -->
+            <div style="border-radius:12px;padding:12px 14px;background:#F0EEFF;border-left:4px solid #725CFF;opacity:0.55;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#E4DCFF;color:#725CFF;">타일</span>
+                <span style="font-size:12px;font-weight:600;color:#725CFF;">03.15 ~ 03.20</span>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">타일 공사 <span style="font-size:11px;color:#bbb;font-weight:400;">inactive</span></div>
+              <div style="font-size:12px;color:#666;">담당: 아남애시소싱</div>
+            </div>
+
+            <!-- 오렌지 카드 -->
+            <div style="border-radius:12px;padding:12px 14px;background:#FFF1E0;border-left:4px solid #F07800;opacity:0.55;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#FFE4C0;color:#F07800;">목공</span>
+                <span style="font-size:12px;font-weight:600;color:#F07800;">03.22 ~</span>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;">목공 공사</div>
+            </div>
+
+          </div>
+          <div class="card-desc mt8">
+            <code>.pcard-active</code> opacity:1 (이번 주 활성) / 나머지 opacity:0.55<br>
+            <code>.pcard-type-badge</code> 10px/700 · 컬러 배경+텍스트<br>
+            border-left 4px solid 공정 컬러 · 배경 라이트 틴트
+          </div>
+        </div>
+      </div>
+
+      <!-- 네이밍 맵 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-label">Calendar Naming Map</div>
+        </div>
+        <div class="card-body" style="font-size:13px;line-height:2;color:#444;">
+          <b>캘린더 래퍼</b> — #screen-cal (.screen)<br>
+          <b>월 네비게이션</b> — .cal-nav-row<br>
+          <b>이전/다음 버튼</b> — .cal-nav-btn (‹ ›)<br>
+          <b>월 타이틀</b> — .cal-th-title (17px/700)<br>
+          <b>오늘 버튼</b> — .cal-today-btn<br>
+          <b>요일 헤더 셀</b> — .cal-dow-th (13px/700, padding 8px)<br>
+          <b>날짜 숫자 행</b> — .cal-date-td (height 24px)<br>
+          <b>내용 셀</b> — .cal-content-td (height 72px)<br>
+          <b>공정 이름 뱃지</b> — .cal-day-pname (공정 컬러)<br>
+          <b>세부 일정 텍스트</b> — .cal-day-detail<br>
+          <b>주간 공정 카드 영역</b> — .cal-cards-inner<br>
+          <b>공정 카드</b> — .cal-proc-card.cX<br>
+          <b>카드 타입 뱃지</b> — .pcard-type-badge.cX<br>
+          <b>활성 카드</b> — .pcard-active (opacity:1)
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
   <!-- Footer -->
   <div style="text-align:center;padding-top:32px;font-size:12px;color:#bbb;">
-    Vibespace Design Guide · Updated 2026-03-27 · vibespacekorea.com
+    Vibespace Design Guide · Updated 2026-03-28 · vibespacekorea.com
   </div>
 
 </div>
