@@ -782,6 +782,122 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
       </div>
 
 
+      <!-- 시공 상세 페이지 풀 레이아웃 -->
+      <div class="card" style="grid-column:1/-1;">
+        <div class="card-head">
+          <div class="card-label">Proc Detail Screen <span class="name-tag primary">#screen-proc-detail</span></div>
+          시공 상세 페이지 — 슬라이드업 풀스크린, 탭 구조
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;align-items:start;">
+
+            <!-- 전체 화면 프리뷰 -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">전체 레이아웃 프리뷰</div>
+              <div style="background:#f0f2f6;border-radius:18px;overflow:hidden;border:1px solid #e4e9f2;max-width:360px;">
+
+                <!-- 헤더 -->
+                <div style="background:#fff;display:flex;align-items:center;gap:8px;padding:16px 18px;border-bottom:1px solid #f0f2f5;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                  <span style="flex:1;font-size:18px;font-weight:700;color:#1a1a1a;">철거 공사</span>
+                  <span style="font-size:22px;font-weight:700;color:#555;letter-spacing:1px;line-height:1;">···</span>
+                </div>
+
+                <!-- 탭바 -->
+                <div style="background:#fff;display:flex;border-bottom:1.5px solid #eef0f5;height:52px;">
+                  <button style="flex:1;background:none;border:none;border-bottom:2.5px solid #3176ff;font-size:15px;font-weight:600;color:#222;font-family:sans-serif;padding:4px 0;margin-bottom:-1.5px;">시공 상세 내역</button>
+                  <button style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;font-family:sans-serif;padding:4px 0;">시공팁</button>
+                </div>
+
+                <!-- 내용 영역 -->
+                <div style="background:#fff;padding:4px 20px 16px;margin:12px 12px 0;">
+                  <!-- 필드 리스트 -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f2f5;">
+                    <span style="font-size:15px;font-weight:500;color:#888;">예상견적</span>
+                    <span style="font-size:16px;font-weight:700;color:#3176ff;">850,000원</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f2f5;">
+                    <span style="font-size:15px;font-weight:500;color:#888;">예상 일정</span>
+                    <span style="font-size:16px;font-weight:700;color:#444;">03.10 ~ 03.12</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+                    <span style="font-size:15px;font-weight:500;color:#888;">담당 업체</span>
+                    <span style="font-size:16px;font-weight:700;color:#444;">다일공사 ›</span>
+                  </div>
+                </div>
+
+                <!-- 상세내역 -->
+                <div style="background:#fff;padding:0 20px 16px;margin:8px 12px 12px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 6px;">
+                    <span style="font-size:16px;font-weight:500;color:#555;">상세내역</span>
+                    <span style="font-size:20px;color:#3176ff;line-height:1;">+</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid #f5f5f5;">
+                    <div>
+                      <div style="font-size:16px;font-weight:700;color:#333;">바닥 철거</div>
+                      <div style="font-size:13px;color:#aaa;margin-top:2px;">폴리싱, 포세린타일</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:16px;font-weight:700;color:#333;">300,000원</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid #f5f5f5;">
+                    <span style="font-size:16px;font-weight:700;color:#333;">벽체 철거</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="font-size:16px;font-weight:700;color:#333;">200,000원</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 스펙 -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">명세</div>
+              <div class="comp-spec" style="line-height:2.4;">
+                <b>스크린 ID</b><br>
+                <code>#screen-proc-detail</code><br>
+                position:fixed · z-index:8500 · translateY(100%→0) 슬라이드업<br><br>
+
+                <b>헤더 <code>.form-header</code></b><br>
+                back-btn: 화살표 22px · gap:8px · padding-left:18px<br>
+                타이틀: <code>#proc-detail-screen-title</code> · H2 18px/700<br>
+                ··· 버튼: <code>.card-more-btn</code> · 22px · #555 → 삭제 바텀시트<br><br>
+
+                <b>탭바</b><br>
+                높이 52px · padding 4px<br>
+                활성: 15px/600 · #222 · Primary 하단 border 2.5px<br>
+                비활성: 15px/500 · #818590<br><br>
+
+                <b>콘텐츠 배경</b><br>
+                스크린 배경: #F0F2F6<br>
+                내용 카드: #fff · margin 12px · border-radius 12px<br><br>
+
+                <b>필드 <code>.work-field</code></b><br>
+                padding: <code>10px 0</code> · border-bottom 1px #F0F2F5<br>
+                라벨: 15px/500 · #888<br>
+                값(filled): 16px/700 · #444<br>
+                값(예상견적): 16px/700 · Primary<br><br>
+
+                <b>상세내역 섹션</b><br>
+                헤더: <code>.detail-header</code> · d-label 16px/500 + + 버튼<br>
+                아이템: <code>.detail-item</code> · 클릭 시 수정 다이얼로그<br>
+                빈 상태: <code>.detail-empty</code> "+ 버튼으로 내역 추가"<br><br>
+
+                <b>삭제 바텀시트</b><br>
+                <code>#dlg-proc-del-sheet</code> · z-index:9600<br>
+                딤 클릭으로 닫기 · 취소 버튼 없음
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
     </div><!-- /grid -->
   </div>
 
