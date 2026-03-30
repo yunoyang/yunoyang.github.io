@@ -3639,6 +3639,7 @@ function confirmContractorSelect() {
     save(); renderAll();
   }
   closeDialog('dlg-company-search');
+  _refreshProcDetailIfOpen();
 }
 
 function switchCompTab(tab) {
@@ -4344,6 +4345,7 @@ function confirmAddDetail() {
     save(); renderAll();
   }
   closeDialog('dlg-add-detail');
+  _refreshProcDetailIfOpen();
 }
 
 function openEditDetail(procId, detailId) {
@@ -4374,6 +4376,7 @@ function confirmEditDetail() {
   const detail = proc?.details.find(d => d.id === editDetailId);
   if (detail) { detail.desc = desc; detail.subDesc = subDesc; detail.cost = cost; detail.date = date; save(); renderAll(); }
   closeDialog('dlg-edit-detail');
+  _refreshProcDetailIfOpen();
 }
 
 function deleteDetailFromEdit() {
@@ -4381,6 +4384,7 @@ function deleteDetailFromEdit() {
   const proc = getProject()?.processes.find(p => p.id === editDetailProcId);
   if (proc) { proc.details = proc.details.filter(d => d.id !== editDetailId); save(); renderAll(); }
   closeDialog('dlg-edit-detail');
+  _refreshProcDetailIfOpen();
 }
 
 function formatDetailDate(iso) {
