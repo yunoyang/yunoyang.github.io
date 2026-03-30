@@ -742,7 +742,7 @@ button, input, textarea, select { font-family:var(--font); }
   padding:8px 14px; border-top:1px solid #f5f5f5;
   background:#fff; gap:10px;
 }
-.day-detail-desc { font-size:13px; color:#444; flex:1; }
+.day-detail-desc { font-size:13px; color:#333; flex:1; }
 .day-detail-cost { font-size:13px; font-weight:600; color:#333; white-space:nowrap; }
 .day-detail-date-badge {
   font-size:10px; font-weight:700; color:var(--primary);
@@ -4407,7 +4407,10 @@ function openDayPopup(year, month, day) {
   const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const body = document.getElementById('day-popup-body');
   if (!active.length) {
-    body.innerHTML = '<div class="day-popup-empty">이 날짜에 예정된 공정이 없습니다</div>';
+    // 빈 날짜 → 팝업 닫고 공정 추가 다이얼로그 열기
+    closeDayPopup();
+    openAddProcess();
+    return;
   } else {
     body.innerHTML = active.map(p => {
       const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
@@ -4430,8 +4433,8 @@ function openDayPopup(year, month, day) {
       if (undatedDetails.length) {
         detailsHtml += undatedDetails.map(d => `
           <div class="day-detail-row">
-            <span class="day-detail-desc" style="color:#888;">${esc(d.desc)}</span>
-            <span class="day-detail-cost" style="color:#aaa;">${(d.cost||0).toLocaleString()}원</span>
+            <span class="day-detail-desc" style="color:#333;">${esc(d.desc)}</span>
+            <span class="day-detail-cost">${(d.cost||0).toLocaleString()}원</span>
           </div>`).join('');
       }
       if (!detailsHtml) {
