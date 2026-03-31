@@ -184,7 +184,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-bottom:1px solid var(--divider);
   position:relative; z-index:10;
 }
-.header-brand-logo { height:28px; width:auto; max-width:120px; object-fit:contain; flex-shrink:0; display:none; margin-right:10px; }
+.landing-logo-img { max-height:60px; width:auto; max-width:220px; object-fit:contain; display:none; }
 .project-selector { position:relative; flex:1; min-width:0; }
 .project-badge {
   display:inline-flex; align-items:center; gap:6px;
@@ -1543,7 +1543,8 @@ button, input, textarea, select { font-family:var(--font); }
 
   <!-- 중앙 로고 + 카피 -->
   <div class="landing-center">
-    <div class="landing-logo">Vibe<span>space</span></div>
+    <img id="landing-brand-logo" class="landing-logo-img" alt="Brand Logo">
+    <div class="landing-logo" id="landing-text-logo">Vibe<span>space</span></div>
     <div class="landing-divider"></div>
     <div class="landing-main-copy">극J들의 행복한 인테리어 여정.</div>
   </div>
@@ -1566,7 +1567,6 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- ===== MAIN ===== -->
 <div class="screen" id="screen-main">
   <div class="header">
-    <img id="header-brand-logo" class="header-brand-logo" alt="Brand Logo">
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
@@ -5976,17 +5976,22 @@ async function _loadBrandLogo() {
   } catch(e) {}
 }
 
-function _applyHeaderLogo(dataUrl) {
-  const el = document.getElementById('header-brand-logo');
-  if (!el) return;
+function _applyBrandLogo(dataUrl) {
+  const imgEl  = document.getElementById('landing-brand-logo');
+  const textEl = document.getElementById('landing-text-logo');
+  if (!imgEl || !textEl) return;
   if (dataUrl) {
-    el.src = dataUrl;
-    el.style.display = 'block';
+    imgEl.src = dataUrl;
+    imgEl.style.display = 'block';
+    textEl.style.display = 'none';
   } else {
-    el.src = '';
-    el.style.display = 'none';
+    imgEl.src = '';
+    imgEl.style.display = 'none';
+    textEl.style.display = '';
   }
 }
+// legacy alias
+const _applyHeaderLogo = _applyBrandLogo;
 
 // ===== INIT =====
 load();
