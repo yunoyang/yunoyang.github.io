@@ -2559,17 +2559,21 @@ async function _autoUploadOnLogin() {
   const allCloudProjs = await _fetchAllMyCloudProjects();
 
   if (allCloudProjs.length) {
-    // 클라우드에 데이터 있음 → processes 많은 순으로 정렬 후 교체
     allCloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
-    state.projects = allCloudProjs;
-    state.currentProjectId = state.projects[0]?.id || null;
-    save();
-    renderAll();
-    showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
-    for (const p of state.projects) {
-      if (p.cloudId) {
-        _startCollabListener(p.cloudId);
-        updateCollabIndicator(p.collaborators||[], p.owner);
+    const cloudTotal = allCloudProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
+    const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
+    // 클라우드에 실제 데이터가 있고, 로컬보다 많거나 같을 때만 교체 (로컬 데이터 보호)
+    if (cloudTotal > 0 && cloudTotal >= localTotal) {
+      state.projects = allCloudProjs;
+      state.currentProjectId = state.projects[0]?.id || null;
+      save();
+      renderAll();
+      showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+      for (const p of state.projects) {
+        if (p.cloudId) {
+          _startCollabListener(p.cloudId);
+          updateCollabIndicator(p.collaborators||[], p.owner);
+        }
       }
     }
     return;
@@ -5326,16 +5330,7 @@ async function _initFirebase() {
       if (e.code === 'app/duplicate-app') { _fbApp = firebase.app(); } else { return false; }
     }
     _db = firebase.firestore();
-    // Firestore rules require request.auth != null — wait for auth then sign in anonymously
-    await new Promise(resolve => {
-      const auth = firebase.auth();
-      const unsub = auth.onAuthStateChanged(user => {
-        unsub();
-        if (user) { resolve(); }
-        else { auth.signInAnonymously().then(resolve).catch(resolve); }
-      });
-      setTimeout(resolve, 4000); // max 4s wait
-    });
+    firebase.auth(); // Auth 초기화
   }
   return true;
 }
@@ -6035,35 +6030,40 @@ async function _syncFromCloudOnStartup() {
   const ok = await _initFirebase();
   if (!ok) return;
 
-  // PC 시작 시: 기존 cloudId 문서에 ownerEmail 백필 + vb_users 인덱스 저장
-  // → 모바일이 이메일로 프로젝트를 찾을 수 있게 됨
+  // Firebase Auth 준비 대기 (indexedDB에서 Google 세션 복원 포함, 최대 4초)
+  await new Promise(resolve => {
+    const auth = firebase.auth();
+    const t = setTimeout(() => { unsub(); resolve(); }, 4000);
+    const unsub = auth.onAuthStateChanged(user => {
+      clearTimeout(t); unsub(); resolve(user);
+    });
+  });
+  // 여전히 미인증이면 anonymous auth로 Firestore 쿼리 허용
+  if (!firebase.auth().currentUser) {
+    try { await firebase.auth().signInAnonymously(); } catch(e) {}
+  }
+
+  // PC: cloudId 있는 프로젝트에 ownerEmail 백필 + vb_users 인덱스 저장
   for (const p of (state.projects || [])) {
     if (p.cloudId && state.user?.email) {
-      // vb_projects 문서에 ownerEmail 직접 기입 (가장 확실한 방법)
       _db.collection('vb_projects').doc(p.cloudId)
-        .update({ ownerEmail: state.user.email })
-        .catch(() => {});
-      // vb_users 인덱스에도 저장
+        .update({ ownerEmail: state.user.email }).catch(() => {});
       _saveUserIndex(p.cloudId);
     }
   }
 
   try {
-    // 3단계 전략으로 클라우드 데이터 조회
     const cloudProjs = await _fetchAllMyCloudProjects();
 
     if (!cloudProjs.length) {
-      // 클라우드에 없음 → 기존 리스너만 재시작
       for (const p of (state.projects||[])) {
         if (p.isCloud && p.cloudId) _startCollabListener(p.cloudId);
       }
       return;
     }
 
-    // processes 수로 풍부도 비교 → 클라우드가 더 많거나 같으면 교체
     cloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
 
-    // 데이터 있는 프로젝트가 하나라도 있으면 빈 프로젝트(processes=0) 제거
     const hasRealData = cloudProjs.some(p => (p.processes?.length||0) > 0);
     const filteredProjs = hasRealData
       ? cloudProjs.filter(p => (p.processes?.length||0) > 0)
@@ -6072,15 +6072,15 @@ async function _syncFromCloudOnStartup() {
     const cloudTotal = filteredProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
     const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
 
-    if (cloudTotal >= localTotal) {
+    // 로컬에 실제 데이터가 있으면 클라우드가 명확히 더 많을 때만 교체 (데이터 보호)
+    if (cloudTotal > 0 && cloudTotal >= localTotal) {
       state.projects = filteredProjs;
       state.currentProjectId = state.projects[0]?.id || null;
       save();
       renderAll();
-      if (cloudTotal > 0) showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
+      showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
     }
 
-    // 리스너 시작
     for (const p of state.projects) {
       if (p.isCloud && p.cloudId) {
         _startCollabListener(p.cloudId);
