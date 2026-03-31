@@ -2579,15 +2579,16 @@ async function _autoUploadOnLogin() {
     return;
   }
 
-  // ── 클라우드에 데이터 없음 → 데이터 있는 프로젝트 전체 업로드 ──
-  const projsWithData = (state.projects||[]).filter(p => (p.processes?.length||0) > 0);
-  if (!projsWithData.length) {
-    showToastMessage('💡 PC에서 프로젝트를 먼저 저장해주세요.');
+  // ── 클라우드에 데이터 없음 → 로컬 프로젝트 전체 업로드 (기본 프로젝트 제외) ──
+  const defaultName = '정자동 아파트 플랜';
+  const projsToUpload = (state.projects||[]).filter(p => p.name && p.name !== defaultName);
+  if (!projsToUpload.length) {
+    // 기본 프로젝트만 있거나 아무것도 없음 → 업로드 불필요
     return;
   }
 
   let uploaded = 0;
-  for (const proj of projsWithData) {
+  for (const proj of projsToUpload) {
     proj.isCloud = true;
     proj.owner = { email: state.user.email, name: state.user.name };
     try {
@@ -2602,7 +2603,7 @@ async function _autoUploadOnLogin() {
   }
   if (uploaded > 0) {
     save();
-    showToastMessage('☁️ 클라우드에 저장됐습니다. 공동작업 초대가 가능합니다.');
+    showToastMessage('☁️ 클라우드에 저장됐습니다.');
   }
 }
 
