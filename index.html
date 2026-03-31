@@ -6011,8 +6011,8 @@ window.addEventListener('load', () => {
   if (typeof google !== 'undefined' && google.accounts &&
       GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
     try {
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse, auto_select: true });
-      google.accounts.id.prompt(); // 이미 로그인 상태여도 silent token으로 Firebase Auth 재연결
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+      if (!state.loggedIn) google.accounts.id.prompt();
     } catch(e) {}
   }
   // 공동작업 초대 처리
@@ -6057,19 +6057,20 @@ async function _syncFromCloudOnStartup() {
     const cloudProjs = await _fetchAllMyCloudProjects();
 
     if (!cloudProjs.length) {
-      // 클라우드 비어있음 → 로컬 데이터 있으면 Firebase Auth 확인 후 업로드
-      const authUser = firebase.auth().currentUser;
-      if (authUser && !authUser.isAnonymous) {
-        for (const p of (state.projects||[])) {
-          if ((p.processes?.length||0) > 0) {
-            p.isCloud = true;
-            p.owner = { email: state.user.email, name: state.user.name };
-            const cloudId = await _pushProjToCloud(p).catch(() => null);
-            if (cloudId) { p.cloudId = cloudId; }
-          }
+      // 클라우드 비어있음 → 앱 로그인 상태면 로컬 데이터 업로드 (Firebase Auth 방식 무관)
+      const projsToUpload = (state.projects||[]).filter(p => (p.processes?.length||0) > 0);
+      if (projsToUpload.length > 0) {
+        let uploaded = 0;
+        for (const p of projsToUpload) {
+          p.isCloud = true;
+          p.owner = { email: state.user.email, name: state.user.name };
+          const cloudId = await _pushProjToCloud(p).catch(() => null);
+          if (cloudId) { p.cloudId = cloudId; uploaded++; }
         }
-        save();
-        showToastMessage('☁️ 로컬 데이터를 클라우드에 업로드했습니다.');
+        if (uploaded > 0) {
+          save();
+          showToastMessage('☁️ 로컬 데이터를 클라우드에 업로드했습니다.');
+        }
       }
       for (const p of (state.projects||[])) {
         if (p.isCloud && p.cloudId) _startCollabListener(p.cloudId);
