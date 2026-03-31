@@ -2579,29 +2579,30 @@ async function _autoUploadOnLogin() {
     return;
   }
 
-  // ── 클라우드에 데이터 없음 → 로컬에 실제 데이터 있을 때만 업로드 ──
-  const proj = getProject();
-  if (!proj) return;
-  const isLocalEmpty = !proj.processes?.length;
-  if (isLocalEmpty) {
-    // 빈 프로젝트를 클라우드에 올리지 않음 (다른 기기 데이터 오염 방지)
+  // ── 클라우드에 데이터 없음 → 데이터 있는 프로젝트 전체 업로드 ──
+  const projsWithData = (state.projects||[]).filter(p => (p.processes?.length||0) > 0);
+  if (!projsWithData.length) {
     showToastMessage('💡 PC에서 프로젝트를 먼저 저장해주세요.');
     return;
   }
 
-  proj.isCloud = true;
-  proj.owner = { email: state.user.email, name: state.user.name };
-  try {
-    const cloudId = await _pushProjToCloud(proj);
-    if (cloudId) {
-      proj.cloudId = cloudId;
-      save();
-      _startCollabListener(cloudId);
-      updateCollabIndicator(proj.collaborators||[], proj.owner);
-      showToastMessage('☁️ 클라우드에 저장됐습니다. 공동작업 초대가 가능합니다.');
-    }
-  } catch(e) {
-    console.error('Auto upload failed:', e);
+  let uploaded = 0;
+  for (const proj of projsWithData) {
+    proj.isCloud = true;
+    proj.owner = { email: state.user.email, name: state.user.name };
+    try {
+      const cloudId = await _pushProjToCloud(proj);
+      if (cloudId) {
+        proj.cloudId = cloudId;
+        uploaded++;
+        _startCollabListener(cloudId);
+        updateCollabIndicator(proj.collaborators||[], proj.owner);
+      }
+    } catch(e) { console.error('Upload failed:', e); }
+  }
+  if (uploaded > 0) {
+    save();
+    showToastMessage('☁️ 클라우드에 저장됐습니다. 공동작업 초대가 가능합니다.');
   }
 }
 
