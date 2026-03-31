@@ -3407,9 +3407,8 @@ async function applyLogoToAll() {
   sessionStorage.removeItem('vibespace_logo_pending');
   // Firestore 저장
   try {
-    if (typeof firebase !== 'undefined' && firebase.apps.length) {
-      const db = firebase.firestore();
-      await db.collection('vb_settings').doc('brand').set(
+    if (_adminDb) {
+      await _adminDb.collection('vb_settings').doc('brand').set(
         { logoDataUrl: dataUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
         { merge: true }
       );
@@ -3430,9 +3429,8 @@ async function clearLogo() {
   preview.innerHTML = '<span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>';
   _updateAllPreviews(null);
   try {
-    if (typeof firebase !== 'undefined' && firebase.apps.length) {
-      const db = firebase.firestore();
-      await db.collection('vb_settings').doc('brand').update({ logoDataUrl: firebase.firestore.FieldValue.delete() });
+    if (_adminDb) {
+      await _adminDb.collection('vb_settings').doc('brand').update({ logoDataUrl: firebase.firestore.FieldValue.delete() });
     }
     const status = document.getElementById('brand-save-status');
     if (status) status.innerHTML = '<span style="color:#10b981;">✓ 삭제 완료</span>';
