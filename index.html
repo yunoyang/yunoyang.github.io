@@ -354,7 +354,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .work-card-body .work-field { pointer-events:none; }
 
-.work-card-body .f-value { cursor:pointer !important; font-size:16px !important; font-weight:700 !important; }
+.work-card-body .f-value { cursor:pointer; }
 .work-card.expanded .work-card-body { cursor:pointer; }
 .work-card-body .f-value.readonly { color:var(--primary) !important; }
 .work-card-body .detail-add-btn { display:none; }
@@ -536,13 +536,13 @@ button, input, textarea, select { font-family:var(--font); }
 .mobile-sheet-item.danger { color:#e03535; }
 .mobile-sheet-item.danger svg, .mobile-sheet-item.danger i { color:#e03535; }
 
-.work-field { display:flex; align-items:center; justify-content:space-between; padding:17px 0; }
-.f-label { font-size:16px; font-weight:400; color:#aaa; flex-shrink:0; }
+.work-field { display:flex; align-items:center; justify-content:space-between; padding:19px 0; }
+.f-label { font-size:15px; font-weight:500; color:#555; flex-shrink:0; }
 .f-value {
   display:flex; align-items:center; gap:5px; font-size:16px; font-weight:700;
-  color:var(--text-placeholder); cursor:pointer;
+  color:#bbb; cursor:pointer;
 }
-.f-value.filled { color:var(--text-secondary); font-weight:700; }
+.f-value.filled { color:#222; font-weight:700; }
 .f-value.readonly { color:var(--primary); font-weight:500; cursor:default; }
 .f-value svg { width:13px; height:13px; color:var(--primary); flex-shrink:0; }
 .field-divider { height:1px; background:#f0f2f5; }
@@ -578,7 +578,10 @@ button, input, textarea, select { font-family:var(--font); }
 .d-cost { font-size:16px; font-weight:700; white-space:nowrap; }
 .d-chev { color:#d0d5e0; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
-.proc-detail-link { display:flex; align-items:center; justify-content:center; gap:4px; padding:10px 0 6px; font-size:14px; font-weight:600; color:#555555; cursor:pointer; background:none; border:none; font-family:var(--font); width:100%; }
+.proc-card-actions { display:flex; align-items:center; justify-content:space-between; padding:4px 0 2px; }
+.proc-delete-btn { display:flex; align-items:center; gap:4px; padding:8px 10px; font-size:13px; font-weight:500; color:#ccc; cursor:pointer; background:none; border:none; font-family:var(--font); border-radius:8px; }
+.proc-delete-btn:active { color:#e03535; background:#fff0f0; }
+.proc-detail-link { display:flex; align-items:center; gap:4px; padding:8px 10px; font-size:14px; font-weight:600; color:#555555; cursor:pointer; background:none; border:none; font-family:var(--font); border-radius:8px; }
 /* 상세내역 다이얼로그 날짜 영역 */
 .detail-date-section { margin-top:4px; }
 .detail-date-label { font-size:12px; color:#888; margin-bottom:5px; }
@@ -3667,7 +3670,11 @@ function switchCompTab(tab) {
     manualBtn.classList.remove('active'); selectBtn.classList.add('active');
     if (tabsBar) tabsBar.style.marginBottom = '0';
     const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
-    _renderContractorSelectList(proc?.type || proc?.name);
+    if (!_contractors.length) {
+      _loadContractors().then(() => _renderContractorSelectList(proc?.type || proc?.name));
+    } else {
+      _renderContractorSelectList(proc?.type || proc?.name);
+    }
   }
 }
 
@@ -3789,17 +3796,17 @@ function renderWorkCards() {
         </div>
       </div>
       <div class="work-card-body" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">
-        <div class="work-field" style="padding:10px 0;">
+        <div class="work-field">
           <span class="f-label">예상 견적</span>
-          <span class="f-value ${totalCost > 0 ? 'readonly' : ''}" style="font-size:16px;">${totalCost > 0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
+          <span class="f-value ${totalCost > 0 ? 'readonly' : ''}">${totalCost > 0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
         </div>
-        <div class="work-field" style="padding:10px 0;">
+        <div class="work-field">
           <span class="f-label">예상 일정</span>
-          <span class="f-value${p.scheduleStart ? ' filled' : ''}" style="font-size:16px;">${esc(schedDisplay)}</span>
+          <span class="f-value${p.scheduleStart ? ' filled' : ''}">${esc(schedDisplay)}</span>
         </div>
-        <div class="work-field" style="padding:10px 0;">
+        <div class="work-field">
           <span class="f-label">담당 업체</span>
-          <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}" style="font-size:16px;">${esc(compDisplay)}</span>
+          <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}">${esc(compDisplay)}</span>
         </div>
         <div class="detail-header" style="padding:14px 0 4px;">
           <span class="d-label">상세내역</span>
@@ -3818,7 +3825,13 @@ function renderWorkCards() {
           ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#555555;letter-spacing:2px;">···</div>` : ''}
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
         <div style="border-top:1px solid #F0F2F5;margin:8px -20px;"></div>
-        <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div class="proc-card-actions">
+          <button class="proc-delete-btn" onclick="event.stopPropagation();if(confirm('공정을 삭제하시겠습니까?'))deleteProcess('${p.id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            삭제
+          </button>
+          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -4020,18 +4033,18 @@ function _renderProcDetailContent(procId) {
     ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
   document.getElementById('ptab-info').innerHTML = `
     <div style="background:#fff;padding:12px 20px 8px;">
-      <div class="work-field" style="padding:10px 0;">
+      <div class="work-field">
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
       </div>
-      <div class="work-field" style="padding:10px 0;">
+      <div class="work-field">
         <span class="f-label">예상 일정</span>
         <span class="f-value ${p.scheduleStart?'filled':''}" onclick="openScheduleDialog('${p.id}')" style="cursor:pointer;">
           ${esc(schedDisplay)}
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </span>
       </div>
-      <div class="work-field" style="padding:10px 0;">
+      <div class="work-field">
         <span class="f-label">담당 업체</span>
         <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
           ${p.companyData ? `<div class="f-company-selected"><span class="f-company-name">${esc(p.companyData.name)}</span></div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
