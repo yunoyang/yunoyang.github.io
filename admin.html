@@ -3272,7 +3272,7 @@ function loadBrandSection() {
   const preview = document.getElementById('brand-logo-preview');
   const placeholder = document.getElementById('brand-logo-placeholder');
   const previewLogo = document.getElementById('brand-preview-logo');
-  const saved = localStorage.getItem('vibespace_logo_admin');
+  const saved = localStorage.getItem('vibespace_logo');
   if (saved) {
     if (placeholder) placeholder.style.display = 'none';
     preview.innerHTML = `<img src="${saved}" style="max-height:90px;max-width:100%;object-fit:contain;">`;
@@ -3288,7 +3288,7 @@ function handleLogoUpload(e) {
   reader.onload = async ev => {
     const dataUrl = ev.target.result;
     // Save to localStorage for immediate use
-    localStorage.setItem('vibespace_logo_admin', dataUrl);
+    localStorage.setItem('vibespace_logo', dataUrl);
     // Update UI
     const preview = document.getElementById('brand-logo-preview');
     const placeholder = document.getElementById('brand-logo-placeholder');
@@ -3315,7 +3315,7 @@ function handleLogoUpload(e) {
 
 async function clearLogo() {
   if (!confirm('로고를 삭제하시겠습니까?')) return;
-  localStorage.removeItem('vibespace_logo_admin');
+  localStorage.removeItem('vibespace_logo');
   const preview = document.getElementById('brand-logo-preview');
   const previewLogo = document.getElementById('brand-preview-logo');
   preview.innerHTML = '<span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>';
