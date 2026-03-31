@@ -1310,42 +1310,124 @@ service cloud.firestore {
         <div class="section-header">
           <div>
             <h1 class="section-title">브랜드 설정</h1>
-            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">공사계획서 PDF에 사용될 Vibespace 로고를 관리합니다</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">메인 앱 헤더 · 어드민 · PDF 공사계획서에 사용될 로고를 관리합니다</p>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;">
-          <!-- Logo Upload Card -->
-          <div class="chart-card" style="padding:24px;">
-            <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;">로고 이미지</h3>
-            <p style="font-size:12px;color:#888;margin-bottom:16px;">PNG, SVG 권장 · 투명 배경 · 최대 2MB</p>
-            <!-- Current logo preview -->
-            <div id="brand-logo-preview" style="width:100%;height:100px;border:1.5px dashed #ddd;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:#fafafa;overflow:hidden;">
-              <span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>
+
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:24px;max-width:960px;align-items:start;">
+
+          <!-- ── LEFT: 업로드 + 스펙 ── -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- 업로드 카드 -->
+            <div class="chart-card" style="padding:24px;">
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;">로고 이미지</h3>
+              <p style="font-size:12px;color:#888;margin-bottom:14px;">PNG, SVG 권장 · 투명 배경 · 최대 2MB</p>
+              <div id="brand-logo-preview" style="width:100%;height:100px;border:1.5px dashed #ddd;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:#fafafa;overflow:hidden;">
+                <span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>
+              </div>
+              <input type="file" id="brand-logo-input" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button onclick="document.getElementById('brand-logo-input').click()" style="flex:1;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">
+                  파일 선택
+                </button>
+                <button onclick="clearLogo()" style="padding:10px 14px;background:#f5f5f5;color:#666;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">
+                  삭제
+                </button>
+              </div>
+              <button onclick="applyLogoToAll()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);letter-spacing:-.2px;">
+                ✓ 모든 영역에 적용
+              </button>
+              <div id="brand-save-status" style="margin-top:10px;font-size:12px;color:#888;text-align:center;"></div>
             </div>
-            <input type="file" id="brand-logo-input" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
-            <div style="display:flex;gap:8px;">
-              <button onclick="document.getElementById('brand-logo-input').click()" style="flex:1;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">
-                업로드
-              </button>
-              <button onclick="clearLogo()" style="padding:10px 14px;background:#f5f5f5;color:#666;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">
-                삭제
-              </button>
+
+            <!-- 권장 스펙 카드 -->
+            <div class="chart-card" style="padding:20px 24px;">
+              <h3 style="font-size:13px;font-weight:700;margin-bottom:12px;color:#555;">로고 권장 사이즈</h3>
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <tbody>
+                  <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:7px 0;color:#888;font-weight:600;width:90px;">표시 높이</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">28px (헤더 내 고정)</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:7px 0;color:#888;font-weight:600;">권장 원본</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">56px 높이 (Retina @2x)</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:7px 0;color:#888;font-weight:600;">최대 가로</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">120px</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:7px 0;color:#888;font-weight:600;">비율</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">가로형 권장 (세로 긴 로고 잘림)</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:7px 0;color:#888;font-weight:600;">포맷</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">PNG (투명배경) 또는 SVG</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 0;color:#888;font-weight:600;">용량 제한</td>
+                    <td style="padding:7px 0;color:#333;font-weight:600;">2MB 이하</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <!-- Preview Card -->
-          <div class="chart-card" style="padding:24px;">
-            <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;">PDF 미리보기</h3>
-            <p style="font-size:12px;color:#888;margin-bottom:16px;">공사계획서 헤더에 이렇게 표시됩니다</p>
-            <div style="border:1px solid #ddd;border-radius:8px;padding:14px 18px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
-              <div id="brand-preview-logo" style="display:flex;align-items:center;height:28px;">
-                <span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>
+
+          <!-- ── RIGHT: 3개 영역 프리뷰 ── -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- 1. 메인 앱 헤더 -->
+            <div class="chart-card" style="padding:20px 24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="font-size:13px;font-weight:700;color:#555;">① 메인 앱 헤더</h3>
+                <span style="font-size:11px;color:#aaa;">vibespacekorea.com</span>
               </div>
-              <div style="text-align:right;">
-                <div style="font-size:9px;font-weight:700;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;">공사계획서</div>
-                <div style="font-size:13px;font-weight:800;color:#111;margin-top:2px;">내 공사 계획</div>
+              <div style="border:1px solid #eef0f5;border-radius:12px;padding:14px 18px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div id="prev-main-logo" style="display:flex;align-items:center;height:28px;"></div>
+                  <div>
+                    <span style="font-size:16px;font-weight:700;color:#1a1a1a;">강남구 리모델링</span>
+                    <span style="font-size:10px;font-weight:700;color:#3176ff;border:1.5px solid #3176ff;border-radius:5px;padding:1px 5px;margin-left:6px;">beta</span>
+                  </div>
+                </div>
+                <div style="width:32px;height:32px;border-radius:50%;background:#e8ecf5;"></div>
               </div>
             </div>
-            <div id="brand-save-status" style="margin-top:12px;font-size:12px;color:#888;text-align:center;"></div>
+
+            <!-- 2. 어드민 사이드바 -->
+            <div class="chart-card" style="padding:20px 24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="font-size:13px;font-weight:700;color:#555;">② 어드민 사이드바</h3>
+                <span style="font-size:11px;color:#aaa;">admin.html</span>
+              </div>
+              <div style="border:1px solid #eef0f5;border-radius:12px;padding:14px 20px;background:#1e2434;display:flex;align-items:center;gap:12px;">
+                <div id="prev-admin-logo" style="display:flex;align-items:center;height:28px;"></div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#fff;">Vibespace <span style="font-size:10px;background:#3176ff;color:#fff;border-radius:4px;padding:1px 6px;font-weight:600;">ADMIN</span></div>
+                  <div style="font-size:11px;color:#8892a4;margin-top:1px;">반셀프인테리어 플래닝툴</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. PDF 공사계획서 -->
+            <div class="chart-card" style="padding:20px 24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="font-size:13px;font-weight:700;color:#555;">③ PDF 공사계획서</h3>
+                <span style="font-size:11px;color:#aaa;">export</span>
+              </div>
+              <div style="border:1px solid #ddd;border-radius:8px;padding:14px 18px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
+                <div id="brand-preview-logo" style="display:flex;align-items:center;height:28px;">
+                  <span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:9px;font-weight:700;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;">공사계획서</div>
+                  <div style="font-size:13px;font-weight:800;color:#111;margin-top:2px;">내 공사 계획</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -3268,16 +3350,28 @@ async function syncFromGoogleSheet() {
 }
 
 // ===== BRAND / LOGO =====
+// ── 3개 영역 프리뷰 동시 업데이트 ──
+function _updateAllPreviews(dataUrl) {
+  const logoImg = dataUrl ? `<img src="${dataUrl}" style="height:28px;width:auto;max-width:120px;object-fit:contain;">` : '';
+  const pdfFallback = '<span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>';
+  const el = id => document.getElementById(id);
+  if (el('prev-main-logo'))  el('prev-main-logo').innerHTML  = logoImg;
+  if (el('prev-admin-logo')) el('prev-admin-logo').innerHTML = logoImg;
+  if (el('brand-preview-logo')) el('brand-preview-logo').innerHTML = dataUrl ? logoImg : pdfFallback;
+  // 어드민 사이드바 실제 반영
+  const sidebarLogo = document.getElementById('admin-sidebar-logo-img');
+  if (sidebarLogo) { sidebarLogo.src = dataUrl || ''; sidebarLogo.style.display = dataUrl ? 'block' : 'none'; }
+}
+
 function loadBrandSection() {
+  const saved = localStorage.getItem('vibespace_logo');
   const preview = document.getElementById('brand-logo-preview');
   const placeholder = document.getElementById('brand-logo-placeholder');
-  const previewLogo = document.getElementById('brand-preview-logo');
-  const saved = localStorage.getItem('vibespace_logo');
   if (saved) {
     if (placeholder) placeholder.style.display = 'none';
     preview.innerHTML = `<img src="${saved}" style="max-height:90px;max-width:100%;object-fit:contain;">`;
-    previewLogo.innerHTML = `<img src="${saved}" style="height:28px;width:auto;object-fit:contain;">`;
   }
+  _updateAllPreviews(saved || null);
 }
 
 function handleLogoUpload(e) {
@@ -3285,41 +3379,56 @@ function handleLogoUpload(e) {
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) { alert('2MB 이하 이미지만 업로드 가능합니다.'); return; }
   const reader = new FileReader();
-  reader.onload = async ev => {
+  reader.onload = ev => {
     const dataUrl = ev.target.result;
-    // Save to localStorage for immediate use
-    localStorage.setItem('vibespace_logo', dataUrl);
-    // Update UI
+    // 업로드 미리보기만 업데이트 (저장은 "적용" 버튼)
     const preview = document.getElementById('brand-logo-preview');
     const placeholder = document.getElementById('brand-logo-placeholder');
-    const previewLogo = document.getElementById('brand-preview-logo');
     if (placeholder) placeholder.style.display = 'none';
     preview.innerHTML = `<img src="${dataUrl}" style="max-height:90px;max-width:100%;object-fit:contain;">`;
-    previewLogo.innerHTML = `<img src="${dataUrl}" style="height:28px;width:auto;object-fit:contain;">`;
-    // Save to Firestore
+    _updateAllPreviews(dataUrl);
+    // 임시 저장 (적용 전 미리보기용)
+    sessionStorage.setItem('vibespace_logo_pending', dataUrl);
     const status = document.getElementById('brand-save-status');
-    if (status) status.textContent = '저장 중...';
-    try {
-      if (typeof firebase !== 'undefined' && firebase.apps.length) {
-        const db = firebase.firestore();
-        await db.collection('vb_settings').doc('brand').set({ logoDataUrl: dataUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-      }
-      if (status) status.innerHTML = '<span style="color:#10b981;">✓ 저장 완료</span>';
-    } catch(err) {
-      if (status) status.innerHTML = '<span style="color:#ef4444;">저장 실패 (로컬에는 저장됨)</span>';
-      console.error(err);
-    }
+    if (status) status.innerHTML = '<span style="color:#f59e0b;">⚡ 미리보기 중 — 아래 적용 버튼을 눌러 저장하세요</span>';
   };
   reader.readAsDataURL(file);
+}
+
+async function applyLogoToAll() {
+  const pending = sessionStorage.getItem('vibespace_logo_pending');
+  const current = localStorage.getItem('vibespace_logo');
+  const dataUrl = pending || current;
+  if (!dataUrl) { alert('먼저 로고 파일을 선택하세요.'); return; }
+  const status = document.getElementById('brand-save-status');
+  if (status) status.textContent = '저장 중...';
+  // localStorage 저장
+  localStorage.setItem('vibespace_logo', dataUrl);
+  sessionStorage.removeItem('vibespace_logo_pending');
+  // Firestore 저장
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+      const db = firebase.firestore();
+      await db.collection('vb_settings').doc('brand').set(
+        { logoDataUrl: dataUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    }
+    if (status) status.innerHTML = '<span style="color:#10b981;">✓ 모든 영역에 적용 완료</span>';
+    _updateAllPreviews(dataUrl);
+  } catch(err) {
+    if (status) status.innerHTML = '<span style="color:#ef4444;">Firestore 저장 실패 (로컬 적용됨)</span>';
+    console.error(err);
+  }
 }
 
 async function clearLogo() {
   if (!confirm('로고를 삭제하시겠습니까?')) return;
   localStorage.removeItem('vibespace_logo');
+  sessionStorage.removeItem('vibespace_logo_pending');
   const preview = document.getElementById('brand-logo-preview');
-  const previewLogo = document.getElementById('brand-preview-logo');
   preview.innerHTML = '<span style="font-size:13px;color:#bbb;" id="brand-logo-placeholder">로고 없음</span>';
-  previewLogo.innerHTML = '<span style="font-size:18px;font-weight:900;color:#111;letter-spacing:-1px;">Vibespace</span>';
+  _updateAllPreviews(null);
   try {
     if (typeof firebase !== 'undefined' && firebase.apps.length) {
       const db = firebase.firestore();
