@@ -184,6 +184,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-bottom:1px solid var(--divider);
   position:relative; z-index:10;
 }
+.header-brand-logo { height:28px; width:auto; max-width:120px; object-fit:contain; flex-shrink:0; display:none; margin-right:10px; }
 .project-selector { position:relative; flex:1; min-width:0; }
 .project-badge {
   display:inline-flex; align-items:center; gap:6px;
@@ -352,7 +353,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-top:1px solid #f0f2f5;
 }
 .work-card-body .work-field { pointer-events:none; }
-.work-card-body .f-label { font-size:16px; font-weight:400; color:#aaa; }
+
 .work-card-body .f-value { cursor:pointer !important; font-size:16px !important; font-weight:700 !important; }
 .work-card.expanded .work-card-body { cursor:pointer; }
 .work-card-body .f-value.readonly { color:var(--primary) !important; }
@@ -536,7 +537,7 @@ button, input, textarea, select { font-family:var(--font); }
 .mobile-sheet-item.danger svg, .mobile-sheet-item.danger i { color:#e03535; }
 
 .work-field { display:flex; align-items:center; justify-content:space-between; padding:17px 0; }
-.f-label { font-size:15px; font-weight:500; color:#888; flex-shrink:0; }
+.f-label { font-size:16px; font-weight:400; color:#aaa; flex-shrink:0; }
 .f-value {
   display:flex; align-items:center; gap:5px; font-size:16px; font-weight:700;
   color:var(--text-placeholder); cursor:pointer;
@@ -1565,6 +1566,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- ===== MAIN ===== -->
 <div class="screen" id="screen-main">
   <div class="header">
+    <img id="header-brand-logo" class="header-brand-logo" alt="Brand Logo">
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
@@ -2224,6 +2226,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="day-popup-handle"></div>
   <div class="day-popup-header">
     <span class="day-popup-title" id="day-popup-title">3월 19일</span>
+    <button id="day-popup-add-btn" onclick="closeDayPopup();openAddProcess(window._dayPopupDateStr)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 공정 추가</button>
     <button class="day-popup-close" onclick="closeDayPopup()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
@@ -4270,7 +4273,11 @@ function formatDate(iso) {
 
 // ===== ADD PROCESS =====
 let selectedProcessType = null;
-function openAddProcess() { requireLogin(_openAddProcess); }
+let _addProcessDefaultDate = null;
+function openAddProcess(defaultDate) {
+  _addProcessDefaultDate = defaultDate || null;
+  requireLogin(_openAddProcess);
+}
 function _openAddProcess() {
   selectedProcessType = null;
   document.getElementById('custom-process-input').value = '';
@@ -4289,11 +4296,19 @@ function confirmAddProcess() {
   const name = custom || selectedProcessType;
   if (!name) { alert('공정 유형을 선택하거나 이름을 입력하세요.'); return; }
   const _newProcId = 'proc_'+Date.now();
-  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, scheduleStart:'', scheduleEnd:'', company:'', details:[] });
+  const _defaultDate = _addProcessDefaultDate || '';
+  _addProcessDefaultDate = null;
+  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, scheduleStart:_defaultDate, scheduleEnd:_defaultDate, company:'', details:[] });
   gtag('event', 'add_process', { process_type: name, is_custom: !!custom });
   trackEvent('process', 'add_process', name);
   _pendingNewProcId = _newProcId;
-  save(); renderAll();
+  save();
+  // 캘린더에서 날짜 클릭으로 추가한 경우 → 해당 달로 캘린더 이동 후 렌더
+  if (_defaultDate) {
+    const _d = new Date(_defaultDate + 'T00:00:00');
+    calMonth = { year: _d.getFullYear(), month: _d.getMonth() };
+  }
+  renderAll();
   closeDialog('dlg-add-process');
 }
 
@@ -4409,11 +4424,12 @@ function openDayPopup(year, month, day) {
     `${month+1}월 ${day}일 (${DOW_KO[dateD.getDay()]})`;
 
   const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  window._dayPopupDateStr = dateStr;
   const body = document.getElementById('day-popup-body');
   if (!active.length) {
-    // 빈 날짜 → 팝업 닫고 공정 추가 다이얼로그 열기
+    // 빈 날짜 → 팝업 없이 공정 추가 다이얼로그 바로 열기
     closeDayPopup();
-    openAddProcess();
+    openAddProcess(dateStr);
     return;
   } else {
     body.innerHTML = active.map(p => {
@@ -5196,6 +5212,7 @@ function renderAll() {
     document.getElementById('current-project-name').textContent = proj.name;
     renderWorkCards();
     updateSummary();
+    renderCalendar();
   }
   updateLoginUI();
   setTimeout(lucide.createIcons, 30);
@@ -5945,7 +5962,7 @@ function initSession() {
   _checkSession();
 }
 
-// Fetch brand logo from Firestore → cache in localStorage for export doc
+// Fetch brand logo from Firestore → cache in localStorage + apply to header
 async function _loadBrandLogo() {
   try {
     const ok = await _initFirebase();
@@ -5953,10 +5970,22 @@ async function _loadBrandLogo() {
     const snap = await _db.collection('vb_settings').doc('brand').get();
     if (snap.exists) {
       const logo = snap.data().logoDataUrl;
-      if (logo) localStorage.setItem('vibespace_logo', logo);
-      else localStorage.removeItem('vibespace_logo');
+      if (logo) { localStorage.setItem('vibespace_logo', logo); _applyHeaderLogo(logo); }
+      else { localStorage.removeItem('vibespace_logo'); _applyHeaderLogo(null); }
     }
   } catch(e) {}
+}
+
+function _applyHeaderLogo(dataUrl) {
+  const el = document.getElementById('header-brand-logo');
+  if (!el) return;
+  if (dataUrl) {
+    el.src = dataUrl;
+    el.style.display = 'block';
+  } else {
+    el.src = '';
+    el.style.display = 'none';
+  }
 }
 
 // ===== INIT =====
@@ -5978,7 +6007,9 @@ window.addEventListener('load', () => {
   }
   // 공동작업 초대 처리
   _checkInviteOnLoad();
-  _loadBrandLogo();
+  // localStorage 캐시에서 즉시 헤더 로고 적용 (Firestore 응답 전 공백 방지)
+  _applyHeaderLogo(localStorage.getItem('vibespace_logo') || null);
+  _loadBrandLogo(); // Firestore 최신 로고 반영
   _loadContractors(); // 업체 DB 로드
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
