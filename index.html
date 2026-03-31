@@ -134,7 +134,7 @@
 
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="icons-sprite.js"></script>
 <style>
 :root {
   --primary: #3176ff;
@@ -157,6 +157,8 @@
   --border-input: #dde3ef;
   --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+/* SVG Icon Sprite */
+svg.icon { display:inline-block; vertical-align:middle; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; overflow:hidden; }
 body { font-family:var(--font); background:var(--bg); }
@@ -1555,10 +1557,10 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 하단 버튼 -->
   <div class="landing-bottom">
     <button class="landing-btn" onclick="startNewProject()">
-      <i data-lucide="plus"></i> 내 공사 계획 시작하기
+      <svg class="icon" width="20" height="20"><use href="#icon-plus"/></svg> 내 공사 계획 시작하기
     </button>
     <button class="landing-btn-secondary" onclick="loadExistingProjects()">
-      <i data-lucide="folder-open"></i> 이전 플랜 이어서 진행
+      <svg class="icon" width="20" height="20"><use href="#icon-folder-open"/></svg> 이전 플랜 이어서 진행
     </button>
     <button class="landing-btn-google" onclick="openDialog('dlg-login')">
       <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -1574,7 +1576,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
         <span class="beta-badge">beta</span>
-        <span class="pchev"><i data-lucide="chevron-down" style="width:15px;height:15px;"></i></span>
+        <span class="pchev"><svg class="icon" width="15" height="15"><use href="#icon-chevron-down"/></svg></span>
       </button>
     </div>
     <div class="header-actions">
@@ -1594,7 +1596,7 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="summary-unified">
         <div class="summary-toggle-row" onclick="toggleSummary()">
           <span>공사 한눈에 보기</span>
-          <span class="sum-chev open" id="sum-chev"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
+          <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
         </div>
         <div class="summary-card" id="summary-card">
           <div class="summary-list">
@@ -1638,23 +1640,23 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- Dropdown Menu -->
   <div class="dropdown" id="main-menu" style="top:68px;right:20px;">
     <button class="dropdown-item" onclick="goTo('form');closeAllMenus();">
-      <i data-lucide="file-text"></i> 공사 정보
+      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
     <button class="dropdown-item" onclick="openShareDialog()">
-      <i data-lucide="share-2"></i> 공유하기
+      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공유하기
     </button>
     <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
-      <i data-lucide="file-down"></i> 공사계획 내보내기
+      <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사계획 내보내기
     </button>
     <button class="dropdown-item" onclick="openExpertDialog()">
-      <i data-lucide="star"></i> 전문가 검토 받기<span class="menu-badge">준비 중</span>
+      <svg class="icon" width="20" height="20"><use href="#icon-star"/></svg> 전문가 검토 받기<span class="menu-badge">준비 중</span>
     </button>
     <button class="dropdown-item" onclick="openFeedbackDialog();closeAllMenus();">
-      <i data-lucide="message-square"></i> 피드백 &amp; 아이디어
+      <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
     </button>
     <div class="dropdown-sep"></div>
     <button class="dropdown-item" id="menu-login-btn" onclick="handleMenuLogin()">
-      <i data-lucide="user"></i> 로그인
+      <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 로그인
     </button>
   </div>
 </div>
@@ -1663,7 +1665,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-form">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="formGoBack()"><i data-lucide="arrow-left"></i></button>
+      <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
       <h2 id="form-title">내 공사 기본 정보</h2>
     </div>
     <div class="form-body">
@@ -1721,7 +1723,7 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="addr-search-row">
           <input class="addr-input" id="f-address" placeholder="주소 검색" onchange="saveFormData()" style="flex:1;">
           <button type="button" class="addr-search-btn" onclick="searchAddress()">
-            <i data-lucide="search"></i> 검색
+            <svg class="icon" width="18" height="18"><use href="#icon-search"/></svg> 검색
           </button>
         </div>
         <input class="addr-input" id="f-address-detail" placeholder="상세주소 (동, 호수 등)" onchange="saveFormData()" style="margin-top:8px;">
@@ -1739,7 +1741,7 @@ button, input, textarea, select { font-family:var(--font); }
             <button type="button" onclick="clearFloorplan(event)" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;">✕</button>
           </div>
           <div id="floorplan-placeholder">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <svg class="icon" width="32" height="32" style="color:#bbb;stroke-width:1.5"><use href="#icon-layout-grid"/></svg>
             <div style="font-size:13px;color:#bbb;margin-top:8px;">도면 이미지를 업로드하세요</div>
             <div style="font-size:11px;color:#ddd;margin-top:4px;">JPG, PNG, PDF 등 이미지 파일</div>
           </div>
@@ -1756,14 +1758,14 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-account">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="goTo('main')"><i data-lucide="arrow-left"></i></button>
+      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
       <h2>계정 관리</h2>
     </div>
     <div class="form-body" style="padding:0;">
       <div class="account-card">
         <div style="display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;">
           <div style="width:52px;height:52px;border-radius:50%;background:#eef1f7;display:flex;align-items:center;justify-content:center;">
-            <i data-lucide="user" style="width:24px;height:24px;color:#aaa;"></i>
+            <svg class="icon" width="24" height="24" style="color:#aaa"><use href="#icon-user"/></svg>
           </div>
           <div>
             <div style="font-size:16px;font-weight:700;" id="acct-name">사용자</div>
@@ -1772,9 +1774,9 @@ button, input, textarea, select { font-family:var(--font); }
         </div>
         <div class="account-row" onclick="doLogout()" style="color:var(--danger);">
           <div class="row-left" style="color:var(--danger);">
-            <i data-lucide="log-out" style="color:var(--danger);width:17px;height:17px;"></i> 로그아웃
+            <svg class="icon" width="17" height="17" style="color:var(--danger)"><use href="#icon-log-out"/></svg> 로그아웃
           </div>
-          <div class="arow"><i data-lucide="chevron-right"></i></div>
+          <div class="arow"><svg class="icon" width="18" height="18"><use href="#icon-chevron-right"/></svg></div>
         </div>
       </div>
     </div>
@@ -1785,7 +1787,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-tip">
   <div class="form-screen-inner">
     <div class="form-header" id="tip-page-header">
-      <button class="back-btn" onclick="goTo('main')"><i data-lucide="arrow-left"></i></button>
+      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
       <h2 id="tip-page-title">시공팁</h2>
     </div>
     <div class="screen-scroll" id="tip-page-content">
@@ -1797,7 +1799,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Floating: + 공정추가 (main screen only, fixed outside screen transform) -->
 <div class="floating-group" id="floating-add-process">
   <button class="floating-btn" onclick="openAddProcess()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 공정 단계 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 공정 단계 추가
   </button>
 </div>
 
@@ -1806,7 +1808,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 헤더: Back + 제목 -->
   <div class="form-header">
     <button class="back-btn" onclick="_closeContractorDetail()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
     </button>
     <h2 id="cdetail-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></h2>
     <div style="width:30px;"></div>
@@ -1819,7 +1821,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="screen-scroll" style="padding:0;">
     <!-- 전화번호 -->
     <div id="cdetail-phone-row" style="display:none;padding:14px 20px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:10px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 12 19.79 19.79 0 0 1 1.21 3.18 2 2 0 0 1 3.22 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <svg class="icon" width="15" height="15" style="color:#888"><use href="#icon-phone"/></svg>
       <span id="cdetail-phone-text" style="font-size:16px;color:#333;font-weight:700;"></span>
     </div>
     <!-- 지역 + 카테고리 -->
@@ -1830,7 +1832,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 하단 버튼: 업체 문의하기만 -->
   <div id="cdetail-footer" style="display:none;flex-shrink:0;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #f0f2f5;">
     <button id="cdetail-sms-btn" onclick="_contactContractorSMS()" style="width:100%;padding:15px;background:var(--primary);border:none;border-radius:14px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <svg class="icon" width="17" height="17"><use href="#icon-message-square"/></svg>
       업체에 문의하기
     </button>
   </div>
@@ -1843,7 +1845,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 10px;border-bottom:1px solid #f0f2f5;">
       <span style="font-size:16px;font-weight:700;color:#222;">업체 정보</span>
       <button onclick="_closeContractorMoreSheet()" style="background:none;border:none;cursor:pointer;padding:4px;color:#999;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-x"/></svg>
       </button>
     </div>
     <div id="contractor-more-content" style="padding:8px 20px 8px;"></div>
@@ -1854,7 +1856,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header" style="background:#fff;flex-shrink:0;">
     <button class="back-btn" onclick="_closeProcDetailScreen()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
     </button>
     <h2 id="proc-detail-screen-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;"></h2>
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
@@ -1871,7 +1873,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 8px;"></div>
     <button onclick="_deleteProcFromDetail()" style="width:100%;background:none;border:none;padding:16px 24px;text-align:left;font-size:16px;font-weight:500;color:#e03535;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:12px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      <svg class="icon" width="18" height="18"><use href="#icon-trash-2"/></svg>
       삭제하기
     </button>
   </div>
@@ -2030,19 +2032,19 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();">
-      <i data-lucide="file-text"></i> 공사 정보
+      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
     <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();">
-      <i data-lucide="share-2"></i> 공유하기
+      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공유하기
     </button>
     <button class="mobile-sheet-item" onclick="openExportDialog();closeAllMenus();">
-      <i data-lucide="file-down"></i> 공사계획 내보내기
+      <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사계획 내보내기
     </button>
     <button class="mobile-sheet-item" onclick="openFeedbackDialog();closeAllMenus();">
-      <i data-lucide="message-square"></i> 피드백 &amp; 아이디어
+      <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
     </button>
     <button class="mobile-sheet-item" id="mobile-menu-login-btn" onclick="handleMenuLogin();closeAllMenus();">
-      <i data-lucide="user"></i> 로그인
+      <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 로그인
     </button>
   </div>
 </div>
@@ -2052,10 +2054,10 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" id="mobile-card-tip-btn" onclick="cardMenuTip();closeDialog('mobile-card-menu-sheet');">
-      <i data-lucide="lightbulb"></i> 시공팁
+      <svg class="icon" width="20" height="20"><use href="#icon-lightbulb"/></svg> 시공팁
     </button>
     <button class="mobile-sheet-item danger" onclick="cardMenuDelete();closeDialog('mobile-card-menu-sheet');">
-      <i data-lucide="trash-2"></i> 삭제하기
+      <svg class="icon" width="20" height="20"><use href="#icon-trash-2"/></svg> 삭제하기
     </button>
   </div>
 </div>
@@ -2084,7 +2086,7 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="share-link-box">
         <span class="share-link-url" id="share-link-url-text">https://vibespacekorea.com</span>
         <button class="share-link-copy-btn" onclick="shareAction('link')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon" width="18" height="18"><use href="#icon-copy"/></svg>
           복사
         </button>
       </div>
@@ -2165,16 +2167,16 @@ button, input, textarea, select { font-family:var(--font); }
       <div style="font-size:17px;font-weight:700;">공사계획 내보내기</div>
       <div style="display:flex;gap:8px;">
         <button onclick="printExportDoc()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">
-          <i data-lucide="printer" style="width:15px;height:15px;"></i> 인쇄 / PDF 저장
+          <svg class="icon" width="15" height="15"><use href="#icon-printer"/></svg> 인쇄 / PDF 저장
         </button>
         <button onclick="closeDialog('dlg-export')" style="width:36px;height:36px;border-radius:10px;border:1px solid #e4e9f2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-          <i data-lucide="x" style="width:16px;height:16px;"></i>
+          <svg class="icon" width="16" height="16"><use href="#icon-x"/></svg>
         </button>
       </div>
     </div>
     <!-- Tip bar -->
     <div style="padding:10px 20px;background:#fffbea;border-bottom:1px solid #fdecc8;font-size:12px;color:#b45309;display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0;"></i>
+      <svg class="icon" width="13" height="13"><use href="#icon-info"/></svg>
       <span>💡 <b>인쇄 / PDF 저장</b>을 누르면 네이버 카페에 첨부할 수 있는 문서가 만들어져요. "PDF로 저장"을 선택하세요.</span>
     </div>
     <!-- Scrollable preview -->
@@ -2209,17 +2211,17 @@ button, input, textarea, select { font-family:var(--font); }
   <div id="project-dropdown-list"></div>
   <div class="pd-divider"></div>
   <div class="pd-new" onclick="promptNewProject()">
-    <i data-lucide="plus" style="width:16px;height:16px;"></i> 새 프로젝트
+    <svg class="icon" width="16" height="16"><use href="#icon-plus"/></svg> 새 프로젝트
   </div>
 </div>
 
 <!-- Card More Menu (shared, positioned via JS) -->
 <div id="card-more-menu" class="card-more-menu">
   <button class="card-menu-item" id="card-menu-tip" onclick="cardMenuTip()">
-    <i data-lucide="lightbulb" style="width:16px;height:16px;color:#333333;"></i> 시공팁
+    <svg class="icon" width="16" height="16" style="color:#333333"><use href="#icon-lightbulb"/></svg> 시공팁
   </button>
   <button class="card-menu-item danger" id="card-menu-del" onclick="cardMenuDelete()">
-    <i data-lucide="trash-2" style="width:16px;height:16px;color:#333333;"></i> 삭제하기
+    <svg class="icon" width="16" height="16" style="color:#333333"><use href="#icon-trash-2"/></svg> 삭제하기
   </button>
 </div>
 
@@ -2231,7 +2233,7 @@ button, input, textarea, select { font-family:var(--font); }
     <span class="day-popup-title" id="day-popup-title">3월 19일</span>
     <button id="day-popup-add-btn" onclick="closeDayPopup();openAddProcess(window._dayPopupDateStr)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 공정 추가</button>
     <button class="day-popup-close" onclick="closeDayPopup()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-x"/></svg>
     </button>
   </div>
   <div class="day-popup-body" id="day-popup-body"></div>
@@ -2711,10 +2713,10 @@ function updateLoginUI() {
   const btn = document.getElementById('menu-login-btn');
   if (btn) {
     if (state.loggedIn) {
-      btn.innerHTML = `<i data-lucide="log-out"></i> 로그아웃 (${state.user.name||'사용자'})`;
+      btn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃 (${state.user.name||'사용자'})`;
       btn.classList.add('danger');
     } else {
-      btn.innerHTML = `<i data-lucide="user"></i> 로그인`;
+      btn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
       btn.classList.remove('danger');
     }
   }
@@ -2722,10 +2724,10 @@ function updateLoginUI() {
   const mobileLoginBtn = document.getElementById('mobile-menu-login-btn');
   if (mobileLoginBtn) {
     if (state.loggedIn) {
-      mobileLoginBtn.innerHTML = `<i data-lucide="log-out"></i> 로그아웃 (${state.user.name||'사용자'})`;
+      mobileLoginBtn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃 (${state.user.name||'사용자'})`;
       mobileLoginBtn.classList.add('danger');
     } else {
-      mobileLoginBtn.innerHTML = `<i data-lucide="user"></i> 로그인`;
+      mobileLoginBtn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
       mobileLoginBtn.classList.remove('danger');
     }
   }
@@ -2737,7 +2739,6 @@ function updateLoginUI() {
   // Show/hide login gate on main screen
   const loginGate = document.getElementById('main-login-gate');
   if (loginGate) loginGate.style.display = state.loggedIn ? 'none' : 'flex';
-  lucide.createIcons();
 }
 
 function _renderProfileAvatar() {
@@ -2852,7 +2853,6 @@ function goTo(screen) {
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;
   }
-  setTimeout(lucide.createIcons, 40);
 }
 
 // ===== PROJECT DROPDOWN =====
@@ -2884,7 +2884,6 @@ function toggleProjectDropdown(e) {
     }
     dd.classList.add('active');
     btn.classList.add('open');
-    lucide.createIcons();
   }
 }
 function renderProjectDropdownList() {
@@ -2893,7 +2892,7 @@ function renderProjectDropdownList() {
     <div class="pd-item ${p.id===state.currentProjectId?'current':''}" onclick="selectProjectDD('${p.id}')">
       <span class="pd-name">${esc(p.name)}</span>
       ${state.projects.length > 1 ? `<span class="pd-del" onclick="event.stopPropagation();deleteProjectDD('${p.id}')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-x"/></svg>
       </span>` : ''}
     </div>`).join('');
 }
@@ -2990,7 +2989,6 @@ function switchMainTab(tab, btn) {
     }
     renderCalendar();
   }
-  setTimeout(lucide.createIcons, 40);
 }
 
 // ===== PROCESS TIPS =====
@@ -3143,7 +3141,6 @@ function toggleCardMenu(e, procId, procType) {
     const mobileTipBtn = document.getElementById('mobile-card-tip-btn');
     if (mobileTipBtn) mobileTipBtn.style.display = hasTip2 ? '' : 'none';
     openDialog('mobile-card-menu-sheet');
-    setTimeout(lucide.createIcons, 10);
     return;
   }
   // PC: 위치 계산
@@ -3159,7 +3156,6 @@ function toggleCardMenu(e, procId, procType) {
   if (tipBtn) tipBtn.style.display = hasTip ? '' : 'none';
   menu.classList.add('open');
   if (_isMobile()) _showMenuBackdrop();
-  setTimeout(() => lucide.createIcons({ nodes: [menu] }), 10);
 }
 
 function cardMenuDelete() {
@@ -3425,8 +3421,8 @@ function showProcessTip(typeName) {
         ${detail.heroSubtitle ? `<div class="tip-hero-sub">${detail.heroSubtitle}</div>` : ''}
         <p>${detail.summary}</p>
         <div class="tip-meta-row">
-          <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 예상 기간: ${detail.duration}</div>
-          <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> 비용: ${detail.cost}</div>
+          <div class="tip-meta-chip"><svg class="icon" width="14" height="14"><use href="#icon-clock"/></svg> 예상 기간: ${detail.duration}</div>
+          <div class="tip-meta-chip"><svg class="icon" width="14" height="14"><use href="#icon-dollar-sign"/></svg> 비용: ${detail.cost}</div>
         </div>
       </div>`;
     } else {
@@ -3437,8 +3433,8 @@ function showProcessTip(typeName) {
         <h1>${typeName} 시공팁</h1>
         <p>${detail.summary}</p>
         <div class="tip-meta-row">
-          <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 예상 기간: ${detail.duration}</div>
-          <div class="tip-meta-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> 비용: ${detail.cost}</div>
+          <div class="tip-meta-chip"><svg class="icon" width="14" height="14"><use href="#icon-clock"/></svg> 예상 기간: ${detail.duration}</div>
+          <div class="tip-meta-chip"><svg class="icon" width="14" height="14"><use href="#icon-dollar-sign"/></svg> 비용: ${detail.cost}</div>
         </div>
       </div>`;
     }
@@ -3598,7 +3594,7 @@ function _renderContractorSelectList(procType) {
           <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description?3:0}px;">${esc(c.name)}</div>
           ${c.description ? `<div style="font-size:13px;color:#555;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.description)}</div>` : ''}
           <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#888;font-weight:500;margin-top:3px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <svg class="icon" width="11" height="11"><use href="#icon-map-pin"/></svg>
             <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
           </div>
         </div>
@@ -3608,7 +3604,7 @@ function _renderContractorSelectList(procType) {
       <!-- 우: 더보기 버튼 -->
       <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:500;color:#888;flex-shrink:0;font-family:var(--font);">
         더보기
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg class="icon" width="13" height="13" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
       </button>
     </div>`;
   }).join('');
@@ -3791,7 +3787,7 @@ function renderWorkCards() {
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
           <button class="work-card-fold-btn" onclick="event.stopPropagation();toggleCardExpand('${p.id}')">
-            <svg class="work-card-fold-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg class="icon work-card-fold-chev" width="20" height="20" style="stroke-width:2.5"><use href="#icon-chevron-down"/></svg>
           </button>
         </div>
       </div>
@@ -3827,9 +3823,9 @@ function renderWorkCards() {
         <div style="height:1px;background:#E4E9F2;margin:8px -20px 0;"></div>
         <div class="proc-card-actions">
           <button class="proc-delete-btn" onclick="event.stopPropagation();if(confirm('공정을 삭제하시겠습니까?'))deleteProcess('${p.id}')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <svg class="icon" width="18" height="18"><use href="#icon-trash-2"/></svg>
           </button>
-          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg class="icon" width="15" height="15" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg></button>
         </div>
       </div>
     </div>`;
@@ -4040,21 +4036,21 @@ function _renderProcDetailContent(procId) {
         <span class="f-label">예상 일정</span>
         <span class="f-value ${p.scheduleStart?'filled':''}" onclick="openScheduleDialog('${p.id}')" style="cursor:pointer;">
           ${esc(schedDisplay)}
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#333"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <svg class="icon" width="17" height="17" style="color:#333"><use href="#icon-calendar"/></svg>
         </span>
       </div>
       <div class="work-field">
         <span class="f-label">담당 업체</span>
         <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
           ${p.companyData ? `<div class="f-company-selected"><span class="f-company-name">${esc(p.companyData.name)}</span></div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
-          ${(p.companyData||p.company) ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
+          ${(p.companyData||p.company) ? `<svg class="icon" width="16" height="16" style="color:#333;stroke-width:2.5"><use href="#icon-chevron-right"/></svg>` : `<svg class="icon" width="16" height="16" style="color:#bbb;stroke-width:2.5"><use href="#icon-plus"/></svg>`}
         </span>
       </div>
       <div style="padding-top:4px;"></div>
       <div class="detail-header">
         <span class="d-label">상세내역</span>
         <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="icon" width="17" height="17" style="stroke-width:2.5"><use href="#icon-plus"/></svg>
         </button>
       </div>
       ${p.details.length ? '<div class="details-list">' : ''}
@@ -4067,7 +4063,7 @@ function _renderProcDetailContent(procId) {
           </div>
           <div class="d-right">
             <span class="d-cost">${(d.cost||0).toLocaleString()}원</span>
-            <svg class="d-chev" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg class="icon d-chev" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
           </div>
         </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
       ${p.details.length ? '</div>' : ''}
@@ -4230,11 +4226,11 @@ function renderDatePicker() {
   document.getElementById('dp-container').innerHTML = `
     <div class="dp-header">
       <button class="dp-nav-btn" onclick="calPickerNav(-1)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
       </button>
       <span class="dp-title">${year}년 ${MONTHS[month]}</span>
       <button class="dp-nav-btn" onclick="calPickerNav(1)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
       </button>
     </div>
     <div class="dp-range-bar">
@@ -4664,13 +4660,13 @@ function renderCalendar() {
         <td colspan="7" class="cal-nav-td">
           <div class="cal-nav-inner">
             <button class="cal-nav-btn" onclick="calMonthNav(-1)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
             </button>
             <span style="display:flex;align-items:center;gap:8px;">
               <span class="cal-th-title">${MONTHS[month]}</span>${todayBtnHtml}
             </span>
             <button class="cal-nav-btn" onclick="calMonthNav(1)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
             </button>
           </div>
         </td>
@@ -4782,7 +4778,6 @@ function searchAddress() {
 function openExportDialog() {
   renderExportDoc();
   openDialog('dlg-export');
-  setTimeout(lucide.createIcons, 80);
 }
 
 function printExportDoc() {
@@ -5086,7 +5081,7 @@ function _updateShareLinkBox() {
 }
 
 // ===== DIALOGS =====
-function openDialog(id) { document.getElementById(id).classList.add('active'); setTimeout(lucide.createIcons, 40); }
+function openDialog(id) { document.getElementById(id).classList.add('active'); }
 function closeDialog(id) { document.getElementById(id).classList.remove('active'); }
 function _isMobile() { return window.innerWidth < 600; }
 function _showMenuBackdrop() {
@@ -5122,7 +5117,7 @@ function _openContractorDetail(cId) {
 
   // 지역 + 카테고리
   const metaEl = document.getElementById('cdetail-meta');
-  metaEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#888;"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>`;
+  metaEl.innerHTML = `<svg class="icon" width="13" height="13" style="color:#888"><use href="#icon-map-pin"/></svg><span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>`;
   metaEl.style.display = (c.area || c.category) ? 'flex' : 'none';
 
   // 설명
@@ -5198,7 +5193,7 @@ function toggleMainMenu(e) {
     const sheet = document.getElementById('mobile-main-menu-sheet');
     const isOpen = sheet.classList.contains('active');
     closeAllMenus();
-    if (!isOpen) { openDialog('mobile-main-menu-sheet'); setTimeout(lucide.createIcons, 30); }
+    if (!isOpen) { openDialog('mobile-main-menu-sheet'); }
     return;
   }
   const menu = document.getElementById('main-menu');
@@ -5206,7 +5201,6 @@ function toggleMainMenu(e) {
   closeAllMenus();
   if (!wasActive) {
     menu.classList.add('active');
-    setTimeout(lucide.createIcons, 30);
   }
 }
 function closeAllMenus() {
@@ -5233,7 +5227,6 @@ function renderAll() {
     renderCalendar();
   }
   updateLoginUI();
-  setTimeout(lucide.createIcons, 30);
 }
 
 // ===== ANALYTICS TRACKER =====
@@ -5466,7 +5459,6 @@ function updateCollabIndicator(collaborators, owner) {
     const names = realCollabs.map(m => m.name || m.email.split('@')[0]);
     textEl.textContent = `${names.join(', ')}와(과) 함께 작업 중`;
   }
-  setTimeout(lucide.createIcons, 50);
 }
 
 function openCollabFromHeader() {
@@ -5519,7 +5511,7 @@ async function renderCollabTab() {
             <div class="cm-email">${esc(m.email)}</div>
           </div>
           <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
-          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><i data-lucide="x" style="width:14px;height:14px;"></i></button>` : ''}
+          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
         </div>`).join('')}
     </div>
 
@@ -5528,7 +5520,7 @@ async function renderCollabTab() {
       <div style="display:flex;flex-direction:column;gap:5px;">
         ${pendingInvites.map(inv => `
           <div class="pending-invite-row">
-            <i data-lucide="clock" style="width:14px;height:14px;color:#b45309;flex-shrink:0;"></i>
+            <svg class="icon" width="14" height="14" style="color:#b45309"><use href="#icon-clock"/></svg>
             <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}</div>
             <div class="pi-expire">~${inv.expiresAt.slice(0,10)}</div>
             <button class="pi-cancel" onclick="cancelInvite('${inv.token}')">취소</button>
@@ -5546,19 +5538,19 @@ async function renderCollabTab() {
           </select>
         </div>
         <button class="invite-gen-btn" onclick="generateInviteLink()">
-          <i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성
+          <svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성
         </button>
         <div class="invite-link-box" id="invite-link-box">
           <div style="font-size:12px;font-weight:700;color:#3176ff;display:flex;align-items:center;gap:5px;">
-            <i data-lucide="check-circle" style="width:13px;height:13px;"></i> 초대 링크 생성 완료 (7일 유효)
+            <svg class="icon" width="13" height="13"><use href="#icon-check-circle"/></svg> 초대 링크 생성 완료 (7일 유효)
           </div>
           <div class="invite-link-url" id="invite-link-url"></div>
           <div class="invite-link-actions">
             <button class="invite-link-btn ilb-copy" onclick="copyInviteLink()">
-              <i data-lucide="copy" style="width:12px;height:12px;"></i> 복사
+              <svg class="icon" width="12" height="12"><use href="#icon-copy"/></svg> 복사
             </button>
             <button class="invite-link-btn ilb-mail" onclick="sendInviteByMail()">
-              <i data-lucide="mail" style="width:12px;height:12px;"></i> 이메일 전송
+              <svg class="icon" width="12" height="12"><use href="#icon-mail"/></svg> 이메일 전송
             </button>
             <button class="invite-link-btn ilb-kakao" onclick="shareInviteKakao()">
               💬 카카오톡
@@ -5567,7 +5559,6 @@ async function renderCollabTab() {
         </div>
       </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
   `;
-  setTimeout(lucide.createIcons, 50);
 }
 
 // ===== INVITE GENERATION =====
@@ -5588,7 +5579,7 @@ async function generateInviteLink() {
 
   const ok = await _initFirebase();
   if (!ok) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
   }
 
@@ -5596,7 +5587,7 @@ async function generateInviteLink() {
   if (!proj.isCloud || !proj.cloudId) {
     const cloudId = await _pushProjToCloud(proj);
     if (!cloudId) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
       alert('프로젝트 클라우드 저장 실패'); return;
     }
     proj.cloudId = cloudId; proj.isCloud = true;
@@ -5630,10 +5621,10 @@ async function generateInviteLink() {
     const linkUrl = document.getElementById('invite-link-url');
     if (linkBox) linkBox.classList.add('show');
     if (linkUrl) linkUrl.textContent = link;
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 새 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 새 초대 링크 생성'; }
     updateCollabIndicator(proj.collaborators||[], proj.owner);
   } catch(e) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="link" style="width:14px;height:14px;"></i> 초대 링크 생성'; setTimeout(lucide.createIcons,50); }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
     alert('초대 링크 생성 실패: ' + e.message);
   }
 }
@@ -5749,8 +5740,8 @@ async function _processInviteToken(token) {
       <div class="join-project-card">
         <div class="join-project-title">${esc(invite.projectName)}</div>
         <div class="join-project-meta">
-          <div class="join-meta-item"><i data-lucide="user" style="width:13px;height:13px;"></i> ${esc(invite.ownerName||invite.ownerEmail)}</div>
-          <div class="join-meta-item"><i data-lucide="users" style="width:13px;height:13px;"></i> 멤버 ${(meta.collaborators||[]).length+1}명</div>
+          <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-user"/></svg> ${esc(invite.ownerName||invite.ownerEmail)}</div>
+          <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-users"/></svg> 멤버 ${(meta.collaborators||[]).length+1}명</div>
         </div>
         <span class="join-role-badge ${invite.role==='editor'?'editor':''}">
           ${invite.role==='editor'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
@@ -5765,7 +5756,6 @@ async function _processInviteToken(token) {
       <button class="btn-cancel" onclick="closeDialog('dlg-join-invite')">거절</button>
       <button class="btn-confirm" onclick="_acceptInviteFromDialog()">참여하기</button>
     `;
-    setTimeout(lucide.createIcons, 50);
     _pendingInviteData = { token, invite, cloudProjData };
   } catch(e) {
     if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">오류: ${esc(e.message)}</p>`;
@@ -6018,7 +6008,6 @@ trackInit();
 goTo('landing');
 updateLoginUI();
 window.addEventListener('load', () => {
-  lucide.createIcons();
   // OAuth redirect 복귀 처리 (가장 먼저 — 로그인 완료시킴)
   _checkOAuthRedirect();
   if (typeof google !== 'undefined' && google.accounts &&

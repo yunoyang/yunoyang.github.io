@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vibespace Icon System</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="icons-sprite.js"></script>
 <style>
 :root {
   --primary: #3176ff;
@@ -545,24 +546,28 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
 
   <!-- Usage Guide -->
   <div class="section" style="margin-top:48px;">
-    <div class="section-title">사용 방법</div>
+    <div class="section-title">SVG Sprite 연동 구조</div>
     <div class="usage-box">
-      <h4>앱에서 아이콘 수정하기</h4>
+      <h4>아이콘 수정 방법 — <code style="font-size:12px;background:#f0f4ff;padding:2px 6px;border-radius:4px;">icons-sprite.js</code> 파일 하나만 수정</h4>
       <div class="usage-item">
-        <span class="usage-where">① 토큰 설정</span>
-        <span class="usage-desc">Size / Stroke / Color를 조정하면 모든 미리보기에 실시간 반영됩니다</span>
+        <span class="usage-where">① 파일 구조</span>
+        <span class="usage-desc"><strong>icons-sprite.js</strong> → VS_ICONS 객체에 아이콘 path 정의 → icons.html + index.html 동시 반영</span>
       </div>
       <div class="usage-item">
-        <span class="usage-where">② 아이콘 클릭</span>
-        <span class="usage-desc">아이콘 카드 클릭 → 하단 코드 패널에서 SVG 코드 확인</span>
+        <span class="usage-where">② 아이콘 수정</span>
+        <span class="usage-desc">icons-sprite.js의 <code>VS_ICONS['아이콘명']</code> 값을 새 SVG path로 교체 → 저장하면 두 파일 모두 반영</span>
       </div>
       <div class="usage-item">
-        <span class="usage-where">③ SVG 복사</span>
-        <span class="usage-desc">"SVG 복사" 버튼으로 현재 토큰이 적용된 SVG 코드 복사</span>
+        <span class="usage-where">③ 아이콘 추가</span>
+        <span class="usage-desc">VS_ICONS에 새 항목 추가 후, 이 파일에 icon-card 블록 추가, index.html에서 <code>&lt;svg class="icon"&gt;&lt;use href="#icon-새이름"/&gt;&lt;/svg&gt;</code> 사용</span>
       </div>
       <div class="usage-item">
-        <span class="usage-where">④ index.html 적용</span>
-        <span class="usage-desc">복사한 SVG를 index.html의 해당 아이콘 위치에 붙여넣기</span>
+        <span class="usage-where">④ index.html 사용법</span>
+        <span class="usage-desc"><code>&lt;svg class="icon" width="24" height="24"&gt;&lt;use href="#icon-trash-2"/&gt;&lt;/svg&gt;</code> — color는 CSS <code>color</code> 속성으로 제어</span>
+      </div>
+      <div class="usage-item">
+        <span class="usage-where">⑤ 토큰 설정</span>
+        <span class="usage-desc">위 컨트롤에서 Size / Stroke / Color 조정 → 하단 "SVG 복사"로 원하는 토큰 값의 SVG 코드 복사</span>
       </div>
     </div>
   </div>
@@ -572,6 +577,17 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); }
 <script>
 let selectedCard = null;
 
+// ── Sprite 초기화: 모든 아이콘 카드의 SVG 내용을 <use href="#icon-name"/>으로 교체 ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.icon-card[data-name]').forEach(card => {
+    const name = card.dataset.name;
+    const svg = card.querySelector('.icon-preview svg');
+    if (svg && typeof VS_ICONS !== 'undefined' && VS_ICONS[name]) {
+      svg.innerHTML = `<use href="#icon-${name}"/>`;
+    }
+  });
+});
+
 // ── Token apply ──
 function applyTokens() {
   const size   = +document.getElementById('tk-size').value || 24;
@@ -580,6 +596,7 @@ function applyTokens() {
   const linecap  = document.getElementById('tk-linecap').value;
   const linejoin = document.getElementById('tk-linejoin').value;
 
+  // SVG 속성(attribute)으로 설정 → stroke 등 상속 속성은 <use>를 통해 symbol 자식에 전달됨
   document.querySelectorAll('.icon-preview svg').forEach(svg => {
     svg.setAttribute('width', size);
     svg.setAttribute('height', size);
@@ -633,13 +650,16 @@ function updateCodePanel(card) {
 }
 
 function getSVGCode(svg) {
+  const card   = svg.closest('[data-name]');
+  const name   = card ? card.dataset.name : '';
   const size   = svg.getAttribute('width') || '24';
   const stroke = svg.getAttribute('stroke') || '#1a1a1a';
   const sw     = svg.getAttribute('stroke-width') || '2';
   const lc     = svg.getAttribute('stroke-linecap') || 'round';
   const lj     = svg.getAttribute('stroke-linejoin') || 'round';
-  const inner  = svg.innerHTML.trim();
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="${lc}" stroke-linejoin="${lj}">\n  ${inner}\n</svg>`;
+  // VS_ICONS에서 실제 path 데이터를 가져와 완전한 SVG 코드 생성
+  const paths  = (typeof VS_ICONS !== 'undefined' && VS_ICONS[name]) ? VS_ICONS[name] : svg.innerHTML.trim();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="${lc}" stroke-linejoin="${lj}">\n  ${paths}\n</svg>`;
 }
 
 function copyCode() {
