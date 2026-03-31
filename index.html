@@ -5326,10 +5326,15 @@ async function _initFirebase() {
       if (e.code === 'app/duplicate-app') { _fbApp = firebase.app(); } else { return false; }
     }
     _db = firebase.firestore();
-    // Firestore rules require request.auth != null — sign in anonymously if not already authed
-    const auth = firebase.auth();
-    auth.onAuthStateChanged(user => {
-      if (!user) auth.signInAnonymously().catch(() => {});
+    // Firestore rules require request.auth != null — wait for auth then sign in anonymously
+    await new Promise(resolve => {
+      const auth = firebase.auth();
+      const unsub = auth.onAuthStateChanged(user => {
+        unsub();
+        if (user) { resolve(); }
+        else { auth.signInAnonymously().then(resolve).catch(resolve); }
+      });
+      setTimeout(resolve, 4000); // max 4s wait
     });
   }
   return true;
