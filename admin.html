@@ -10,6 +10,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <!-- SheetJS — 엑셀/TSV/CSV 파싱 -->
@@ -1513,9 +1514,11 @@ function initFirestoreAdmin() {
   try {
     const app = firebase.initializeApp(FIREBASE_CONFIG, 'admin');
     _adminDb = firebase.firestore(app);
+    firebase.auth(app).signInAnonymously().catch(() => {});
   } catch(e) {
     if (e.code === 'app/duplicate-app') {
       _adminDb = firebase.firestore(firebase.app('admin'));
+      firebase.auth(firebase.app('admin')).signInAnonymously().catch(() => {});
     } else { console.error('Firebase init error', e); return; }
   }
   try { _adminStorage = firebase.storage(firebase.app('admin')); } catch(e) { console.warn('Storage init skipped:', e); }
