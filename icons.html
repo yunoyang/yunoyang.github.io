@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibespace Icon System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root {
+  --primary: #3176ff;
+  --primary-bg: rgba(49,118,255,0.08);
+  --bg: #f5f6fa;
+  --white: #fff;
+  --text: #1a1a1a;
+  --text-secondary: #444;
+  --text-muted: #888;
+  --border: #e4e9f2;
+  --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --icon-size: 24px;
+  --icon-stroke: 2;
+  --icon-color: #1a1a1a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+.page { max-width:1080px; margin:0 auto; padding:48px 24px 100px; }
+.section { margin-bottom:64px; }
+.section-title {
+  font-size:13px; font-weight:700; color:var(--primary);
+  letter-spacing:.12em; text-transform:uppercase;
+  margin-bottom:24px; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* Hero */
+.hero {
+  text-align:center; padding:48px 24px 40px;
+  background:linear-gradient(135deg,#eef3ff 0%,#f8f0ff 100%);
+  border-radius:20px; margin-bottom:56px; border:1px solid #e0e8ff;
+}
+.hero-logo { font-size:26px; font-weight:800; color:var(--primary); letter-spacing:-.5px; margin-bottom:8px; }
+.hero-sub { font-size:14px; color:#6b7fa8; font-weight:500; }
+.hero-badge {
+  display:inline-block; background:var(--primary); color:#fff;
+  font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px;
+  letter-spacing:.05em; margin-bottom:16px;
+}
+
+/* Token Controls */
+.token-bar {
+  background:#fff; border-radius:14px; border:1px solid var(--border);
+  padding:20px 24px; margin-bottom:40px;
+  display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end;
+}
+.token-group { display:flex; flex-direction:column; gap:6px; }
+.token-label { font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; }
+.token-group input[type=number],
+.token-group input[type=color],
+.token-group select {
+  font-family:var(--font); font-size:13px; font-weight:600;
+  border:1.5px solid var(--border); border-radius:8px;
+  padding:7px 10px; background:#fff; color:var(--text); outline:none;
+  transition:border-color .15s;
+}
+.token-group input[type=number] { width:80px; }
+.token-group input[type=color] { width:56px; height:36px; padding:2px 4px; cursor:pointer; }
+.token-group select { min-width:110px; cursor:pointer; }
+.token-group input:focus, .token-group select:focus { border-color:var(--primary); }
+.token-reset {
+  padding:8px 16px; background:#f0f2f5; color:#555; font-family:var(--font);
+  font-size:13px; font-weight:600; border:none; border-radius:8px; cursor:pointer;
+  transition:background .15s;
+}
+.token-reset:hover { background:#e4e9f2; }
+
+/* Icon Grid */
+.icon-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:12px;
+}
+.icon-card {
+  background:#fff; border-radius:14px; border:1.5px solid var(--border);
+  padding:20px 12px 14px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  transition:border-color .15s, box-shadow .15s, transform .1s;
+  position:relative;
+}
+.icon-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(49,118,255,0.12); transform:translateY(-1px); }
+.icon-card:active { transform:translateY(0); }
+.icon-card.copied { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.12); }
+.icon-preview { display:flex; align-items:center; justify-content:center; width:48px; height:48px; }
+.icon-preview svg { display:block; }
+.icon-name { font-size:11px; font-weight:600; color:#555; text-align:center; line-height:1.4; word-break:break-all; }
+.icon-tag {
+  font-size:10px; font-weight:700; color:var(--primary); background:var(--primary-bg);
+  padding:2px 7px; border-radius:20px; letter-spacing:.04em;
+}
+.copied-toast {
+  position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+  background:#10b981; color:#fff; font-size:11px; font-weight:700;
+  padding:3px 10px; border-radius:20px; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.icon-card.copied .copied-toast { opacity:1; }
+
+/* Code Panel */
+.code-panel {
+  background:#1e293b; border-radius:14px; padding:0;
+  overflow:hidden; margin-top:32px; display:none;
+}
+.code-panel.open { display:block; }
+.code-panel-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 18px; background:#0f172a; border-bottom:1px solid #334155;
+}
+.code-panel-name { font-size:13px; font-weight:700; color:#94a3b8; }
+.code-panel-actions { display:flex; gap:8px; }
+.code-btn {
+  font-family:var(--font); font-size:12px; font-weight:600;
+  padding:5px 12px; border-radius:8px; border:none; cursor:pointer;
+  transition:background .15s;
+}
+.code-btn-copy { background:#3176ff; color:#fff; }
+.code-btn-copy:hover { background:#1d5cf0; }
+.code-btn-close { background:#334155; color:#94a3b8; }
+.code-btn-close:hover { background:#475569; }
+.code-body { padding:18px; overflow-x:auto; }
+.code-body pre { font-size:12px; color:#e2e8f0; line-height:1.7; font-family:'Menlo','Monaco',monospace; white-space:pre-wrap; }
+
+/* Usage guide */
+.usage-box {
+  background:#fff; border-radius:14px; border:1px solid var(--border);
+  padding:20px 24px; margin-top:12px;
+}
+.usage-box h4 { font-size:13px; font-weight:700; color:#555; margin-bottom:10px; }
+.usage-item { display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid #f5f7fa; }
+.usage-item:last-child { border-bottom:none; }
+.usage-where { font-size:12px; font-weight:600; color:var(--primary); min-width:120px; flex-shrink:0; }
+.usage-desc { font-size:12px; color:#666; }
+
+/* Search */
+.search-bar {
+  display:flex; align-items:center; gap:10px;
+  background:#fff; border:1.5px solid var(--border);
+  border-radius:12px; padding:10px 14px; margin-bottom:20px;
+  transition:border-color .15s;
+}
+.search-bar:focus-within { border-color:var(--primary); }
+.search-bar svg { color:#bbb; flex-shrink:0; }
+.search-bar input {
+  flex:1; border:none; outline:none; font-family:var(--font);
+  font-size:14px; color:var(--text); background:transparent;
+}
+.search-bar input::placeholder { color:#bbb; }
+.no-result { text-align:center; padding:40px 0; color:#bbb; font-size:14px; display:none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">ICON SYSTEM v1.0</div>
+    <div class="hero-logo">Vibespace Icons</div>
+    <div class="hero-sub">앱 전체 아이콘 세트 · SVG 토큰 기반 · 클릭으로 코드 복사</div>
+  </div>
+
+  <!-- Token Controls -->
+  <div class="section">
+    <div class="section-title">아이콘 토큰 설정</div>
+    <div class="token-bar">
+      <div class="token-group">
+        <span class="token-label">Size (px)</span>
+        <input type="number" id="tk-size" value="24" min="12" max="64" oninput="applyTokens()">
+      </div>
+      <div class="token-group">
+        <span class="token-label">Stroke Width</span>
+        <input type="number" id="tk-stroke" value="2" min="1" max="4" step="0.5" oninput="applyTokens()">
+      </div>
+      <div class="token-group">
+        <span class="token-label">Color</span>
+        <input type="color" id="tk-color" value="#1a1a1a" oninput="applyTokens()">
+      </div>
+      <div class="token-group">
+        <span class="token-label">Stroke Linecap</span>
+        <select id="tk-linecap" onchange="applyTokens()">
+          <option value="round" selected>round</option>
+          <option value="square">square</option>
+          <option value="butt">butt</option>
+        </select>
+      </div>
+      <div class="token-group">
+        <span class="token-label">Stroke Linejoin</span>
+        <select id="tk-linejoin" onchange="applyTokens()">
+          <option value="round" selected>round</option>
+          <option value="miter">miter</option>
+          <option value="bevel">bevel</option>
+        </select>
+      </div>
+      <button class="token-reset" onclick="resetTokens()">초기화</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="section">
+    <div class="section-title">내비게이션</div>
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="아이콘 검색..." oninput="filterIcons()">
+    </div>
+    <div class="no-result" id="no-result">검색 결과가 없습니다</div>
+  </div>
+
+  <!-- Icons: Navigation & UI -->
+  <div class="section" data-group="navigation">
+    <div class="section-title">Navigation & UI</div>
+    <div class="icon-grid" id="grid-navigation">
+
+      <div class="icon-card" data-name="arrow-left" data-usage="뒤로가기, 상세→목록" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </div>
+        <span class="icon-name">arrow-left</span>
+        <span class="icon-tag">nav</span>
+      </div>
+
+      <div class="icon-card" data-name="chevron-right" data-usage="메뉴, 목록 이동" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <span class="icon-name">chevron-right</span>
+        <span class="icon-tag">nav</span>
+      </div>
+
+      <div class="icon-card" data-name="chevron-down" data-usage="드롭다운, 펼치기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="icon-name">chevron-down</span>
+        <span class="icon-tag">nav</span>
+      </div>
+
+      <div class="icon-card" data-name="x" data-usage="닫기, 다이얼로그 닫기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <span class="icon-name">x</span>
+        <span class="icon-tag">action</span>
+      </div>
+
+      <div class="icon-card" data-name="search" data-usage="검색 입력" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <span class="icon-name">search</span>
+        <span class="icon-tag">action</span>
+      </div>
+
+      <div class="icon-card" data-name="plus" data-usage="추가, 새 프로젝트" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <span class="icon-name">plus</span>
+        <span class="icon-tag">action</span>
+      </div>
+
+      <div class="icon-card" data-name="menu" data-usage="햄버거 메뉴" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <span class="icon-name">menu</span>
+        <span class="icon-tag">nav</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: Project & Files -->
+  <div class="section" data-group="project">
+    <div class="section-title">Project & Files</div>
+    <div class="icon-grid" id="grid-project">
+
+      <div class="icon-card" data-name="folder-open" data-usage="기존 프로젝트 불러오기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        </div>
+        <span class="icon-name">folder-open</span>
+        <span class="icon-tag">project</span>
+      </div>
+
+      <div class="icon-card" data-name="file-text" data-usage="공정표, 문서" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <span class="icon-name">file-text</span>
+        <span class="icon-tag">project</span>
+      </div>
+
+      <div class="icon-card" data-name="file-down" data-usage="PDF/엑셀 내보내기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+        </div>
+        <span class="icon-name">file-down</span>
+        <span class="icon-tag">project</span>
+      </div>
+
+      <div class="icon-card" data-name="printer" data-usage="인쇄/PDF 저장" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        </div>
+        <span class="icon-name">printer</span>
+        <span class="icon-tag">action</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: User & Auth -->
+  <div class="section" data-group="user">
+    <div class="section-title">User & Auth</div>
+    <div class="icon-grid" id="grid-user">
+
+      <div class="icon-card" data-name="user" data-usage="사용자, 로그인, 프로필" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="icon-name">user</span>
+        <span class="icon-tag">user</span>
+      </div>
+
+      <div class="icon-card" data-name="users" data-usage="공동작업, 팀원" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="icon-name">users</span>
+        <span class="icon-tag">user</span>
+      </div>
+
+      <div class="icon-card" data-name="log-out" data-usage="로그아웃" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <span class="icon-name">log-out</span>
+        <span class="icon-tag">auth</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: Communication -->
+  <div class="section" data-group="communication">
+    <div class="section-title">Communication & Share</div>
+    <div class="icon-grid" id="grid-communication">
+
+      <div class="icon-card" data-name="share-2" data-usage="공유하기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <span class="icon-name">share-2</span>
+        <span class="icon-tag">share</span>
+      </div>
+
+      <div class="icon-card" data-name="link" data-usage="초대 링크 생성" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <span class="icon-name">link</span>
+        <span class="icon-tag">share</span>
+      </div>
+
+      <div class="icon-card" data-name="mail" data-usage="이메일 전송" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <span class="icon-name">mail</span>
+        <span class="icon-tag">share</span>
+      </div>
+
+      <div class="icon-card" data-name="message-square" data-usage="피드백, 채팅" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="icon-name">message-square</span>
+        <span class="icon-tag">comm</span>
+      </div>
+
+      <div class="icon-card" data-name="copy" data-usage="클립보드 복사" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+        <span class="icon-name">copy</span>
+        <span class="icon-tag">action</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: Status & Feedback -->
+  <div class="section" data-group="status">
+    <div class="section-title">Status & Feedback</div>
+    <div class="icon-grid" id="grid-status">
+
+      <div class="icon-card" data-name="check-circle" data-usage="완료, 확인" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <span class="icon-name">check-circle</span>
+        <span class="icon-tag">status</span>
+      </div>
+
+      <div class="icon-card" data-name="check" data-usage="선택, 완료 체크" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="icon-name">check</span>
+        <span class="icon-tag">status</span>
+      </div>
+
+      <div class="icon-card" data-name="info" data-usage="정보, 알림" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <span class="icon-name">info</span>
+        <span class="icon-tag">status</span>
+      </div>
+
+      <div class="icon-card" data-name="star" data-usage="전문가 리뷰, 즐겨찾기" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="icon-name">star</span>
+        <span class="icon-tag">status</span>
+      </div>
+
+      <div class="icon-card" data-name="lightbulb" data-usage="시공 팁, 아이디어" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+        </div>
+        <span class="icon-name">lightbulb</span>
+        <span class="icon-tag">info</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: Work & Schedule -->
+  <div class="section" data-group="work">
+    <div class="section-title">Work & Schedule</div>
+    <div class="icon-grid" id="grid-work">
+
+      <div class="icon-card" data-name="clock" data-usage="시간, 일정 기간" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="icon-name">clock</span>
+        <span class="icon-tag">schedule</span>
+      </div>
+
+      <div class="icon-card" data-name="calendar" data-usage="일정 선택, 캘린더" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span class="icon-name">calendar</span>
+        <span class="icon-tag">schedule</span>
+      </div>
+
+      <div class="icon-card" data-name="map-pin" data-usage="주소, 위치" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <span class="icon-name">map-pin</span>
+        <span class="icon-tag">info</span>
+      </div>
+
+      <div class="icon-card" data-name="dollar-sign" data-usage="비용, 견적" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <span class="icon-name">dollar-sign</span>
+        <span class="icon-tag">cost</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Icons: Destructive -->
+  <div class="section" data-group="destructive">
+    <div class="section-title">Destructive Actions</div>
+    <div class="icon-grid" id="grid-destructive">
+
+      <div class="icon-card" data-name="trash-2" data-usage="삭제, 공정 삭제" onclick="selectIcon(this)">
+        <div class="copied-toast">복사됨!</div>
+        <div class="icon-preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </div>
+        <span class="icon-name">trash-2</span>
+        <span class="icon-tag">danger</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Code Panel -->
+  <div class="code-panel" id="code-panel">
+    <div class="code-panel-head">
+      <span class="code-panel-name" id="code-panel-name">아이콘 선택</span>
+      <div class="code-panel-actions">
+        <button class="code-btn code-btn-copy" onclick="copyCode()">SVG 복사</button>
+        <button class="code-btn code-btn-close" onclick="closePanel()">닫기</button>
+      </div>
+    </div>
+    <div class="code-body">
+      <pre id="code-output"></pre>
+    </div>
+  </div>
+
+  <!-- Usage Guide -->
+  <div class="section" style="margin-top:48px;">
+    <div class="section-title">사용 방법</div>
+    <div class="usage-box">
+      <h4>앱에서 아이콘 수정하기</h4>
+      <div class="usage-item">
+        <span class="usage-where">① 토큰 설정</span>
+        <span class="usage-desc">Size / Stroke / Color를 조정하면 모든 미리보기에 실시간 반영됩니다</span>
+      </div>
+      <div class="usage-item">
+        <span class="usage-where">② 아이콘 클릭</span>
+        <span class="usage-desc">아이콘 카드 클릭 → 하단 코드 패널에서 SVG 코드 확인</span>
+      </div>
+      <div class="usage-item">
+        <span class="usage-where">③ SVG 복사</span>
+        <span class="usage-desc">"SVG 복사" 버튼으로 현재 토큰이 적용된 SVG 코드 복사</span>
+      </div>
+      <div class="usage-item">
+        <span class="usage-where">④ index.html 적용</span>
+        <span class="usage-desc">복사한 SVG를 index.html의 해당 아이콘 위치에 붙여넣기</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let selectedCard = null;
+
+// ── Token apply ──
+function applyTokens() {
+  const size   = +document.getElementById('tk-size').value || 24;
+  const stroke = +document.getElementById('tk-stroke').value || 2;
+  const color  = document.getElementById('tk-color').value || '#1a1a1a';
+  const linecap  = document.getElementById('tk-linecap').value;
+  const linejoin = document.getElementById('tk-linejoin').value;
+
+  document.querySelectorAll('.icon-preview svg').forEach(svg => {
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+    svg.setAttribute('stroke', color);
+    svg.setAttribute('stroke-width', stroke);
+    svg.setAttribute('stroke-linecap', linecap);
+    svg.setAttribute('stroke-linejoin', linejoin);
+  });
+
+  // update code panel if open
+  if (selectedCard) updateCodePanel(selectedCard);
+}
+
+function resetTokens() {
+  document.getElementById('tk-size').value   = 24;
+  document.getElementById('tk-stroke').value = 2;
+  document.getElementById('tk-color').value  = '#1a1a1a';
+  document.getElementById('tk-linecap').value  = 'round';
+  document.getElementById('tk-linejoin').value = 'round';
+  applyTokens();
+}
+
+// ── Icon select ──
+function selectIcon(card) {
+  if (selectedCard) selectedCard.style.outline = '';
+  selectedCard = card;
+  card.style.outline = '2px solid var(--primary)';
+  updateCodePanel(card);
+
+  // copy on click
+  const svg = card.querySelector('.icon-preview svg');
+  if (svg) {
+    const code = getSVGCode(svg);
+    navigator.clipboard.writeText(code).then(() => {
+      card.classList.add('copied');
+      setTimeout(() => card.classList.remove('copied'), 1400);
+    }).catch(() => {});
+  }
+}
+
+function updateCodePanel(card) {
+  const name = card.dataset.name;
+  const usage = card.dataset.usage;
+  const svg = card.querySelector('.icon-preview svg');
+  if (!svg) return;
+
+  document.getElementById('code-panel').classList.add('open');
+  document.getElementById('code-panel-name').textContent = `${name} — ${usage}`;
+  document.getElementById('code-output').textContent = getSVGCode(svg);
+  document.getElementById('code-panel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function getSVGCode(svg) {
+  const size   = svg.getAttribute('width') || '24';
+  const stroke = svg.getAttribute('stroke') || '#1a1a1a';
+  const sw     = svg.getAttribute('stroke-width') || '2';
+  const lc     = svg.getAttribute('stroke-linecap') || 'round';
+  const lj     = svg.getAttribute('stroke-linejoin') || 'round';
+  const inner  = svg.innerHTML.trim();
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="${lc}" stroke-linejoin="${lj}">\n  ${inner}\n</svg>`;
+}
+
+function copyCode() {
+  const code = document.getElementById('code-output').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.code-btn-copy');
+    btn.textContent = '복사됨 ✓';
+    btn.style.background = '#10b981';
+    setTimeout(() => { btn.textContent = 'SVG 복사'; btn.style.background = ''; }, 1500);
+  });
+}
+
+function closePanel() {
+  document.getElementById('code-panel').classList.remove('open');
+  if (selectedCard) { selectedCard.style.outline = ''; selectedCard = null; }
+}
+
+// ── Search ──
+function filterIcons() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  let total = 0;
+  document.querySelectorAll('.icon-card').forEach(card => {
+    const match = !q || card.dataset.name.includes(q) || (card.dataset.usage||'').includes(q);
+    card.style.display = match ? '' : 'none';
+    if (match) total++;
+  });
+  document.getElementById('no-result').style.display = total === 0 ? 'block' : 'none';
+  // hide empty sections
+  document.querySelectorAll('.icon-grid').forEach(grid => {
+    const visible = [...grid.querySelectorAll('.icon-card')].some(c => c.style.display !== 'none');
+    grid.closest('.section').style.display = visible ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
