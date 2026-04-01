@@ -2095,7 +2095,7 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
     <!-- 미리보기 -->
-    <div style="padding:0 20px 16px;">
+    <div style="padding:0 20px 12px;">
       <div id="notice-card" style="
         background:#fff; border:1.5px solid #e5e9f2; border-radius:14px;
         padding:32px 28px; text-align:center; font-family:'Noto Sans KR',sans-serif;
@@ -2137,12 +2137,18 @@ button, input, textarea, select { font-family:var(--font); }
           <strong>감사합니다.</strong>
         </div>
       </div>
-    </div>
-    <div style="padding:0 20px calc(16px + env(safe-area-inset-bottom));display:flex;gap:8px;">
-      <button onclick="closeDialog('dlg-notice')" style="flex:1;padding:12px;background:#f0f2f5;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);color:#555;">닫기</button>
-      <button onclick="downloadNoticeImage()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg class="icon" width="15" height="15"><use href="#icon-download"/></svg> 이미지 저장
+      <!-- 카드 바로 아래 다운로드 버튼 -->
+      <button onclick="downloadNoticeImage()" id="notice-download-btn" style="
+        margin-top:10px; width:100%; padding:13px; background:var(--primary); border:none;
+        border-radius:11px; font-size:15px; font-weight:700; cursor:pointer;
+        font-family:var(--font); color:#fff; display:flex; align-items:center;
+        justify-content:center; gap:7px;
+      ">
+        <svg class="icon" width="16" height="16"><use href="#icon-download"/></svg> 이미지 다운로드
       </button>
+    </div>
+    <div style="padding:0 20px calc(14px + env(safe-area-inset-bottom));">
+      <button onclick="closeDialog('dlg-notice')" style="width:100%;padding:11px;background:#f0f2f5;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);color:#777;">닫기</button>
     </div>
   </div>
 </div>
@@ -4940,7 +4946,7 @@ function updateNoticePreview() {
 async function downloadNoticeImage() {
   const card = document.getElementById('notice-card');
   if (!card) return;
-  const btn = document.querySelector('#dlg-notice .dialog > div:last-child button:last-child');
+  const btn = document.getElementById('notice-download-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;"></span> 생성 중...'; }
   try {
     const canvas = await html2canvas(card, {
@@ -4957,7 +4963,7 @@ async function downloadNoticeImage() {
   } catch(e) {
     alert('이미지 저장 실패: ' + e.message);
   }
-  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-download"/></svg> 이미지 저장'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="16" height="16"><use href="#icon-download"/></svg> 이미지 다운로드'; }
 }
 
 function printExportDoc() {
