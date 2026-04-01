@@ -136,6 +136,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="icons-sprite.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
 <style>
 :root {
@@ -1655,6 +1656,9 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사계획 내보내기
     </button>
+    <button class="dropdown-item" onclick="openNoticeDialog();closeAllMenus();">
+      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
+    </button>
     <button class="dropdown-item" onclick="openExpertDialog()">
       <svg class="icon" width="20" height="20"><use href="#icon-star"/></svg> 전문가 검토 받기<span class="menu-badge">준비 중</span>
     </button>
@@ -2047,6 +2051,9 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사계획 내보내기
     </button>
+    <button class="mobile-sheet-item" onclick="openNoticeDialog();closeAllMenus();">
+      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
+    </button>
     <button class="mobile-sheet-item" onclick="openFeedbackDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
     </button>
@@ -2066,6 +2073,77 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item danger" onclick="cardMenuDelete();closeDialog('mobile-card-menu-sheet');">
       <svg class="icon" width="20" height="20"><use href="#icon-trash-2"/></svg> 삭제하기
     </button>
+  </div>
+</div>
+
+<!-- 인테리어 양해 안내문 Dialog -->
+<div class="overlay" id="dlg-notice">
+  <div class="dialog" style="max-width:400px;width:92%;padding:0;overflow:hidden;border-radius:18px;">
+    <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:700;color:#222;">인테리어 양해 안내문</div>
+      <button onclick="closeDialog('dlg-notice')" style="background:none;border:none;cursor:pointer;color:#aaa;padding:4px;">
+        <svg class="icon" width="20" height="20"><use href="#icon-x"/></svg>
+      </button>
+    </div>
+    <div style="padding:12px 20px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;color:#888;">아래 내용을 확인하고 이미지로 저장하세요.</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:#666;font-weight:600;">동·호수</label>
+          <input id="notice-unit" type="text" placeholder="예: 101동 502호" style="padding:9px 12px;border:1.5px solid #dde3ef;border-radius:9px;font-size:14px;font-family:var(--font);outline:none;width:100%;box-sizing:border-box;" oninput="updateNoticePreview()"/>
+        </div>
+      </div>
+    </div>
+    <!-- 미리보기 -->
+    <div style="padding:0 20px 16px;">
+      <div id="notice-card" style="
+        background:#fff; border:1.5px solid #e5e9f2; border-radius:14px;
+        padding:32px 28px; text-align:center; font-family:'Noto Sans KR',sans-serif;
+        position:relative; min-height:420px; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; gap:0;
+      ">
+        <!-- 꽃 장식 SVG -->
+        <div style="margin-bottom:18px;">
+          <svg width="120" height="60" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="60" cy="38" rx="10" ry="6" fill="#a8d5e2" opacity=".4"/>
+            <circle cx="60" cy="30" r="7" fill="#7ec8d8"/>
+            <circle cx="60" cy="30" r="3" fill="#f4c430"/>
+            <circle cx="44" cy="33" r="6" fill="#9db8e8"/>
+            <circle cx="44" cy="33" r="2.5" fill="#f4c430"/>
+            <circle cx="76" cy="33" r="6" fill="#c8a8d8"/>
+            <circle cx="76" cy="33" r="2.5" fill="#f4c430"/>
+            <circle cx="52" cy="24" r="5" fill="#b8d0f0"/>
+            <circle cx="68" cy="24" r="5" fill="#d4a8c8"/>
+            <path d="M30 42 Q40 20 55 38" stroke="#7db87d" stroke-width="1.5" fill="none"/>
+            <path d="M90 42 Q80 20 65 38" stroke="#7db87d" stroke-width="1.5" fill="none"/>
+            <path d="M25 44 Q33 30 42 40" stroke="#8fc88f" stroke-width="1.2" fill="none"/>
+            <path d="M95 44 Q87 30 78 40" stroke="#8fc88f" stroke-width="1.2" fill="none"/>
+            <ellipse cx="33" cy="38" rx="4" ry="2.5" fill="#a8d0a8" opacity=".6" transform="rotate(-30 33 38)"/>
+            <ellipse cx="87" cy="38" rx="4" ry="2.5" fill="#a8d0a8" opacity=".6" transform="rotate(30 87 38)"/>
+          </svg>
+        </div>
+        <div id="np-greeting" style="font-size:14px;color:#333;line-height:1.9;margin-bottom:16px;"></div>
+        <div id="np-dates" style="font-size:14px;color:#333;line-height:1.9;margin-bottom:16px;"></div>
+        <div style="font-size:13.5px;color:#444;line-height:1.9;margin-bottom:16px;">
+          공사로 인해 여러 불편함을 드리게 되어<br>
+          진심으로 죄송한 마음입니다.<br>
+          최대한 신속하고 안전하게 공사를 마칠 수 있도록<br>
+          최선을 다하겠습니다.<br>
+          부디 너그러운 양해 부탁드립니다.
+        </div>
+        <div style="font-size:13px;color:#555;line-height:1.9;">
+          이웃님 가정에 늘 건강과 평안이 함께하시길 바라며,<br>
+          앞으로 좋은 이웃으로 인사드리겠습니다.<br>
+          <strong>감사합니다.</strong>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 20px calc(16px + env(safe-area-inset-bottom));display:flex;gap:8px;">
+      <button onclick="closeDialog('dlg-notice')" style="flex:1;padding:12px;background:#f0f2f5;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);color:#555;">닫기</button>
+      <button onclick="downloadNoticeImage()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg class="icon" width="15" height="15"><use href="#icon-download"/></svg> 이미지 저장
+      </button>
+    </div>
   </div>
 </div>
 
@@ -4819,6 +4897,67 @@ function searchAddress() {
 function openExportDialog() {
   renderExportDoc();
   openDialog('dlg-export');
+}
+
+// ===== 인테리어 양해 안내문 =====
+function openNoticeDialog() {
+  const proj = getProject();
+  // 저장된 동호수 자동 채우기 (addressDetail 에서 추출)
+  const detail = proj?.form?.addressDetail || '';
+  const unitInput = document.getElementById('notice-unit');
+  if (unitInput && !unitInput.value) unitInput.value = detail;
+  updateNoticePreview();
+  openDialog('dlg-notice');
+}
+
+function updateNoticePreview() {
+  const proj = getProject();
+  const unit = (document.getElementById('notice-unit')?.value || '').trim();
+  const f = proj?.form || {};
+
+  // 동호수 인사말
+  const greetEl = document.getElementById('np-greeting');
+  if (greetEl) {
+    greetEl.innerHTML = unit
+      ? `안녕하세요.<br><strong>${esc(unit)}</strong>에 이사하게 된 입주민입니다.`
+      : `안녕하세요.<br>이사하게 된 입주민입니다.`;
+  }
+
+  // 공사 기간
+  const datesEl = document.getElementById('np-dates');
+  if (datesEl) {
+    if (f.startDate && f.endDate) {
+      const s = new Date(f.startDate + 'T00:00:00');
+      const e = new Date(f.endDate + 'T00:00:00');
+      const fmt = d => `${d.getMonth()+1}월 ${d.getDate()}일`;
+      datesEl.innerHTML = `오는 <strong>${fmt(s)}</strong>부터 <strong>${fmt(e)}</strong>까지<br>인테리어 공사가 예정되어 있어<br>미리 양해 말씀드립니다.`;
+    } else {
+      datesEl.innerHTML = `인테리어 공사가 예정되어 있어<br>미리 양해 말씀드립니다.`;
+    }
+  }
+}
+
+async function downloadNoticeImage() {
+  const card = document.getElementById('notice-card');
+  if (!card) return;
+  const btn = document.querySelector('#dlg-notice .dialog > div:last-child button:last-child');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;"></span> 생성 중...'; }
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+    const link = document.createElement('a');
+    link.download = '인테리어_양해안내문.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToastMessage('✅ 이미지가 저장됐습니다!');
+  } catch(e) {
+    alert('이미지 저장 실패: ' + e.message);
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-download"/></svg> 이미지 저장'; }
 }
 
 function printExportDoc() {
