@@ -1031,11 +1031,15 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .invite-role-select:focus { border-color:var(--primary); }
 .invite-gen-btn {
-  padding:10px 18px; background:var(--primary); color:#fff; border:none;
-  border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font);
+  padding:10px 18px; background:#d1d9ef; color:#a0aec0; border:none;
+  border-radius:9px; font-size:14px; font-weight:600; cursor:not-allowed; font-family:var(--font);
   white-space:nowrap; display:flex; align-items:center; gap:6px;
+  transition:background .2s, color .2s;
 }
-.invite-gen-btn:disabled { background:#b0c4f0; cursor:not-allowed; }
+.invite-gen-btn.active {
+  background:var(--primary); color:#fff; cursor:pointer;
+}
+.invite-gen-btn:disabled { background:#b0c4f0; color:#fff; cursor:not-allowed; }
 
 /* generated link box */
 .invite-link-box {
@@ -5580,13 +5584,13 @@ async function renderCollabTab() {
       <div style="font-size:13px;font-weight:700;color:#888;margin:14px 0 8px;">새 멤버 초대</div>
       <div class="invite-form">
         <div class="invite-row">
-          <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" />
+          <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" oninput="checkInviteEmailInput(this)" />
           <select class="invite-role-select" id="invite-role-select">
             <option value="editor">편집자</option>
             <option value="viewer">뷰어</option>
           </select>
         </div>
-        <button class="invite-gen-btn" onclick="generateInviteLink()">
+        <button class="invite-gen-btn" id="invite-gen-btn" onclick="generateInviteLink()" disabled>
           <svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기
         </button>
         <div class="invite-link-box" id="invite-link-box">
@@ -5627,12 +5631,12 @@ async function generateInviteLink() {
     emailEl?.focus();
     alert('올바른 이메일 주소를 입력해주세요.'); return;
   }
-  const btn = document.querySelector('.invite-gen-btn');
+  const btn = document.getElementById('invite-gen-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 초대장 만드는 중...'; }
 
   const ok = await _initFirebase();
   if (!ok) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
   }
 
@@ -5655,7 +5659,7 @@ async function generateInviteLink() {
     if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
     const cloudId = await _pushProjToCloud(proj);
     if (!cloudId) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+      if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
       alert('클라우드 저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.'); return;
     }
     proj.cloudId = cloudId; proj.isCloud = true;
@@ -5686,11 +5690,11 @@ async function generateInviteLink() {
     _currentInviteEmail = email;
     // EmailJS로 직접 발송 (실패 시 mailto fallback 내장)
     sendInviteByMail();
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); }
     updateCollabIndicator(proj.collaborators||[], proj.owner);
   } catch(e) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     alert('초대 링크 생성 실패: ' + e.message);
   }
 }
@@ -5704,7 +5708,7 @@ function copyInviteLink() {
 
 async function sendInviteByMail() {
   const proj = getProject();
-  const btn = document.querySelector('.invite-gen-btn');
+  const btn = document.getElementById('invite-gen-btn');
   const origText = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 전송 중...'; }
   try {
@@ -5741,13 +5745,25 @@ function shareInviteKakao() {
   alert('링크가 복사되었습니다. 카카오톡에서 붙여넣기로 공유하세요! 💬');
 }
 
+function checkInviteEmailInput(input) {
+  const btn = document.getElementById('invite-gen-btn');
+  if (!btn) return;
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());
+  btn.disabled = !valid;
+  btn.classList.toggle('active', valid);
+}
+
 function resetInviteForm() {
   const linkBox = document.getElementById('invite-link-box');
   if (linkBox) linkBox.classList.remove('show');
   const emailEl = document.getElementById('invite-email-input');
   if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); emailEl.focus(); }
-  const btn = document.querySelector('.invite-gen-btn');
-  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+  const btn = document.getElementById('invite-gen-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기';
+  }
   _currentInviteLink = ''; _currentInviteEmail = '';
 }
 
