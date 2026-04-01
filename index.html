@@ -135,6 +135,8 @@
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="icons-sprite.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
 <style>
 :root {
   --primary: #3176ff;
@@ -5589,9 +5591,9 @@ async function renderCollabTab() {
         <div class="invite-link-box" id="invite-link-box">
           <div style="font-size:13px;font-weight:700;color:#16a34a;display:flex;align-items:center;gap:6px;">
             <svg class="icon" width="15" height="15" style="color:#16a34a"><use href="#icon-check-circle"/></svg>
-            초대 이메일을 열었습니다 <span style="font-weight:400;color:#888;font-size:11px;">(7일 유효)</span>
+            초대 이메일을 전송했습니다 <span style="font-weight:400;color:#888;font-size:11px;">(7일 유효)</span>
           </div>
-          <div style="font-size:12px;color:#888;margin-top:-2px;">메일 앱에서 전송을 완료해 주세요.</div>
+          <div style="font-size:12px;color:#888;margin-top:-2px;" id="invite-sent-to"></div>
           <div class="invite-link-actions" style="margin-top:4px;">
             <button class="invite-link-btn ilb-copy" onclick="copyInviteLink()">
               <svg class="icon" width="12" height="12"><use href="#icon-copy"/></svg> 링크 복사
@@ -5681,10 +5683,8 @@ async function generateInviteLink() {
     const link = `${window.location.origin}${window.location.pathname}?invite=${token}`;
     _currentInviteLink = link;
     _currentInviteEmail = email;
-    // 메일 앱 자동 열기
+    // EmailJS로 직접 발송 (실패 시 mailto fallback 내장)
     sendInviteByMail();
-    const linkBox = document.getElementById('invite-link-box');
-    if (linkBox) linkBox.classList.add('show');
     if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); }
     updateCollabIndicator(proj.collaborators||[], proj.owner);
@@ -5701,14 +5701,38 @@ function copyInviteLink() {
   });
 }
 
-function sendInviteByMail() {
+async function sendInviteByMail() {
   const proj = getProject();
-  const subject = encodeURIComponent(`[Vibespace] ${proj?.name||'시공 프로젝트'} 공동작업 초대`);
-  const body = encodeURIComponent(
-    `안녕하세요!\n\n${state.user.name || state.user.email}님이 Vibespace에서 시공 프로젝트에 초대했습니다.\n\n` +
-    `프로젝트명: ${proj?.name||''}\n\n아래 링크를 클릭해 참여하세요:\n${_currentInviteLink}\n\n(링크는 7일간 유효합니다)`
-  );
-  window.open(`mailto:${_currentInviteEmail}?subject=${subject}&body=${body}`);
+  const btn = document.querySelector('.invite-gen-btn');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 전송 중...'; }
+  try {
+    await emailjs.send('service_elvk718', 'template_11ldrbw', {
+      to_email:     _currentInviteEmail,
+      to_name:      _currentInviteEmail.split('@')[0],
+      from_name:    state.user.name || state.user.email,
+      project_name: proj?.name || '시공 프로젝트',
+      invite_link:  _currentInviteLink,
+      role:         (document.getElementById('invite-role-select')?.value === 'viewer') ? '뷰어' : '편집자',
+    });
+    if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+    showToastMessage('✉️ 초대 이메일을 전송했습니다!');
+    const linkBox = document.getElementById('invite-link-box');
+    if (linkBox) linkBox.classList.add('show');
+    const sentTo = document.getElementById('invite-sent-to');
+    if (sentTo) sentTo.textContent = _currentInviteEmail + '로 발송됐습니다.';
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+    console.error('EmailJS 오류:', e);
+    // fallback: 메일 앱 열기
+    const subject = encodeURIComponent(`[Vibespace] ${proj?.name||'시공 프로젝트'} 공동작업 초대`);
+    const body = encodeURIComponent(
+      `안녕하세요!\n\n${state.user.name || state.user.email}님이 Vibespace에서 시공 프로젝트에 초대했습니다.\n\n` +
+      `프로젝트명: ${proj?.name||''}\n\n아래 링크를 클릭해 참여하세요:\n${_currentInviteLink}\n\n(링크는 7일간 유효합니다)`
+    );
+    window.open(`mailto:${_currentInviteEmail}?subject=${subject}&body=${body}`);
+    showToastMessage('⚠️ 직접 전송 실패 — 메일 앱을 열었습니다.');
+  }
 }
 
 function shareInviteKakao() {
