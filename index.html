@@ -2346,13 +2346,30 @@ function initDefaultProject() {
   state.currentProjectId = proj.id;
 }
 
-function createDefaultProject(name) {
+const DEFAULT_PROCESS_NAMES = [
+  '실측','도면설계','동의서 및 보양','철거','샷시','전기',
+  '목공','타일','욕실','싱크','마루','도배','필름','가구',
+  '입주청소','이삿짐정리'
+];
+
+function createDefaultProject(name, withProcesses = false) {
+  const processes = withProcesses
+    ? DEFAULT_PROCESS_NAMES.map((pname, i) => ({
+        id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2,6),
+        name: pname,
+        type: pname,
+        scheduleStart: '',
+        scheduleEnd: '',
+        company: '',
+        details: []
+      }))
+    : [];
   return {
     id: 'p_' + Date.now() + Math.random().toString(36).slice(2,6),
     name,
     form: { type:['아파트'], size:['30평대'], method:['반셀프'], startDate:'', endDate:'', memo:'', address:'', addressDetail:'' },
     drawing: null,
-    processes: []
+    processes
   };
 }
 
@@ -2519,6 +2536,23 @@ async function _notifyNewUserIfNeeded() {
         lastLoginAt:  firebase.firestore.FieldValue.serverTimestamp(),
         loginCount: 1,
       });
+
+      // 기존 프로젝트에 공정이 없으면 디폴트 공정 16개 삽입
+      const currentProj = getProject();
+      if (currentProj && (!currentProj.processes || currentProj.processes.length === 0)) {
+        currentProj.processes = DEFAULT_PROCESS_NAMES.map((pname, i) => ({
+          id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2,6),
+          name: pname,
+          type: pname,
+          scheduleStart: '',
+          scheduleEnd: '',
+          company: '',
+          details: []
+        }));
+        save();
+        renderAll();
+        showToastMessage('🏠 공정 순서가 자동으로 추가됐습니다!');
+      }
       const tgText =
         `🎉 *신규 가입자!*\n\n` +
         `👤 ${state.user.name}\n` +
@@ -2800,7 +2834,7 @@ function doLogout() {
 let formMode = 'edit';
 function startNewProject() { requireLogin(_startNewProject); }
 function _startNewProject() {
-  const proj = createDefaultProject('새 시공 프로젝트');
+  const proj = createDefaultProject('새 시공 프로젝트', true);
   state.projects.push(proj);
   state.currentProjectId = proj.id;
   save();
