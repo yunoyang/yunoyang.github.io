@@ -5262,6 +5262,7 @@ function renderAll() {
     renderWorkCards();
     updateSummary();
     renderCalendar();
+    updateCollabIndicator(proj.collaborators || [], proj.owner);
   }
   updateLoginUI();
 }
@@ -6203,7 +6204,21 @@ async function _syncFromCloudOnStartup() {
     for (const p of state.projects) {
       if (p.isCloud && p.cloudId) {
         _startCollabListener(p.cloudId);
-        updateCollabIndicator(p.collaborators||[], p.owner);
+        // collaborators가 비어있으면 Firestore에서 직접 보완
+        if (!(p.collaborators||[]).length) {
+          _db.collection('vb_projects').doc(p.cloudId).get().then(snap => {
+            if (!snap.exists) return;
+            const meta = snap.data().meta || {};
+            if ((meta.collaborators||[]).length) {
+              p.collaborators = meta.collaborators;
+              p.owner = meta.owner || p.owner;
+              localStorage.setItem('vibespace', JSON.stringify(state));
+              updateCollabIndicator(p.collaborators, p.owner);
+            }
+          }).catch(() => {});
+        } else {
+          updateCollabIndicator(p.collaborators, p.owner);
+        }
       }
     }
   } catch(e) {
