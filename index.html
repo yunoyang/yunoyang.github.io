@@ -1818,7 +1818,7 @@ button, input, textarea, select { font-family:var(--font); }
         background:var(--primary); color:#fff; border:none; border-radius:9px;
         padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font);
       ">
-        <svg class="icon" width="14" height="14"><use href="#icon-download"/></svg> 저장
+        <svg class="icon" width="14" height="14"><use href="#icon-download"/></svg> 저장하기
       </button>
     </div>
     <div class="screen-scroll" style="padding:16px 20px calc(32px + env(safe-area-inset-bottom));">
@@ -2082,7 +2082,7 @@ button, input, textarea, select { font-family:var(--font); }
             oninput="this.style.borderColor='var(--primary)'"
             onkeydown="if(event.key==='Enter')saveCompanyManual()">
         </div>
-        <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;color:#555;line-height:1.7;"></div>
+        <div id="comp-current-info" style="display:none;padding:10px 14px;background:#f8f9fc;border-radius:10px;font-size:13px;line-height:1.7;display:none;align-items:center;justify-content:space-between;gap:8px;"></div>
       </div>
       <div class="dialog-actions split" style="margin-top:16px;">
         <button class="btn-cancel" onclick="closeDialog('dlg-company-search');clearCompanyManual()">취소</button>
@@ -3703,23 +3703,21 @@ function _renderContractorSelectList(procType) {
     <div id="ccard-${esc(cId)}" data-selected="0"
       style="background:#f8f9fc;border-radius:12px;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:stretch;overflow:hidden;">
       <!-- 좌: 선택 영역 -->
-      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:16px 12px 16px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:10px 12px 10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
         <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description?3:0}px;">${esc(c.name)}</div>
           ${c.description ? `<div style="font-size:13px;color:#555;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.description)}</div>` : ''}
-          <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#888;font-weight:500;margin-top:3px;">
-            <svg class="icon" width="11" height="11"><use href="#icon-map-pin"/></svg>
+          <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#222;font-weight:500;margin-top:3px;">
+            <svg class="icon" width="11" height="11" style="color:#888;"><use href="#icon-map-pin"/></svg>
             <span>${esc(c.area||'')} · ${esc(c.originalCategory||c.category||'')}</span>
           </div>
         </div>
       </div>
-      <!-- 세로선 -->
-      <div style="width:1px;background:#eef0f6;flex-shrink:0;margin:10px 0;"></div>
       <!-- 우: 더보기 버튼 -->
-      <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;cursor:pointer;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:500;color:#888;flex-shrink:0;font-family:var(--font);">
+      <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;border-left:1.5px solid #eef0f6;cursor:pointer;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:500;color:#888;flex-shrink:0;font-family:var(--font);">
         더보기
         <svg class="icon" width="13" height="13" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
       </button>
@@ -3829,8 +3827,16 @@ function openCompanySearch(procId) {
   // 기존 업체 표시
   const cur = document.getElementById('comp-current-info');
   if (proc?.companyData?.name) {
-    cur.style.display = 'block';
-    cur.innerHTML = `<span style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:3px;">현재 등록 업체</span>${esc(proc.companyData.name)}${proc.companyData.phone ? ' · '+esc(proc.companyData.phone) : ''}`;
+    cur.style.display = 'flex';
+    const cId = proc.companyData.contractorId || proc.companyData.id || '';
+    cur.innerHTML = `
+      <div style="min-width:0;">
+        <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px;">현재 등록 업체</div>
+        <div style="font-size:14px;font-weight:700;color:#222;">${esc(proc.companyData.name)}</div>
+        ${proc.companyData.phone ? `<div style="font-size:13px;color:#222;margin-top:1px;">${esc(proc.companyData.phone)}</div>` : ''}
+      </div>
+      ${cId ? `<button onclick="_openContractorDetail('${esc(cId)}')" style="flex-shrink:0;padding:7px 12px;background:#fff;border:1.5px solid #dde3ef;border-radius:8px;font-size:12px;font-weight:600;color:#3176ff;cursor:pointer;font-family:var(--font);white-space:nowrap;">업체 정보 보기</button>` : ''}
+    `;
   } else { cur.style.display = 'none'; }
   // 항상 직접입력 탭으로 시작
   switchCompTab('manual');
@@ -3892,8 +3898,8 @@ function renderWorkCards() {
   container.innerHTML = sorted.map(p => {
     const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
     const schedDisplay = (p.scheduleStart && p.scheduleEnd)
-      ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 미설정';
-    const compDisplay = p.companyData?.name || p.company || '업체 미설정';
+      ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 설정하기';
+    const compDisplay = p.companyData?.name || p.company || '업체 설정하기';
     const isExpanded = _expandedCards.has(p.id);
     return `
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
@@ -4954,7 +4960,7 @@ async function downloadNoticeImage() {
   } catch(e) {
     alert('이미지 저장 실패: ' + e.message);
   }
-  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-download"/></svg> 저장'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-download"/></svg> 저장하기'; }
 }
 
 function printExportDoc() {
