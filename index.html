@@ -5422,7 +5422,10 @@ async function _pushProjToCloud(proj) {
     await _db.collection('vb_projects').doc(proj.cloudId).set(payload, { merge: true });
     _saveUserIndex(proj.cloudId); // 유저 인덱스 업데이트 (논블로킹)
     return proj.cloudId;
-  } catch(e) { console.error('push failed', e); return null; }
+  } catch(e) {
+    console.error('push failed — code:', e.code, '/ message:', e.message);
+    return null;
+  }
 }
 
 function _syncProjToCloud(proj) {
@@ -5617,15 +5620,29 @@ async function generateInviteLink() {
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
   }
 
+  // Firebase Auth 준비 대기 (모바일에서 세션 복원 시간 필요)
+  await new Promise(resolve => {
+    const auth = firebase.auth();
+    const t = setTimeout(() => { unsub(); resolve(); }, 3000);
+    const unsub = auth.onAuthStateChanged(user => {
+      clearTimeout(t); unsub(); resolve(user);
+    });
+  });
+  // Auth 미확보 시 anonymous fallback
+  if (!firebase.auth().currentUser) {
+    try { await firebase.auth().signInAnonymously(); } catch(e) {}
+  }
+
   const proj = getProject();
   if (!proj.isCloud || !proj.cloudId) {
+    // owner 정보 먼저 설정
+    if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
     const cloudId = await _pushProjToCloud(proj);
     if (!cloudId) {
       if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
-      alert('프로젝트 클라우드 저장 실패'); return;
+      alert('클라우드 저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.'); return;
     }
     proj.cloudId = cloudId; proj.isCloud = true;
-    if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
     save();
     _startCollabListener(cloudId);
   }
