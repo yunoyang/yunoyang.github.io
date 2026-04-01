@@ -5727,7 +5727,6 @@ async function cancelInvite(token) {
   if (!confirm(`${who}초대를 취소하시겠습니까?`)) return;
   const ok = await _initFirebase();
   if (ok && _db) { try { await _db.collection('vb_invites').doc(token).delete(); } catch(e){} }
-  const proj = getProject();
   if (proj && proj.invites) {
     proj.invites = proj.invites.filter(i => i.token !== token);
     save();
