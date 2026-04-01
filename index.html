@@ -5577,33 +5577,34 @@ async function renderCollabTab() {
       <div style="font-size:13px;font-weight:700;color:#888;margin:14px 0 8px;">새 멤버 초대</div>
       <div class="invite-form">
         <div class="invite-row">
-          <input type="email" id="invite-email-input" placeholder="이메일 주소 입력" />
+          <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" />
           <select class="invite-role-select" id="invite-role-select">
             <option value="editor">편집자</option>
             <option value="viewer">뷰어</option>
           </select>
         </div>
         <button class="invite-gen-btn" onclick="generateInviteLink()">
-          <svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성
+          <svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기
         </button>
         <div class="invite-link-box" id="invite-link-box">
-          <div style="font-size:12px;font-weight:700;color:#3176ff;display:flex;align-items:center;gap:5px;">
-            <svg class="icon" width="13" height="13"><use href="#icon-check-circle"/></svg> 초대 링크 생성 완료 (7일 유효)
+          <div style="font-size:13px;font-weight:700;color:#16a34a;display:flex;align-items:center;gap:6px;">
+            <svg class="icon" width="15" height="15" style="color:#16a34a"><use href="#icon-check-circle"/></svg>
+            초대 이메일을 열었습니다 <span style="font-weight:400;color:#888;font-size:11px;">(7일 유효)</span>
           </div>
-          <div class="invite-link-url" id="invite-link-url"></div>
-          <div class="invite-link-actions">
+          <div style="font-size:12px;color:#888;margin-top:-2px;">메일 앱에서 전송을 완료해 주세요.</div>
+          <div class="invite-link-actions" style="margin-top:4px;">
             <button class="invite-link-btn ilb-copy" onclick="copyInviteLink()">
-              <svg class="icon" width="12" height="12"><use href="#icon-copy"/></svg> 복사
-            </button>
-            <button class="invite-link-btn ilb-mail" onclick="sendInviteByMail()">
-              <svg class="icon" width="12" height="12"><use href="#icon-mail"/></svg> 이메일 전송
+              <svg class="icon" width="12" height="12"><use href="#icon-copy"/></svg> 링크 복사
             </button>
             <button class="invite-link-btn ilb-kakao" onclick="shareInviteKakao()">
               💬 카카오톡
             </button>
+            <button class="invite-link-btn ilb-mail" onclick="sendInviteByMail()">
+              <svg class="icon" width="12" height="12"><use href="#icon-mail"/></svg> 다시 보내기
+            </button>
           </div>
-          <button onclick="resetInviteForm()" style="margin-top:8px;width:100%;padding:6px;background:none;border:1px dashed #c7d7f9;border-radius:7px;color:#3176ff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
-            <svg class="icon" width="12" height="12"><use href="#icon-plus"/></svg> 다른 사람 추가 초대하기
+          <button onclick="resetInviteForm()" style="margin-top:8px;width:100%;padding:7px;background:none;border:1.5px dashed #c7d7f9;border-radius:8px;color:#3176ff;font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+            <svg class="icon" width="13" height="13"><use href="#icon-plus"/></svg> 다른 사람 초대하기
           </button>
         </div>
       </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
@@ -5624,11 +5625,11 @@ async function generateInviteLink() {
     alert('올바른 이메일 주소를 입력해주세요.'); return;
   }
   const btn = document.querySelector('.invite-gen-btn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 생성 중...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 초대장 만드는 중...'; }
 
   const ok = await _initFirebase();
   if (!ok) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
   }
 
@@ -5651,7 +5652,7 @@ async function generateInviteLink() {
     if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
     const cloudId = await _pushProjToCloud(proj);
     if (!cloudId) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
       alert('클라우드 저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.'); return;
     }
     proj.cloudId = cloudId; proj.isCloud = true;
@@ -5680,16 +5681,15 @@ async function generateInviteLink() {
     const link = `${window.location.origin}${window.location.pathname}?invite=${token}`;
     _currentInviteLink = link;
     _currentInviteEmail = email;
+    // 메일 앱 자동 열기
+    sendInviteByMail();
     const linkBox = document.getElementById('invite-link-box');
-    const linkUrl = document.getElementById('invite-link-url');
     if (linkBox) linkBox.classList.add('show');
-    if (linkUrl) linkUrl.textContent = link;
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
-    // 이메일 입력 초기화 — 이어서 다른 사람도 바로 초대 가능
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); }
     updateCollabIndicator(proj.collaborators||[], proj.owner);
   } catch(e) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
     alert('초대 링크 생성 실패: ' + e.message);
   }
 }
@@ -5722,7 +5722,7 @@ function resetInviteForm() {
   const emailEl = document.getElementById('invite-email-input');
   if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); emailEl.focus(); }
   const btn = document.querySelector('.invite-gen-btn');
-  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="14" height="14"><use href="#icon-link"/></svg> 초대 링크 생성'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
   _currentInviteLink = ''; _currentInviteEmail = '';
 }
 
