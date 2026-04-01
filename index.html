@@ -1012,8 +1012,8 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .cm-role.owner { background:#fef9c3; color:#b45309; }
 .cm-role.viewer { background:#f0fdf4; color:#059669; }
-.cm-remove { padding:4px; background:none; border:none; cursor:pointer; color:#ccc; flex-shrink:0; }
-.cm-remove:hover { color:#e05050; }
+.cm-remove { padding:4px; background:none; border:none; cursor:pointer; color:#bbb; flex-shrink:0; border-radius:50%; transition:background .15s,color .15s; }
+.cm-remove:hover { background:#fee2e2; color:#e05050; }
 
 /* invite form */
 .invite-form { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
@@ -5526,7 +5526,6 @@ async function renderCollabTab() {
   const isOwner = !proj.myRole || proj.myRole === 'owner';
   const collaborators = proj.collaborators || [];
   const invites = proj.invites || [];
-  const pendingInvites = invites.filter(inv => new Date(inv.expiresAt) > new Date());
 
   body.innerHTML = `
     <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:6px;">현재 멤버</div>
@@ -5553,18 +5552,21 @@ async function renderCollabTab() {
         </div>`).join('')}
     </div>
 
-    ${pendingInvites.length ? `
-      <div style="font-size:13px;font-weight:700;color:#888;margin:12px 0 6px;">대기 중인 초대</div>
+    ${invites.length ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:12px 0 6px;">초대 현황</div>
       <div style="display:flex;flex-direction:column;gap:5px;">
-        ${pendingInvites.map(inv => `
-          <div class="pending-invite-row">
-            <svg class="icon" width="14" height="14" style="color:#b45309"><use href="#icon-clock"/></svg>
-            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}</div>
-            <div class="pi-expire">~${inv.expiresAt.slice(0,10)}</div>
-            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 취소">
+        ${invites.map(inv => {
+          const expired = new Date(inv.expiresAt) < new Date();
+          return `
+          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
+            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
+            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:11px;">만료</span>':''}</div>
+            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
+            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
               <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
             </button>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>` : ''}
 
     ${isOwner ? `
