@@ -5411,8 +5411,10 @@ function _genToken(len = 28) {
 async function _pushProjToCloud(proj) {
   if (!_db) return null;
   if (!proj.cloudId) proj.cloudId = _genToken(16);
+  const projData = JSON.parse(JSON.stringify(proj));
+  delete projData.myRole; // myRole은 각 클라이언트에서 결정 — Firestore에 저장 안 함
   const payload = {
-    projectData: JSON.parse(JSON.stringify(proj)),
+    projectData: projData,
     ownerEmail: state.user.email,          // top-level: 인덱스 없이 쿼리 가능
     'meta.owner': { email: state.user.email, name: state.user.name },
     'meta.collaborators': proj.collaborators || [],
@@ -5431,8 +5433,10 @@ async function _pushProjToCloud(proj) {
 
 function _syncProjToCloud(proj) {
   if (!_db || !proj.cloudId) return;
+  const projData = JSON.parse(JSON.stringify(proj));
+  delete projData.myRole; // myRole은 각 클라이언트에서 결정 — Firestore에 저장 안 함
   const payload = {
-    projectData: JSON.parse(JSON.stringify(proj)),
+    projectData: projData,
     ownerEmail: state.user.email,   // 구버전 문서 ownerEmail 자동 backfill
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
     'meta.updatedBy': state.user.email,
@@ -5523,7 +5527,7 @@ async function renderCollabTab() {
   }
 
   const proj = getProject();
-  const isOwner = !proj.myRole || proj.myRole === 'owner';
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
   const collaborators = proj.collaborators || [];
   const invites = proj.invites || [];
 
