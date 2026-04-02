@@ -1066,9 +1066,9 @@ button, input, textarea, select { font-family:var(--font); }
 .fb-not-configured p { font-size:13px; color:#92400e; line-height:1.6; margin:0; }
 
 /* 업체선택 다이얼로그 — 리스트 내부 스크롤 */
-#dlg-company-search .dialog { overflow:hidden; max-height:85vh; }
+#dlg-company-search .dialog { overflow:hidden; max-height:90vh; }
 #ctab-select-pane { overflow:hidden; }
-#comp-suggest-list { max-height:42vh; overflow-y:auto !important; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+#comp-suggest-list { max-height:52vh; overflow-y:auto !important; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
 
 /* join invite overlay */
 #dlg-join-invite .dialog { gap:20px; }
@@ -3688,7 +3688,7 @@ function _renderContractorSelectList(procType) {
     <div id="ccard-${esc(cId)}" data-selected="0"
       style="background:#f8f9fc;border-radius:12px;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:stretch;overflow:hidden;">
       <!-- 좌: 선택 영역 -->
-      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:6px 12px 6px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:8px 12px 8px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
         <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
         </div>
