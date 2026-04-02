@@ -1066,9 +1066,15 @@ button, input, textarea, select { font-family:var(--font); }
 .fb-not-configured p { font-size:13px; color:#92400e; line-height:1.6; margin:0; }
 
 /* 업체선택 다이얼로그 — 리스트 내부 스크롤 */
-#dlg-company-search .dialog { overflow:hidden; max-height:90vh; }
-#ctab-select-pane { overflow:hidden; }
-#comp-suggest-list { max-height:44vh; overflow-y:auto !important; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+#dlg-company-search .dialog { overflow:visible; max-height:none; }
+#ctab-select-pane { overflow:visible; }
+#comp-suggest-list {
+  max-height:300px;
+  overflow-y:scroll !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain;
+  position:relative;
+}
 
 /* join invite overlay */
 #dlg-join-invite .dialog { gap:20px; }
