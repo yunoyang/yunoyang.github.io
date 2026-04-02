@@ -1066,8 +1066,9 @@ button, input, textarea, select { font-family:var(--font); }
 .fb-not-configured p { font-size:13px; color:#92400e; line-height:1.6; margin:0; }
 
 /* 업체선택 다이얼로그 — 리스트 내부 스크롤 */
-#dlg-company-search .dialog { overflow:hidden; }
-#comp-suggest-list { max-height:calc(90vh - 220px); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+#dlg-company-search .dialog { overflow:hidden; max-height:85vh; }
+#ctab-select-pane { overflow:hidden; }
+#comp-suggest-list { max-height:42vh; overflow-y:auto !important; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
 
 /* join invite overlay */
 #dlg-join-invite .dialog { gap:20px; }
@@ -2077,7 +2078,7 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ── 업체선택 탭 ── -->
     <div id="ctab-select-pane" style="display:none;padding-bottom:16px;">
-      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:8px;margin-top:0;padding:2px 0;"></div>
+      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:8px;margin-top:0;padding:2px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
       <div id="comp-suggest-empty" style="display:none;text-align:center;padding:32px 0;color:#bbb;font-size:14px;">
         이 공정에 등록된 업체가 없습니다.<br><span style="font-size:12px;">어드민에서 업체를 추가해주세요.</span>
       </div>
