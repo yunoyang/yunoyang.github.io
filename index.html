@@ -1066,14 +1066,12 @@ button, input, textarea, select { font-family:var(--font); }
 .fb-not-configured p { font-size:13px; color:#92400e; line-height:1.6; margin:0; }
 
 /* 업체선택 다이얼로그 — 리스트 내부 스크롤 */
-#dlg-company-search .dialog { overflow:visible; max-height:none; }
-#ctab-select-pane { overflow:visible; }
 #comp-suggest-list {
-  max-height:300px;
+  max-height:300px !important;
   overflow-y:scroll !important;
+  overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain;
-  position:relative;
 }
 
 /* join invite overlay */
@@ -2043,7 +2041,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- Company Input Dialog (탭 구조) -->
 <div class="overlay" id="dlg-company-search">
-  <div class="dialog" style="max-height:90vh;overflow-y:auto;padding-bottom:0;">
+  <div class="dialog" style="max-height:90vh;overflow:hidden;padding-bottom:0;">
     <!-- 헤더 -->
     <div class="comp-header" style="margin-bottom:0;">
       <h3>업체 입력</h3>
