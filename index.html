@@ -1073,6 +1073,8 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain;
 }
+#comp-suggest-list > div { margin-bottom:10px; }
+#comp-suggest-list > div:last-child { margin-bottom:0; }
 
 /* join invite overlay */
 #dlg-join-invite .dialog { gap:20px; }
@@ -2082,7 +2084,7 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ── 업체선택 탭 ── -->
     <div id="ctab-select-pane" style="display:none;padding-bottom:16px;">
-      <div id="comp-suggest-list" style="display:flex;flex-direction:column;gap:10px;margin-top:0;padding:4px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+      <div id="comp-suggest-list" style="display:block;margin-top:0;padding:4px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
       <div id="comp-suggest-empty" style="display:none;text-align:center;padding:32px 0;color:#bbb;font-size:14px;">
         이 공정에 등록된 업체가 없습니다.<br><span style="font-size:12px;">어드민에서 업체를 추가해주세요.</span>
       </div>
