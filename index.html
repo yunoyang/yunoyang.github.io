@@ -835,26 +835,26 @@ button, input, textarea, select { font-family:var(--font); }
 .date-row { display:flex; align-items:center; gap:8px; }
 .date-input {
   flex:1; display:flex; align-items:center;
-  padding:11px 14px; background:#fff; border:1px solid var(--border-input);
+  padding:9px 14px; background:#fff; border:1px solid var(--border-input);
   border-radius:8px;
 }
 .date-input input { border:none; outline:none; font-size:15px; font-family:var(--font); width:100%; background:transparent; color:#222; }
 .date-sep { font-size:14px; color:#bbb; }
 .addr-input {
-  padding:11px 14px; background:#fff; border:1px solid var(--border-input);
+  padding:9px 14px; background:#fff; border:1px solid var(--border-input);
   border-radius:8px; font-size:15px; color:#222; width:100%; outline:none; font-family:var(--font);
 }
 .addr-input:focus { border-color:var(--primary); }
 .addr-search-row { display:flex; gap:8px; }
 .addr-search-btn {
-  padding:11px 16px; background:var(--btn-blue); color:#fff; border:none;
+  padding:9px 16px; background:var(--btn-blue); color:#fff; border:none;
   border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;
   white-space:nowrap; font-family:var(--font); flex-shrink:0;
   display:flex; align-items:center; gap:6px;
 }
 .addr-search-btn svg { width:15px; height:15px; }
 .textarea-field {
-  width:100%; min-height:80px; padding:11px 14px; background:#fff;
+  width:100%; min-height:80px; padding:9px 14px; background:#fff;
   border:1px solid var(--border-input); border-radius:8px;
   font-size:15px; color:#222; resize:vertical; font-family:var(--font); outline:none;
 }
@@ -881,7 +881,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .dialog h3 { font-size:18px; font-weight:700; }
 .dialog-input {
-  width:100%; padding:11px 14px; border:1px solid #dde3ef; border-radius:8px;
+  width:100%; padding:9px 14px; border:1px solid #dde3ef; border-radius:8px;
   font-size:15px; font-family:var(--font); outline:none; color:#222;
 }
 .dialog-input:focus { border-color:var(--primary); }
@@ -1114,7 +1114,7 @@ button, input, textarea, select { font-family:var(--font); }
 .comp-src-btn.naver.active { border-color:#03c75a; background:#edfff5; color:#008540; }
 .comp-search-row { display:flex; gap:8px; }
 .comp-search-input {
-  flex:1; padding:11px 14px; border:1px solid var(--border-input); border-radius:10px;
+  flex:1; padding:9px 14px; border:1px solid var(--border-input); border-radius:10px;
   font-size:15px; font-family:var(--font); outline:none; color:#222;
 }
 .comp-search-input:focus { border-color:var(--primary); }
@@ -2055,7 +2055,7 @@ button, input, textarea, select { font-family:var(--font); }
         <div style="position:relative;">
           <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">업체명 <span style="color:#e05050;">*</span></label>
           <input id="comp-manual-name" type="text" placeholder="예) 홍길동 인테리어"
-            style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+            style="width:100%;padding:10px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
             oninput="this.style.borderColor='var(--primary)';_compNameAutocomplete(this.value)"
             onkeydown="if(event.key==='Enter')document.getElementById('comp-manual-phone').focus()">
           <div id="comp-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dde3ef;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.10);z-index:200;max-height:160px;overflow-y:auto;margin-top:2px;"></div>
@@ -2063,7 +2063,7 @@ button, input, textarea, select { font-family:var(--font); }
         <div>
           <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:6px;">전화번호</label>
           <input id="comp-manual-phone" type="tel" placeholder="예) 010-1234-5678"
-            style="width:100%;padding:12px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
+            style="width:100%;padding:10px 14px;border:1px solid #dde3ef;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;box-sizing:border-box;"
             oninput="this.style.borderColor='var(--primary)'"
             onkeydown="if(event.key==='Enter')saveCompanyManual()">
         </div>
@@ -3687,7 +3687,7 @@ function _renderContractorSelectList(procType) {
     <div id="ccard-${esc(cId)}" data-selected="0"
       style="background:#f8f9fc;border-radius:12px;border:2px solid #eef0f6;transition:all .15s;display:flex;align-items:stretch;overflow:hidden;">
       <!-- 좌: 선택 영역 -->
-      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:10px 12px 10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:6px 12px 6px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;">
         <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
         </div>
@@ -3814,12 +3814,15 @@ function openCompanySearch(procId) {
     cur.style.display = 'flex';
     const cId = proc.companyData.contractorId || proc.companyData.id || '';
     cur.innerHTML = `
-      <div style="min-width:0;">
+      <div style="min-width:0;flex:1;">
         <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px;">현재 등록 업체</div>
         <div style="font-size:14px;font-weight:700;color:#222;">${esc(proc.companyData.name)}</div>
-        ${proc.companyData.phone ? `<div style="font-size:13px;color:#222;margin-top:1px;">${esc(proc.companyData.phone)}</div>` : ''}
+        ${proc.companyData.phone ? `<div style="font-size:13px;color:#888;margin-top:1px;">${esc(proc.companyData.phone)}</div>` : ''}
       </div>
-      ${cId ? `<button onclick="_openContractorDetail('${esc(cId)}')" style="flex-shrink:0;padding:7px 12px;background:#fff;border:1.5px solid #dde3ef;border-radius:8px;font-size:12px;font-weight:600;color:#3176ff;cursor:pointer;font-family:var(--font);white-space:nowrap;">업체 정보 보기</button>` : ''}
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="_clearProcCompany()" style="padding:6px 10px;background:#fff;border:1.5px solid #eee;border-radius:8px;font-size:12px;font-weight:600;color:#e03535;cursor:pointer;font-family:var(--font);white-space:nowrap;">삭제</button>
+        ${cId ? `<button onclick="_openContractorDetail('${esc(cId)}')" style="padding:6px 10px;background:#fff;border:1.5px solid #dde3ef;border-radius:8px;font-size:12px;font-weight:600;color:#3176ff;cursor:pointer;font-family:var(--font);white-space:nowrap;">더보기</button>` : ''}
+      </div>
     `;
   } else { cur.style.display = 'none'; }
   // 항상 직접입력 탭으로 시작
@@ -3851,6 +3854,17 @@ function clearCompanyManual() {
   const p = document.getElementById('comp-manual-phone');
   if (n) { n.value = ''; n.style.borderColor = ''; }
   if (p) { p.value = ''; p.style.borderColor = ''; }
+}
+
+function _clearProcCompany() {
+  const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
+  if (!proc) return;
+  proc.company = '';
+  proc.companyData = null;
+  save(); renderAll(); _refreshProcDetailIfOpen();
+  const cur = document.getElementById('comp-current-info');
+  if (cur) cur.style.display = 'none';
+  clearCompanyManual();
 }
 
 // ===== WORK CARDS =====
