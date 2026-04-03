@@ -550,6 +550,10 @@ tr:hover td { background:#fafbfe; }
         <i data-lucide="hard-hat"></i>
         <span>업체 DB</span>
       </div>
+      <div class="nav-item" id="nav-tips" onclick="showPage('tips',this)">
+        <i data-lucide="lightbulb"></i>
+        <span>시공팁 편집</span>
+      </div>
 
       <div style="margin-top:24px; padding:12px 10px;">
         <a href="index.html" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8fa3c4;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">
@@ -1429,6 +1433,30 @@ service cloud.firestore {
               </div>
             </div>
 
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 시공팁 편집 페이지 ===== -->
+      <div class="page" id="page-tips">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">시공팁 편집</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">공정별 체크리스트 · 꿀팁 카드 · 커뮤니티 피드를 Firestore에 저장합니다</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+
+          <!-- 공정 선택 -->
+          <div class="chart-card" style="padding:16px;">
+            <div style="font-size:12px;font-weight:700;color:#999;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">공정 선택</div>
+            <div id="tip-proc-list" style="display:flex;flex-direction:column;gap:2px;"></div>
+          </div>
+
+          <!-- 편집 영역 -->
+          <div id="tip-editor-area">
+            <div style="text-align:center;padding:60px;color:#bbb;font-size:14px;">왼쪽에서 공정을 선택하세요</div>
           </div>
         </div>
       </div>
@@ -2760,6 +2788,7 @@ const pageTitles = {
   settings: ['시스템 설정', 'API 키 및 앱 설정'],
   brand: ['브랜드 설정', '공사계획서 로고 관리'],
   contractors: ['업체 DB', '시공 업체 데이터베이스 관리'],
+  tips: ['시공팁 편집', '공정별 체크리스트 · 꿀팁 · 피드 관리'],
 };
 
 function showPage(name, navEl) {
@@ -2773,6 +2802,7 @@ function showPage(name, navEl) {
   if (name === 'analytics') renderAnalytics();
   if (name === 'brand') loadBrandSection();
   if (name === 'contractors') loadContractorPage();
+  if (name === 'tips') loadTipsPage();
   setTimeout(lucide.createIcons, 60);
 }
 
@@ -3438,6 +3468,160 @@ async function clearLogo() {
     const status = document.getElementById('brand-save-status');
     if (status) status.innerHTML = '<span style="color:#10b981;">✓ 삭제 완료</span>';
   } catch(e) { console.error(e); }
+}
+
+// ===== 시공팁 편집 =====
+const TIP_PROCS = ['실측','도면설계','철거','샷시','목공','타일','욕실','도배','가구','전기','마루','필름','싱크','입주청소','이삿짐정리','동의서 및 보양'];
+let _tipSelProc = null;
+let _tipDocCache = {};
+
+function loadTipsPage() {
+  if (!_adminDb) initFirestoreAdmin();
+  const list = document.getElementById('tip-proc-list');
+  if (!list) return;
+  list.innerHTML = TIP_PROCS.map(p => `
+    <div onclick="selectTipProc('${p}')" id="tipnav-${p.replace(/ /g,'_')}"
+      style="padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#555;cursor:pointer;transition:background .15s;"
+      onmouseover="this.style.background='#f4f6fb'" onmouseout="if(_tipSelProc!=='${p}')this.style.background=''">${p}</div>
+  `).join('');
+}
+
+async function selectTipProc(proc) {
+  _tipSelProc = proc;
+  TIP_PROCS.forEach(p => {
+    const el = document.getElementById('tipnav-' + p.replace(/ /g,'_'));
+    if (el) { el.style.background = p === proc ? 'var(--primary-bg)' : ''; el.style.color = p === proc ? 'var(--primary)' : '#555'; el.style.fontWeight = p === proc ? '700' : '500'; }
+  });
+  const area = document.getElementById('tip-editor-area');
+  area.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px;">불러오는 중...</div>';
+  if (!_adminDb) initFirestoreAdmin();
+  let data = { checklists:{before:[],during:[],after:[]}, tips:[], feeds:[] };
+  try {
+    const snap = await _adminDb.collection('vb_tips').doc(proc).get();
+    if (snap.exists) data = { checklists:{before:[],during:[],after:[]}, tips:[], feeds:[], ...snap.data() };
+  } catch(e) { console.warn(e); }
+  _tipDocCache[proc] = data;
+  renderTipEditor(proc, data);
+}
+
+function renderTipEditor(proc, data) {
+  const area = document.getElementById('tip-editor-area');
+  const cl = data.checklists || {before:[],during:[],after:[]};
+  const clToText = (arr) => (arr||[]).map(i=>i.text).join('\n');
+
+  area.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- 체크리스트 -->
+      <div class="chart-card" style="padding:20px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;">체크리스트</div>
+        ${['before','during','after'].map(phase => {
+          const label = {before:'시공 전',during:'시공 중',after:'시공 후'}[phase];
+          return `<div style="margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:5px;">${label}</div>
+            <textarea id="tip-cl-${phase}" rows="5" style="width:100%;padding:10px 12px;border:1.5px solid #e4e9f2;border-radius:8px;font-size:13px;font-family:var(--font);resize:vertical;outline:none;line-height:1.6;"
+              placeholder="항목을 한 줄에 하나씩 입력">${clToText(cl[phase])}</textarea>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- 꿀팁 카드 -->
+      <div class="chart-card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:14px;font-weight:700;">꿀팁 카드</div>
+          <button onclick="addTipCard()" style="padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 추가</button>
+        </div>
+        <div id="tip-cards-editor">${(data.tips||[]).map((t,i) => tipCardRow(t,i)).join('')}</div>
+      </div>
+
+      <!-- 피드 -->
+      <div class="chart-card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:14px;font-weight:700;">커뮤니티 피드</div>
+          <button onclick="addFeedCard()" style="padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 추가</button>
+        </div>
+        <div id="tip-feeds-editor">${(data.feeds||[]).map((f,i) => feedCardRow(f,i)).join('')}</div>
+      </div>
+
+      <button onclick="saveTipData('${proc}')" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);">저장하기</button>
+    </div>`;
+}
+
+function tipCardRow(t, i) {
+  return `<div id="tip-card-row-${i}" style="display:grid;grid-template-columns:60px 80px 1fr 1fr 36px;gap:8px;align-items:center;margin-bottom:8px;">
+    <input value="${(t.icon||'').replace(/"/g,'&quot;')}" placeholder="이모지" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:14px;text-align:center;font-family:var(--font);outline:none;">
+    <select style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+      <option value="point"${t.type==='point'?' selected':''}>💡 포인트</option>
+      <option value="warn"${t.type==='warn'?' selected':''}>⚠️ 경고</option>
+    </select>
+    <input value="${(t.title||'').replace(/"/g,'&quot;')}" placeholder="제목" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+    <input value="${(t.body||'').replace(/"/g,'&quot;')}" placeholder="내용" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+    <button onclick="removeTipCard(${i})" style="padding:8px;background:#fff0f0;color:#e03535;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">✕</button>
+  </div>`;
+}
+
+function feedCardRow(f, i) {
+  return `<div id="tip-feed-row-${i}" style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 36px;gap:8px;align-items:center;margin-bottom:8px;">
+    <select style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+      <option value="youtube"${f.source==='youtube'?' selected':''}>YouTube</option>
+      <option value="cafe"${f.source==='cafe'?' selected':''}>카페</option>
+      <option value="thread"${f.source==='thread'?' selected':''}>쓰레드</option>
+    </select>
+    <input value="${(f.title||'').replace(/"/g,'&quot;')}" placeholder="제목" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+    <input value="${(f.url||'').replace(/"/g,'&quot;')}" placeholder="URL" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+    <input value="${(f.meta||'').replace(/"/g,'&quot;')}" placeholder="부가정보 (채널명 등)" style="padding:8px;border:1.5px solid #e4e9f2;border-radius:6px;font-size:13px;font-family:var(--font);outline:none;">
+    <button onclick="removeFeedCard(${i})" style="padding:8px;background:#fff0f0;color:#e03535;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">✕</button>
+  </div>`;
+}
+
+function addTipCard() {
+  const container = document.getElementById('tip-cards-editor');
+  if (!container) return;
+  const i = container.children.length;
+  container.insertAdjacentHTML('beforeend', tipCardRow({icon:'💡',type:'point',title:'',body:''},i));
+}
+
+function removeTipCard(i) {
+  document.getElementById('tip-card-row-' + i)?.remove();
+  // re-index
+  document.querySelectorAll('#tip-cards-editor > div').forEach((el,idx) => el.id = 'tip-card-row-' + idx);
+}
+
+function addFeedCard() {
+  const container = document.getElementById('tip-feeds-editor');
+  if (!container) return;
+  const i = container.children.length;
+  container.insertAdjacentHTML('beforeend', feedCardRow({source:'youtube',title:'',url:'',meta:''},i));
+}
+
+function removeFeedCard(i) {
+  document.getElementById('tip-feed-row-' + i)?.remove();
+  document.querySelectorAll('#tip-feeds-editor > div').forEach((el,idx) => el.id = 'tip-feed-row-' + idx);
+}
+
+function _clTextToArr(text) {
+  return text.split('\n').map(s => s.trim()).filter(Boolean).map((s,i) => ({id:'item_'+i, text:s}));
+}
+
+async function saveTipData(proc) {
+  if (!_adminDb) return;
+  const checklists = {
+    before: _clTextToArr(document.getElementById('tip-cl-before')?.value||''),
+    during: _clTextToArr(document.getElementById('tip-cl-during')?.value||''),
+    after:  _clTextToArr(document.getElementById('tip-cl-after')?.value||''),
+  };
+  const tips = [...document.querySelectorAll('#tip-cards-editor > div')].map(row => {
+    const inputs = row.querySelectorAll('input,select');
+    return { icon:inputs[0].value, type:inputs[1].value, title:inputs[2].value, body:inputs[3].value, id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2) };
+  }).filter(t => t.title);
+  const feeds = [...document.querySelectorAll('#tip-feeds-editor > div')].map(row => {
+    const inputs = row.querySelectorAll('input,select');
+    return { source:inputs[0].value, title:inputs[1].value, url:inputs[2].value, meta:inputs[3].value, id:'f_'+Date.now()+'_'+Math.random().toString(36).slice(2) };
+  }).filter(f => f.title);
+  try {
+    await _adminDb.collection('vb_tips').doc(proc).set({ checklists, tips, feeds, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast(`✅ "${proc}" 시공팁이 저장됐습니다.`);
+  } catch(e) { console.error(e); showToast('❌ 저장 실패: ' + e.message); }
 }
 
 // ===== TOAST =====

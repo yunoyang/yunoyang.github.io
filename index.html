@@ -1350,6 +1350,33 @@ button, input, textarea, select { font-family:var(--font); }
 .tip-qa-num { display:inline-block; font-size:10px; font-weight:800; background:#222; color:#fff; border-radius:4px; padding:2px 7px; margin-bottom:6px; letter-spacing:.04em; }
 .tip-qa-q { font-size:13px; font-weight:600; color:#111; line-height:1.65; margin-bottom:6px; word-break:keep-all; }
 .tip-qa-a { font-size:12px; color:#777; line-height:1.55; padding-left:10px; border-left:2px solid #ddd; word-break:keep-all; }
+/* ===== PROC TIP TAB — Firestore Dynamic ===== */
+.tip-block { background:#fff; margin-bottom:8px; padding:16px 20px; }
+.tip-block-title { font-size:12px; font-weight:700; color:#999; letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px; }
+.tip-phase-tabs { display:flex; gap:6px; margin-bottom:14px; }
+.tip-phase-btn { padding:6px 14px; border-radius:20px; border:1.5px solid #e4e9f2; font-size:13px; font-weight:500; color:#555; cursor:pointer; background:#fff; font-family:var(--font); transition:all .15s; }
+.tip-phase-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; font-weight:700; }
+.tip-cl-progress { height:3px; background:#eee; border-radius:2px; margin-bottom:6px; }
+.tip-cl-prog-bar { height:100%; background:var(--primary); border-radius:2px; transition:width .3s; }
+.tip-cl-item { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid #f4f5f8; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tip-cl-item:last-child { border-bottom:none; }
+.tip-cl-check { width:22px; height:22px; border-radius:50%; border:1.5px solid #d0d5e0; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:transparent; transition:all .15s; }
+.tip-cl-item.checked .tip-cl-check { background:var(--primary); border-color:var(--primary); color:#fff; }
+.tip-cl-text { font-size:14px; color:#333; line-height:1.4; }
+.tip-cl-item.checked .tip-cl-text { color:#bbb; text-decoration:line-through; }
+.tip-fs-card { display:flex; gap:12px; padding:12px 14px; background:#f8f9fc; border-radius:10px; margin-bottom:8px; }
+.tip-fs-card:last-child { margin-bottom:0; }
+.tip-fs-card.warn { background:#fff8f0; }
+.tip-fs-icon { font-size:20px; line-height:1; flex-shrink:0; margin-top:1px; }
+.tip-fs-title { font-size:13px; font-weight:700; color:#222; margin-bottom:3px; }
+.tip-fs-body { font-size:12px; color:#666; line-height:1.5; }
+.tip-fs-card.warn .tip-fs-title { color:#c2410c; }
+.tip-fs-card.warn .tip-fs-body { color:#7c2d12; }
+.tip-feed-card { display:block; padding:12px 14px; background:#f8f9fc; border-radius:10px; margin-bottom:8px; text-decoration:none; }
+.tip-feed-card:last-child { margin-bottom:0; }
+.tip-feed-source { font-size:11px; font-weight:700; color:#888; margin-bottom:4px; }
+.tip-feed-title { font-size:14px; font-weight:600; color:#222; line-height:1.4; }
+.tip-feed-meta { font-size:12px; color:#999; margin-top:3px; }
 .pcard-date { font-size:11px; color:#aaa; font-weight:500; }
 .pcard-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:3px; }
 .pcard-company { font-size:12px; color:#888; margin-bottom:6px; }
@@ -1945,7 +1972,7 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:52px;">
     <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">시공 상세 내역</button>
-    <button id="ptab-btn-tip" onclick="showToastMessage('추후 오픈 예정입니다.')" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#c0c4cc;cursor:default;font-family:var(--font);padding:4px 0;display:flex;align-items:center;justify-content:center;gap:5px;">시공팁 <span style="font-size:10px;font-weight:600;color:#fff;background:#c0c4cc;border-radius:4px;padding:1px 5px;line-height:1.4;">준비중</span></button>
+    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">시공팁</button>
   </div>
   <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
   <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
@@ -4155,6 +4182,11 @@ function switchProcDetailTab(tab, btn) {
   const activeId = tab === 'info' ? 'ptab-btn-info' : 'ptab-btn-tip';
   const a = document.getElementById(activeId);
   if (a) { a.style.borderBottomColor = 'var(--primary)'; a.style.color = '#222'; a.style.fontWeight = '600'; }
+  if (tab === 'tip' && _currentProcDetailId) {
+    const proj = getProject();
+    const proc = proj?.processes.find(p => p.id === _currentProcDetailId);
+    if (proc) _loadProcTips(proc.type || proc.name, _currentProcDetailId);
+  }
 }
 function _renderProcDetailContent(procId) {
   const proj = getProject();
@@ -4240,6 +4272,129 @@ function _buildProcTipHtml(typeName) {
     html += '</div>';
   });
   return html;
+}
+
+// ===== PROC TIP TAB — Firestore Dynamic =====
+const _tipCache = {};
+let _currentTipPhase = 'before';
+
+async function _loadProcTips(procType, procId) {
+  const el = document.getElementById('ptab-tip');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#bbb;font-size:14px;">불러오는 중...</div>';
+  if (_tipCache[procType]) { _renderTipTab(_tipCache[procType], procId); return; }
+  if (!_db) { _renderTipTab(null, procId); return; }
+  try {
+    const snap = await _db.collection('vb_tips').doc(procType).get();
+    _tipCache[procType] = snap.exists ? snap.data() : null;
+    _renderTipTab(_tipCache[procType], procId);
+  } catch(e) { console.warn('tip load err', e); _renderTipTab(null, procId); }
+}
+
+function _renderTipTab(data, procId) {
+  const el = document.getElementById('ptab-tip');
+  if (!el) return;
+  if (!data) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁을 준비 중입니다.</div>';
+    return;
+  }
+  el._tipData = data;
+  _currentTipPhase = 'before';
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  const checks = proc?.tipChecks || {};
+  const cl = data.checklists || {};
+  const hasCl = cl.before?.length || cl.during?.length || cl.after?.length;
+  let html = '<div style="padding:8px 0 32px;">';
+  // 체크리스트
+  if (hasCl) {
+    html += `<div class="tip-block">
+      <div class="tip-block-title">체크리스트</div>
+      <div class="tip-phase-tabs">
+        <button class="tip-phase-btn active" id="tphase-before" onclick="_switchTipPhase('before','${procId}')">시공 전</button>
+        <button class="tip-phase-btn" id="tphase-during" onclick="_switchTipPhase('during','${procId}')">시공 중</button>
+        <button class="tip-phase-btn" id="tphase-after" onclick="_switchTipPhase('after','${procId}')">시공 후</button>
+      </div>
+      <div id="tip-cl-items">${_buildClHtml(cl.before||[], checks.before||{}, procId, 'before')}</div>
+    </div>`;
+  }
+  // 꿀팁 카드
+  if (data.tips?.length) {
+    html += `<div class="tip-block"><div class="tip-block-title">꿀팁</div>`;
+    data.tips.forEach(t => {
+      html += `<div class="tip-fs-card${t.type==='warn'?' warn':''}">
+        <span class="tip-fs-icon">${t.icon||'💡'}</span>
+        <div><div class="tip-fs-title">${esc(t.title)}</div><div class="tip-fs-body">${esc(t.body)}</div></div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  // 피드
+  if (data.feeds?.length) {
+    const src = {youtube:'🎬 YouTube', cafe:'💬 카페', thread:'🧵 쓰레드'};
+    html += `<div class="tip-block"><div class="tip-block-title">커뮤니티</div>`;
+    data.feeds.forEach(f => {
+      html += `<a href="${esc(f.url)}" target="_blank" rel="noopener" class="tip-feed-card">
+        <div class="tip-feed-source">${src[f.source]||f.source}</div>
+        <div class="tip-feed-title">${esc(f.title)}</div>
+        ${f.meta?`<div class="tip-feed-meta">${esc(f.meta)}</div>`:''}
+      </a>`;
+    });
+    html += '</div>';
+  }
+  if (!hasCl && !data.tips?.length && !data.feeds?.length) {
+    html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁을 준비 중입니다.</div>';
+  }
+  el.innerHTML = html + '</div>';
+}
+
+function _buildClHtml(items, checks, procId, phase) {
+  if (!items.length) return '<div style="padding:12px 0;color:#bbb;font-size:13px;text-align:center;">항목이 없습니다</div>';
+  const done = items.filter(i => checks[i.id]).length;
+  const pct = Math.round(done / items.length * 100);
+  let h = `<div class="tip-cl-progress"><div class="tip-cl-prog-bar" style="width:${pct}%"></div></div>
+    <div style="font-size:12px;color:#888;margin-bottom:10px;">${done}/${items.length} 완료</div>`;
+  items.forEach(item => {
+    const checked = !!checks[item.id];
+    h += `<div class="tip-cl-item${checked?' checked':''}" onclick="toggleTipCheck('${procId}','${phase}','${item.id}')">
+      <div class="tip-cl-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <span class="tip-cl-text">${esc(item.text)}</span>
+    </div>`;
+  });
+  return h;
+}
+
+function _switchTipPhase(phase, procId) {
+  _currentTipPhase = phase;
+  ['before','during','after'].forEach(p => {
+    const b = document.getElementById('tphase-' + p);
+    if (b) b.classList.toggle('active', p === phase);
+  });
+  const el = document.getElementById('ptab-tip');
+  const data = el?._tipData;
+  if (!data) return;
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  const checks = (proc?.tipChecks || {})[phase] || {};
+  const items = data.checklists?.[phase] || [];
+  const cl = document.getElementById('tip-cl-items');
+  if (cl) cl.innerHTML = _buildClHtml(items, checks, procId, phase);
+}
+
+function toggleTipCheck(procId, phase, itemId) {
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc) return;
+  if (!proc.tipChecks) proc.tipChecks = {};
+  if (!proc.tipChecks[phase]) proc.tipChecks[phase] = {};
+  proc.tipChecks[phase][itemId] = !proc.tipChecks[phase][itemId];
+  save();
+  const el = document.getElementById('ptab-tip');
+  const data = el?._tipData;
+  if (!data) return;
+  const items = data.checklists?.[phase] || [];
+  const cl = document.getElementById('tip-cl-items');
+  if (cl) cl.innerHTML = _buildClHtml(items, proc.tipChecks[phase], procId, phase);
 }
 
 // ===== COLLAPSIBLE CARDS =====
