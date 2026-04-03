@@ -4262,6 +4262,7 @@ function openScheduleDialog(procId) {
   // Set initial view month
   let viewD = new Date();
   if (proc.scheduleStart) viewD = new Date(proc.scheduleStart + 'T00:00:00');
+  else if (proj.form?.startDate) viewD = new Date(proj.form.startDate + 'T00:00:00');
   calPicker.year = viewD.getFullYear();
   calPicker.month = viewD.getMonth();
   calPicker.start = proc.scheduleStart || null;
