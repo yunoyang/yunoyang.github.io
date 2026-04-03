@@ -4209,7 +4209,8 @@ function _renderProcDetailContent(procId) {
   const schedDisplay = (p.scheduleStart && p.scheduleEnd)
     ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
   document.getElementById('ptab-info').innerHTML = `
-    <div style="background:#fff;padding:28px 20px 16px;">
+    <div style="height:16px;background:#f0f2f6;"></div>
+    <div style="background:#fff;padding:12px 20px 16px;">
       <div class="work-field">
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
