@@ -1945,7 +1945,7 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:52px;">
     <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">시공 상세 내역</button>
-    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">시공팁</button>
+    <button id="ptab-btn-tip" onclick="showToastMessage('추후 오픈 예정입니다.')" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#c0c4cc;cursor:default;font-family:var(--font);padding:4px 0;display:flex;align-items:center;justify-content:center;gap:5px;">시공팁 <span style="font-size:10px;font-weight:600;color:#fff;background:#c0c4cc;border-radius:4px;padding:1px 5px;line-height:1.4;">준비중</span></button>
   </div>
   <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
   <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
