@@ -1831,7 +1831,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="form-screen-inner">
     <div class="form-header" id="tip-page-header">
       <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
-      <h2 id="tip-page-title">시공팁</h2>
+      <h2 id="tip-page-title">공정팁</h2>
     </div>
     <div class="screen-scroll" id="tip-page-content">
       <!-- dynamically filled by showProcessTip() -->
@@ -1971,8 +1971,8 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:52px;">
-    <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">시공 상세 내역</button>
-    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">시공팁</button>
+    <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 상세 내역</button>
+    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">공정팁</button>
   </div>
   <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
   <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
@@ -2178,7 +2178,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" id="mobile-card-tip-btn" onclick="cardMenuTip();closeDialog('mobile-card-menu-sheet');">
-      <svg class="icon" width="20" height="20"><use href="#icon-lightbulb"/></svg> 시공팁
+      <svg class="icon" width="20" height="20"><use href="#icon-lightbulb"/></svg> 공정팁
     </button>
     <button class="mobile-sheet-item danger" onclick="cardMenuDelete();closeDialog('mobile-card-menu-sheet');">
       <svg class="icon" width="20" height="20"><use href="#icon-trash-2"/></svg> 삭제하기
@@ -2189,7 +2189,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Process Tip Dialog -->
 <div class="overlay" id="dlg-proc-tip">
   <div class="dialog">
-    <h3 id="tip-dialog-title">💡 시공팁</h3>
+    <h3 id="tip-dialog-title">💡 공정팁</h3>
     <div id="tip-dialog-body" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;max-height:60vh;overflow-y:auto;"></div>
     <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-proc-tip')">닫기</button></div>
   </div>
@@ -2342,7 +2342,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Card More Menu (shared, positioned via JS) -->
 <div id="card-more-menu" class="card-more-menu">
   <button class="card-menu-item" id="card-menu-tip" onclick="cardMenuTip()">
-    <svg class="icon" width="16" height="16" style="color:#333333"><use href="#icon-lightbulb"/></svg> 시공팁
+    <svg class="icon" width="16" height="16" style="color:#333333"><use href="#icon-lightbulb"/></svg> 공정팁
   </button>
   <button class="card-menu-item danger" id="card-menu-del" onclick="cardMenuDelete()">
     <svg class="icon" width="16" height="16" style="color:#333333"><use href="#icon-trash-2"/></svg> 삭제하기
@@ -3311,7 +3311,7 @@ function toggleCardMenu(e, procId, procType) {
   if (left < 8) left = 8;
   menu.style.top = top + 'px';
   menu.style.left = left + 'px';
-  // 시공팁 버튼 노출 여부
+  // 공정팁 버튼 노출 여부
   const hasTip = !!getTipsForProcess(_cardMenuProcType);
   if (tipBtn) tipBtn.style.display = hasTip ? '' : 'none';
   menu.classList.add('open');
@@ -3577,7 +3577,7 @@ function showProcessTip(typeName) {
       html += `<div class="tip-page-hero dark-hero">
         ${detail.guideLabel ? `<div class="tip-guide-label">${detail.guideLabel}</div>` : ''}
         <span class="tip-page-badge">${detail.icon} ${typeName}</span>
-        ${detail.heroTitle ? `<div class="tip-hero-main">${detail.heroTitle}</div>` : `<h1>${typeName} 시공팁</h1>`}
+        ${detail.heroTitle ? `<div class="tip-hero-main">${detail.heroTitle}</div>` : `<h1>${typeName} 공정팁</h1>`}
         ${detail.heroSubtitle ? `<div class="tip-hero-sub">${detail.heroSubtitle}</div>` : ''}
         <p>${detail.summary}</p>
         <div class="tip-meta-row">
@@ -3590,7 +3590,7 @@ function showProcessTip(typeName) {
         <span class="tip-page-badge" style="background:${badgeBg};color:${hex};">
           ${detail.icon} ${typeName}
         </span>
-        <h1>${typeName} 시공팁</h1>
+        <h1>${typeName} 공정팁</h1>
         <p>${detail.summary}</p>
         <div class="tip-meta-row">
           <div class="tip-meta-chip"><svg class="icon" width="14" height="14"><use href="#icon-clock"/></svg> 예상 기간: ${detail.duration}</div>
@@ -3636,7 +3636,7 @@ function showProcessTip(typeName) {
   } else if (tips) {
     // Fallback for processes without PROCESS_DETAIL
     html += `<div class="tip-page-hero" style="background:#f8f9fc">
-      <h1>${typeName} 시공팁</h1>
+      <h1>${typeName} 공정팁</h1>
     </div>
     <div class="tip-section">
       <div class="tip-section-title">핵심 체크포인트</div>
@@ -3646,7 +3646,7 @@ function showProcessTip(typeName) {
     html += `<div style="text-align:center;padding:40px;color:#bbb;font-size:14px;">해당 공정의 팁이 준비 중입니다.</div>`;
   }
 
-  document.getElementById('tip-page-title').textContent = `${typeName} 시공팁`;
+  document.getElementById('tip-page-title').textContent = `${typeName} 공정팁`;
   document.getElementById('tip-page-content').innerHTML = html;
   goTo('tip');
 }
@@ -4209,7 +4209,7 @@ function _renderProcDetailContent(procId) {
   const schedDisplay = (p.scheduleStart && p.scheduleEnd)
     ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
   document.getElementById('ptab-info').innerHTML = `
-    <div style="background:#fff;padding:12px 20px 8px;">
+    <div style="background:#fff;padding:12px 20px 16px;">
       <div class="work-field">
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
@@ -4228,7 +4228,9 @@ function _renderProcDetailContent(procId) {
           ${(p.companyData||p.company) ? `<svg class="icon" width="16" height="16" style="color:#333;stroke-width:2.5"><use href="#icon-chevron-right"/></svg>` : `<svg class="icon" width="16" height="16" style="color:#bbb;stroke-width:2.5"><use href="#icon-plus"/></svg>`}
         </span>
       </div>
-      <div style="padding-top:4px;"></div>
+    </div>
+    <div style="height:6px;background:#f0f2f6;"></div>
+    <div style="background:#fff;padding:0 20px;">
       <div class="detail-header">
         <span class="d-label">상세내역</span>
         <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
@@ -4269,7 +4271,7 @@ function _deleteProcFromDetail() {
 }
 function _buildProcTipHtml(typeName) {
   const detail = PROCESS_DETAIL[typeName] || null;
-  if (!detail) return `<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁이 준비 중입니다.</div>`;
+  if (!detail) return `<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 공정팁이 준비 중입니다.</div>`;
   const colorCls = PROCESS_COLORS[typeName] || 'c0';
   const hex = COLOR_HEX[colorCls] || '#3176ff';
   let html = `<div style="background:#fff;padding:20px;"><span class="tip-page-badge" style="background:${hex}22;color:${hex};display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;">${detail.icon} ${typeName}</span>
@@ -4307,7 +4309,7 @@ function _renderTipTab(data, procId) {
   const el = document.getElementById('ptab-tip');
   if (!el) return;
   if (!data) {
-    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁을 준비 중입니다.</div>';
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 공정팁을 준비 중입니다.</div>';
     return;
   }
   el._tipData = data;
@@ -4355,7 +4357,7 @@ function _renderTipTab(data, procId) {
     html += '</div>';
   }
   if (!hasCl && !data.tips?.length && !data.feeds?.length) {
-    html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 시공팁을 준비 중입니다.</div>';
+    html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:14px;">이 공정의 공정팁을 준비 중입니다.</div>';
   }
   el.innerHTML = html + '</div>';
 }
