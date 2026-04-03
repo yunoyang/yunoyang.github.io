@@ -1977,6 +1977,18 @@ button, input, textarea, select { font-family:var(--font); }
   <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
   <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
 </div>
+<!-- ===== 주소 검색 인앱 오버레이 ===== -->
+<div id="addr-search-overlay" onclick="if(event.target===this)closeAddrSearch()"
+  style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;background:rgba(0,0,0,0.5);">
+  <div style="position:absolute;bottom:0;left:0;right:0;max-width:600px;margin:0 auto;background:#fff;border-radius:20px 20px 0 0;height:92vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
+      <span style="font-size:16px;font-weight:700;color:#222;">주소 검색</span>
+      <button onclick="closeAddrSearch()" style="background:none;border:none;font-size:24px;color:#888;cursor:pointer;line-height:1;padding:0 4px;font-family:var(--font);">×</button>
+    </div>
+    <div id="addr-search-container" style="flex:1;overflow:hidden;"></div>
+  </div>
+</div>
+
 <!-- ===== 시공 삭제 바텀시트 ===== -->
 <div class="overlay" id="dlg-proc-del-sheet" onclick="if(event.target===this)closeDialog('dlg-proc-del-sheet')" style="z-index:9600;">
   <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));">
@@ -2513,19 +2525,19 @@ function triggerGoogleLogin() {
     showToastMessage('Google 로그인 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
   }
 }
-function _googleOAuthRedirect() {
-  // One Tap 차단 시 → Google OAuth 리디렉션 (등록된 redirect_uri 필요)
-  const nonce = Math.random().toString(36).slice(2);
-  localStorage.setItem('oauth_nonce', nonce);
-  const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: 'https://vibespacekorea.com/',
-    response_type: 'id_token',
-    scope: 'openid email profile',
-    nonce,
-    prompt: 'select_account',
-  });
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+async function _googleOAuthRedirect() {
+  // One Tap 차단 시(iOS Safari 등) → Firebase signInWithRedirect (동일 탭 유지, 복귀 후 getRedirectResult로 처리)
+  try {
+    const ok = await _initFirebase();
+    if (!ok) { showToastMessage('서비스 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
+    await firebase.auth().signInWithRedirect(provider);
+  } catch(e) {
+    console.warn('signInWithRedirect failed:', e);
+    showToastMessage('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+  }
 }
 function _checkOAuthRedirect() {
   // 페이지 로드 시 URL hash에서 id_token 확인 (OAuth redirect 후 복귀 시)
@@ -5061,14 +5073,26 @@ function saveFormAndBack() {
 // ===== ADDRESS =====
 function searchAddress() {
   if (typeof daum === 'undefined' || !daum.Postcode) { alert('주소 검색 서비스를 불러오는 중입니다.'); return; }
+  const overlay = document.getElementById('addr-search-overlay');
+  const container = document.getElementById('addr-search-container');
+  if (!overlay || !container) return;
+  container.innerHTML = '';
+  overlay.style.display = 'block';
   new daum.Postcode({
     oncomplete: function(data) {
       const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
       document.getElementById('f-address').value = addr;
-      document.getElementById('f-address-detail').focus();
       saveFormData();
-    }
-  }).open();
+      closeAddrSearch();
+      setTimeout(() => document.getElementById('f-address-detail')?.focus(), 150);
+    },
+    width: '100%',
+    height: '100%',
+  }).embed(container, { autoClose: false });
+}
+function closeAddrSearch() {
+  const overlay = document.getElementById('addr-search-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 // ===== EXPORT DOC =====
@@ -5698,6 +5722,41 @@ async function _initFirebase() {
     firebase.auth(); // Auth 초기화
   }
   return true;
+}
+
+// Firebase redirect 복귀 후 user 객체로 로그인 처리 (모바일 Google 로그인)
+async function _handleFirebaseUser(user) {
+  try {
+    state.loggedIn = true;
+    state.user = { name: user.displayName || '사용자', email: user.email || '', picture: user.photoURL || '' };
+    if (typeof gtag !== 'undefined') {
+      gtag('set', 'user_id', btoa(state.user.email).replace(/[^a-zA-Z0-9]/g,'').slice(0,16));
+      gtag('set', 'user_properties', { login_method: 'google', user_type: 'registered' });
+    }
+    _createSession();
+    save();
+    trackUserLogin(state.user);
+    trackEvent('auth', 'login', 'google');
+    closeDialog('dlg-login');
+    updateLoginUI();
+    showToastMessage('로그인됐습니다! 👋');
+    await _autoUploadOnLogin();
+    _loadContractors();
+    if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
+  } catch(e) { console.warn('_handleFirebaseUser err:', e); }
+}
+
+// 페이지 로드 시 Firebase signInWithRedirect 복귀 처리
+async function _checkFirebaseRedirectResult() {
+  const ok = await _initFirebase();
+  if (!ok) return;
+  try {
+    const result = await firebase.auth().getRedirectResult();
+    if (!result || !result.user) return;
+    await _handleFirebaseUser(result.user);
+  } catch(e) {
+    if (e.code && e.code !== 'auth/no-auth-event') console.warn('getRedirectResult:', e.message);
+  }
 }
 
 // Google GSI credential → Firebase Auth 세션 연결
@@ -6442,8 +6501,10 @@ trackInit();
 goTo('landing');
 updateLoginUI();
 window.addEventListener('load', () => {
-  // OAuth redirect 복귀 처리 (가장 먼저 — 로그인 완료시킴)
+  // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
+  // Firebase signInWithRedirect 복귀 처리 (모바일 Google 로그인)
+  _checkFirebaseRedirectResult();
   if (typeof google !== 'undefined' && google.accounts &&
       GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
     try {
