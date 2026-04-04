@@ -740,17 +740,17 @@ button, input, textarea, select { font-family:var(--font); }
   border-radius:12px; overflow:hidden; border:1px solid #eef0f6;
 }
 .day-proc-head {
-  padding:10px 14px; font-size:14px; font-weight:700;
+  padding:10px 14px; font-size:16px; font-weight:700;
   display:flex; align-items:center; gap:8px;
 }
 .day-proc-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .day-detail-row {
   display:flex; align-items:center; justify-content:space-between;
-  padding:8px 14px; border-top:1px solid #f5f5f5;
+  padding:10px 14px; border-top:1px solid #f5f5f5;
   background:#fff; gap:10px;
 }
-.day-detail-desc { font-size:13px; color:#333; flex:1; }
-.day-detail-cost { font-size:13px; font-weight:600; color:#333; white-space:nowrap; }
+.day-detail-desc { font-size:15px; color:#333; flex:1; }
+.day-detail-cost { font-size:15px; font-weight:600; color:#333; white-space:nowrap; }
 .day-detail-date-badge {
   font-size:10px; font-weight:700; color:var(--primary);
   background:rgba(49,118,255,0.1); padding:2px 7px;
@@ -1188,6 +1188,17 @@ button, input, textarea, select { font-family:var(--font); }
   padding:7px 0; border-bottom:1px solid #f5f5f5; font-size:13px;
 }
 .sched-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* ===== DATE CUSTOM BUTTON ===== */
+.date-custom-btn {
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:#bbb; font-size:14px; font-weight:500;
+  min-height:40px; border-radius:8px; border:1.5px solid #dde3ef;
+  background:#fff; transition:border-color .15s; user-select:none;
+  padding:0 10px; text-align:center;
+}
+.date-custom-btn.has-value { color:#222; }
+.date-custom-btn:active { border-color:var(--primary); }
 
 /* ===== CUSTOM DATE PICKER ===== */
 .dp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -1756,9 +1767,11 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="form-group">
         <span class="form-label">전체 시공일정</span>
         <div class="date-row">
-          <div class="date-input"><input type="date" id="f-start" onchange="saveFormData()"></div>
+          <input type="hidden" id="f-start">
+          <div class="date-input date-custom-btn" id="f-start-btn" onclick="openSingleDate('f-start','시작일')">날짜 선택</div>
           <span class="date-sep">~</span>
-          <div class="date-input"><input type="date" id="f-end" onchange="saveFormData()"></div>
+          <input type="hidden" id="f-end">
+          <div class="date-input date-custom-btn" id="f-end-btn" onclick="openSingleDate('f-end','종료일')">날짜 선택</div>
         </div>
       </div>
       <div class="form-group">
@@ -2022,6 +2035,23 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- Single Date Picker -->
+<div class="overlay" id="dlg-single-date" style="z-index:9500;" onclick="if(event.target===this)_closeSingleDate()">
+  <div class="dialog" style="padding:20px 16px 12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-size:16px;font-weight:700;color:#222;" id="sdp-title">날짜 선택</span>
+      <button onclick="_closeSingleDate()" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;">
+        <svg class="icon" width="16" height="16" style="stroke-width:2.5"><use href="#icon-x"/></svg>
+      </button>
+    </div>
+    <div id="sdp-container"></div>
+    <div class="dialog-actions split" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="_clearSingleDate()">초기화</button>
+      <button class="btn-confirm" onclick="_confirmSingleDate()">확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Detail -->
 <div class="overlay" id="dlg-add-detail">
   <div class="dialog">
@@ -2031,7 +2061,8 @@ button, input, textarea, select { font-family:var(--font); }
     <input class="dialog-input" id="detail-cost" type="number" placeholder="비용 (원)">
     <div class="detail-date-section" style="overflow:hidden;">
       <div class="detail-date-label">날짜 <span style="color:#bbb;font-size:11px;">(선택)</span></div>
-      <input class="dialog-input" id="detail-date" type="date" style="width:100%;max-width:100%;box-sizing:border-box;">
+      <input type="hidden" id="detail-date">
+      <div class="dialog-input date-custom-btn" id="detail-date-btn" onclick="openSingleDate('detail-date','날짜 선택')">날짜 선택</div>
       <div class="detail-date-hint" id="detail-date-hint"></div>
     </div>
     <div class="dialog-actions split">
@@ -2050,7 +2081,8 @@ button, input, textarea, select { font-family:var(--font); }
     <input class="dialog-input" id="edit-detail-cost" type="number" placeholder="비용 (원)">
     <div class="detail-date-section" style="overflow:hidden;">
       <div class="detail-date-label">날짜 <span style="color:#bbb;font-size:11px;">(선택)</span></div>
-      <input class="dialog-input" id="edit-detail-date" type="date" style="width:100%;max-width:100%;box-sizing:border-box;">
+      <input type="hidden" id="edit-detail-date">
+      <div class="dialog-input date-custom-btn" id="edit-detail-date-btn" onclick="openSingleDate('edit-detail-date','날짜 선택')">날짜 선택</div>
       <div class="detail-date-hint" id="edit-detail-date-hint"></div>
     </div>
     <div class="dialog-actions split">
@@ -4421,6 +4453,73 @@ function toggleCardExpand(procId) {
   else { _expandedCards.add(procId); card.classList.add('expanded'); }
 }
 
+// ===== SINGLE DATE PICKER =====
+let _sdpTarget = null, _sdpYear, _sdpMonth, _sdpSelected = null;
+
+function openSingleDate(targetId, title) {
+  _sdpTarget = targetId;
+  const val = document.getElementById(targetId)?.value;
+  const now = new Date();
+  if (val) {
+    const d = new Date(val + 'T00:00:00');
+    _sdpYear = d.getFullYear(); _sdpMonth = d.getMonth(); _sdpSelected = val;
+  } else {
+    _sdpYear = now.getFullYear(); _sdpMonth = now.getMonth(); _sdpSelected = null;
+  }
+  document.getElementById('sdp-title').textContent = title || '날짜 선택';
+  _renderSdp();
+  openDialog('dlg-single-date');
+}
+function _renderSdp() {
+  const todayStr = new Date().toISOString().slice(0,10);
+  const firstDay = new Date(_sdpYear, _sdpMonth, 1).getDay();
+  const daysInMonth = new Date(_sdpYear, _sdpMonth+1, 0).getDate();
+  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const DOW = ['일','월','화','수','목','금','토'];
+  let cells = '';
+  for (let i=0;i<firstDay;i++) cells += '<div class="dp-cell dp-empty"></div>';
+  for (let d=1;d<=daysInMonth;d++) {
+    const mo=String(_sdpMonth+1).padStart(2,'0'), dd=String(d).padStart(2,'0');
+    const ds=`${_sdpYear}-${mo}-${dd}`;
+    const col=(firstDay+d-1)%7;
+    let cls='dp-cell';
+    if (ds===_sdpSelected) cls+=' dp-sel-start';
+    else if (ds===todayStr) cls+=' dp-today';
+    if (col===0) cls+=' dp-sun'; if (col===6) cls+=' dp-sat';
+    cells+=`<div class="${cls}" onclick="_sdpSelect('${ds}')"><span class="dp-num">${d}</span></div>`;
+  }
+  document.getElementById('sdp-container').innerHTML=`
+    <div class="dp-header">
+      <button class="dp-nav-btn" onclick="_sdpNav(-1)"><svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg></button>
+      <span class="dp-title">${_sdpYear}년 ${MONTHS[_sdpMonth]}</span>
+      <button class="dp-nav-btn" onclick="_sdpNav(1)"><svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg></button>
+    </div>
+    <div class="dp-weekdays">${DOW.map((w,i)=>`<span class="${i===0?'dp-wks':i===6?'dp-wksa':''}">${w}</span>`).join('')}</div>
+    <div class="dp-grid">${cells}</div>`;
+}
+function _sdpNav(dir) {
+  _sdpMonth+=dir;
+  if (_sdpMonth>11){_sdpMonth=0;_sdpYear++;} if (_sdpMonth<0){_sdpMonth=11;_sdpYear--;}
+  _renderSdp();
+}
+function _sdpSelect(ds) { _sdpSelected=ds; _renderSdp(); }
+function _confirmSingleDate() {
+  if (!_sdpTarget) return;
+  const hidden = document.getElementById(_sdpTarget);
+  if (hidden) hidden.value = _sdpSelected || '';
+  _updateDateBtn(_sdpTarget, _sdpSelected);
+  if (_sdpTarget==='f-start'||_sdpTarget==='f-end') saveFormData();
+  closeDialog('dlg-single-date');
+}
+function _clearSingleDate() { _sdpSelected=null; _confirmSingleDate(); }
+function _closeSingleDate() { closeDialog('dlg-single-date'); }
+function _updateDateBtn(id, val) {
+  const btn = document.getElementById(id+'-btn');
+  if (!btn) return;
+  if (val) { btn.textContent=formatDate(val); btn.classList.add('has-value'); }
+  else { btn.textContent='날짜 선택'; btn.classList.remove('has-value'); }
+}
+
 // ===== SCHEDULE DIALOG + CUSTOM DATE PICKER =====
 let schedulingProcessId = null;
 let calPicker = { year:0, month:0, start:null, end:null, step:'start', otherProcs:[] };
@@ -4661,6 +4760,7 @@ function openAddDetail(procId) {
   document.getElementById('detail-subdesc').value = '';
   document.getElementById('detail-cost').value = '';
   document.getElementById('detail-date').value = '';
+  _updateDateBtn('detail-date', '');
   const proc = getProject()?.processes.find(p => p.id === procId);
   _setDetailDateRange(
     document.getElementById('detail-date'),
@@ -4695,6 +4795,7 @@ function openEditDetail(procId, detailId) {
   document.getElementById('edit-detail-subdesc').value = detail.subDesc || '';
   document.getElementById('edit-detail-cost').value = detail.cost || '';
   document.getElementById('edit-detail-date').value = detail.date || '';
+  _updateDateBtn('edit-detail-date', detail.date || '');
   _setDetailDateRange(
     document.getElementById('edit-detail-date'),
     document.getElementById('edit-detail-date-hint'),
@@ -5020,6 +5121,8 @@ function loadFormData() {
   document.getElementById('f-turnkey').checked = false;
   document.getElementById('f-start').value = f.startDate || '';
   document.getElementById('f-end').value = f.endDate || '';
+  _updateDateBtn('f-start', f.startDate || '');
+  _updateDateBtn('f-end', f.endDate || '');
   document.getElementById('f-memo').value = f.memo || '';
   document.getElementById('f-address').value = f.address || '';
   document.getElementById('f-address-detail').value = f.addressDetail || '';
