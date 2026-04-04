@@ -1229,6 +1229,11 @@ service cloud.firestore {
           <button onclick="filterContractors('설비',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">설비</button>
           <button onclick="filterContractors('청소',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">청소</button>
           <button onclick="filterContractors('입주청소',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">입주청소</button>
+          <button onclick="filterContractors('줄눈',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">줄눈</button>
+          <button onclick="filterContractors('탄성코트',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">탄성코트</button>
+          <button onclick="filterContractors('시스템에어컨',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">시스템에어컨</button>
+          <button onclick="filterContractors('단열',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">단열</button>
+          <button onclick="filterContractors('미장',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">미장</button>
           <button onclick="filterContractors('기타',this)" class="c-filter-btn" style="padding:6px 14px;border:1px solid #dde3ef;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#555;">기타</button>
         </div>
 
@@ -1262,6 +1267,11 @@ service cloud.firestore {
                   <option value="페인트">페인트</option>
                   <option value="청소">청소</option>
                   <option value="입주청소">입주청소</option>
+                  <option value="줄눈">줄눈</option>
+                  <option value="탄성코트">탄성코트</option>
+                  <option value="시스템에어컨">시스템에어컨</option>
+                  <option value="단열">단열</option>
+                  <option value="미장">미장</option>
                   <option value="기타" selected>기타</option>
                 </select></div>
               <div style="flex:1;"><label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">지역</label>
@@ -3471,7 +3481,7 @@ async function clearLogo() {
 }
 
 // ===== 시공팁 편집 =====
-const TIP_PROCS = ['실측','도면설계','철거','샷시','목공','타일','욕실','도배','가구','전기','마루','필름','싱크','입주청소','이삿짐정리','동의서 및 보양'];
+const TIP_PROCS = ['실측','도면설계','철거','샷시','목공','타일','욕실','도배','가구','전기','마루','필름','싱크','입주청소','이삿짐정리','동의서 및 보양','줄눈','탄성코트','시스템에어컨','단열','미장'];
 let _tipSelProc = null;
 let _tipDocCache = {};
 
