@@ -1761,7 +1761,7 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="form-label">진행 방식</span>
         <div class="checkbox-row">
           <div class="chk-item"><input type="checkbox" id="f-self" checked onchange="saveFormData()"><label for="f-self">반셀프</label></div>
-          <div class="chk-item"><input type="checkbox" id="f-turnkey" disabled><label for="f-turnkey" style="color:#ccc;cursor:not-allowed;">턴키(추후오픈)</label></div>
+          <div class="chk-item"><input type="checkbox" id="f-turnkey" onchange="saveFormData()"><label for="f-turnkey">턴키</label></div>
         </div>
       </div>
       <div class="form-group">
@@ -5118,7 +5118,7 @@ function loadFormData() {
     if (sr2) exactWrap.classList.add('show'); else exactWrap.classList.remove('show');
   }
   document.getElementById('f-self').checked = f.method.includes('반셀프');
-  document.getElementById('f-turnkey').checked = false;
+  document.getElementById('f-turnkey').checked = f.method.includes('턴키');
   document.getElementById('f-start').value = f.startDate || '';
   document.getElementById('f-end').value = f.endDate || '';
   _updateDateBtn('f-start', f.startDate || '');
@@ -5155,6 +5155,7 @@ function saveFormData() {
   f.sizeExact = sizeExact ? parseInt(sizeExact) + '평' : '';
   f.method = [];
   if (document.getElementById('f-self').checked) f.method.push('반셀프');
+  if (document.getElementById('f-turnkey').checked) f.method.push('턴키');
   f.startDate = document.getElementById('f-start').value;
   f.endDate = document.getElementById('f-end').value;
   f.memo = document.getElementById('f-memo').value;
