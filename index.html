@@ -5968,9 +5968,26 @@ function updateCollabIndicator(collaborators, owner) {
 
   const realCollabs = (collaborators || []).filter(c => c.email && c.email !== effectiveOwner?.email);
 
-  // 혼자(collaborators 없음)이면 collab-bar 숨김
-  if (!proj || !proj.isCloud || !realCollabs.length) {
+  // 협업자 있거나 내가 협업자로 참여 중이면 표시
+  const isCollabViewer = proj?.myRole && proj.myRole !== 'owner';
+  if (!proj || !proj.isCloud || (!realCollabs.length && !isCollabViewer)) {
     if (bar) bar.style.display = 'none';
+    return;
+  }
+
+  // 협업자 입장: collaborators 비어있으면 owner + 나 표시
+  if (!realCollabs.length && isCollabViewer && effectiveOwner) {
+    const me = { email: state.user.email, name: state.user.name };
+    if (bar) bar.style.display = 'flex';
+    if (avatarsEl) {
+      const members = [effectiveOwner, me];
+      avatarsEl.innerHTML = members.map((m, ci) => {
+        const init = (m.name || m.email || '?').charAt(0).toUpperCase();
+        const colors = ['#3176ff','#8b5cf6'];
+        return `<div class="collab-avatar" style="background:${colors[ci]};z-index:${10-ci};" title="${esc(m.name||m.email)}">${init}</div>`;
+      }).join('');
+    }
+    if (textEl) textEl.textContent = `${effectiveOwner.name || effectiveOwner.email.split('@')[0]}의 프로젝트 참여 중`;
     return;
   }
 
