@@ -1,29 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- Background: blue rounded square -->
-  <rect width="64" height="64" rx="16" fill="#3176ff"/>
-
-  <!-- Subtle inner gradient overlay -->
-  <rect width="64" height="64" rx="16" fill="url(#grad)" opacity="0.25"/>
-  <defs>
-    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#3176ff"/>
-    </linearGradient>
-  </defs>
-
-  <!-- V shape: bold, slightly architectural with floor-plan feel -->
-  <!-- Two angled lines meeting at center bottom -->
-  <path d="M13 16 L32 46 L51 16"
-        stroke="white"
-        stroke-width="7"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        fill="none"/>
-
-  <!-- Small horizontal accent line at top — suggests a "space/room" -->
-  <line x1="13" y1="16" x2="51" y2="16"
-        stroke="white"
-        stroke-width="3"
-        stroke-linecap="round"
-        opacity="0.45"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_38_2)">
+<path d="M48 0H16C7.16344 0 0 7.16344 0 16V48C0 56.8366 7.16344 64 16 64H48C56.8366 64 64 56.8366 64 48V16C64 7.16344 56.8366 0 48 0Z" fill="black"/>
+<path d="M32.1053 42L20 20H25.7895L34 36.9906L31 36.8873L38.5263 20H44L32.3684 42H32.1053Z" fill="white"/>
+</g>
+<defs>
+<clipPath id="clip0_38_2">
+<rect width="64" height="64" fill="white"/>
+</clipPath>
+</defs>
 </svg>
