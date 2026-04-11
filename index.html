@@ -6937,43 +6937,36 @@ async function _syncFromCloudOnStartup() {
 }
 
 
-// ===== URL 압축 헬퍼 (Firestore 불필요, 서버리스 공유) =====
-async function _compressToBase64(str) {
-  const encoded = new TextEncoder().encode(str);
-  const cs = new CompressionStream('gzip');
-  const writer = cs.writable.getWriter();
-  writer.write(encoded);
-  writer.close();
-  const compressed = await new Response(cs.readable).arrayBuffer();
-  const bytes = new Uint8Array(compressed);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 8192) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-  }
-  return btoa(binary);
-}
-async function _decompressFromBase64(b64) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const ds = new DecompressionStream('gzip');
-  const writer = ds.writable.getWriter();
-  writer.write(bytes);
-  writer.close();
-  return new Response(ds.readable).text();
-}
-
-// ===== 공사계획 공유 링크 생성 (프로젝트 JSON만 인코딩 → URL 짧아짐) =====
+// ===== 공사계획 공유 링크 생성 (Firestore 저장 → 짧은 URL) =====
 async function generateExportLink(btn) {
   const origHtml = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<svg class="icon" width="15" height="15"><use href="#icon-link"/></svg><span class="export-hdr-label" style="margin-left:6px;">생성 중...</span>`;
 
   try {
+    // Firebase 초기화
+    const ok = await _initFirebase();
+    if (!ok || !_db) throw new Error('Firebase 연결 실패');
+
+    // 로그인 확인
+    await new Promise(resolve => {
+      const unsub = firebase.auth().onAuthStateChanged(u => { unsub(); resolve(u); });
+    });
+    if (!firebase.auth().currentUser) {
+      showToastMessage('로그인 후 링크를 생성할 수 있습니다.');
+      btn.disabled = false; btn.innerHTML = origHtml; return;
+    }
+
+    renderExportDoc();
+    const html = document.getElementById('export-doc-area').innerHTML;
     const proj = getProject();
-    if (!proj) throw new Error('no project');
-    const b64 = await _compressToBase64(JSON.stringify(proj));
-    const url = `https://vibespacekorea.com/#export=${b64}`;
+    const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    await _db.collection('vb_exports').doc(id).set({
+      html,
+      projectName: proj?.name || '공사계획서',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const url = `https://vibespacekorea.com/?export=${id}`;
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(url);
     } else {
@@ -6990,12 +6983,11 @@ async function generateExportLink(btn) {
   btn.innerHTML = origHtml;
 }
 
-// ===== 공사계획 공유 링크 뷰어 (JSON 복원 후 재렌더링) =====
+// ===== 공사계획 공유 링크 뷰어 (Firestore 공개 읽기, 인증 불필요) =====
 async function _checkExportOnLoad() {
-  const hash = window.location.hash;
-  if (!hash.startsWith('#export=')) return;
-  const b64 = hash.slice('#export='.length);
-  if (!b64) return;
+  const params = new URLSearchParams(window.location.search);
+  const exportId = params.get('export');
+  if (!exportId) return;
 
   const screen = document.getElementById('screen-export-view');
   if (!screen) return;
@@ -7006,13 +6998,25 @@ async function _checkExportOnLoad() {
       <p style="color:#aaa;font-size:14px;">공사계획서 불러오는 중...</p>
     </div>`;
 
+  // Firebase 초기화만 (인증 불필요 — vb_exports는 allow read: if true)
+  const ok = await _initFirebase();
+  if (!ok || !_db) {
+    document.getElementById('export-view-content').innerHTML =
+      '<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">연결 오류. 페이지를 새로고침해주세요.</div>';
+    return;
+  }
+
   try {
-    const json = await _decompressFromBase64(b64);
-    const proj = JSON.parse(json);
-    renderExportDoc(proj, 'export-view-content');
+    const doc = await _db.collection('vb_exports').doc(exportId).get();
+    if (!doc.exists) {
+      document.getElementById('export-view-content').innerHTML =
+        '<div style="text-align:center;padding:60px;color:#aaa;font-size:14px;">공사계획서를 찾을 수 없거나 만료되었습니다.</div>';
+      return;
+    }
+    document.getElementById('export-view-content').innerHTML = doc.data().html;
   } catch(e) {
     document.getElementById('export-view-content').innerHTML =
-      '<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">공사계획서를 불러올 수 없습니다. 링크를 다시 확인해주세요.</div>';
+      '<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">불러오기 실패. 잠시 후 다시 시도해주세요.</div>';
     console.error('export view error:', e);
   }
 }
