@@ -271,7 +271,7 @@ button, input, textarea, select { font-family:var(--font); }
 .autosave-toast {
   position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
   background:rgba(30,30,30,0.8); color:#fff; font-size:12px; font-weight:600;
-  padding:7px 16px; border-radius:20px; z-index:99999;
+  padding:11px 20px; border-radius:20px; z-index:99999;
   opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;
 }
 .autosave-toast.show { opacity:1; }
@@ -1530,17 +1530,17 @@ button, input, textarea, select { font-family:var(--font); }
   display:flex; align-items:center; justify-content:space-between;
   padding:26px 32px 22px; border-bottom:1px solid #999;
 }
-.export-logo-area { display:flex; align-items:center; height:32px; }
-.export-logo-area img { height:32px; width:auto; object-fit:contain; filter:grayscale(100%) contrast(1.5); }
-.export-logo-text { font-size:22px; font-weight:900; color:#000; letter-spacing:-1.5px; }
+.export-logo-area { display:flex; align-items:center; height:16px; }
+.export-logo-area img { height:16px; width:auto; object-fit:contain; filter:grayscale(100%) contrast(1.5); }
+.export-logo-text { font-size:13px; font-weight:900; color:#aaa; letter-spacing:-0.5px; }
 .export-doc-label { font-size:12px; font-weight:800; color:#aaa; letter-spacing:2px; text-transform:uppercase; }
 .export-doc-name { font-size:19px; font-weight:800; color:#000; margin-top:5px; text-align:right; max-width:360px; line-height:1.3; letter-spacing:-.5px; }
 /* ── Info table ── */
 .export-info-table { width:100%; border-collapse:collapse; font-size:14px; }
-.export-info-table td { padding:9px 0; border:none; border-bottom:1px solid #e8e8e8; vertical-align:top; }
+.export-info-table td { padding:9px 0; border:none; vertical-align:top; }
 .export-info-table td:first-child { font-size:12px; font-weight:800; color:#aaa; width:88px; white-space:nowrap; letter-spacing:1px; text-transform:uppercase; padding-top:11px; }
 .export-info-table td:last-child { font-size:15px; font-weight:600; color:#000; }
-.export-info-table tr:last-child td { border-bottom:none; }
+.export-info-table tr:last-child td { }
 /* ── Sections ── */
 .export-section { padding:22px 32px; border-bottom:1px solid #999; position:relative; }
 .export-section:last-child { border-bottom:none; }
@@ -1548,21 +1548,21 @@ button, input, textarea, select { font-family:var(--font); }
   font-size:12px; font-weight:800; color:#bbb; letter-spacing:2px;
   text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:8px;
 }
-.export-section-title::after { content:''; display:block; flex:1; height:1px; background:#ddd; }
+.export-section-title::after { display:none; }
 /* ── Floor plan ── */
 .export-floorplan-img { width:100%; border:1px solid #ddd; display:block; }
 /* ── Process list ── */
 .export-proc-item { margin-bottom:16px; break-inside:avoid; page-break-inside:avoid; }
 .export-proc-title-row {
   display:flex; align-items:baseline; gap:10px;
-  padding:11px 14px; background:#f4f4f4;
+  padding:11px 14px; background:#fff;
 }
 .export-proc-num { font-size:12px; font-weight:800; color:#bbb; flex-shrink:0; letter-spacing:.5px; }
 .export-proc-name { font-size:15px; font-weight:800; color:#000; flex:1; letter-spacing:-.3px; }
 .export-proc-period { font-size:12px; color:#666; white-space:nowrap; font-weight:600; }
 .export-proc-company-row {
   padding:6px 14px 6px 14px; font-size:12px; color:#777; font-weight:500;
-  background:#fafafa;
+  background:#fff;
 }
 /* ── Detail table ── */
 .export-detail-table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -1573,14 +1573,16 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .export-detail-table td { padding:8px 10px; border:none; border-bottom:1px solid #ebebeb; vertical-align:top; color:#333; font-size:13px; }
 .export-detail-table td.date { color:#888; text-align:center; white-space:nowrap; width:64px; font-size:12px; }
-.export-detail-table td.cost { font-weight:700; text-align:right; white-space:nowrap; width:96px; color:#000; font-size:15px; }
-.export-detail-table tr.subtotal td { font-weight:800; font-size:15px; border-top:1px solid #999; color:#000; background:#f4f4f4; padding:9px 10px; }
+.export-detail-table td.cost { font-weight:700; text-align:right; white-space:nowrap; width:96px; color:#000; font-size:13px; }
+.export-detail-table tr.subtotal td { font-weight:800; font-size:13px; border-top:1px solid #999; color:#000; background:#fff; padding:9px 10px; }
+.export-detail-table tr.subtotal td.cost { font-size:15px; }
 /* ── Calendar ── */
 .export-cal-month-title { font-size:14px; font-weight:800; color:#000; margin:18px 0 7px; letter-spacing:-.3px; }
 .export-cal-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:6px; }
 .export-cal-table th {
-  background:var(--primary); color:#fff; padding:8px 2px;
-  text-align:center; font-weight:800; font-size:12px; letter-spacing:.3px;
+  background:#fff; color:#555; padding:8px 2px;
+  text-align:center; font-weight:700; font-size:12px; letter-spacing:.3px;
+  border-bottom:1px solid #ddd;
 }
 .export-cal-table td { vertical-align:top; border:1px solid #ddd; padding:4px; height:58px; }
 .export-cal-table td.out { background:#f6f6f6; opacity:.5; }
@@ -5417,7 +5419,7 @@ function copyExportDoc() {
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => {
-      showToastMessage('📋 복사 완료! 네이버 카페 글쓰기에 붙여넣기 하세요.');
+      showToastMessage('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-top:-2px;"><polyline points="20 6 9 17 4 12"/></svg>복사완료');
     }).catch(() => {
       _fallbackCopyText(text);
     });
@@ -5432,7 +5434,7 @@ function _fallbackCopyText(text) {
   ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
   document.body.appendChild(ta);
   ta.focus(); ta.select();
-  try { document.execCommand('copy'); showToastMessage('📋 복사 완료! 네이버 카페 글쓰기에 붙여넣기 하세요.'); }
+  try { document.execCommand('copy'); showToastMessage('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-top:-2px;"><polyline points="20 6 9 17 4 12"/></svg>복사완료'); }
   catch(e) { alert('복사 실패. 직접 텍스트를 선택해서 복사해 주세요.'); }
   document.body.removeChild(ta);
 }
@@ -5524,11 +5526,11 @@ function renderExportDoc() {
     ${watermarkHtml}
     <!-- Header -->
     <div class="export-doc-header">
-      ${logoHtml}
       <div>
         <div class="export-doc-label">공사계획서</div>
         <div class="export-doc-name">${esc(proj.name || '내 공사 계획')}</div>
       </div>
+      ${logoHtml}
     </div>
     <!-- Basic Info -->
     <div class="export-section">
@@ -5563,13 +5565,21 @@ function _buildExportCalendar(proj) {
   const startD  = new Date(minDate+'T00:00:00');
   const endD    = new Date(maxDate+'T00:00:00');
 
-  // Cursor: Sunday of the week containing startD
+  // Period title: "2026년 10월~11월" 형식으로 한번만 표시
+  const sy = startD.getFullYear(), sm = startD.getMonth();
+  const ey = endD.getFullYear(),   em = endD.getMonth();
+  let periodTitle;
+  if (sy === ey && sm === em)  periodTitle = `${sy}년 ${sm+1}월`;
+  else if (sy === ey)          periodTitle = `${sy}년 ${sm+1}월~${em+1}월`;
+  else                         periodTitle = `${sy}년 ${sm+1}월~${ey}년 ${em+1}월`;
+
   const cursor = new Date(startD);
   cursor.setDate(cursor.getDate() - cursor.getDay());
 
   let html = '';
   let currentMonth = -1;
   let tableOpen = false;
+  let firstTable = true;
 
   while (cursor <= endD) {
     const weekDays = [];
@@ -5578,17 +5588,17 @@ function _buildExportCalendar(proj) {
     const firstVisible = weekDays.find(d => d >= startD && d <= endD);
     if (!firstVisible) continue;
 
-    // Month header
     const m = firstVisible.getMonth(), y = firstVisible.getFullYear();
     if (m !== currentMonth) {
       if (tableOpen) { html += `</tbody></table>`; tableOpen = false; }
       currentMonth = m;
-      html += `<div class="export-cal-month-title">${y}년 ${m+1}월</div>
-      <table class="export-cal-table">
-        <thead><tr>
-          <th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
-        </tr></thead><tbody>`;
+      // 요일 헤더는 첫 번째 테이블에만
+      const thead = firstTable
+        ? `<thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>`
+        : '';
+      html += `<table class="export-cal-table" style="margin-top:${firstTable?'0':'12px'};">${thead}<tbody>`;
       tableOpen = true;
+      firstTable = false;
     }
 
     html += '<tr>';
@@ -5604,7 +5614,6 @@ function _buildExportCalendar(proj) {
         dateStr >= p.scheduleStart && dateStr <= p.scheduleEnd
       ) : [];
 
-      // 셀 배경: 첫 번째 공정 컬러 틴트 + top stroke
       let tdStyle = '';
       if (activeProcs.length) {
         const fc = activeProcs[0];
@@ -5632,7 +5641,7 @@ function _buildExportCalendar(proj) {
   if (tableOpen) html += `</tbody></table>`;
 
   return `<div class="export-section">
-    <div class="export-section-title">전체 일정</div>
+    <div class="export-section-title">전체 일정 · ${periodTitle}</div>
     ${html}
   </div>`;
 }
@@ -5668,7 +5677,6 @@ function _buildExportProcesses(proj) {
     return `
     <div class="export-proc-item">
       <div class="export-proc-title-row">
-        <span class="export-proc-num">${String(idx+1).padStart(2,'0')}</span>
         <span class="export-proc-name">${esc(p.name)}</span>
         <span class="export-proc-period">${esc(periodStr)}</span>
       </div>
@@ -6573,7 +6581,7 @@ function closeAllDialogs() {
 function showToastMessage(msg) {
   const el = document.getElementById('autosave-toast');
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = '저장됨'; }, 2800);
