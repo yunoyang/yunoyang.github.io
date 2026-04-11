@@ -5472,11 +5472,11 @@ function _fmtCostKo(won) {
   return won.toLocaleString() + '원';
 }
 
-function renderExportDoc() {
-  const proj = getProject();
+function renderExportDoc(projOverride, targetAreaId) {
+  const proj = projOverride || getProject();
   if (!proj) return;
   const f = proj.form || {};
-  const area = document.getElementById('export-doc-area');
+  const area = document.getElementById(targetAreaId || 'export-doc-area');
   if (!area) return;
 
   const sizeLabel = f.size?.[0] || '';
@@ -6963,16 +6963,16 @@ async function _decompressFromBase64(b64) {
   return new Response(ds.readable).text();
 }
 
-// ===== 공사계획 공유 링크 생성 (URL 인코딩, 서버리스) =====
+// ===== 공사계획 공유 링크 생성 (프로젝트 JSON만 인코딩 → URL 짧아짐) =====
 async function generateExportLink(btn) {
   const origHtml = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<svg class="icon" width="15" height="15"><use href="#icon-link"/></svg><span class="export-hdr-label" style="margin-left:6px;">생성 중...</span>`;
 
   try {
-    renderExportDoc();
-    const html = document.getElementById('export-doc-area').innerHTML;
-    const b64 = await _compressToBase64(html);
+    const proj = getProject();
+    if (!proj) throw new Error('no project');
+    const b64 = await _compressToBase64(JSON.stringify(proj));
     const url = `https://vibespacekorea.com/#export=${b64}`;
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(url);
@@ -6990,7 +6990,7 @@ async function generateExportLink(btn) {
   btn.innerHTML = origHtml;
 }
 
-// ===== 공사계획 공유 링크 뷰어 (URL 해시에서 직접 복원) =====
+// ===== 공사계획 공유 링크 뷰어 (JSON 복원 후 재렌더링) =====
 async function _checkExportOnLoad() {
   const hash = window.location.hash;
   if (!hash.startsWith('#export=')) return;
@@ -7007,11 +7007,13 @@ async function _checkExportOnLoad() {
     </div>`;
 
   try {
-    const html = await _decompressFromBase64(b64);
-    document.getElementById('export-view-content').innerHTML = html;
+    const json = await _decompressFromBase64(b64);
+    const proj = JSON.parse(json);
+    renderExportDoc(proj, 'export-view-content');
   } catch(e) {
     document.getElementById('export-view-content').innerHTML =
       '<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">공사계획서를 불러올 수 없습니다. 링크를 다시 확인해주세요.</div>';
+    console.error('export view error:', e);
   }
 }
 </script>
