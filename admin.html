@@ -3450,7 +3450,13 @@ async function applyLogoToAll() {
   sessionStorage.removeItem('vibespace_logo_pending');
   // Firestore 저장
   try {
+    if (!_adminDb) initFirestoreAdmin();
     if (_adminDb) {
+      // 인증 완료 대기 (anonymous auth가 비동기이므로)
+      const adminAuth = firebase.auth(firebase.app('admin'));
+      if (!adminAuth.currentUser) {
+        try { await adminAuth.signInAnonymously(); } catch(e) { console.warn('auth failed', e); }
+      }
       await _adminDb.collection('vb_settings').doc('brand').set(
         { logoDataUrl: dataUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
         { merge: true }
