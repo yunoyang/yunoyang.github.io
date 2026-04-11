@@ -1491,6 +1491,21 @@ button, input, textarea, select { font-family:var(--font); }
 .account-row .row-left svg { width:17px; height:17px; color:#999; }
 .account-row .arow svg { width:15px; height:15px; color:#ccc; }
 
+/* ===== EXPORT HEADER BUTTONS ===== */
+.export-hdr-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font);
+  flex-shrink:0; white-space:nowrap;
+}
+.export-hdr-btn--outline { background:#fff; color:#111; border:1.5px solid #111; }
+.export-hdr-btn--fill    { background:#000; color:#fff; border:none; }
+.export-hdr-label { display:inline; }
+@media (max-width:599px) {
+  .export-hdr-btn { padding:8px 10px; gap:0; }
+  .export-hdr-label { display:none; }
+}
+
 /* ===== EXPORT / PRINT ===== */
 @media print {
   body > .app { display:none !important; }
@@ -2326,13 +2341,15 @@ button, input, textarea, select { font-family:var(--font); }
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;padding-top:max(env(safe-area-inset-top,0px),16px);background:#fff;border-bottom:1px solid #eef0f5;flex-shrink:0;">
       <div style="font-size:17px;font-weight:700;">공사계획 내보내기</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="copyExportDoc()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;color:#111;border:1.5px solid #111;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">
-          <svg class="icon" width="15" height="15"><use href="#icon-copy"/></svg> 텍스트 복사
+        <button onclick="copyExportDoc()" class="export-hdr-btn export-hdr-btn--outline">
+          <svg class="icon" width="15" height="15"><use href="#icon-copy"/></svg>
+          <span class="export-hdr-label">텍스트 복사</span>
         </button>
-        <button onclick="printExportDoc()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#000;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">
-          <svg class="icon" width="15" height="15"><use href="#icon-printer"/></svg> PDF 저장
+        <button onclick="printExportDoc()" class="export-hdr-btn export-hdr-btn--fill">
+          <svg class="icon" width="15" height="15"><use href="#icon-printer"/></svg>
+          <span class="export-hdr-label">PDF 저장</span>
         </button>
-        <button onclick="closeDialog('dlg-export')" style="width:36px;height:36px;border-radius:10px;border:1px solid #e4e9f2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <button onclick="closeDialog('dlg-export')" style="width:36px;height:36px;border-radius:10px;border:1px solid #e4e9f2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg class="icon" width="16" height="16"><use href="#icon-x"/></svg>
         </button>
       </div>
