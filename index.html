@@ -1517,7 +1517,6 @@ button, input, textarea, select { font-family:var(--font); }
   body > .app { display:none !important; }
   .export-doc { border:none !important; box-shadow:none !important; }
   .export-watermark { opacity:.02 !important; }
-  .export-section-title::after { display:none; }
 }
 /* Document wrapper */
 .export-doc {
@@ -1527,55 +1526,58 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* ── Header ── */
 .export-doc-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:26px 32px 22px; border-bottom:1px solid #999;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding:28px 32px 20px;
 }
-.export-logo-area { display:flex; align-items:center; height:16px; }
-.export-logo-area img { height:16px; width:auto; object-fit:contain; filter:grayscale(100%) contrast(1.5); }
-.export-logo-text { font-size:13px; font-weight:900; color:#aaa; letter-spacing:-0.5px; }
-.export-doc-label { font-size:12px; font-weight:800; color:#aaa; letter-spacing:2px; text-transform:uppercase; }
-.export-doc-name { font-size:19px; font-weight:800; color:#000; margin-top:5px; text-align:right; max-width:360px; line-height:1.3; letter-spacing:-.5px; }
-/* ── Info table ── */
-.export-info-table { width:100%; border-collapse:collapse; font-size:14px; }
-.export-info-table td { padding:9px 0; border:none; vertical-align:top; }
-.export-info-table td:first-child { font-size:12px; font-weight:800; color:#aaa; width:88px; white-space:nowrap; letter-spacing:1px; text-transform:uppercase; padding-top:11px; }
-.export-info-table td:last-child { font-size:15px; font-weight:600; color:#000; }
-.export-info-table tr:last-child td { }
+.export-doc-title {
+  font-size:24px; font-weight:800; color:#000; letter-spacing:-0.5px; line-height:1.3;
+}
+.export-doc-brand {
+  font-size:13px; font-weight:600; color:#bbb; letter-spacing:-0.3px; padding-top:4px; flex-shrink:0;
+}
+/* ── Info rows (label:value) ── */
+.export-info-list { display:flex; flex-direction:column; gap:0; }
+.export-info-row { display:flex; align-items:baseline; gap:0; padding:5px 0; font-size:13px; }
+.export-info-label { color:#999; width:72px; flex-shrink:0; font-size:12px; font-weight:500; }
+.export-info-value { color:#000; font-weight:500; flex:1; }
 /* ── Sections ── */
-.export-section { padding:22px 32px; border-bottom:1px solid #999; position:relative; }
-.export-section:last-child { border-bottom:none; }
+.export-section { padding:16px 32px; position:relative; }
+.export-section + .export-section { padding-top:8px; }
 .export-section-title {
-  font-size:12px; font-weight:800; color:#bbb; letter-spacing:2px;
-  text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:8px;
+  font-size:12px; font-weight:700; color:#bbb; letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:12px;
 }
-.export-section-title::after { display:none; }
+/* ── Summary card ── */
+.export-summary-card {
+  border:1px solid #e4e4e4; border-radius:12px; padding:16px 20px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.export-summary-row { display:flex; justify-content:space-between; align-items:baseline; font-size:13px; }
+.export-summary-label { color:#888; font-size:12px; font-weight:500; }
+.export-summary-value { font-weight:700; color:#000; }
+.export-summary-value.primary { font-size:15px; font-weight:800; }
 /* ── Floor plan ── */
-.export-floorplan-img { width:100%; border:1px solid #ddd; display:block; }
-/* ── Process list ── */
-.export-proc-item { margin-bottom:16px; break-inside:avoid; page-break-inside:avoid; }
-.export-proc-title-row {
-  display:flex; align-items:baseline; gap:10px;
-  padding:11px 14px; background:#fff;
+.export-floorplan-wrap { border:1px solid #e4e4e4; border-radius:12px; overflow:hidden; }
+.export-floorplan-img { width:100%; display:block; }
+/* ── Process section ── */
+.export-proc-item { margin-bottom:20px; break-inside:avoid; page-break-inside:avoid; }
+.export-proc-head { font-size:16px; font-weight:800; color:#000; margin-bottom:12px; }
+.export-proc-item-row {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:6px 0; font-size:13px; color:#444;
+  border-bottom:1px solid #f2f2f2;
 }
-.export-proc-num { font-size:12px; font-weight:800; color:#bbb; flex-shrink:0; letter-spacing:.5px; }
-.export-proc-name { font-size:15px; font-weight:800; color:#000; flex:1; letter-spacing:-.3px; }
-.export-proc-period { font-size:12px; color:#666; white-space:nowrap; font-weight:600; }
-.export-proc-company-row {
-  padding:6px 14px 6px 14px; font-size:12px; color:#777; font-weight:500;
-  background:#fff;
+.export-proc-item-row:last-child { border-bottom:none; }
+.export-proc-item-desc { flex:1; padding-right:16px; }
+.export-proc-item-cost { font-weight:500; color:#333; white-space:nowrap; font-size:13px; }
+.export-proc-footer {
+  margin-top:14px; padding-top:12px; border-top:1px solid #ebebeb;
+  display:flex; flex-direction:column; gap:6px;
 }
-/* ── Detail table ── */
-.export-detail-table { width:100%; border-collapse:collapse; font-size:13px; }
-.export-detail-table th {
-  padding:7px 10px; border:none; border-bottom:1px solid #999;
-  font-size:12px; font-weight:800; color:#aaa; text-align:left;
-  letter-spacing:1px; background:none; text-transform:uppercase;
-}
-.export-detail-table td { padding:8px 10px; border:none; border-bottom:1px solid #ebebeb; vertical-align:top; color:#333; font-size:13px; }
-.export-detail-table td.date { color:#888; text-align:center; white-space:nowrap; width:64px; font-size:12px; }
-.export-detail-table td.cost { font-weight:700; text-align:right; white-space:nowrap; width:96px; color:#000; font-size:13px; }
-.export-detail-table tr.subtotal td { font-weight:800; font-size:13px; border-top:1px solid #999; color:#000; background:#fff; padding:9px 10px; }
-.export-detail-table tr.subtotal td.cost { font-size:15px; }
+.export-proc-footer-row { display:flex; justify-content:space-between; align-items:baseline; font-size:13px; }
+.export-proc-footer-label { color:#999; font-size:12px; font-weight:500; }
+.export-proc-footer-value { font-weight:600; color:#000; font-size:13px; }
+.export-proc-footer-value.cost { font-weight:800; font-size:15px; color:#000; }
 /* ── Calendar ── */
 .export-cal-month-title { font-size:14px; font-weight:800; color:#000; margin:18px 0 7px; letter-spacing:-.3px; }
 .export-cal-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:6px; }
@@ -1610,8 +1612,8 @@ button, input, textarea, select { font-family:var(--font); }
 /* ── Footer ── */
 .export-doc-footer {
   display:flex; align-items:center; justify-content:space-between;
-  padding:13px 32px; border-top:1px solid #999; background:#fff;
-  font-size:12px; color:#ccc;
+  padding:13px 32px; border-top:1px solid #ebebeb; background:#fff;
+  font-size:12px; color:#ccc; margin-top:8px;
 }
 .export-footer-logo { display:flex; align-items:center; gap:6px; }
 .export-footer-logo img { height:16px; opacity:.25; filter:grayscale(100%); }
@@ -5456,6 +5458,16 @@ function _getExportCSS() {
   return css;
 }
 
+function _fmtCostKo(won) {
+  if (!won) return '-';
+  if (won >= 10000) {
+    const man = Math.floor(won / 10000);
+    const rem = won % 10000;
+    return rem ? `${man}만 ${rem.toLocaleString()}원` : `${man}만원`;
+  }
+  return won.toLocaleString() + '원';
+}
+
 function renderExportDoc() {
   const proj = getProject();
   if (!proj) return;
@@ -5466,20 +5478,38 @@ function renderExportDoc() {
   const sizeLabel = f.size?.[0] || '';
   const sizeExact = f.sizeExact || '';
   const displaySize = sizeExact || sizeLabel;
-  const periodStr = (f.startDate && f.endDate)
-    ? _fmtExportDate(f.startDate) + ' ~ ' + _fmtExportDate(f.endDate)
-    : (f.startDate ? _fmtExportDate(f.startDate) + ' 시작' : '');
-  const addrStr = [f.address, f.addressDetail].filter(Boolean).join(' ');
   const typeStr = f.type?.[0] || '';
+  const methodStr = f.method?.[0] || f.buildType?.[0] || '';
+  const addrStr = [f.address, f.addressDetail].filter(Boolean).join(' ');
+  const periodStr = (f.startDate && f.endDate)
+    ? `${f.startDate.replace(/-/g,'.')} - ${f.endDate.replace(/-/g,'.')}`
+    : (f.startDate ? f.startDate.replace(/-/g,'.') + ' 시작' : '');
   const totalCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d) => a+(d.cost||0), 0), 0);
-  const processCount = proj.processes.length;
   const genDate = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'});
 
-  // Logo: try localStorage (set by admin), fallback to text
+  // Vendor count (unique company names)
+  const vendorNames = [...new Set(proj.processes.map(p => p.companyData?.name || p.company || '').filter(Boolean))];
+  const vendorCount = vendorNames.length;
+
+  // Calendar period label
+  const starts = proj.processes.filter(p=>p.scheduleStart).map(p=>p.scheduleStart);
+  const ends   = proj.processes.filter(p=>p.scheduleEnd).map(p=>p.scheduleEnd);
+  let calPeriod = '';
+  if (starts.length) {
+    const sy = starts.reduce((a,b)=>a<b?a:b);
+    const ey = ends.length ? ends.reduce((a,b)=>a>b?a:b) : sy;
+    const sd = new Date(sy+'T00:00:00'), ed = new Date(ey+'T00:00:00');
+    const sm2 = sd.getMonth(), em2 = ed.getMonth(), syr = sd.getFullYear(), eyr = ed.getFullYear();
+    if (syr===eyr && sm2===em2) calPeriod = `${syr}년 ${sm2+1}월`;
+    else if (syr===eyr)         calPeriod = `${syr}년 ${sm2+1}월~${em2+1}월`;
+    else                        calPeriod = `${syr}년 ${sm2+1}월~${eyr}년 ${em2+1}월`;
+  }
+
+  // Logo / watermark
   const logoDataUrl = localStorage.getItem('vibespace_logo') || '';
-  const logoHtml = logoDataUrl
-    ? `<div class="export-logo-area"><img src="${logoDataUrl}" alt="Vibespace"></div>`
-    : `<div class="export-logo-area"><span class="export-logo-text">Vibespace</span></div>`;
+  const brandHtml = logoDataUrl
+    ? `<div class="export-doc-brand"><img src="${logoDataUrl}" style="height:16px;opacity:.4;filter:grayscale(100%);" alt="Vibespace"></div>`
+    : `<div class="export-doc-brand">vibespace</div>`;
   const watermarkHtml = logoDataUrl
     ? `<img class="export-watermark-img" src="${logoDataUrl}" alt="">`
     : `<div class="export-watermark">Vibespace</div>`;
@@ -5487,23 +5517,34 @@ function renderExportDoc() {
     ? `<div class="export-footer-logo"><img src="${logoDataUrl}" alt=""><span>vibespacekorea.com</span></div>`
     : `<div class="export-footer-logo"><span>Vibespace · vibespacekorea.com</span></div>`;
 
-  // Info table rows
-  const infoRows = [
-    ['프로젝트명', esc(proj.name || '-')],
-    ['시공 형태', [typeStr, displaySize].filter(Boolean).join(' · ') || '-'],
-    ['전체 일정', periodStr || '-'],
-    addrStr ? ['시공 주소', esc(addrStr)] : null,
-    processCount ? ['공정 수', `${processCount}개 공정`] : null,
-    totalCost ? ['예상 총 비용', `${totalCost.toLocaleString()}원`] : null,
-  ].filter(Boolean).map(([k,v]) =>
-    `<tr><td>${k}</td><td>${v}</td></tr>`
+  // Basic info rows
+  const infoItems = [
+    typeStr       ? ['시공종류', typeStr] : null,
+    displaySize   ? ['평형',     displaySize] : null,
+    methodStr     ? ['시공방법', methodStr] : null,
+    periodStr     ? ['시공일정', periodStr] : null,
+    addrStr       ? ['시공주소', esc(addrStr)] : null,
+  ].filter(Boolean);
+  const infoHtml = infoItems.map(([k,v]) =>
+    `<div class="export-info-row"><span class="export-info-label">${k}</span><span class="export-info-value">${v}</span></div>`
   ).join('');
+
+  // Summary card
+  const summaryHtml = (totalCost || calPeriod || vendorCount) ? `
+  <div class="export-section">
+    <div class="export-summary-card">
+      ${totalCost ? `<div class="export-summary-row"><span class="export-summary-label">예상 견적</span><span class="export-summary-value primary">총 ${_fmtCostKo(totalCost)}</span></div>` : ''}
+      ${calPeriod ? `<div class="export-summary-row"><span class="export-summary-label">전체 일정</span><span class="export-summary-value">${calPeriod}</span></div>` : ''}
+      ${vendorCount ? `<div class="export-summary-row"><span class="export-summary-label">업체</span><span class="export-summary-value">총 ${vendorCount}업체</span></div>` : ''}
+      ${proj.processes.length ? `<div class="export-summary-row"><span class="export-summary-label">공정</span><span class="export-summary-value">총 ${proj.processes.length}공정</span></div>` : ''}
+    </div>
+  </div>` : '';
 
   // Floor plan
   const fpHtml = proj.floorplanImage
     ? `<div class="export-section">
         <div class="export-section-title">도면</div>
-        <img class="export-floorplan-img" src="${proj.floorplanImage}" alt="도면">
+        <div class="export-floorplan-wrap"><img class="export-floorplan-img" src="${proj.floorplanImage}" alt="도면"></div>
        </div>`
     : '';
 
@@ -5526,17 +5567,12 @@ function renderExportDoc() {
     ${watermarkHtml}
     <!-- Header -->
     <div class="export-doc-header">
-      <div>
-        <div class="export-doc-label">공사계획서</div>
-        <div class="export-doc-name">${esc(proj.name || '내 공사 계획')}</div>
-      </div>
-      ${logoHtml}
+      <div class="export-doc-title">${esc(proj.name || '공사 계획서')}</div>
+      ${brandHtml}
     </div>
     <!-- Basic Info -->
-    <div class="export-section">
-      <div class="export-section-title">기본 정보</div>
-      <table class="export-info-table">${infoRows}</table>
-    </div>
+    ${infoHtml ? `<div class="export-section" style="padding-top:4px;padding-bottom:16px;"><div class="export-info-list">${infoHtml}</div></div>` : ''}
+    ${summaryHtml}
     ${fpHtml}
     ${procHtml}
     ${calHtml}
@@ -5649,46 +5685,48 @@ function _buildExportCalendar(proj) {
 function _buildExportProcesses(proj) {
   if (!proj.processes.length) return '';
 
-  const items = proj.processes.map((p, idx) => {
-    const periodStr = (p.scheduleStart && p.scheduleEnd)
-      ? _fmtExportDate(p.scheduleStart) + ' ~ ' + _fmtExportDate(p.scheduleEnd)
-      : (p.scheduleStart ? _fmtExportDate(p.scheduleStart) + ' ~' : '일정 미정');
-    const procCost = (p.details||[]).reduce((s,d) => s+(d.cost||0), 0);
+  const items = proj.processes.map((p) => {
     const companyName = p.companyData?.name || p.company || '';
-    const companyRow = companyName
-      ? `<div class="export-proc-company-row">업체: ${esc(companyName)}</div>` : '';
 
-    const detailRows = (p.details||[]).map(d =>
-      `<tr>
-        <td>${esc(d.desc)}</td>
-        <td class="date">${d.date ? _fmtExportDate(d.date) : '-'}</td>
-        <td class="cost">${(d.cost||0) ? (d.cost).toLocaleString()+'원' : '-'}</td>
-       </tr>`
+    // 일정 계산
+    let scheduleStr = '';
+    if (p.scheduleStart && p.scheduleEnd) {
+      const sd = new Date(p.scheduleStart+'T00:00:00');
+      const ed = new Date(p.scheduleEnd+'T00:00:00');
+      const days = Math.round((ed - sd) / 86400000) + 1;
+      const fmt = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      scheduleStr = `총${days}일 ${fmt(sd)}-${String(ed.getMonth()+1).padStart(2,'0')}.${ed.getDate()}`;
+    } else if (p.scheduleStart) {
+      scheduleStr = p.scheduleStart.replace(/-/g,'.');
+    } else {
+      scheduleStr = '일정 미정';
+    }
+
+    const procCost = (p.details||[]).reduce((s,d) => s+(d.cost||0), 0);
+
+    const itemRows = (p.details||[]).map(d =>
+      `<div class="export-proc-item-row">
+        <span class="export-proc-item-desc">${esc(d.desc)}</span>
+        <span class="export-proc-item-cost">${(d.cost||0) ? d.cost.toLocaleString() : '-'}</span>
+      </div>`
     ).join('');
 
-    const detailTable = p.details?.length
-      ? `<table class="export-detail-table">
-          <thead><tr><th>작업 내용</th><th style="width:64px;text-align:center;">날짜</th><th style="width:96px;text-align:right;">비용</th></tr></thead>
-          <tbody>${detailRows}</tbody>
-          ${procCost ? `<tr class="subtotal"><td colspan="2">소계</td><td class="cost">${procCost.toLocaleString()}원</td></tr>` : ''}
-         </table>`
-      : '';
+    const footer = `
+    <div class="export-proc-footer">
+      ${procCost ? `<div class="export-proc-footer-row"><span class="export-proc-footer-label">예상견적</span><span class="export-proc-footer-value cost">${_fmtCostKo(procCost)}</span></div>` : ''}
+      <div class="export-proc-footer-row"><span class="export-proc-footer-label">일정</span><span class="export-proc-footer-value">${scheduleStr}</span></div>
+      ${companyName ? `<div class="export-proc-footer-row"><span class="export-proc-footer-label">업체</span><span class="export-proc-footer-value">${esc(companyName)}</span></div>` : ''}
+    </div>`;
 
     return `
     <div class="export-proc-item">
-      <div class="export-proc-title-row">
-        <span class="export-proc-name">${esc(p.name)}</span>
-        <span class="export-proc-period">${esc(periodStr)}</span>
-      </div>
-      ${companyRow}
-      ${detailTable}
+      <div class="export-proc-head">${esc(p.name)}</div>
+      ${itemRows}
+      ${footer}
     </div>`;
   }).join('');
 
-  return `<div class="export-section">
-    <div class="export-section-title">공정별 상세 계획</div>
-    ${items}
-  </div>`;
+  return `<div class="export-section">${items}</div>`;
 }
 
 // ===== SHARE =====
