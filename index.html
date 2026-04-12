@@ -2561,7 +2561,7 @@ function initDefaultProject() {
 }
 
 const DEFAULT_PROCESS_NAMES = [
-  '실측','도면설계','동의서 및 보양','철거','샷시','전기','시스템 에어컨',
+  '실측','도면설계','동의서 및 보양','철거','샷시','전기','시스템에어컨',
   '목공','타일','욕실','싱크','마루','도배','필름','가구',
   '입주청소','이삿짐정리'
 ];
@@ -3173,7 +3173,7 @@ function promptNewProject() {
   const name = prompt('새 프로젝트 이름:');
   if (!name || !name.trim()) return;
   requireLogin(() => {
-    const proj = createDefaultProject(name.trim());
+    const proj = createDefaultProject(name.trim(), true);
     state.projects.push(proj);
     state.currentProjectId = proj.id;
     save();
