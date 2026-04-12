@@ -6815,6 +6815,7 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
+setTimeout(() => showToastMessage('기본 공정이 미리 세팅됩니다 ✅'), 800);
 window.addEventListener('load', () => {
   // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
