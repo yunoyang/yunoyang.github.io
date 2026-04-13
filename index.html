@@ -4013,7 +4013,7 @@ function renderWorkCards() {
   if (!proj.processes.length) {
     container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;">
       <div style="font-size:14px;color:#aaa;margin-bottom:20px;">등록된 공정이 없습니다</div>
-      <button onclick="addDefaultProcesses()" style="background:#222;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
+      <button onclick="addDefaultProcesses()" style="background:#fff;color:#555;border:1px solid var(--card-border);border-radius:12px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
     </div>`;
     return;
   }
