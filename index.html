@@ -159,7 +159,7 @@
   --tab-bg: #eef1f7;
   --tab-border: #dde3ef;
   --tab-inactive: #8e9bcf;
-  --btn-blue: #333333;
+  --btn-blue: #222222;
   --danger: #ff3b30;
   --border-light: #e8ecf2;
   --border-input: #dde3ef;
@@ -880,7 +880,7 @@ button, input, textarea, select { font-family:var(--font); }
 .form-footer { padding:16px 20px; flex-shrink:0; border-top:1px solid var(--divider); }
 .btn-primary {
   width:100%; height:50px; background:var(--btn-blue); color:#fff; border:none;
-  border-radius:12px; font-size:16px; font-weight:700; cursor:pointer;
+  border-radius:12px; font-size:16px; font-weight:500; cursor:pointer;
 }
 .btn-primary:active { opacity:.88; }
 
@@ -1436,7 +1436,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .landing-btn {
   width:100%; padding:16px; background:var(--btn-blue); color:#fff; border:none;
-  border-radius:14px; font-size:16px; font-weight:700; cursor:pointer;
+  border-radius:14px; font-size:16px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
   transition:transform .13s, opacity .13s;
   font-family:var(--font);
@@ -1712,7 +1712,7 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획</button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#00C87D;color:#fff;font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px;vertical-align:middle;line-height:1.6;"></span></button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
       </div>
     </div>
@@ -2751,22 +2751,6 @@ async function _notifyNewUserIfNeeded() {
         loginCount: 1,
       });
 
-      // 기존 프로젝트에 공정이 없으면 디폴트 공정 16개 삽입
-      const currentProj = getProject();
-      if (currentProj && (!currentProj.processes || currentProj.processes.length === 0)) {
-        currentProj.processes = DEFAULT_PROCESS_NAMES.map((pname, i) => ({
-          id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2,6),
-          name: pname,
-          type: pname,
-          scheduleStart: '',
-          scheduleEnd: '',
-          company: '',
-          details: []
-        }));
-        save();
-        renderAll();
-        showToastMessage('🏠 공정 순서가 자동으로 추가됐습니다!');
-      }
       const tgText =
         `🎉 *신규 가입자!*\n\n` +
         `👤 ${state.user.name}\n` +
@@ -2808,7 +2792,6 @@ async function _autoUploadOnLogin() {
   _notifyNewUserIfNeeded();
 
   // ── 클라우드 전체 프로젝트 조회 ──
-  showToastMessage('☁️ 클라우드 데이터 확인 중...');
   const allCloudProjs = await _fetchAllMyCloudProjects();
 
   if (allCloudProjs.length) {
@@ -2817,11 +2800,14 @@ async function _autoUploadOnLogin() {
     const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
     // 클라우드에 실제 데이터가 있고, 로컬보다 많거나 같을 때만 교체 (로컬 데이터 보호)
     if (cloudTotal > 0 && cloudTotal >= localTotal) {
-      state.projects = allCloudProjs;
-      state.currentProjectId = state.projects[0]?.id || null;
+      // 새로 생성된 로컬 전용 프로젝트(cloudId 없음) 보존
+      const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
+      const currentProj = getProject();
+      const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
+      state.projects = [...allCloudProjs, ...newLocalProjs];
+      state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
       renderAll();
-      showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
       for (const p of state.projects) {
         if (p.cloudId) {
           _startCollabListener(p.cloudId);
@@ -3048,7 +3034,7 @@ function doLogout() {
 let formMode = 'edit';
 function startNewProject() { requireLogin(_startNewProject); }
 function _startNewProject() {
-  const proj = createDefaultProject('새 시공 프로젝트', true);
+  const proj = createDefaultProject('새 시공 프로젝트', false);
   state.projects.push(proj);
   state.currentProjectId = proj.id;
   save();
@@ -3173,7 +3159,7 @@ function promptNewProject() {
   const name = prompt('새 프로젝트 이름:');
   if (!name || !name.trim()) return;
   requireLogin(() => {
-    const proj = createDefaultProject(name.trim(), true);
+    const proj = createDefaultProject(name.trim(), false);
     state.projects.push(proj);
     state.currentProjectId = proj.id;
     save();
@@ -4025,7 +4011,10 @@ function renderWorkCards() {
   const proj = getProject(); if (!proj) return;
   const container = document.getElementById('work-cards');
   if (!proj.processes.length) {
-    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:15px;grid-column:1/-1;">아래 버튼을 눌러 첫 공정을 추가하세요</div>';
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;">
+      <div style="font-size:14px;color:#aaa;margin-bottom:20px;">등록된 공정이 없습니다</div>
+      <button onclick="addDefaultProcesses()" style="background:#222;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
+    </div>`;
     return;
   }
   // 일정 입력된 것은 날짜순, 없는 것은 원래 순서 유지 (뒤로)
@@ -4053,7 +4042,7 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row">
         <div class="work-card-name-area" onclick="toggleCardExpand('${p.id}')">
-          <span class="work-card-title" style="font-size:17px;font-weight:700;color:#1a1a1a;">${esc(p.name)}</span>
+          <span class="work-card-title" style="font-size:17px;font-weight:500;color:#1a1a1a;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
@@ -4120,6 +4109,17 @@ function renderWorkCards() {
       }
     }
   });
+}
+
+function addDefaultProcesses() {
+  const proj = getProject(); if (!proj) return;
+  proj.processes = DEFAULT_PROCESS_NAMES.map((pname, i) => ({
+    id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2,6),
+    name: pname, type: pname,
+    scheduleStart: '', scheduleEnd: '', company: '', details: []
+  }));
+  save(); renderAll();
+  showToastMessage('기본 공정이 추가되었습니다 ✅');
 }
 
 function editField(procId, key, label) {
@@ -5905,6 +5905,12 @@ function renderAll() {
     updateSummary();
     renderCalendar();
     updateCollabIndicator(proj.collaborators || [], proj.owner);
+    const badge = document.getElementById('plan-count-badge');
+    if (badge) {
+      const cnt = proj.processes.length;
+      badge.textContent = cnt;
+      badge.style.display = cnt > 0 ? '' : 'none';
+    }
   }
   updateLoginUI();
 }
@@ -6815,7 +6821,6 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
-setTimeout(() => showToastMessage('기본 공정이 미리 세팅됩니다 ✅'), 800);
 window.addEventListener('load', () => {
   // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
@@ -6905,11 +6910,13 @@ async function _syncFromCloudOnStartup() {
 
     // 로컬에 실제 데이터가 있으면 클라우드가 명확히 더 많을 때만 교체 (데이터 보호)
     if (cloudTotal > 0 && cloudTotal >= localTotal) {
-      state.projects = filteredProjs;
-      state.currentProjectId = state.projects[0]?.id || null;
+      const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
+      const currentProj = getProject();
+      const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
+      state.projects = [...filteredProjs, ...newLocalProjs];
+      state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
       renderAll();
-      showToastMessage('☁️ 클라우드에서 데이터를 불러왔습니다!');
     }
 
     for (const p of state.projects) {
