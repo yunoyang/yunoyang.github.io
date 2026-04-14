@@ -149,8 +149,8 @@
   --primary-bg: rgba(49,118,255,0.07);
   --bg: #f8f9fc;
   --white: #fff;
-  --card-border: #e4e9f2;
-  --card-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  --card-border: #d4d9e8;
+  --card-shadow: none;
   --text-primary: #111;
   --text-secondary: #444;
   --text-muted: #888;
@@ -326,7 +326,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== CARDS ===== */
 .cards-area {
-  padding:16px 20px 80px;
+  padding:14px 18px 80px;
   display:grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap:8px;
@@ -337,7 +337,7 @@ button, input, textarea, select { font-family:var(--font); }
   will-change:transform; overflow:hidden;
 }
 .work-card-row {
-  display:flex; align-items:center; padding:18px 20px; gap:8px; min-height:60px;
+  display:flex; align-items:center; padding:16px 18px; gap:8px; min-height:60px;
 }
 .work-card-name-area {
   display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer;
@@ -355,11 +355,11 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-fold-chev { width:18px; height:18px; transition:transform .2s; }
 .work-card.expanded .work-card-fold-chev { transform:rotate(180deg); }
 .work-card-body {
-  max-height:0; overflow:hidden; opacity:0; padding:0 20px;
+  max-height:0; overflow:hidden; opacity:0; padding:0 18px;
   transition:max-height .35s cubic-bezier(.22,1,.36,1), padding .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
 }
 .work-card.expanded .work-card-body {
-  max-height:800px; opacity:1; padding:4px 20px 0;
+  max-height:800px; opacity:1; padding:2px 18px 0;
   border-top:1px solid #f0f2f5;
 }
 .work-card-body .work-field { pointer-events:none; }
