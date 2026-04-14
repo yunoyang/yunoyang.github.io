@@ -321,7 +321,7 @@ button, input, textarea, select { font-family:var(--font); }
 .tab-btn.active {
   background:transparent; color:#333333; font-weight:600;
   border-radius:0; border:none;
-  border-bottom:2.5px solid var(--primary);
+  border-bottom:2.5px solid #333333;
 }
 
 /* ===== CARDS ===== */
@@ -350,7 +350,7 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-cost-sm { font-size:16px; font-weight:700; color:var(--primary); }
 .work-card.expanded .work-card-cost-sm { display:none; }
 .work-card-fold-btn {
-  background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:#bbb;
+  background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:#999;
 }
 .work-card-fold-chev { width:18px; height:18px; transition:transform .2s; }
 .work-card.expanded .work-card-fold-chev { transform:rotate(180deg); }
@@ -549,10 +549,10 @@ button, input, textarea, select { font-family:var(--font); }
 .work-field { display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
 .f-label { font-size:15px; font-weight:500; color:#555; flex-shrink:0; }
 .f-value {
-  display:flex; align-items:center; gap:5px; font-size:16px; font-weight:800;
+  display:flex; align-items:center; gap:5px; font-size:16px; font-weight:500;
   color:#bbb; cursor:pointer;
 }
-.f-value.filled { color:#222; font-weight:800; }
+.f-value.filled { color:#222; font-weight:500; }
 .f-value.readonly { color:var(--primary); font-weight:500; cursor:default; }
 .f-value svg { width:13px; height:13px; color:var(--primary); flex-shrink:0; }
 .field-divider { height:1px; background:#f0f2f5; }
@@ -582,10 +582,10 @@ button, input, textarea, select { font-family:var(--font); }
 .detail-item:first-of-type { margin-top:0; }
 .detail-item:hover { background:#f5f7fc; }
 .d-left { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
-.d-desc { font-size:16px; font-weight:700; color:var(--text-secondary); line-height:1.3; }
+.d-desc { font-size:15px; font-weight:700; color:var(--text-secondary); line-height:1.3; }
 .d-date { font-size:13px; color:#aaa; font-weight:400; }
 .d-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.d-cost { font-size:16px; font-weight:700; white-space:nowrap; }
+.d-cost { font-size:15px; font-weight:700; white-space:nowrap; }
 .d-chev { color:#d0d5e0; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
 .proc-card-actions { display:flex; align-items:center; justify-content:center; padding:6px 0; }
@@ -1712,7 +1712,7 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#00C87D;color:#fff;font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px;vertical-align:middle;line-height:1.6;"></span></button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 7px;vertical-align:middle;line-height:1.6;"></span></button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
       </div>
     </div>
@@ -4013,7 +4013,7 @@ function renderWorkCards() {
   if (!proj.processes.length) {
     container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;">
       <div style="font-size:14px;color:#aaa;margin-bottom:20px;">등록된 공정이 없습니다</div>
-      <button onclick="addDefaultProcesses()" style="background:#fff;color:#555;border:1px solid var(--card-border);border-radius:12px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
+      <button onclick="addDefaultProcesses()" style="background:#222;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
     </div>`;
     return;
   }
