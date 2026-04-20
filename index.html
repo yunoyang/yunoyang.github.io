@@ -1928,10 +1928,32 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
 
-    <!-- Style Image Viewer -->
-    <div id="style-viewer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1300;align-items:center;justify-content:center;flex-direction:column;" onclick="closeStyleViewer()">
-      <img id="style-viewer-img" src="" alt="" style="max-width:92vw;max-height:80vh;border-radius:12px;object-fit:contain;">
-      <button id="style-viewer-delete" onclick="event.stopPropagation();deleteStyleImage()" style="margin-top:20px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:10px 24px;cursor:pointer;">삭제</button>
+    <!-- Style Image Viewer (full-screen) -->
+    <div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#000;z-index:1300;flex-direction:column;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;flex-shrink:0;">
+        <button onclick="closeStyleViewer()" style="width:40px;height:40px;border:none;background:rgba(255,255,255,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span id="style-viewer-counter" style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:500;"></span>
+        <button onclick="deleteStyleImage()" style="width:40px;height:40px;border:none;background:rgba(255,255,255,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <!-- Image area (swipeable) -->
+      <div id="style-viewer-wrap" style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;"
+        ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)">
+        <img id="style-viewer-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;transition:opacity .18s;">
+        <div id="style-viewer-link-fallback" style="display:none;flex-direction:column;align-items:center;gap:12px;">
+          <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span id="style-viewer-link-domain" style="font-size:14px;color:rgba(255,255,255,0.5);"></span>
+          <a id="style-viewer-link-open" href="" target="_blank" style="font-size:13px;color:#7ab4ff;text-decoration:underline;">링크 열기</a>
+        </div>
+      </div>
+      <!-- Room label -->
+      <div style="text-align:center;padding:12px 0 calc(env(safe-area-inset-bottom,0px) + 16px);flex-shrink:0;">
+        <span id="style-viewer-room" style="font-size:13px;color:rgba(255,255,255,0.45);font-weight:500;"></span>
+      </div>
     </div>
   </div>
 
@@ -3588,31 +3610,69 @@ function addStyleImage(room, item) {
   renderStyleTab();
 }
 
+let _svTouchX = null;
+
 function openStyleViewer(room, index) {
-  const data = getStyleData();
-  const item = (data[room] || [])[index];
-  if (!item) return;
   styleViewerRoom = room;
   styleViewerIndex = index;
-  const overlay = document.getElementById('style-viewer-overlay');
-  document.getElementById('style-viewer-img').src = item.url;
-  overlay.style.display = 'flex';
-  overlay.style.flexDirection = 'column';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
+  _svRenderCurrent();
+  const screen = document.getElementById('style-viewer-screen');
+  screen.style.display = 'flex';
+}
+
+function _svRenderCurrent() {
+  const data = getStyleData();
+  const items = data[styleViewerRoom] || [];
+  const item = items[styleViewerIndex];
+  if (!item) return;
+  const img = document.getElementById('style-viewer-img');
+  const fallback = document.getElementById('style-viewer-link-fallback');
+  img.style.opacity = '0';
+  img.onload = () => { img.style.opacity = '1'; };
+  img.onerror = () => { img.style.display = 'none'; fallback.style.display = 'flex'; };
+  img.style.display = '';
+  fallback.style.display = 'none';
+  img.src = item.url;
+  if (item.type === 'link') {
+    let domain = '';
+    try { domain = new URL(item.url).hostname.replace('www.',''); } catch(e) {}
+    document.getElementById('style-viewer-link-domain').textContent = domain;
+    document.getElementById('style-viewer-link-open').href = item.url;
+  }
+  document.getElementById('style-viewer-counter').textContent = `${styleViewerIndex + 1} / ${items.length}`;
+  document.getElementById('style-viewer-room').textContent = styleViewerRoom;
 }
 
 function closeStyleViewer() {
-  document.getElementById('style-viewer-overlay').style.display = 'none';
+  document.getElementById('style-viewer-screen').style.display = 'none';
 }
 
 function deleteStyleImage() {
   const proj = getProject();
   if (!proj || styleViewerRoom === null || styleViewerIndex === null) return;
+  if (!confirm('이 이미지를 삭제할까요?')) return;
   proj.styleImages[styleViewerRoom].splice(styleViewerIndex, 1);
-  save();
-  closeStyleViewer();
+  try { save(); } catch(e) {}
+  const remaining = (proj.styleImages[styleViewerRoom] || []).length;
+  if (remaining === 0) { closeStyleViewer(); renderStyleTab(); return; }
+  if (styleViewerIndex >= remaining) styleViewerIndex = remaining - 1;
+  _svRenderCurrent();
   renderStyleTab();
+}
+
+function svTouchStart(e) {
+  _svTouchX = e.touches[0].clientX;
+}
+
+function svTouchEnd(e) {
+  if (_svTouchX === null) return;
+  const dx = e.changedTouches[0].clientX - _svTouchX;
+  _svTouchX = null;
+  if (Math.abs(dx) < 40) return;
+  const data = getStyleData();
+  const total = (data[styleViewerRoom] || []).length;
+  if (dx < 0 && styleViewerIndex < total - 1) { styleViewerIndex++; _svRenderCurrent(); }
+  else if (dx > 0 && styleViewerIndex > 0) { styleViewerIndex--; _svRenderCurrent(); }
 }
 
 // ===== PROCESS TIPS =====
