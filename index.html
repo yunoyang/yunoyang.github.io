@@ -2447,8 +2447,11 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
-    <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
+    <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();" style="justify-content:space-between;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
+      </span>
+      <span id="collab-menu-badge-mobile" style="font-size:11px;font-weight:500;color:#333;"></span>
     </button>
     <button class="mobile-sheet-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
@@ -6124,15 +6127,14 @@ function updateCollabMenuBadge() {
   const proj = getProject();
   const collaborators = proj?.collaborators || [];
   const invites = (proj?.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
+  const text = collaborators.length > 0 ? `공동작업자 ${collaborators.length}명`
+    : invites.length > 0 ? '초대중'
+    : '공동작업자 없음';
   const baseStyle = 'font-size:11px;font-weight:500;color:#333;';
-  if (collaborators.length > 0) {
-    badge.textContent = `공동작업자 ${collaborators.length}명`;
-  } else if (invites.length > 0) {
-    badge.textContent = '초대중';
-  } else {
-    badge.textContent = '공동작업자 없음';
-  }
+  badge.textContent = text;
   badge.style.cssText = baseStyle;
+  const mobileBadge = document.getElementById('collab-menu-badge-mobile');
+  if (mobileBadge) { mobileBadge.textContent = text; mobileBadge.style.cssText = baseStyle; }
 }
 
 function openShareDialog() {
