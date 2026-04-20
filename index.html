@@ -324,6 +324,96 @@ button, input, textarea, select { font-family:var(--font); }
   border-bottom:2.5px solid #333333;
 }
 
+/* ===== STYLE TAB ===== */
+.style-tab-inner {
+  padding: 16px 18px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.style-room-section {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.style-room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+}
+.style-room-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+}
+.style-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  background: #f1f1f5;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.style-add-btn:active { background: #e5e5ec; }
+.style-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 2px 2px;
+}
+.style-image-item {
+  aspect-ratio: 1;
+  background: #f5f5f5;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+.style-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.style-image-item .style-link-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 4px;
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+}
+.style-empty {
+  font-size: 13px;
+  color: #aaa;
+  text-align: center;
+  padding: 20px 16px 24px;
+}
+.style-sheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f1f1f5;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  cursor: pointer;
+  text-align: left;
+}
+.style-sheet-btn:last-of-type { border-bottom: none; }
+.style-sheet-btn:active { background: #f9f9fa; }
+
 /* ===== CARDS ===== */
 .cards-area {
   padding:14px 18px 80px;
@@ -1714,6 +1804,7 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="tab-toggle">
         <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 7px;vertical-align:middle;line-height:1.6;"></span></button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
+        <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
       </div>
     </div>
 
@@ -1725,6 +1816,102 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Calendar Tab -->
     <div id="tab-calendar" style="display:none; background:#EDF0F4; flex:1;">
       <div id="calendar-container"></div>
+    </div>
+
+    <!-- Style Tab -->
+    <div id="tab-style" style="display:none; background:#EDF0F4; flex:1; overflow-y:auto;">
+      <div class="style-tab-inner">
+        <div class="style-room-section" id="style-room-거실">
+          <div class="style-room-header">
+            <span class="style-room-title">거실</span>
+            <button class="style-add-btn" onclick="openStyleAddMenu('거실')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="style-image-grid" id="style-grid-거실"></div>
+          <div class="style-empty" id="style-empty-거실">이미지나 링크를 추가해 보세요</div>
+        </div>
+        <div class="style-room-section" id="style-room-욕실">
+          <div class="style-room-header">
+            <span class="style-room-title">욕실</span>
+            <button class="style-add-btn" onclick="openStyleAddMenu('욕실')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="style-image-grid" id="style-grid-욕실"></div>
+          <div class="style-empty" id="style-empty-욕실">이미지나 링크를 추가해 보세요</div>
+        </div>
+        <div class="style-room-section" id="style-room-침실">
+          <div class="style-room-header">
+            <span class="style-room-title">침실</span>
+            <button class="style-add-btn" onclick="openStyleAddMenu('침실')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="style-image-grid" id="style-grid-침실"></div>
+          <div class="style-empty" id="style-empty-침실">이미지나 링크를 추가해 보세요</div>
+        </div>
+        <div class="style-room-section" id="style-room-부엌">
+          <div class="style-room-header">
+            <span class="style-room-title">부엌</span>
+            <button class="style-add-btn" onclick="openStyleAddMenu('부엌')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="style-image-grid" id="style-grid-부엌"></div>
+          <div class="style-empty" id="style-empty-부엌">이미지나 링크를 추가해 보세요</div>
+        </div>
+        <div class="style-room-section" id="style-room-작은방">
+          <div class="style-room-header">
+            <span class="style-room-title">작은방</span>
+            <button class="style-add-btn" onclick="openStyleAddMenu('작은방')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="style-image-grid" id="style-grid-작은방"></div>
+          <div class="style-empty" id="style-empty-작은방">이미지나 링크를 추가해 보세요</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Style Add Menu (bottom sheet) -->
+    <div id="style-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;" onclick="closeStyleAddMenu()"></div>
+    <div id="style-add-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1101;max-width:540px;margin:0 auto;">
+      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:20px;" id="style-add-sheet-title">이미지 추가</div>
+      <button class="style-sheet-btn" onclick="triggerStyleFileUpload()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        사진 업로드
+      </button>
+      <button class="style-sheet-btn" onclick="openStyleLinkInput()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        링크 붙여넣기
+      </button>
+      <input type="file" id="style-file-input" accept="image/*" style="display:none;" onchange="handleStyleFileSelect(event)">
+    </div>
+
+    <!-- Style Link Input Sheet -->
+    <div id="style-link-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleLinkInput()"></div>
+    <div id="style-link-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1201;max-width:540px;margin:0 auto;">
+      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;">링크로 이미지 추가</div>
+      <input id="style-link-input-field" type="url" placeholder="이미지 URL을 붙여넣으세요" style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;" oninput="previewStyleLink(this.value)">
+      <div id="style-link-preview" style="display:none;margin-top:12px;border-radius:10px;overflow:hidden;height:160px;background:#f5f5f5;">
+        <img id="style-link-preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button onclick="closeStyleLinkInput()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:10px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;">취소</button>
+        <button onclick="confirmStyleLink()" style="flex:1;height:48px;border:none;border-radius:10px;background:#333;font-size:15px;font-weight:600;color:#fff;cursor:pointer;">추가</button>
+      </div>
+    </div>
+
+    <!-- Style Image Viewer -->
+    <div id="style-viewer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1300;align-items:center;justify-content:center;flex-direction:column;" onclick="closeStyleViewer()">
+      <img id="style-viewer-img" src="" alt="" style="max-width:92vw;max-height:80vh;border-radius:12px;object-fit:contain;">
+      <button id="style-viewer-delete" onclick="event.stopPropagation();deleteStyleImage()" style="margin-top:20px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:10px 24px;cursor:pointer;">삭제</button>
     </div>
   </div>
 
@@ -3209,7 +3396,9 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
+  document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
+  if (tab === 'style') renderStyleTab();
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -3226,6 +3415,128 @@ function switchMainTab(tab, btn) {
     }
     renderCalendar();
   }
+}
+
+// ===== STYLE TAB =====
+const STYLE_ROOMS = ['거실', '욕실', '침실', '부엌', '작은방'];
+let styleCurrentRoom = null;
+let styleViewerRoom = null;
+let styleViewerIndex = null;
+
+function getStyleData() {
+  const proj = getProject();
+  if (!proj) return {};
+  if (!proj.styleImages) proj.styleImages = {};
+  return proj.styleImages;
+}
+
+function renderStyleTab() {
+  const data = getStyleData();
+  STYLE_ROOMS.forEach(room => {
+    const grid = document.getElementById('style-grid-' + room);
+    const empty = document.getElementById('style-empty-' + room);
+    const items = data[room] || [];
+    grid.innerHTML = items.map((item, i) => `
+      <div class="style-image-item" onclick="openStyleViewer('${room}', ${i})">
+        <img src="${item.url}" alt="" onerror="this.parentElement.style.display='none'">
+        ${item.type === 'link' ? `<span class="style-link-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>` : ''}
+      </div>`).join('');
+    empty.style.display = items.length ? 'none' : '';
+  });
+}
+
+function openStyleAddMenu(room) {
+  styleCurrentRoom = room;
+  document.getElementById('style-add-sheet-title').textContent = room + ' — 이미지 추가';
+  document.getElementById('style-add-overlay').style.display = '';
+  document.getElementById('style-add-sheet').style.display = '';
+}
+
+function closeStyleAddMenu() {
+  document.getElementById('style-add-overlay').style.display = 'none';
+  document.getElementById('style-add-sheet').style.display = 'none';
+}
+
+function triggerStyleFileUpload() {
+  closeStyleAddMenu();
+  document.getElementById('style-file-input').value = '';
+  document.getElementById('style-file-input').click();
+}
+
+function handleStyleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    addStyleImage(styleCurrentRoom, { url: ev.target.result, type: 'upload' });
+  };
+  reader.readAsDataURL(file);
+}
+
+function openStyleLinkInput() {
+  closeStyleAddMenu();
+  document.getElementById('style-link-input-field').value = '';
+  document.getElementById('style-link-preview').style.display = 'none';
+  document.getElementById('style-link-overlay').style.display = '';
+  document.getElementById('style-link-sheet').style.display = '';
+}
+
+function closeStyleLinkInput() {
+  document.getElementById('style-link-overlay').style.display = 'none';
+  document.getElementById('style-link-sheet').style.display = 'none';
+}
+
+function previewStyleLink(url) {
+  const preview = document.getElementById('style-link-preview');
+  const img = document.getElementById('style-link-preview-img');
+  if (!url) { preview.style.display = 'none'; return; }
+  img.src = url;
+  img.onload = () => { preview.style.display = ''; };
+  img.onerror = () => { preview.style.display = 'none'; };
+}
+
+function confirmStyleLink() {
+  const url = document.getElementById('style-link-input-field').value.trim();
+  if (!url) return;
+  closeStyleLinkInput();
+  addStyleImage(styleCurrentRoom, { url, type: 'link' });
+}
+
+function addStyleImage(room, item) {
+  const proj = getProject();
+  if (!proj) return;
+  if (!proj.styleImages) proj.styleImages = {};
+  if (!proj.styleImages[room]) proj.styleImages[room] = [];
+  proj.styleImages[room].push(item);
+  save();
+  renderStyleTab();
+}
+
+function openStyleViewer(room, index) {
+  const data = getStyleData();
+  const item = (data[room] || [])[index];
+  if (!item) return;
+  styleViewerRoom = room;
+  styleViewerIndex = index;
+  const overlay = document.getElementById('style-viewer-overlay');
+  document.getElementById('style-viewer-img').src = item.url;
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+}
+
+function closeStyleViewer() {
+  document.getElementById('style-viewer-overlay').style.display = 'none';
+}
+
+function deleteStyleImage() {
+  const proj = getProject();
+  if (!proj || styleViewerRoom === null || styleViewerIndex === null) return;
+  proj.styleImages[styleViewerRoom].splice(styleViewerIndex, 1);
+  save();
+  closeStyleViewer();
+  renderStyleTab();
 }
 
 // ===== PROCESS TIPS =====
