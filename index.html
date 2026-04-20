@@ -313,7 +313,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .tab-btn {
   flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-  font-size:16px; font-weight:500; color:#818590;
+  font-size:15px; font-weight:500; color:#818590;
   cursor:pointer; border:none; background:transparent; transition:all .2s;
   border-bottom:2.5px solid transparent; margin-bottom:-1.5px;
 }
@@ -357,10 +357,20 @@ button, input, textarea, select { font-family:var(--font); }
   background: #f1f1f5;
   border: none;
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   cursor: pointer;
 }
 .style-add-btn:active { background: #e5e5ec; }
+.style-newspace-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 15px;
+  background: rgba(255,255,255,0.6);
+  border: 1.5px dashed #c8cdd8;
+  border-radius: 16px;
+  font-size: 14px; font-weight: 600; color: #888;
+  cursor: pointer; font-family: var(--font);
+}
+.style-newspace-btn:active { background: rgba(255,255,255,0.9); }
 .style-image-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1841,64 +1851,15 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Style Tab -->
     <div id="tab-style" style="display:none; background:#EDF0F4;">
       <div class="style-tab-inner">
-        <div class="style-room-section" id="style-room-거실">
-          <div class="style-room-header">
-            <span class="style-room-title">거실</span>
-            <button class="style-add-btn" onclick="openStyleAddMenu('거실')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
-          </div>
-          <div class="style-image-grid" id="style-grid-거실"></div>
-          <div class="style-empty" id="style-empty-거실">이미지나 링크를 추가해 보세요</div>
-        </div>
-        <div class="style-room-section" id="style-room-욕실">
-          <div class="style-room-header">
-            <span class="style-room-title">욕실</span>
-            <button class="style-add-btn" onclick="openStyleAddMenu('욕실')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
-          </div>
-          <div class="style-image-grid" id="style-grid-욕실"></div>
-          <div class="style-empty" id="style-empty-욕실">이미지나 링크를 추가해 보세요</div>
-        </div>
-        <div class="style-room-section" id="style-room-침실">
-          <div class="style-room-header">
-            <span class="style-room-title">침실</span>
-            <button class="style-add-btn" onclick="openStyleAddMenu('침실')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
-          </div>
-          <div class="style-image-grid" id="style-grid-침실"></div>
-          <div class="style-empty" id="style-empty-침실">이미지나 링크를 추가해 보세요</div>
-        </div>
-        <div class="style-room-section" id="style-room-부엌">
-          <div class="style-room-header">
-            <span class="style-room-title">부엌</span>
-            <button class="style-add-btn" onclick="openStyleAddMenu('부엌')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
-          </div>
-          <div class="style-image-grid" id="style-grid-부엌"></div>
-          <div class="style-empty" id="style-empty-부엌">이미지나 링크를 추가해 보세요</div>
-        </div>
-        <div class="style-room-section" id="style-room-작은방">
-          <div class="style-room-header">
-            <span class="style-room-title">작은방</span>
-            <button class="style-add-btn" onclick="openStyleAddMenu('작은방')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
-          </div>
-          <div class="style-image-grid" id="style-grid-작은방"></div>
-          <div class="style-empty" id="style-empty-작은방">이미지나 링크를 추가해 보세요</div>
-        </div>
+        <div id="style-rooms-container"></div>
+        <button class="style-newspace-btn" onclick="openStyleNewSpace()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          스타일 추가
+        </button>
       </div>
     </div>
 
+    <!-- Style Add Menu (bottom sheet) -->
     <!-- Style Add Menu (bottom sheet) -->
     <div id="style-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;" onclick="closeStyleAddMenu()"></div>
     <div id="style-add-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1101;max-width:540px;margin:0 auto;">
@@ -1907,25 +1868,19 @@ button, input, textarea, select { font-family:var(--font); }
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         사진 업로드
       </button>
-      <button class="style-sheet-btn" onclick="openStyleLinkInput()">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        링크 붙여넣기
-      </button>
       <input type="file" id="style-file-input" accept="image/*" style="display:none;" onchange="handleStyleFileSelect(event)">
     </div>
 
-    <!-- Style Link Input Sheet -->
-    <div id="style-link-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleLinkInput()"></div>
-    <div id="style-link-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1201;max-width:540px;margin:0 auto;">
-      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;">링크로 이미지 추가</div>
-      <input id="style-link-input-field" type="url" placeholder="이미지 또는 페이지 URL을 붙여넣으세요" style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;" oninput="previewStyleLink(this.value)">
-      <div id="style-link-status" style="display:none;margin-top:8px;font-size:13px;color:#888;"></div>
-      <div id="style-link-preview" style="display:none;margin-top:12px;border-radius:10px;overflow:hidden;background:#f5f5f5;position:relative;">
-        <img id="style-link-preview-img" src="" alt="" style="width:100%;max-height:220px;object-fit:cover;display:block;">
-      </div>
+    <!-- Style New Space Sheet -->
+    <div id="style-newspace-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleNewSpace()"></div>
+    <div id="style-newspace-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1201;max-width:540px;margin:0 auto;">
+      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;">공간 추가</div>
+      <input id="style-newspace-input" type="text" placeholder="공간 이름 (예: 드레스룸, 현관…)" maxlength="20"
+        style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;"
+        onkeydown="if(event.key==='Enter')confirmStyleNewSpace()">
       <div style="display:flex;gap:10px;margin-top:16px;">
-        <button onclick="closeStyleLinkInput()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:10px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;">취소</button>
-        <button onclick="confirmStyleLink()" style="flex:1;height:48px;border:none;border-radius:10px;background:#333;font-size:15px;font-weight:600;color:#fff;cursor:pointer;">추가</button>
+        <button onclick="closeStyleNewSpace()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:10px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);">취소</button>
+        <button onclick="confirmStyleNewSpace()" style="flex:1;height:48px;border:none;border-radius:10px;background:#333;font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--font);">추가하기</button>
       </div>
     </div>
 
@@ -3441,10 +3396,17 @@ function switchMainTab(tab, btn) {
 }
 
 // ===== STYLE TAB =====
-const STYLE_ROOMS = ['거실', '욕실', '침실', '부엌', '작은방'];
+const STYLE_ROOMS_DEFAULT = ['거실', '욕실', '침실', '부엌', '작은방'];
 let styleCurrentRoom = null;
 let styleViewerRoom = null;
 let styleViewerIndex = null;
+
+function getStyleRooms() {
+  const proj = getProject();
+  if (!proj) return [...STYLE_ROOMS_DEFAULT];
+  if (!proj.styleRooms) proj.styleRooms = [...STYLE_ROOMS_DEFAULT];
+  return proj.styleRooms;
+}
 
 function getStyleData() {
   const proj = getProject();
@@ -3454,33 +3416,55 @@ function getStyleData() {
 }
 
 function renderStyleTab() {
+  const rooms = getStyleRooms();
   const data = getStyleData();
-  STYLE_ROOMS.forEach(room => {
-    const grid = document.getElementById('style-grid-' + room);
-    const empty = document.getElementById('style-empty-' + room);
+  const container = document.getElementById('style-rooms-container');
+  container.innerHTML = rooms.map(room => {
+    const r = room.replace(/'/g, "\\'");
     const items = data[room] || [];
-    grid.innerHTML = items.map((item, i) => {
-      const escapedRoom = room.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      if (item.type === 'link') {
-        let domain = '';
-        try { domain = new URL(item.url).hostname.replace('www.',''); } catch(e) {}
-        return `<div class="style-image-item" onclick="openStyleViewer('${escapedRoom}',${i})">
-          <img src="${item.url}" alt=""
-            onload="this.nextElementSibling.style.display='none'"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="style-link-fallback" style="display:none">
-            <svg width="22" height="22" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <span>${domain}</span>
-          </div>
-          <span class="style-link-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-        </div>`;
-      }
-      return `<div class="style-image-item" onclick="openStyleViewer('${escapedRoom}',${i})">
+    const itemsHtml = items.map((item, i) =>
+      `<div class="style-image-item" onclick="openStyleViewer('${r}',${i})">
         <img src="${item.url}" alt="" onerror="this.parentElement.style.background='#eee'">
-      </div>`;
-    }).join('');
-    empty.style.display = items.length ? 'none' : '';
-  });
+      </div>`
+    ).join('');
+    return `<div class="style-room-section">
+      <div class="style-room-header">
+        <span class="style-room-title">${room}</span>
+        <button class="style-add-btn" onclick="openStyleAddMenu('${r}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          추가
+        </button>
+      </div>
+      <div class="style-image-grid">${itemsHtml}</div>
+      ${items.length === 0 ? `<div class="style-empty">사진을 추가해 보세요</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openStyleNewSpace() {
+  document.getElementById('style-newspace-input').value = '';
+  document.getElementById('style-newspace-overlay').style.display = '';
+  document.getElementById('style-newspace-sheet').style.display = '';
+  setTimeout(() => document.getElementById('style-newspace-input').focus(), 120);
+}
+
+function closeStyleNewSpace() {
+  document.getElementById('style-newspace-overlay').style.display = 'none';
+  document.getElementById('style-newspace-sheet').style.display = 'none';
+}
+
+function confirmStyleNewSpace() {
+  const name = document.getElementById('style-newspace-input').value.trim();
+  if (!name) return;
+  const proj = getProject();
+  if (!proj) return;
+  if (!proj.styleRooms) proj.styleRooms = [...STYLE_ROOMS_DEFAULT];
+  if (!proj.styleRooms.includes(name)) {
+    proj.styleRooms.push(name);
+    try { save(); } catch(e) {}
+  }
+  closeStyleNewSpace();
+  renderStyleTab();
 }
 
 function openStyleAddMenu(room) {
@@ -3545,65 +3529,6 @@ async function handleStyleFileSelect(e) {
   if (dataUrl) addStyleImage(room, { url: dataUrl, type: 'upload' });
 }
 
-function openStyleLinkInput() {
-  closeStyleAddMenu();
-  const input = document.getElementById('style-link-input-field');
-  input.value = '';
-  delete input.dataset.resolvedUrl;
-  document.getElementById('style-link-preview').style.display = 'none';
-  document.getElementById('style-link-status').style.display = 'none';
-  document.getElementById('style-link-overlay').style.display = '';
-  document.getElementById('style-link-sheet').style.display = '';
-}
-
-function closeStyleLinkInput() {
-  document.getElementById('style-link-overlay').style.display = 'none';
-  document.getElementById('style-link-sheet').style.display = 'none';
-}
-
-async function _resolveOgImage(url) {
-  if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(url)) return url;
-  try {
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
-    const data = await res.json();
-    const html = data.contents || '';
-    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-           || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    if (m) return m[1];
-  } catch(e) {}
-  return null;
-}
-
-async function previewStyleLink(url) {
-  const preview = document.getElementById('style-link-preview');
-  const img = document.getElementById('style-link-preview-img');
-  const status = document.getElementById('style-link-status');
-  const input = document.getElementById('style-link-input-field');
-  delete input.dataset.resolvedUrl;
-  if (!url) { preview.style.display = 'none'; status.style.display = 'none'; return; }
-  status.textContent = '이미지 불러오는 중…';
-  status.style.display = '';
-  preview.style.display = 'none';
-  const resolved = await _resolveOgImage(url);
-  if (!resolved) {
-    status.textContent = '이미지를 찾을 수 없습니다. .jpg/.png 등 직접 이미지 URL을 사용해보세요.';
-    return;
-  }
-  input.dataset.resolvedUrl = resolved;
-  img.onload = () => { status.style.display = 'none'; preview.style.display = ''; };
-  img.onerror = () => { status.textContent = '이미지를 표시할 수 없습니다.'; preview.style.display = 'none'; };
-  img.src = resolved;
-}
-
-function confirmStyleLink() {
-  const input = document.getElementById('style-link-input-field');
-  const url = input.value.trim();
-  if (!url) return;
-  const resolvedUrl = input.dataset.resolvedUrl || url;
-  closeStyleLinkInput();
-  addStyleImage(styleCurrentRoom, { url: resolvedUrl, originalUrl: url, type: 'link' });
-}
 
 function addStyleImage(room, item) {
   const proj = getProject();
