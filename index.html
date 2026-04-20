@@ -363,17 +363,16 @@ button, input, textarea, select { font-family:var(--font); }
 .style-add-btn:active { background: #e5e5ec; }
 .style-image-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  padding: 0 12px 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 2px 2px;
 }
 .style-image-item {
-  aspect-ratio: 3/4;
-  background: #f0f0f0;
+  aspect-ratio: 1;
+  background: #f5f5f5;
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  border-radius: 16px;
 }
 .style-image-item img {
   width: 100%;
@@ -390,25 +389,6 @@ button, input, textarea, select { font-family:var(--font); }
   padding: 2px 5px;
   display: flex;
   align-items: center;
-}
-.style-link-fallback {
-  position: absolute;
-  inset: 0;
-  background: #f5f5f7;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-}
-.style-link-fallback span {
-  font-size: 11px;
-  color: #888;
-  max-width: 90%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: center;
 }
 .style-empty {
   font-size: 13px;
@@ -1839,7 +1819,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Style Tab -->
-    <div id="tab-style" style="display:none; background:#EDF0F4;">
+    <div id="tab-style" style="display:none; background:#EDF0F4; flex:1; overflow-y:auto;">
       <div class="style-tab-inner">
         <div class="style-room-section" id="style-room-거실">
           <div class="style-room-header">
@@ -1918,16 +1898,10 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="style-link-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleLinkInput()"></div>
     <div id="style-link-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1201;max-width:540px;margin:0 auto;">
       <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;">링크로 이미지 추가</div>
-      <input id="style-link-input-field" type="url" placeholder="이미지 URL을 붙여넣으세요" style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;" oninput="previewStyleLink(this.value)">
-      <div id="style-link-preview" style="display:none;margin-top:12px;border-radius:10px;overflow:hidden;background:#f5f5f5;position:relative;">
-        <img id="style-link-preview-img" src="" alt="" style="width:100%;max-height:220px;object-fit:cover;display:block;">
-        <div id="style-link-preview-card" style="display:none;padding:16px;display:flex;align-items:center;gap:10px;">
-          <svg width="20" height="20" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <div>
-            <div id="style-link-preview-domain" style="font-size:13px;font-weight:600;color:#333;"></div>
-            <div style="font-size:11px;color:#aaa;margin-top:2px;">링크가 저장됩니다</div>
-          </div>
-        </div>
+      <input id="style-link-input-field" type="url" placeholder="이미지 또는 페이지 URL을 붙여넣으세요" style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;" oninput="previewStyleLink(this.value)">
+      <div id="style-link-status" style="display:none;margin-top:8px;font-size:13px;color:#888;"></div>
+      <div id="style-link-preview" style="display:none;margin-top:12px;border-radius:10px;overflow:hidden;height:160px;background:#f5f5f5;">
+        <img id="style-link-preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;">
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;">
         <button onclick="closeStyleLinkInput()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:10px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;">취소</button>
@@ -1935,6 +1909,11 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
 
+    <!-- Style Image Viewer -->
+    <div id="style-viewer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1300;align-items:center;justify-content:center;flex-direction:column;" onclick="closeStyleViewer()">
+      <img id="style-viewer-img" src="" alt="" style="max-width:92vw;max-height:80vh;border-radius:12px;object-fit:contain;">
+      <button id="style-viewer-delete" onclick="event.stopPropagation();deleteStyleImage()" style="margin-top:20px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;padding:10px 24px;cursor:pointer;">삭제</button>
+    </div>
   </div>
 
   <!-- Login Gate -->
@@ -1952,11 +1931,8 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="dropdown-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
-    <button class="dropdown-item" onclick="openShareDialog()" style="justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
-      </span>
-      <span id="collab-menu-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;"></span>
+    <button class="dropdown-item" onclick="openShareDialog()">
+      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
     </button>
     <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
@@ -2449,11 +2425,8 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
-    <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();" style="justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
-      </span>
-      <span id="collab-menu-badge-mobile" style="font-size:11px;font-weight:500;color:#333;"></span>
+    <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();">
+      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
     </button>
     <button class="mobile-sheet-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
@@ -2495,14 +2468,14 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Share -->
 <div class="overlay" id="dlg-share">
   <div class="dialog">
-    <h3>공동작업자 초대</h3>
-    <div class="share-tabs" style="display:none;">
+    <h3>공유하기</h3>
+    <div class="share-tabs">
       <button class="share-tab-btn active" id="stab-share" onclick="switchShareTab('share')">링크 공유</button>
       <button class="share-tab-btn" id="stab-collab" onclick="switchShareTab('collab')">공동작업</button>
     </div>
 
-    <!-- 링크 공유 탭 (숨김) -->
-    <div class="share-tab-pane" id="stab-share-pane" style="display:none!important;">
+    <!-- 링크 공유 탭 -->
+    <div class="share-tab-pane active" id="stab-share-pane">
       <!-- 링크 복사 박스 -->
       <div class="share-link-box">
         <span class="share-link-url" id="share-link-url-text">https://vibespacekorea.com</span>
@@ -2548,7 +2521,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- 공동작업 탭 -->
-    <div class="share-tab-pane active" id="stab-collab-pane">
+    <div class="share-tab-pane" id="stab-collab-pane">
       <div id="collab-tab-body"><!-- renderCollabTab()으로 채움 --></div>
     </div>
 
@@ -3425,7 +3398,6 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = tab === 'style' ? 'none' : '';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') renderStyleTab();
   if (tab === 'calendar') {
@@ -3465,26 +3437,11 @@ function renderStyleTab() {
     const grid = document.getElementById('style-grid-' + room);
     const empty = document.getElementById('style-empty-' + room);
     const items = data[room] || [];
-    grid.innerHTML = items.map((item, i) => {
-      const escapedRoom = room.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      if (item.type === 'link') {
-        let domain = '';
-        try { domain = new URL(item.url).hostname.replace('www.',''); } catch(e) {}
-        return `<div class="style-image-item" onclick="openStyleViewer('${escapedRoom}',${i})">
-          <img src="${item.url}" alt=""
-            onload="this.nextElementSibling.style.display='none'"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="style-link-fallback" style="display:none">
-            <svg width="22" height="22" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            <span>${domain}</span>
-          </div>
-          <span class="style-link-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-        </div>`;
-      }
-      return `<div class="style-image-item" onclick="openStyleViewer('${escapedRoom}',${i})">
-        <img src="${item.url}" alt="" onerror="this.parentElement.style.background='#eee'">
-      </div>`;
-    }).join('');
+    grid.innerHTML = items.map((item, i) => `
+      <div class="style-image-item" onclick="openStyleViewer('${room}', ${i})">
+        <img src="${item.url}" alt="" onerror="this.parentElement.style.display='none'">
+        ${item.type === 'link' ? `<span class="style-link-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>` : ''}
+      </div>`).join('');
     empty.style.display = items.length ? 'none' : '';
   });
 }
@@ -3507,54 +3464,23 @@ function triggerStyleFileUpload() {
   document.getElementById('style-file-input').click();
 }
 
-function _compressImage(file, maxW = 1200, quality = 0.75) {
-  return new Promise(resolve => {
-    const img = new Image();
-    const blobUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(blobUrl);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(null); };
-    img.src = blobUrl;
-  });
-}
-
-async function handleStyleFileSelect(e) {
+function handleStyleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const room = styleCurrentRoom;
-
-  // 로그인 상태면 Firebase Storage 업로드
-  if (state.loggedIn && _fbStorage) {
-    try {
-      const proj = getProject();
-      const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `styleImages/${projId}/${room}/${Date.now()}.${ext}`;
-      await _fbStorage.ref(path).put(file);
-      const url = await _fbStorage.ref(path).getDownloadURL();
-      addStyleImage(room, { url, type: 'upload' });
-      return;
-    } catch(err) {
-      console.warn('Storage upload failed, fallback to compressed base64:', err.message);
-    }
-  }
-
-  // 압축 후 base64 저장
-  const dataUrl = await _compressImage(file);
-  if (dataUrl) addStyleImage(room, { url: dataUrl, type: 'upload' });
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    addStyleImage(styleCurrentRoom, { url: ev.target.result, type: 'upload' });
+  };
+  reader.readAsDataURL(file);
 }
 
 function openStyleLinkInput() {
   closeStyleAddMenu();
-  document.getElementById('style-link-input-field').value = '';
+  const input = document.getElementById('style-link-input-field');
+  input.value = '';
+  delete input.dataset.resolvedUrl;
   document.getElementById('style-link-preview').style.display = 'none';
+  document.getElementById('style-link-status').style.display = 'none';
   document.getElementById('style-link-overlay').style.display = '';
   document.getElementById('style-link-sheet').style.display = '';
 }
@@ -3564,38 +3490,48 @@ function closeStyleLinkInput() {
   document.getElementById('style-link-sheet').style.display = 'none';
 }
 
-function previewStyleLink(url) {
+async function _resolveOgImage(url) {
+  if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(url)) return url;
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    const html = data.contents || '';
+    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+           || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (m) return m[1];
+  } catch(e) {}
+  return null;
+}
+
+async function previewStyleLink(url) {
   const preview = document.getElementById('style-link-preview');
   const img = document.getElementById('style-link-preview-img');
-  const card = document.getElementById('style-link-preview-card');
-  const domainEl = document.getElementById('style-link-preview-domain');
-  if (!url) { preview.style.display = 'none'; return; }
-
-  let domain = url;
-  try { domain = new URL(url).hostname.replace('www.', ''); } catch(e) {}
-
-  // 카드는 URL이 있으면 바로 표시
-  img.style.display = 'none';
-  card.style.display = 'flex';
-  domainEl.textContent = domain;
-  preview.style.display = '';
-
-  // 이미지 로드 성공 시 이미지로 교체
-  const testImg = new Image();
-  testImg.onload = () => {
-    img.src = url;
-    img.style.display = 'block';
-    card.style.display = 'none';
-  };
-  testImg.onerror = () => { /* 카드 유지 */ };
-  testImg.src = url;
+  const status = document.getElementById('style-link-status');
+  const input = document.getElementById('style-link-input-field');
+  delete input.dataset.resolvedUrl;
+  if (!url) { preview.style.display = 'none'; status.style.display = 'none'; return; }
+  status.textContent = '이미지 불러오는 중…';
+  status.style.display = '';
+  preview.style.display = 'none';
+  const resolved = await _resolveOgImage(url);
+  if (!resolved) {
+    status.textContent = '이미지를 찾을 수 없습니다. 직접 이미지 URL(.jpg, .png 등)을 사용해보세요.';
+    return;
+  }
+  input.dataset.resolvedUrl = resolved;
+  img.onload = () => { status.style.display = 'none'; preview.style.display = ''; };
+  img.onerror = () => { status.textContent = '이미지를 표시할 수 없습니다.'; preview.style.display = 'none'; };
+  img.src = resolved;
 }
 
 function confirmStyleLink() {
-  const url = document.getElementById('style-link-input-field').value.trim();
+  const input = document.getElementById('style-link-input-field');
+  const url = input.value.trim();
   if (!url) return;
+  const resolvedUrl = input.dataset.resolvedUrl || url;
   closeStyleLinkInput();
-  addStyleImage(styleCurrentRoom, { url, type: 'link' });
+  addStyleImage(styleCurrentRoom, { url: resolvedUrl, originalUrl: url, type: 'link' });
 }
 
 function addStyleImage(room, item) {
@@ -3604,73 +3540,35 @@ function addStyleImage(room, item) {
   if (!proj.styleImages) proj.styleImages = {};
   if (!proj.styleImages[room]) proj.styleImages[room] = [];
   proj.styleImages[room].push(item);
-  try { save(); } catch(e) { console.warn('save failed:', e); }
+  save();
   renderStyleTab();
 }
 
-let _svTouchX = null;
-
 function openStyleViewer(room, index) {
+  const data = getStyleData();
+  const item = (data[room] || [])[index];
+  if (!item) return;
   styleViewerRoom = room;
   styleViewerIndex = index;
-  _svRenderCurrent();
-  const screen = document.getElementById('style-viewer-screen');
-  screen.style.display = 'flex';
-}
-
-function _svRenderCurrent() {
-  const data = getStyleData();
-  const items = data[styleViewerRoom] || [];
-  const item = items[styleViewerIndex];
-  if (!item) return;
-  const img = document.getElementById('style-viewer-img');
-  const fallback = document.getElementById('style-viewer-link-fallback');
-  img.style.opacity = '0';
-  img.onload = () => { img.style.opacity = '1'; };
-  img.onerror = () => { img.style.display = 'none'; fallback.style.display = 'flex'; };
-  img.style.display = '';
-  fallback.style.display = 'none';
-  img.src = item.url;
-  if (item.type === 'link') {
-    let domain = '';
-    try { domain = new URL(item.url).hostname.replace('www.',''); } catch(e) {}
-    document.getElementById('style-viewer-link-domain').textContent = domain;
-    document.getElementById('style-viewer-link-open').href = item.url;
-  }
-  document.getElementById('style-viewer-counter').textContent = `${styleViewerIndex + 1} / ${items.length}`;
-  document.getElementById('style-viewer-room').textContent = styleViewerRoom;
+  const overlay = document.getElementById('style-viewer-overlay');
+  document.getElementById('style-viewer-img').src = item.url;
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
 }
 
 function closeStyleViewer() {
-  document.getElementById('style-viewer-screen').style.display = 'none';
+  document.getElementById('style-viewer-overlay').style.display = 'none';
 }
 
 function deleteStyleImage() {
   const proj = getProject();
   if (!proj || styleViewerRoom === null || styleViewerIndex === null) return;
-  if (!confirm('이 이미지를 삭제할까요?')) return;
   proj.styleImages[styleViewerRoom].splice(styleViewerIndex, 1);
-  try { save(); } catch(e) {}
-  const remaining = (proj.styleImages[styleViewerRoom] || []).length;
-  if (remaining === 0) { closeStyleViewer(); renderStyleTab(); return; }
-  if (styleViewerIndex >= remaining) styleViewerIndex = remaining - 1;
-  _svRenderCurrent();
+  save();
+  closeStyleViewer();
   renderStyleTab();
-}
-
-function svTouchStart(e) {
-  _svTouchX = e.touches[0].clientX;
-}
-
-function svTouchEnd(e) {
-  if (_svTouchX === null) return;
-  const dx = e.changedTouches[0].clientX - _svTouchX;
-  _svTouchX = null;
-  if (Math.abs(dx) < 40) return;
-  const data = getStyleData();
-  const total = (data[styleViewerRoom] || []).length;
-  if (dx < 0 && styleViewerIndex < total - 1) { styleViewerIndex++; _svRenderCurrent(); }
-  else if (dx > 0 && styleViewerIndex > 0) { styleViewerIndex--; _svRenderCurrent(); }
 }
 
 // ===== PROCESS TIPS =====
@@ -6179,29 +6077,7 @@ function _buildExportProcesses(proj) {
 }
 
 // ===== SHARE =====
-function updateCollabMenuBadge() {
-  const badge = document.getElementById('collab-menu-badge');
-  if (!badge) return;
-  const proj = getProject();
-  const collaborators = proj?.collaborators || [];
-  const invites = (proj?.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
-  const text = collaborators.length > 0 ? `공동작업자 ${collaborators.length}명`
-    : invites.length > 0 ? '초대중'
-    : '공동작업자 없음';
-  const baseStyle = 'font-size:11px;font-weight:500;color:#333;';
-  badge.textContent = text;
-  badge.style.cssText = baseStyle;
-  const mobileBadge = document.getElementById('collab-menu-badge-mobile');
-  if (mobileBadge) { mobileBadge.textContent = text; mobileBadge.style.cssText = baseStyle; }
-}
-
-function openShareDialog() {
-  closeAllMenus();
-  gtag('event', 'share_open');
-  trackEvent('share','open');
-  openDialog('dlg-share');
-  renderCollabTab();
-}
+function openShareDialog() { closeAllMenus(); gtag('event', 'share_open'); trackEvent('share','open'); openDialog('dlg-share'); }
 function openExpertDialog() { closeAllMenus(); openDialog('dlg-expert'); }
 function shareAction(type) {
   const proj = getProject();
@@ -6339,7 +6215,7 @@ function toggleMainMenu(e) {
     const sheet = document.getElementById('mobile-main-menu-sheet');
     const isOpen = sheet.classList.contains('active');
     closeAllMenus();
-    if (!isOpen) { openDialog('mobile-main-menu-sheet'); updateCollabMenuBadge(); }
+    if (!isOpen) { openDialog('mobile-main-menu-sheet'); }
     return;
   }
   const menu = document.getElementById('main-menu');
@@ -6347,7 +6223,6 @@ function toggleMainMenu(e) {
   closeAllMenus();
   if (!wasActive) {
     menu.classList.add('active');
-    updateCollabMenuBadge();
   }
 }
 function closeAllMenus() {
@@ -6446,7 +6321,7 @@ function trackUserLogin(user) {
 // ===================================
 
 let _fbLoaded = false, _fbLoadPromise = null;
-let _fbApp = null, _db = null, _fbStorage = null, _collabUnsub = null;
+let _fbApp = null, _db = null, _collabUnsub = null;
 
 function _loadFirebaseSDK() {
   if (_fbLoaded) return Promise.resolve(true);
@@ -6456,7 +6331,6 @@ function _loadFirebaseSDK() {
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js',
     ];
     let i = 0;
     const next = () => {
@@ -6492,7 +6366,6 @@ async function _initFirebase() {
       if (e.code === 'app/duplicate-app') { _fbApp = firebase.app(); } else { return false; }
     }
     _db = firebase.firestore();
-    try { _fbStorage = firebase.storage(); } catch(e) {}
     firebase.auth(); // Auth 초기화
   }
   return true;
@@ -6705,7 +6578,49 @@ async function renderCollabTab() {
   const invites = proj.invites || [];
 
   body.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:6px;">현재 멤버</div>
+    <div class="collab-member-list" id="collab-member-list">
+      <div class="collab-member-row">
+        <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
+        <div class="cm-info">
+          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:11px;color:#aaa;">(나)</span></div>
+          <div class="cm-email">${esc(state.user.email)}</div>
+        </div>
+        <span class="cm-role owner">오너</span>
+      </div>
+      ${collaborators.map((m,i) => `
+        <div class="collab-member-row">
+          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
+            ${(m.name||m.email||'?').charAt(0).toUpperCase()}
+          </div>
+          <div class="cm-info">
+            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
+            <div class="cm-email">${esc(m.email)}</div>
+          </div>
+          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
+          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
+        </div>`).join('')}
+    </div>
+
+    ${invites.length ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:12px 0 6px;">초대 현황</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${invites.map(inv => {
+          const expired = new Date(inv.expiresAt) < new Date();
+          return `
+          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
+            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
+            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:11px;">만료</span>':''}</div>
+            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
+            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
+              <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
+            </button>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
     ${isOwner ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:14px 0 8px;">새 멤버 초대</div>
       <div class="invite-form">
         <div class="invite-row">
           <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" oninput="checkInviteEmailInput(this)" />
@@ -6739,49 +6654,7 @@ async function renderCollabTab() {
           </button>
         </div>
       </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
-
-    ${invites.length ? `
-      <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">초대 현황</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        ${invites.map(inv => {
-          const expired = new Date(inv.expiresAt) < new Date();
-          return `
-          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
-            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
-            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:11px;">만료</span>':''}</div>
-            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
-            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
-              <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
-            </button>
-          </div>`;
-        }).join('')}
-      </div>` : ''}
-
-    <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">현재 멤버</div>
-    <div class="collab-member-list" id="collab-member-list">
-      <div class="collab-member-row">
-        <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
-        <div class="cm-info">
-          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:11px;color:#aaa;">(나)</span></div>
-          <div class="cm-email">${esc(state.user.email)}</div>
-        </div>
-        <span class="cm-role owner">오너</span>
-      </div>
-      ${collaborators.map((m,i) => `
-        <div class="collab-member-row">
-          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
-            ${(m.name||m.email||'?').charAt(0).toUpperCase()}
-          </div>
-          <div class="cm-info">
-            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
-            <div class="cm-email">${esc(m.email)}</div>
-          </div>
-          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
-          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
-        </div>`).join('')}
-    </div>
   `;
-  updateCollabMenuBadge();
 }
 
 // ===== INVITE GENERATION =====
@@ -7513,31 +7386,6 @@ async function _checkExportOnLoad() {
   </div>
   <!-- 뷰어 콘텐츠 -->
   <div style="padding:20px 16px 40px;" id="export-view-content"></div>
-</div>
-
-<!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
-<div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#111;z-index:9999;flex-direction:column;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 14px) 8px 14px;flex-shrink:0;background:#111;">
-    <button onclick="closeStyleViewer()" style="display:flex;align-items:center;gap:4px;border:none;background:none;color:#fff;font-size:17px;font-weight:600;padding:8px 12px;cursor:pointer;line-height:1;">
-      <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      <span id="style-viewer-room"></span>
-    </button>
-    <button onclick="deleteStyleImage()" style="width:44px;height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-      <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-    </button>
-  </div>
-  <div id="style-viewer-wrap" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;"
-    ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)">
-    <img id="style-viewer-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;transition:opacity .15s;">
-    <div id="style-viewer-link-fallback" style="display:none;flex-direction:column;align-items:center;gap:12px;">
-      <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      <span id="style-viewer-link-domain" style="font-size:14px;color:rgba(255,255,255,0.45);"></span>
-      <a id="style-viewer-link-open" href="" target="_blank" style="font-size:13px;color:#7ab4ff;text-decoration:underline;">링크 열기</a>
-    </div>
-  </div>
-  <div style="text-align:center;padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 14px);flex-shrink:0;">
-    <span id="style-viewer-counter" style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:500;letter-spacing:.04em;"></span>
-  </div>
 </div>
 
 </body>
