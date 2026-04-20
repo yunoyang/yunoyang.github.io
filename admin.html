@@ -483,6 +483,39 @@ tr:hover td { background:#fafbfe; }
   .settings-grid { grid-template-columns:1fr; }
   .analytics-grid { grid-template-columns:1fr 1fr; }
 }
+/* ===== STYLE IMAGES ===== */
+.style-filter-btn {
+  padding:6px 14px; border:1.5px solid var(--card-border); border-radius:20px;
+  background:#fff; font-size:13px; font-weight:500; color:var(--text-secondary);
+  cursor:pointer; font-family:var(--font); transition:all .15s;
+}
+.style-filter-btn.active {
+  background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600;
+}
+.style-img-card {
+  background:#fff; border-radius:12px; overflow:hidden;
+  border:1px solid var(--card-border); cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+}
+.style-img-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.1); }
+.style-img-card .thumb {
+  aspect-ratio:3/4; background:#f4f6fb; overflow:hidden;
+}
+.style-img-card .thumb img { width:100%;height:100%;object-fit:cover;display:block; }
+.style-img-card .thumb .link-thumb {
+  width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+}
+.style-img-card .meta {
+  padding:8px 10px;
+}
+.style-img-card .meta .room-badge {
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:11px;font-weight:600;background:var(--primary-bg);color:var(--primary);margin-bottom:4px;
+}
+.style-img-card .meta .proj-name {
+  font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 </style>
 </head>
 <body>
@@ -553,6 +586,10 @@ tr:hover td { background:#fafbfe; }
       <div class="nav-item" id="nav-tips" onclick="showPage('tips',this)">
         <i data-lucide="lightbulb"></i>
         <span>시공팁 편집</span>
+      </div>
+      <div class="nav-item" id="nav-style-images" onclick="showPage('style-images',this)">
+        <i data-lucide="image"></i>
+        <span>스타일 이미지</span>
       </div>
 
       <div style="margin-top:24px; padding:12px 10px;">
@@ -1469,6 +1506,36 @@ service cloud.firestore {
             <div style="text-align:center;padding:60px;color:#bbb;font-size:14px;">왼쪽에서 공정을 선택하세요</div>
           </div>
         </div>
+      </div>
+
+      <!-- ===== 스타일 이미지 페이지 ===== -->
+      <div class="page" id="page-style-images">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <h1 class="section-title">스타일 이미지</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">사용자가 업로드한 스타일 이미지 현황</p>
+          </div>
+          <div class="section-actions">
+            <button onclick="loadStyleImages()" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">새로고침</button>
+          </div>
+        </div>
+
+        <!-- 요약 카드 -->
+        <div id="style-summary-cards" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;"></div>
+
+        <!-- 필터 -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="style-room-filter">
+          <button class="style-filter-btn active" data-room="all" onclick="filterStyleRoom('all',this)">전체</button>
+          <button class="style-filter-btn" data-room="거실" onclick="filterStyleRoom('거실',this)">거실</button>
+          <button class="style-filter-btn" data-room="욕실" onclick="filterStyleRoom('욕실',this)">욕실</button>
+          <button class="style-filter-btn" data-room="침실" onclick="filterStyleRoom('침실',this)">침실</button>
+          <button class="style-filter-btn" data-room="부엌" onclick="filterStyleRoom('부엌',this)">부엌</button>
+          <button class="style-filter-btn" data-room="작은방" onclick="filterStyleRoom('작은방',this)">작은방</button>
+        </div>
+
+        <!-- 이미지 그리드 -->
+        <div id="style-images-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
+        <div id="style-images-empty" style="display:none;text-align:center;padding:60px;color:#bbb;font-size:14px;">업로드된 이미지가 없습니다</div>
       </div>
 
     </div><!-- /content -->
@@ -2799,6 +2866,7 @@ const pageTitles = {
   brand: ['브랜드 설정', '공사계획서 로고 관리'],
   contractors: ['업체 DB', '시공 업체 데이터베이스 관리'],
   tips: ['시공팁 편집', '공정별 체크리스트 · 꿀팁 · 피드 관리'],
+  'style-images': ['스타일 이미지', '사용자 업로드 이미지 현황'],
 };
 
 function showPage(name, navEl) {
@@ -2813,6 +2881,7 @@ function showPage(name, navEl) {
   if (name === 'brand') loadBrandSection();
   if (name === 'contractors') loadContractorPage();
   if (name === 'tips') loadTipsPage();
+  if (name === 'style-images') loadStyleImages();
   setTimeout(lucide.createIcons, 60);
 }
 
@@ -3662,6 +3731,87 @@ window.addEventListener('load', () => {
     if (e.key === 'Enter') document.getElementById('lg-pw').focus();
   });
 });
+
+// ===== STYLE IMAGES =====
+const STYLE_ROOMS_ADMIN = ['거실', '욕실', '침실', '부엌', '작은방'];
+let _styleAllItems = []; // { room, url, type, projName, ownerEmail, projId }
+let _styleRoomFilter = 'all';
+
+function loadStyleImages() {
+  if (!_adminDb) initFirestoreAdmin();
+  const grid = document.getElementById('style-images-grid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#bbb;font-size:14px;">불러오는 중...</div>';
+
+  // _fbData.projects 는 실시간 리스너로 이미 채워져 있음
+  _buildStyleItems();
+}
+
+function _buildStyleItems() {
+  _styleAllItems = [];
+  (_fbData.projects || []).forEach(proj => {
+    const data = proj.projectData || proj;
+    const styleImages = data.styleImages || {};
+    const projName = data.form?.projectName || data.name || proj.id;
+    const ownerEmail = proj.ownerEmail || proj.meta?.owner?.email || '';
+    STYLE_ROOMS_ADMIN.forEach(room => {
+      (styleImages[room] || []).forEach(item => {
+        _styleAllItems.push({ room, url: item.url, type: item.type || 'upload', projName, ownerEmail, projId: proj.id });
+      });
+    });
+  });
+  _renderStyleSummary();
+  _renderStyleGrid();
+}
+
+function _renderStyleSummary() {
+  const counts = { total: _styleAllItems.length };
+  STYLE_ROOMS_ADMIN.forEach(r => { counts[r] = _styleAllItems.filter(i => i.room === r).length; });
+  const roomColors = { '거실':'#3176ff','욕실':'#10b981','침실':'#8b5cf6','부엌':'#f59e0b','작은방':'#ef4444' };
+  const cards = [
+    { label:'전체', value: counts.total, color:'#111' },
+    ...STYLE_ROOMS_ADMIN.map(r => ({ label: r, value: counts[r], color: roomColors[r] }))
+  ];
+  document.getElementById('style-summary-cards').innerHTML = cards.map(c => `
+    <div class="chart-card" style="padding:16px 18px;">
+      <div style="font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;">${c.label}</div>
+      <div style="font-size:26px;font-weight:800;color:${c.color};">${c.value}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">장</div>
+    </div>`).join('');
+}
+
+function _renderStyleGrid() {
+  const items = _styleRoomFilter === 'all' ? _styleAllItems : _styleAllItems.filter(i => i.room === _styleRoomFilter);
+  const grid = document.getElementById('style-images-grid');
+  const empty = document.getElementById('style-images-empty');
+  if (!items.length) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = items.map(item => {
+    const thumb = item.type === 'link'
+      ? `<div class="link-thumb">
+           <svg width="28" height="28" fill="none" stroke="#aaa" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+           <span style="font-size:10px;color:#aaa;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(() => { try { return new URL(item.url).hostname.replace('www.',''); } catch(e) { return 'link'; } })()}</span>
+         </div>`
+      : `<img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML='<div class=\\'link-thumb\\'><svg width=\\'24\\' height=\\'24\\' fill=\\'none\\' stroke=\\'#ccc\\' stroke-width=\\'1.5\\' viewBox=\\'0 0 24 24\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'3\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><polyline points=\\'21 15 16 10 5 21\\'/></svg></div>'">`;
+    return `<div class="style-img-card" onclick="window.open('${item.url}','_blank')">
+      <div class="thumb">${thumb}</div>
+      <div class="meta">
+        <span class="room-badge">${item.room}</span>
+        <div class="proj-name">${item.projName}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterStyleRoom(room, btn) {
+  _styleRoomFilter = room;
+  document.querySelectorAll('.style-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _renderStyleGrid();
+}
 </script>
 </body>
 </html>

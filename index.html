@@ -3499,13 +3499,32 @@ function triggerStyleFileUpload() {
   document.getElementById('style-file-input').click();
 }
 
-function handleStyleFileSelect(e) {
+async function handleStyleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
+  const room = styleCurrentRoom;
+
+  // Firebase Storage 사용 가능한 경우 서버 업로드
+  if (_fbStorage || await _initFirebase()) {
+    if (!_fbStorage) _fbStorage = firebase.storage();
+    try {
+      const proj = getProject();
+      const projId = proj?.cloudId || proj?.id || 'local';
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `styleImages/${projId}/${room}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const ref = _fbStorage.ref(path);
+      await ref.put(file);
+      const url = await ref.getDownloadURL();
+      addStyleImage(room, { url, type: 'upload' });
+      return;
+    } catch(err) {
+      console.warn('Storage upload failed, fallback to base64:', err);
+    }
+  }
+
+  // fallback: base64
   const reader = new FileReader();
-  reader.onload = function(ev) {
-    addStyleImage(styleCurrentRoom, { url: ev.target.result, type: 'upload' });
-  };
+  reader.onload = ev => addStyleImage(room, { url: ev.target.result, type: 'upload' });
   reader.readAsDataURL(file);
 }
 
@@ -6325,7 +6344,7 @@ function trackUserLogin(user) {
 // ===================================
 
 let _fbLoaded = false, _fbLoadPromise = null;
-let _fbApp = null, _db = null, _collabUnsub = null;
+let _fbApp = null, _db = null, _fbStorage = null, _collabUnsub = null;
 
 function _loadFirebaseSDK() {
   if (_fbLoaded) return Promise.resolve(true);
@@ -6335,6 +6354,7 @@ function _loadFirebaseSDK() {
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js',
     ];
     let i = 0;
     const next = () => {
@@ -6370,6 +6390,7 @@ async function _initFirebase() {
       if (e.code === 'app/duplicate-app') { _fbApp = firebase.app(); } else { return false; }
     }
     _db = firebase.firestore();
+    _fbStorage = firebase.storage();
     firebase.auth(); // Auth 초기화
   }
   return true;
