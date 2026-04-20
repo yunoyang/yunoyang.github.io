@@ -1950,8 +1950,11 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="dropdown-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
-    <button class="dropdown-item" onclick="openShareDialog()">
-      <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
+    <button class="dropdown-item" onclick="openShareDialog()" style="justify-content:space-between;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
+      </span>
+      <span id="collab-menu-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;"></span>
     </button>
     <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
@@ -2487,14 +2490,14 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Share -->
 <div class="overlay" id="dlg-share">
   <div class="dialog">
-    <h3>공유하기</h3>
-    <div class="share-tabs">
+    <h3>공동작업자 초대</h3>
+    <div class="share-tabs" style="display:none;">
       <button class="share-tab-btn active" id="stab-share" onclick="switchShareTab('share')">링크 공유</button>
       <button class="share-tab-btn" id="stab-collab" onclick="switchShareTab('collab')">공동작업</button>
     </div>
 
-    <!-- 링크 공유 탭 -->
-    <div class="share-tab-pane active" id="stab-share-pane">
+    <!-- 링크 공유 탭 (숨김) -->
+    <div class="share-tab-pane" id="stab-share-pane" style="display:none!important;">
       <!-- 링크 복사 박스 -->
       <div class="share-link-box">
         <span class="share-link-url" id="share-link-url-text">https://vibespacekorea.com</span>
@@ -2540,7 +2543,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- 공동작업 탭 -->
-    <div class="share-tab-pane" id="stab-collab-pane">
+    <div class="share-tab-pane active" id="stab-collab-pane">
       <div id="collab-tab-body"><!-- renderCollabTab()으로 채움 --></div>
     </div>
 
@@ -6115,7 +6118,31 @@ function _buildExportProcesses(proj) {
 }
 
 // ===== SHARE =====
-function openShareDialog() { closeAllMenus(); gtag('event', 'share_open'); trackEvent('share','open'); openDialog('dlg-share'); }
+function updateCollabMenuBadge() {
+  const badge = document.getElementById('collab-menu-badge');
+  if (!badge) return;
+  const proj = getProject();
+  const collaborators = proj?.collaborators || [];
+  const invites = (proj?.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
+  if (collaborators.length > 0) {
+    badge.textContent = `공동작업자 ${collaborators.length}명`;
+    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8f0ff;color:#3176ff;';
+  } else if (invites.length > 0) {
+    badge.textContent = '초대중';
+    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#fef9c3;color:#b45309;';
+  } else {
+    badge.textContent = '공동작업자 없음';
+    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#9ca3af;';
+  }
+}
+
+function openShareDialog() {
+  closeAllMenus();
+  gtag('event', 'share_open');
+  trackEvent('share','open');
+  openDialog('dlg-share');
+  renderCollabTab();
+}
 function openExpertDialog() { closeAllMenus(); openDialog('dlg-expert'); }
 function shareAction(type) {
   const proj = getProject();
@@ -6261,6 +6288,7 @@ function toggleMainMenu(e) {
   closeAllMenus();
   if (!wasActive) {
     menu.classList.add('active');
+    updateCollabMenuBadge();
   }
 }
 function closeAllMenus() {
@@ -6618,49 +6646,7 @@ async function renderCollabTab() {
   const invites = proj.invites || [];
 
   body.innerHTML = `
-    <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:6px;">현재 멤버</div>
-    <div class="collab-member-list" id="collab-member-list">
-      <div class="collab-member-row">
-        <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
-        <div class="cm-info">
-          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:11px;color:#aaa;">(나)</span></div>
-          <div class="cm-email">${esc(state.user.email)}</div>
-        </div>
-        <span class="cm-role owner">오너</span>
-      </div>
-      ${collaborators.map((m,i) => `
-        <div class="collab-member-row">
-          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
-            ${(m.name||m.email||'?').charAt(0).toUpperCase()}
-          </div>
-          <div class="cm-info">
-            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
-            <div class="cm-email">${esc(m.email)}</div>
-          </div>
-          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
-          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
-        </div>`).join('')}
-    </div>
-
-    ${invites.length ? `
-      <div style="font-size:13px;font-weight:700;color:#888;margin:12px 0 6px;">초대 현황</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        ${invites.map(inv => {
-          const expired = new Date(inv.expiresAt) < new Date();
-          return `
-          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
-            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
-            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:11px;">만료</span>':''}</div>
-            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
-            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
-              <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
-            </button>
-          </div>`;
-        }).join('')}
-      </div>` : ''}
-
     ${isOwner ? `
-      <div style="font-size:13px;font-weight:700;color:#888;margin:14px 0 8px;">새 멤버 초대</div>
       <div class="invite-form">
         <div class="invite-row">
           <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" oninput="checkInviteEmailInput(this)" />
@@ -6694,7 +6680,49 @@ async function renderCollabTab() {
           </button>
         </div>
       </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
+
+    ${invites.length ? `
+      <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">초대 현황</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${invites.map(inv => {
+          const expired = new Date(inv.expiresAt) < new Date();
+          return `
+          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
+            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
+            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:11px;">만료</span>':''}</div>
+            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
+            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
+              <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
+            </button>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+    <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">현재 멤버</div>
+    <div class="collab-member-list" id="collab-member-list">
+      <div class="collab-member-row">
+        <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
+        <div class="cm-info">
+          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:11px;color:#aaa;">(나)</span></div>
+          <div class="cm-email">${esc(state.user.email)}</div>
+        </div>
+        <span class="cm-role owner">오너</span>
+      </div>
+      ${collaborators.map((m,i) => `
+        <div class="collab-member-row">
+          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
+            ${(m.name||m.email||'?').charAt(0).toUpperCase()}
+          </div>
+          <div class="cm-info">
+            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
+            <div class="cm-email">${esc(m.email)}</div>
+          </div>
+          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
+          ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
+        </div>`).join('')}
+    </div>
   `;
+  updateCollabMenuBadge();
 }
 
 // ===== INVITE GENERATION =====
