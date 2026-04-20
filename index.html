@@ -363,16 +363,17 @@ button, input, textarea, select { font-family:var(--font); }
 .style-add-btn:active { background: #e5e5ec; }
 .style-image-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  padding: 0 2px 2px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 12px 12px;
 }
 .style-image-item {
-  aspect-ratio: 1;
-  background: #f5f5f5;
+  aspect-ratio: 3/4;
+  background: #f0f0f0;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+  border-radius: 16px;
 }
 .style-image-item img {
   width: 100%;
