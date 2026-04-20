@@ -6281,7 +6281,7 @@ function toggleMainMenu(e) {
     const sheet = document.getElementById('mobile-main-menu-sheet');
     const isOpen = sheet.classList.contains('active');
     closeAllMenus();
-    if (!isOpen) { openDialog('mobile-main-menu-sheet'); }
+    if (!isOpen) { openDialog('mobile-main-menu-sheet'); updateCollabMenuBadge(); }
     return;
   }
   const menu = document.getElementById('main-menu');
