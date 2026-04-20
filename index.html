@@ -6124,16 +6124,15 @@ function updateCollabMenuBadge() {
   const proj = getProject();
   const collaborators = proj?.collaborators || [];
   const invites = (proj?.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
+  const baseStyle = 'font-size:11px;font-weight:500;color:#333;';
   if (collaborators.length > 0) {
     badge.textContent = `공동작업자 ${collaborators.length}명`;
-    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8f0ff;color:#3176ff;';
   } else if (invites.length > 0) {
     badge.textContent = '초대중';
-    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#fef9c3;color:#b45309;';
   } else {
     badge.textContent = '공동작업자 없음';
-    badge.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#9ca3af;';
   }
+  badge.style.cssText = baseStyle;
 }
 
 function openShareDialog() {
