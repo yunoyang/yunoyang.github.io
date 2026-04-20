@@ -304,7 +304,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding:0 24px; display:flex; align-items:center; background:#fff;
+  padding:2px 24px 0; display:flex; align-items:center; background:#fff;
   border-bottom:1.5px solid #eef0f5; flex-shrink:0;
 }
 .tab-toggle {
@@ -326,10 +326,10 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
-  padding: 16px 18px 80px;
+  padding: 14px 18px 80px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 /* Pinterest-style room card */
 .style-room-card {
@@ -407,18 +407,17 @@ button, input, textarea, select { font-family:var(--font); }
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 16px 4px;
+  padding: 14px 4px;
   background: none;
   border: none;
-  border-bottom: 1px solid #f1f1f5;
   font-size: 15px;
   font-weight: 500;
   color: #111;
   cursor: pointer;
   text-align: left;
+  font-family: var(--font);
 }
-.style-sheet-btn:last-of-type { border-bottom: none; }
-.style-sheet-btn:active { background: #f9f9fa; }
+.style-sheet-btn:active { background: #f9f9fa; border-radius: 8px; }
 
 /* ===== CARDS ===== */
 .cards-area {
@@ -1808,7 +1807,7 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 7px;vertical-align:middle;line-height:1.6;"></span></button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:6px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 5px;vertical-align:middle;line-height:1.6;"></span></button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
         <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
       </div>
@@ -1828,10 +1827,6 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="tab-style" style="display:none; background:#EDF0F4;">
       <div class="style-tab-inner">
         <div id="style-rooms-container"></div>
-        <button class="style-newspace-btn" onclick="openStyleNewSpace()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          스타일 추가
-        </button>
       </div>
     </div>
 
@@ -2109,6 +2104,11 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="floating-group" id="floating-add-process">
   <button class="floating-btn" onclick="openAddProcess()">
     <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 공정 단계 추가
+  </button>
+</div>
+<div class="floating-group" id="floating-add-style" style="display:none;">
+  <button class="floating-btn" onclick="openStyleNewSpace()">
+    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 스타일 추가
   </button>
 </div>
 
@@ -3351,6 +3351,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   document.getElementById('floating-add-process').style.display = tab === 'style' ? 'none' : '';
+  document.getElementById('floating-add-style').style.display = tab === 'style' ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') renderStyleTab();
   if (tab === 'calendar') {
@@ -3409,7 +3410,7 @@ function renderStyleTab() {
     } else {
       collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div><div class="style-card-col-side-item">${thumb(2)}</div></div></div>`;
     }
-    const meta = items.length > 0 ? `핀 ${items.length}개` : '사진을 추가해 보세요';
+    const meta = `핀 ${items.length}개`;
     return `<div class="style-room-card" onclick="openStyleViewer('${r}',0)">
       ${collage}
       <div class="style-card-info">
@@ -3453,7 +3454,7 @@ function confirmStyleNewSpace() {
 
 function openStyleAddMenu(room) {
   styleCurrentRoom = room;
-  document.getElementById('style-add-sheet-title').textContent = room + ' — 이미지 추가';
+  document.getElementById('style-add-sheet-title').textContent = '이미지 추가';
   document.getElementById('style-add-overlay').style.display = '';
   document.getElementById('style-add-sheet').style.display = '';
 }
@@ -7446,8 +7447,8 @@ async function _checkExportOnLoad() {
 <!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
 <div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
   <!-- header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 12px) 8px 12px;flex-shrink:0;background:#fff;border-bottom:1px solid #f0f0f0;">
-    <button onclick="closeStyleViewer()" style="display:flex;align-items:center;gap:4px;border:none;background:none;color:#111;font-size:16px;font-weight:600;padding:8px 12px;cursor:pointer;line-height:1;font-family:var(--font);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 12px) 8px 0;flex-shrink:0;background:#fff;">
+    <button onclick="closeStyleViewer()" style="display:flex;align-items:center;gap:4px;border:none;background:none;color:#111;font-size:20px;font-weight:700;padding:8px 12px;cursor:pointer;line-height:1;font-family:var(--font);">
       <svg width="22" height="22" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       <span id="style-viewer-room"></span>
     </button>
