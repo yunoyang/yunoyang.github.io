@@ -6290,6 +6290,9 @@ function renderAll() {
       badge.textContent = cnt;
       badge.style.display = cnt > 0 ? '' : 'none';
     }
+    // 스타일 탭이 열려있으면 함께 갱신 (공동작업자 실시간 동기화)
+    const styleTabEl = document.getElementById('tab-style');
+    if (styleTabEl && styleTabEl.style.display !== 'none') renderStyleTab();
   }
   updateLoginUI();
 }
@@ -6530,6 +6533,7 @@ function _startCollabListener(cloudId) {
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
+    updateCollabMenuBadge();
     showToastMessage('팀원이 변경 사항을 업데이트했습니다');
   });
 }
@@ -7313,6 +7317,7 @@ async function _syncFromCloudOnStartup() {
               p.owner = meta.owner || p.owner;
               localStorage.setItem('vibespace', JSON.stringify(state));
               updateCollabIndicator(p.collaborators, p.owner);
+              updateCollabMenuBadge();
             }
           }).catch(() => {});
         } else {
