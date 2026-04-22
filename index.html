@@ -3470,6 +3470,15 @@ function _compressImage(file, maxW = 1200, quality = 0.75) {
   });
 }
 
+function _dataUrlToBlob(dataUrl) {
+  const [header, b64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
 async function handleStyleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -3479,21 +3488,31 @@ async function handleStyleFileSelect(e) {
     try {
       const proj = getProject();
       const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `styleImages/${projId}/${room}/${Date.now()}.${ext}`;
-      await _fbStorage.ref(path).put(file);
-      const url = await _fbStorage.ref(path).getDownloadURL();
-      addStyleImage(room, { url, type: 'upload' });
+      const base = `styleImages/${projId}/${room}/${Date.now()}`;
+      // 업로드 전 압축 — 뷰어용 900px / 그리드 썸네일 240px
+      const [viewerDataUrl, thumbDataUrl] = await Promise.all([
+        _compressImage(file, 900, 0.78),
+        _compressImage(file, 240, 0.60)
+      ]);
+      const [viewerRef, thumbRef] = await Promise.all([
+        _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' }),
+        _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbDataUrl), { contentType: 'image/jpeg' })
+      ]);
+      const [url, thumb] = await Promise.all([
+        viewerRef.ref.getDownloadURL(),
+        thumbRef.ref.getDownloadURL()
+      ]);
+      addStyleImage(room, { url, thumb, type: 'upload' });
       return;
     } catch(err) {
       console.warn('Storage upload failed, fallback:', err.message);
     }
   }
 
-  // 썸네일(400px) + 원본(1200px) 모두 base64로 저장
+  // base64 폴백 — 뷰어용 900px / 그리드 썸네일 240px
   const [dataUrl, thumbUrl] = await Promise.all([
-    _compressImage(file, 1200, 0.78),
-    _compressImage(file, 400, 0.65)
+    _compressImage(file, 900, 0.78),
+    _compressImage(file, 240, 0.60)
   ]);
   if (dataUrl) addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload' });
 }
