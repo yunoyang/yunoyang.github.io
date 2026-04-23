@@ -6160,6 +6160,8 @@ function openShareDialog() {
   trackEvent('share','open');
   openDialog('dlg-share');
   renderCollabTab();
+  // meta.collaborators 비어있으면 vb_users 인덱스로 자동 복원 시도
+  _recoverCollaboratorsFromIndex();
 }
 function openExpertDialog() { closeAllMenus(); openDialog('dlg-expert'); }
 function shareAction(type) {
@@ -6826,6 +6828,41 @@ async function renderCollabTab() {
     </div>
   `;
   updateCollabMenuBadge();
+}
+
+// ===== COLLAB RECOVERY =====
+// meta.collaborators가 비어있을 때 vb_users 인덱스로 역추적해 복원
+async function _recoverCollaboratorsFromIndex() {
+  const proj = getProject();
+  if (!proj?.cloudId || !_db || !state.loggedIn) return;
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (!isOwner) return;
+  if ((proj.collaborators||[]).length > 0) return; // 이미 있으면 스킵
+
+  try {
+    // vb_users 전체 조회 → 이 cloudId를 가진 다른 유저 찾기
+    const snap = await _db.collection('vb_users').get();
+    const recovered = [];
+    snap.forEach(doc => {
+      if (doc.id === state.user.email) return; // 본인 제외
+      const ids = doc.data().projectIds || [];
+      if (ids.includes(proj.cloudId)) {
+        recovered.push({ email: doc.id, name: doc.data().name || doc.id.split('@')[0], role: 'editor', joinedAt: new Date().toISOString() });
+      }
+    });
+    if (!recovered.length) return;
+
+    // Firestore meta.collaborators 복원
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'meta.collaborators': recovered,
+    });
+    proj.collaborators = recovered;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    updateCollabMenuBadge();
+    updateCollabIndicator(recovered, proj.owner);
+    showToastMessage(`공동작업자 ${recovered.length}명 복원됐습니다 ✅`);
+    renderCollabTab();
+  } catch(e) { console.warn('_recoverCollaboratorsFromIndex:', e); }
 }
 
 // ===== INVITE GENERATION =====
