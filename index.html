@@ -7633,11 +7633,11 @@ async function _checkExportOnLoad() {
 <!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
 <div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
   <!-- header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 12px) 8px 0;flex-shrink:0;background:#fff;">
-    <button onclick="closeStyleViewer()" style="display:flex;align-items:center;gap:4px;border:none;background:none;color:#111;font-size:20px;font-weight:700;padding:8px 12px;cursor:pointer;line-height:1;font-family:var(--font);">
-      <svg width="22" height="22" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      <span id="style-viewer-room"></span>
+  <div class="form-header" style="background:#fff;justify-content:space-between;">
+    <button class="back-btn" onclick="closeStyleViewer()">
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
     </button>
+    <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
     <div style="display:flex;align-items:center;gap:4px;">
       <button onclick="openStyleAddFromViewer()" style="display:flex;align-items:center;gap:5px;border:none;background:#f1f1f5;border-radius:8px;color:#333;font-size:13px;font-weight:600;padding:8px 12px;cursor:pointer;font-family:var(--font);">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
