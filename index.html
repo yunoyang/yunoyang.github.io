@@ -6703,19 +6703,36 @@ function _syncProjToCloud(proj) {
   _db.collection('vb_projects').doc(proj.cloudId).update(payload).catch(e => console.error('sync err',e));
 }
 
-// 스타일 이미지만 Firestore에 업데이트 (규칙: write if request.auth != null → 공동작업자도 가능)
+// 스타일 이미지만 Firestore에 업데이트 — read-merge-write로 타인 이미지 덮어쓰기 방지
 async function _syncStyleImagesToCloud(proj) {
   if (!proj?.cloudId) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
+    // 1) 현재 Firestore 값 읽기
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudImages = snap.data()?.projectData?.styleImages || {};
+    // 2) cloud + local 병합 (URL 기준 중복 제거) — 모든 방의 이미지 보존
+    const merged = {};
+    const allRooms = new Set([...Object.keys(cloudImages), ...Object.keys(proj.styleImages || {})]);
+    allRooms.forEach(r => {
+      const ci = cloudImages[r] || [];
+      const li = (proj.styleImages || {})[r] || [];
+      const seen = new Set(ci.map(x => x.url));
+      const m = [...ci, ...li.filter(x => !seen.has(x.url))];
+      if (m.length) merged[r] = m;
+    });
+    // 3) 병합 결과 쓰기
     await _db.collection('vb_projects').doc(proj.cloudId).update({
-      'projectData.styleImages': proj.styleImages || {},
+      'projectData.styleImages': merged,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
     });
+    // 로컬도 병합된 값으로 갱신
+    proj.styleImages = merged;
+    localStorage.setItem('vibespace', JSON.stringify(state));
     _lastSaveTime = Date.now();
-    console.log('[styleSync] ✅', state.user?.email, '→', proj.cloudId);
+    console.log('[styleSync] ✅ merged', Object.values(merged).reduce((s,a)=>s+a.length,0), 'images');
   } catch(e) {
     console.error('[styleSync] ❌', e.code, e.message);
   }
