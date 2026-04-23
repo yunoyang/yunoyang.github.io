@@ -6121,20 +6121,37 @@ function _buildExportProcesses(proj) {
 }
 
 // ===== SHARE =====
+function _applyCollabBadgeText(text) {
+  const style = 'font-size:11px;font-weight:500;color:#333;';
+  const b1 = document.getElementById('collab-menu-badge');
+  const b2 = document.getElementById('collab-menu-badge-mobile');
+  if (b1) { b1.textContent = text; b1.style.cssText = style; }
+  if (b2) { b2.textContent = text; b2.style.cssText = style; }
+}
+
 function updateCollabMenuBadge() {
-  const badge = document.getElementById('collab-menu-badge');
-  if (!badge) return;
   const proj = getProject();
-  const collaborators = proj?.collaborators || [];
-  const invites = (proj?.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
-  const text = collaborators.length > 0 ? `공동작업자 ${collaborators.length}명`
-    : invites.length > 0 ? '초대중'
-    : '공동작업자 없음';
-  const baseStyle = 'font-size:11px;font-weight:500;color:#333;';
-  badge.textContent = text;
-  badge.style.cssText = baseStyle;
-  const mobileBadge = document.getElementById('collab-menu-badge-mobile');
-  if (mobileBadge) { mobileBadge.textContent = text; mobileBadge.style.cssText = baseStyle; }
+  if (!proj) return;
+  // 로컬 데이터로 즉시 렌더
+  const localCollabs = proj.collaborators || [];
+  const invites = (proj.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
+  const localText = localCollabs.length > 0 ? `공동작업자 ${localCollabs.length}명`
+    : invites.length > 0 ? '초대중' : '공동작업자 없음';
+  _applyCollabBadgeText(localText);
+  // Firestore에서 최신값 확인 (비동기)
+  if (proj.cloudId && typeof _db !== 'undefined' && _db) {
+    _db.collection('vb_projects').doc(proj.cloudId).get().then(snap => {
+      if (!snap.exists) return;
+      const collabs = snap.data()?.meta?.collaborators || [];
+      if (collabs.length !== localCollabs.length) {
+        proj.collaborators = collabs;
+        localStorage.setItem('vibespace', JSON.stringify(state));
+        const text = collabs.length > 0 ? `공동작업자 ${collabs.length}명`
+          : invites.length > 0 ? '초대중' : '공동작업자 없음';
+        _applyCollabBadgeText(text);
+      }
+    }).catch(() => {});
+  }
 }
 
 function openShareDialog() {
@@ -6621,6 +6638,7 @@ function _syncProjToCloud(proj) {
     ownerEmail: state.user.email,   // 구버전 문서 ownerEmail 자동 backfill
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
     'meta.updatedBy': state.user.email,
+    // meta.collaborators는 여기서 쓰지 않음 — 초대 수락/삭제 시에만 변경
   };
   _db.collection('vb_projects').doc(proj.cloudId).update(payload).catch(e => console.error('sync err',e));
 }
