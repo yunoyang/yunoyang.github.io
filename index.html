@@ -2643,7 +2643,9 @@ function save() {
   showToast();
   _lastSaveTime = Date.now();
   const proj = getProject();
-  if (proj && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+  // 공동작업자(myRole 있음)는 로컬만 저장 — owner만 projectData를 Firestore에 씀
+  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  if (proj && proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
     _syncProjToCloud(proj);
   }
 }
@@ -2925,7 +2927,13 @@ async function _autoUploadOnLogin() {
       const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
       const currentProj = getProject();
       const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
-      state.projects = [...allCloudProjs, ...newLocalProjs];
+      // myRole(공동작업자 역할)을 기존 로컬 프로젝트에서 복원 (parseDoc에서 누락됨)
+      const prevProjs = state.projects || [];
+      const mergedProjs = allCloudProjs.map(cp => {
+        const local = prevProjs.find(lp => lp.cloudId === cp.cloudId);
+        return local?.myRole ? { ...cp, myRole: local.myRole } : cp;
+      });
+      state.projects = [...mergedProjs, ...newLocalProjs];
       state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
       renderAll();
@@ -7268,11 +7276,15 @@ async function _syncFromCloudOnStartup() {
     try { await firebase.auth().signInAnonymously(); } catch(e) {}
   }
 
-  // PC: cloudId 있는 프로젝트에 ownerEmail 백필 + vb_users 인덱스 저장
+  // PC: 내 프로젝트(owner)에만 ownerEmail 백필 + vb_users 인덱스 저장
   for (const p of (state.projects || [])) {
     if (p.cloudId && state.user?.email) {
-      _db.collection('vb_projects').doc(p.cloudId)
-        .update({ ownerEmail: state.user.email }).catch(() => {});
+      // 공동작업자로 참여한 프로젝트는 ownerEmail을 덮어쓰지 않음
+      const isMyProj = !p.myRole || p.myRole === 'owner' || p.owner?.email === state.user?.email;
+      if (isMyProj) {
+        _db.collection('vb_projects').doc(p.cloudId)
+          .update({ ownerEmail: state.user.email }).catch(() => {});
+      }
       _saveUserIndex(p.cloudId);
     }
   }
@@ -7317,7 +7329,13 @@ async function _syncFromCloudOnStartup() {
       const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
       const currentProj = getProject();
       const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
-      state.projects = [...filteredProjs, ...newLocalProjs];
+      // myRole(공동작업자 역할)을 기존 로컬 프로젝트에서 복원 (parseDoc에서 누락됨)
+      const prevProjs2 = state.projects || [];
+      const mergedProjs2 = filteredProjs.map(cp => {
+        const local = prevProjs2.find(lp => lp.cloudId === cp.cloudId);
+        return local?.myRole ? { ...cp, myRole: local.myRole } : cp;
+      });
+      state.projects = [...mergedProjs2, ...newLocalProjs];
       state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
       renderAll();
