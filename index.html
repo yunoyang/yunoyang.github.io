@@ -3393,9 +3393,9 @@ function renderStyleTab() {
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
     const items = data[room] || [];
-    // 모든 collage 이미지 eager 로드 (썸네일이 작아서 부담 없음)
+    // collage: 뷰어용 원본(720px) 사용 — thumb은 너무 작아 깨짐
     const thumb = (i) => items[i]
-      ? `<img src="${items[i].thumb || items[i].url}" loading="eager" fetchpriority="high" decoding="sync" alt="" onerror="this.style.opacity=0">`
+      ? `<img src="${items[i].url}" loading="eager" fetchpriority="high" decoding="sync" alt="" onerror="this.style.opacity=0">`
       : '';
     let collage = '';
     if (items.length === 1) {
