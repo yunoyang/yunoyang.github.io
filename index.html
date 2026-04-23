@@ -3393,16 +3393,17 @@ function renderStyleTab() {
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
     const items = data[room] || [];
-    const thumb = (i, eager) => items[i]
-      ? `<img src="${items[i].thumb || items[i].url}" ${eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async" alt="" onerror="this.style.opacity=0">`
+    // 모든 collage 이미지 eager 로드 (썸네일이 작아서 부담 없음)
+    const thumb = (i) => items[i]
+      ? `<img src="${items[i].thumb || items[i].url}" loading="eager" fetchpriority="high" decoding="sync" alt="" onerror="this.style.opacity=0">`
       : '';
     let collage = '';
     if (items.length === 1) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(0,true)}</div></div>`;
+      collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(0)}</div></div>`;
     } else if (items.length === 2) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0,true)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1,false)}</div></div></div>`;
+      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div></div></div>`;
     } else if (items.length >= 3) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0,true)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1,false)}</div><div class="style-card-col-side-item">${thumb(2,false)}</div></div></div>`;
+      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div><div class="style-card-col-side-item">${thumb(2)}</div></div></div>`;
     }
     const onclick = items.length > 0 ? `openStyleViewer('${r}',0)` : `openStyleAddMenu('${r}')`;
     const meta = `핀 ${items.length}개`;
@@ -3498,7 +3499,7 @@ function _dataUrlToBlob(dataUrl) {
 function _styleUploadSetProgress(pct, label) {
   const el = document.getElementById('style-upload-progress');
   if (!el) return;
-  el.style.display = '';
+  el.style.display = 'flex';
   document.getElementById('style-upload-pct').textContent = Math.round(pct) + '%';
   document.getElementById('style-upload-bar').style.width = Math.round(pct) + '%';
   if (label) document.getElementById('style-upload-label').textContent = label;
@@ -3519,11 +3520,11 @@ async function handleStyleFileSelect(e) {
       const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
       const base = `styleImages/${projId}/${room}/${Date.now()}`;
 
-      // 1단계: 압축 (0 → 20%)
+      // 1단계: 압축 (0 → 20%) — 썸네일 100px/0.38 (그리드 빠른 로드)
       _styleUploadSetProgress(0, '이미지 압축 중...');
       const [viewerDataUrl, thumbDataUrl] = await Promise.all([
         _compressImage(file, 720, 0.72),
-        _compressImage(file, 180, 0.50)
+        _compressImage(file, 100, 0.38)
       ]);
       _styleUploadSetProgress(20, '업로드 중...');
 
@@ -3560,7 +3561,7 @@ async function handleStyleFileSelect(e) {
   _styleUploadSetProgress(0, '이미지 처리 중...');
   const [dataUrl, thumbUrl] = await Promise.all([
     _compressImage(file, 720, 0.72),
-    _compressImage(file, 180, 0.50)
+    _compressImage(file, 100, 0.38)
   ]);
   _styleUploadHideProgress();
   if (dataUrl) {
@@ -7740,14 +7741,14 @@ async function _checkExportOnLoad() {
   </div>
 </div>
 
-<!-- 스타일 이미지 업로드 프로그레스 바 -->
-<div id="style-upload-progress" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);z-index:20000;box-shadow:0 -2px 12px rgba(0,0,0,0.08);">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-    <span id="style-upload-label" style="font-size:13px;color:#333;font-weight:500;">업로드 중...</span>
-    <span id="style-upload-pct" style="font-size:13px;font-weight:700;color:var(--nl-blue,#5386FF);">0%</span>
-  </div>
-  <div style="height:4px;background:#eee;border-radius:4px;overflow:hidden;">
-    <div id="style-upload-bar" style="height:100%;background:var(--nl-blue,#5386FF);border-radius:4px;width:0%;transition:width 0.15s ease;"></div>
+<!-- 스타일 이미지 업로드 프로그레스 오버레이 (화면 중앙) -->
+<div id="style-upload-progress" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:32px 28px 28px;width:260px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-size:40px;font-weight:800;color:#222;line-height:1;margin-bottom:6px;" id="style-upload-pct">0%</div>
+    <div style="font-size:13px;color:#888;margin-bottom:20px;" id="style-upload-label">이미지 압축 중...</div>
+    <div style="height:6px;background:#eee;border-radius:6px;overflow:hidden;">
+      <div id="style-upload-bar" style="height:100%;background:#222;border-radius:6px;width:0%;transition:width 0.15s ease;"></div>
+    </div>
   </div>
 </div>
 
