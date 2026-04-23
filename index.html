@@ -7760,13 +7760,17 @@ async function _checkExportOnLoad() {
   </div>
 </div>
 
-<!-- 스타일 이미지 업로드 프로그레스 오버레이 (화면 중앙) -->
-<div id="style-upload-progress" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:20px;padding:32px 28px 28px;width:260px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
-    <div style="font-size:40px;font-weight:800;color:#222;line-height:1;margin-bottom:6px;" id="style-upload-pct">0%</div>
-    <div style="font-size:13px;color:#888;margin-bottom:20px;" id="style-upload-label">이미지 압축 중...</div>
-    <div style="height:6px;background:#eee;border-radius:6px;overflow:hidden;">
-      <div id="style-upload-bar" style="height:100%;background:#222;border-radius:6px;width:0%;transition:width 0.15s ease;"></div>
+<!-- 스타일 이미지 업로드 프로그레스 오버레이 (가로형 팝업) -->
+<div id="style-upload-progress" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.50);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:20px 24px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <!-- 가로 정렬: 퍼센트 + 라벨 -->
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;">
+      <span id="style-upload-pct" style="font-size:22px;font-weight:800;color:#222;line-height:1;">0%</span>
+      <span id="style-upload-label" style="font-size:13px;color:#888;font-weight:500;">업로드 중...</span>
+    </div>
+    <!-- 프로그레스 바 -->
+    <div style="height:5px;background:#eee;border-radius:5px;overflow:hidden;">
+      <div id="style-upload-bar" style="height:100%;background:#222;border-radius:5px;width:0%;transition:width 0.15s ease;"></div>
     </div>
   </div>
 </div>
