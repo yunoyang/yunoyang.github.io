@@ -3540,6 +3540,11 @@ function addStyleImage(room, item) {
   if (!proj.styleImages[room]) proj.styleImages[room] = [];
   proj.styleImages[room].push(item);
   try { save(); } catch(e) { console.warn('save failed:', e); }
+  // 공동작업자는 save()에서 isOwner 체크로 Firestore 못 씀 → 스타일 이미지만 직접 동기화
+  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  if (!isOwner && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+    _syncStyleImagesToCloud(proj);
+  }
   renderStyleTab();
 }
 
@@ -3587,6 +3592,11 @@ function deleteStyleImage() {
   if (!confirm('이 이미지를 삭제할까요?')) return;
   proj.styleImages[styleViewerRoom].splice(styleViewerIndex, 1);
   try { save(); } catch(e) {}
+  // 공동작업자 삭제도 Firestore에 반영
+  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  if (!isOwner && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+    _syncStyleImagesToCloud(proj);
+  }
   const remaining = (proj.styleImages[styleViewerRoom] || []).length;
   closeStyleViewer();
   renderStyleTab();
@@ -6648,6 +6658,19 @@ function _syncProjToCloud(proj) {
   _db.collection('vb_projects').doc(proj.cloudId).update(payload).catch(e => console.error('sync err',e));
 }
 
+// 스타일 이미지만 Firestore에 업데이트 — owner/collaborator 모두 호출 가능
+async function _syncStyleImagesToCloud(proj) {
+  if (!proj?.cloudId || !_db) return;
+  try {
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.styleImages': proj.styleImages || {},
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+    });
+    _lastSaveTime = Date.now();
+  } catch(e) { console.warn('_syncStyleImagesToCloud:', e); }
+}
+
 // ===== REAL-TIME LISTENER =====
 function _startCollabListener(cloudId) {
   if (_collabUnsub) { _collabUnsub(); _collabUnsub = null; }
@@ -6663,7 +6686,20 @@ function _startCollabListener(cloudId) {
     const remote = data.projectData;
     if (!remote) return;
     const myRole = proj.myRole;
+    const localImages = proj.styleImages || {}; // 로컬 이미지 보존용 (업로드 직후 리스너 역전 대비)
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
+    // styleImages: 클라우드 + 로컬 합집합 (URL 기준 중복 제거)
+    const remoteImages = remote.styleImages || {};
+    const mergedImages = {};
+    const allRooms = new Set([...Object.keys(remoteImages), ...Object.keys(localImages)]);
+    allRooms.forEach(r => {
+      const ri = remoteImages[r] || [];
+      const li = localImages[r] || [];
+      const urls = new Set(ri.map(x => x.url));
+      const merged = [...ri, ...li.filter(x => !urls.has(x.url))];
+      if (merged.length) mergedImages[r] = merged;
+    });
+    proj.styleImages = mergedImages;
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
