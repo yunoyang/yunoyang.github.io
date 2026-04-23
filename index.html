@@ -3540,10 +3540,10 @@ function addStyleImage(room, item) {
   if (!proj.styleImages[room]) proj.styleImages[room] = [];
   proj.styleImages[room].push(item);
   try { save(); } catch(e) { console.warn('save failed:', e); }
-  // 공동작업자는 save()에서 isOwner 체크로 Firestore 못 씀 → 스타일 이미지만 직접 동기화
+  // 공동작업자는 save()에서 isOwner 체크로 Firestore 못 씀 → meta.styleImages 직접 동기화
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
-  if (!isOwner && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
-    _syncStyleImagesToCloud(proj);
+  if (!isOwner && proj.isCloud && proj.cloudId) {
+    _syncStyleImagesToCloud(proj);  // _initFirebase()는 함수 내부에서 처리
   }
   renderStyleTab();
 }
@@ -3557,9 +3557,13 @@ function openStyleViewer(room, index) {
   styleViewerIndex = index;
   const reel = document.getElementById('style-viewer-reel');
   reel.innerHTML = items.map(item => {
-    const by = item.uploadedBy ? `<div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.45);color:#fff;font-size:11px;padding:3px 10px;border-radius:99px;white-space:nowrap;pointer-events:none;">${item.uploadedBy}</div>` : '';
-    return `<div style="flex-shrink:0;width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;background:#fff;">
-      <img src="${item.url}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;">
+    const by = item.uploadedBy
+      ? `<div style="flex-shrink:0;text-align:center;padding:4px 0 2px;font-size:11px;color:#aaa;">${item.uploadedBy}</div>`
+      : '';
+    return `<div style="flex-shrink:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:stretch;justify-content:center;background:#fff;overflow:hidden;">
+      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;">
+        <img src="${item.url}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;">
+      </div>
       ${by}
     </div>`;
   }).join('');
@@ -3596,7 +3600,7 @@ function deleteStyleImage() {
   try { save(); } catch(e) {}
   // 공동작업자 삭제도 Firestore에 반영
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
-  if (!isOwner && proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+  if (!isOwner && proj.isCloud && proj.cloudId) {
     _syncStyleImagesToCloud(proj);
   }
   const remaining = (proj.styleImages[styleViewerRoom] || []).length;
@@ -6543,6 +6547,20 @@ function _genToken(len = 28) {
 }
 
 // ===== CLOUD MERGE HELPER =====
+// 두 styleImages 맵을 URL 기준 중복 제거 후 합집합으로 병합
+function _mergeStyleImageMaps(a, b) {
+  const result = {};
+  const allRooms = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+  allRooms.forEach(r => {
+    const ai = (a[r] || []);
+    const bi = (b[r] || []);
+    const urls = new Set(ai.map(x => x.url));
+    const merged = [...ai, ...bi.filter(x => !urls.has(x.url))];
+    if (merged.length) result[r] = merged;
+  });
+  return result;
+}
+
 // 클라우드 프로젝트를 로컬 프로젝트와 병합 — myRole과 styleImages 보존
 function _mergeLocalPreserve(cp, localProjs) {
   const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
@@ -6567,22 +6585,17 @@ async function _fetchStyleFromCloud() {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     if (!snap.exists) return;
     const data = snap.data();
-    // projectData.styleImages 또는 최상위 styleImages 모두 확인
-    const remoteImages = data?.projectData?.styleImages || data?.styleImages || {};
+    // meta.styleImages(공동작업자 업로드) + projectData.styleImages(owner 업로드) 병합
+    const remoteImages = _mergeStyleImageMaps(
+      data?.meta?.styleImages || {},
+      data?.projectData?.styleImages || {}
+    );
     const remoteRooms  = data?.projectData?.styleRooms  || [];
     let changed = false;
 
-    // 클라우드 + 로컬 합집합 (URL 기준 중복 제거) — 항상 병합
+    // 클라우드 + 로컬 합집합 — 항상 병합
     const localImages = proj.styleImages || {};
-    const allRooms = new Set([...Object.keys(remoteImages), ...Object.keys(localImages)]);
-    const mergedImages = {};
-    allRooms.forEach(r => {
-      const ri = remoteImages[r] || [];
-      const li = localImages[r] || [];
-      const urls = new Set(ri.map(x => x.url));
-      const merged = [...ri, ...li.filter(x => !urls.has(x.url))];
-      if (merged.length) mergedImages[r] = merged;
-    });
+    const mergedImages = _mergeStyleImageMaps(remoteImages, localImages);
     const mergedCnt = Object.values(mergedImages).reduce((s,a)=>s+a.length,0);
     const localCnt  = Object.values(localImages).reduce((s,a)=>s+(a?.length||0),0);
     if (mergedCnt !== localCnt || JSON.stringify(mergedImages) !== JSON.stringify(localImages)) {
@@ -6676,22 +6689,31 @@ function _syncProjToCloud(proj) {
 }
 
 // 스타일 이미지만 Firestore에 업데이트 — owner/collaborator 모두 호출 가능
+// meta.styleImages 경로 사용 — _acceptInvite와 동일하게 meta.* 는 공동작업자도 쓸 수 있음
 async function _syncStyleImagesToCloud(proj) {
   if (!proj?.cloudId) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
     await _db.collection('vb_projects').doc(proj.cloudId).update({
-      'projectData.styleImages': proj.styleImages || {},
-      'styleImages': proj.styleImages || {},          // 최상위에도 기록 (권한 폴백)
-      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
-      'meta.updatedBy': state.user?.email || '',
+      'meta.styleImages': proj.styleImages || {},   // meta.* 경로: 공동작업자도 쓸 수 있음
+      'meta.styleUpdatedBy': state.user?.email || '',
+      'meta.styleUpdatedAt': firebase.firestore.FieldValue.serverTimestamp(),
     });
-    _lastSaveTime = Date.now();
-    console.log('[style sync] ✅ Firestore에 styleImages 저장 완료:', proj.cloudId);
+    console.log('[style sync] ✅ meta.styleImages 저장 완료 by', state.user?.email);
   } catch(e) {
-    console.error('[style sync] ❌ Firestore 저장 실패:', e.code, e.message);
-    showToastMessage('이미지 동기화 실패: ' + (e.code || e.message));
+    console.error('[style sync] ❌ 저장 실패:', e.code, e.message);
+    // meta 경로도 실패 → projectData 경로로 재시도 (owner 권한일 때)
+    try {
+      await _db.collection('vb_projects').doc(proj.cloudId).update({
+        'projectData.styleImages': proj.styleImages || {},
+        'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+        'meta.updatedBy': state.user?.email || '',
+      });
+      console.log('[style sync] ✅ projectData.styleImages 저장 완료 (fallback)');
+    } catch(e2) {
+      console.error('[style sync] ❌ fallback도 실패:', e2.code, e2.message);
+    }
   }
 }
 
@@ -6710,20 +6732,14 @@ function _startCollabListener(cloudId) {
     const remote = data.projectData;
     if (!remote) return;
     const myRole = proj.myRole;
-    const localImages = proj.styleImages || {}; // 로컬 이미지 보존용 (업로드 직후 리스너 역전 대비)
+    const localImages = proj.styleImages || {};
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
-    // styleImages: 클라우드 + 로컬 합집합 (URL 기준 중복 제거)
-    const remoteImages = remote.styleImages || {};
-    const mergedImages = {};
-    const allRooms = new Set([...Object.keys(remoteImages), ...Object.keys(localImages)]);
-    allRooms.forEach(r => {
-      const ri = remoteImages[r] || [];
-      const li = localImages[r] || [];
-      const urls = new Set(ri.map(x => x.url));
-      const merged = [...ri, ...li.filter(x => !urls.has(x.url))];
-      if (merged.length) mergedImages[r] = merged;
-    });
-    proj.styleImages = mergedImages;
+    // styleImages: meta.styleImages(공동작업자) + projectData.styleImages(owner) + 로컬 3방향 병합
+    // meta.styleImages(공동작업자) + projectData.styleImages(owner) + 로컬 3방향 병합
+    proj.styleImages = _mergeStyleImageMaps(
+      _mergeStyleImageMaps(meta.styleImages || {}, remote.styleImages || {}),
+      localImages
+    );
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
