@@ -3517,7 +3517,7 @@ async function handleStyleFileSelect(e) {
         viewerRef.ref.getDownloadURL(),
         thumbRef.ref.getDownloadURL()
       ]);
-      addStyleImage(room, { url, thumb, type: 'upload' });
+      addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '' });
       return;
     } catch(err) {
       console.warn('Storage upload failed, fallback:', err.message);
@@ -3529,7 +3529,7 @@ async function handleStyleFileSelect(e) {
     _compressImage(file, 720, 0.72),
     _compressImage(file, 180, 0.50)
   ]);
-  if (dataUrl) addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload' });
+  if (dataUrl) addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
 }
 
 
@@ -3556,11 +3556,13 @@ function openStyleViewer(room, index) {
   styleViewerRoom = room;
   styleViewerIndex = index;
   const reel = document.getElementById('style-viewer-reel');
-  reel.innerHTML = items.map(item =>
-    `<div style="flex-shrink:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fff;">
+  reel.innerHTML = items.map(item => {
+    const by = item.uploadedBy ? `<div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.45);color:#fff;font-size:11px;padding:3px 10px;border-radius:99px;white-space:nowrap;pointer-events:none;">${item.uploadedBy}</div>` : '';
+    return `<div style="flex-shrink:0;width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;background:#fff;">
       <img src="${item.url}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;">
-    </div>`
-  ).join('');
+      ${by}
+    </div>`;
+  }).join('');
   reel.style.transition = 'none';
   reel.style.transform = `translateX(-${index * 100}%)`;
   requestAnimationFrame(() => { reel.style.transition = 'transform .28s cubic-bezier(0.25,1,0.5,1)'; });
@@ -6555,7 +6557,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   return merged;
 }
 
-// 스타일 탭 진입 시 Firestore에서 styleImages를 직접 가져와 로컬 업데이트
+// 스타일 탭 진입 시 Firestore에서 styleImages를 직접 가져와 로컬과 병합
 async function _fetchStyleFromCloud() {
   const proj = getProject();
   if (!proj?.cloudId) return;
@@ -6564,21 +6566,36 @@ async function _fetchStyleFromCloud() {
   try {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     if (!snap.exists) return;
-    const remote = snap.data()?.projectData;
-    if (!remote) return;
+    const data = snap.data();
+    // projectData.styleImages 또는 최상위 styleImages 모두 확인
+    const remoteImages = data?.projectData?.styleImages || data?.styleImages || {};
+    const remoteRooms  = data?.projectData?.styleRooms  || [];
     let changed = false;
-    // 클라우드의 styleImages가 로컬보다 많으면 덮어쓰기
-    if (remote.styleImages) {
-      const cloudCnt = Object.values(remote.styleImages).reduce((s,a)=>s+(a?.length||0),0);
-      const localCnt = Object.values(proj.styleImages||{}).reduce((s,a)=>s+(a?.length||0),0);
-      if (cloudCnt > localCnt) { proj.styleImages = remote.styleImages; changed = true; }
+
+    // 클라우드 + 로컬 합집합 (URL 기준 중복 제거) — 항상 병합
+    const localImages = proj.styleImages || {};
+    const allRooms = new Set([...Object.keys(remoteImages), ...Object.keys(localImages)]);
+    const mergedImages = {};
+    allRooms.forEach(r => {
+      const ri = remoteImages[r] || [];
+      const li = localImages[r] || [];
+      const urls = new Set(ri.map(x => x.url));
+      const merged = [...ri, ...li.filter(x => !urls.has(x.url))];
+      if (merged.length) mergedImages[r] = merged;
+    });
+    const mergedCnt = Object.values(mergedImages).reduce((s,a)=>s+a.length,0);
+    const localCnt  = Object.values(localImages).reduce((s,a)=>s+(a?.length||0),0);
+    if (mergedCnt !== localCnt || JSON.stringify(mergedImages) !== JSON.stringify(localImages)) {
+      proj.styleImages = mergedImages;
+      changed = true;
     }
-    // styleRooms도 동기화
-    if (remote.styleRooms?.length) { proj.styleRooms = remote.styleRooms; changed = true; }
+    if (remoteRooms.length) { proj.styleRooms = remoteRooms; changed = true; }
     if (changed) {
       localStorage.setItem('vibespace', JSON.stringify(state));
       renderStyleTab();
     }
+    console.log('[style fetch] 클라우드', Object.values(remoteImages).reduce((s,a)=>s+(a?.length||0),0),
+      '개 / 로컬', localCnt, '개 / 병합', mergedCnt, '개');
   } catch(e) { console.warn('_fetchStyleFromCloud:', e); }
 }
 
@@ -6660,15 +6677,22 @@ function _syncProjToCloud(proj) {
 
 // 스타일 이미지만 Firestore에 업데이트 — owner/collaborator 모두 호출 가능
 async function _syncStyleImagesToCloud(proj) {
-  if (!proj?.cloudId || !_db) return;
+  if (!proj?.cloudId) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
   try {
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.styleImages': proj.styleImages || {},
+      'styleImages': proj.styleImages || {},          // 최상위에도 기록 (권한 폴백)
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
     });
     _lastSaveTime = Date.now();
-  } catch(e) { console.warn('_syncStyleImagesToCloud:', e); }
+    console.log('[style sync] ✅ Firestore에 styleImages 저장 완료:', proj.cloudId);
+  } catch(e) {
+    console.error('[style sync] ❌ Firestore 저장 실패:', e.code, e.message);
+    showToastMessage('이미지 동기화 실패: ' + (e.code || e.message));
+  }
 }
 
 // ===== REAL-TIME LISTENER =====
