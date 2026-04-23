@@ -358,6 +358,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .style-card-col-main img {
   width: 100%; height: 100%; object-fit: cover; display: block;
+  background: #e8e8ec;
 }
 .style-card-col-side {
   display: flex; flex-direction: column; gap: 2px;
@@ -3475,7 +3476,9 @@ function _compressImage(file, maxW = 1200, quality = 0.75) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(blobUrl);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      // WebP 지원 시 WebP 우선 (동일 화질에서 JPEG 대비 ~35% 작은 용량)
+      const webp = canvas.toDataURL('image/webp', quality);
+      resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', quality));
     };
     img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(null); };
     img.src = blobUrl;
@@ -3501,10 +3504,10 @@ async function handleStyleFileSelect(e) {
       const proj = getProject();
       const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
       const base = `styleImages/${projId}/${room}/${Date.now()}`;
-      // 업로드 전 압축 — 뷰어용 900px / 그리드 썸네일 240px
+      // 업로드 전 압축 — 뷰어용 720px / 그리드 썸네일 180px (WebP)
       const [viewerDataUrl, thumbDataUrl] = await Promise.all([
-        _compressImage(file, 900, 0.78),
-        _compressImage(file, 240, 0.60)
+        _compressImage(file, 720, 0.72),
+        _compressImage(file, 180, 0.50)
       ]);
       const [viewerRef, thumbRef] = await Promise.all([
         _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' }),
@@ -3521,10 +3524,10 @@ async function handleStyleFileSelect(e) {
     }
   }
 
-  // base64 폴백 — 뷰어용 900px / 그리드 썸네일 240px
+  // base64 폴백 — 뷰어용 720px / 그리드 썸네일 180px (WebP)
   const [dataUrl, thumbUrl] = await Promise.all([
-    _compressImage(file, 900, 0.78),
-    _compressImage(file, 240, 0.60)
+    _compressImage(file, 720, 0.72),
+    _compressImage(file, 180, 0.50)
   ]);
   if (dataUrl) addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload' });
 }
