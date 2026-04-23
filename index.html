@@ -3524,7 +3524,7 @@ async function handleStyleFileSelect(e) {
       _styleUploadSetProgress(0, '이미지 압축 중...');
       const [viewerDataUrl, thumbDataUrl] = await Promise.all([
         _compressImage(file, 720, 0.72),
-        _compressImage(file, 180, 0.50)
+        _compressImage(file, 360, 0.72)
       ]);
       _styleUploadSetProgress(20, '업로드 중...');
 
@@ -3561,7 +3561,7 @@ async function handleStyleFileSelect(e) {
   _styleUploadSetProgress(0, '이미지 처리 중...');
   const [dataUrl, thumbUrl] = await Promise.all([
     _compressImage(file, 720, 0.72),
-    _compressImage(file, 180, 0.50)
+    _compressImage(file, 360, 0.72)
   ]);
   _styleUploadHideProgress();
   if (dataUrl) {
