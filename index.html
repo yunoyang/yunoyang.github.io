@@ -3339,7 +3339,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('floating-add-process').style.display = tab === 'style' ? 'none' : '';
   document.getElementById('floating-add-style').style.display = tab === 'style' ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
-  if (tab === 'style') renderStyleTab();
+  if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -6521,6 +6521,33 @@ function _mergeLocalPreserve(cp, localProjs) {
   const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
   if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
   return merged;
+}
+
+// 스타일 탭 진입 시 Firestore에서 styleImages를 직접 가져와 로컬 업데이트
+async function _fetchStyleFromCloud() {
+  const proj = getProject();
+  if (!proj?.cloudId) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    if (!snap.exists) return;
+    const remote = snap.data()?.projectData;
+    if (!remote) return;
+    let changed = false;
+    // 클라우드의 styleImages가 로컬보다 많으면 덮어쓰기
+    if (remote.styleImages) {
+      const cloudCnt = Object.values(remote.styleImages).reduce((s,a)=>s+(a?.length||0),0);
+      const localCnt = Object.values(proj.styleImages||{}).reduce((s,a)=>s+(a?.length||0),0);
+      if (cloudCnt > localCnt) { proj.styleImages = remote.styleImages; changed = true; }
+    }
+    // styleRooms도 동기화
+    if (remote.styleRooms?.length) { proj.styleRooms = remote.styleRooms; changed = true; }
+    if (changed) {
+      localStorage.setItem('vibespace', JSON.stringify(state));
+      renderStyleTab();
+    }
+  } catch(e) { console.warn('_fetchStyleFromCloud:', e); }
 }
 
 // Firebase Storage에서 스타일 이미지 복구 (Firestore/localStorage 데이터 소실 시)
