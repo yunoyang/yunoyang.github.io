@@ -6590,6 +6590,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   const cloudHasImages = cp.styleImages && Object.values(cp.styleImages).some(a => a?.length > 0);
   const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
   if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
+  // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
+  if (!cp.floorplanImage && local.floorplanImage) merged.floorplanImage = local.floorplanImage;
   return merged;
 }
 
@@ -6754,7 +6756,10 @@ function _startCollabListener(cloudId) {
     if (!remote) return;
     const myRole = proj.myRole;
     const localImages = proj.styleImages || {};
+    const localFloorplan = proj.floorplanImage; // 도면 보존
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
+    // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
+    if (!proj.floorplanImage && localFloorplan) proj.floorplanImage = localFloorplan;
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
