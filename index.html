@@ -908,7 +908,7 @@ button, input, textarea, select { font-family:var(--font); }
   font-family:var(--font); transition:all .18s; margin-bottom:-1.5px;
 }
 .process-tab.active { color:#222; border-bottom-color:#222; }
-.process-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding-top:4px; }
+.process-grid { display:grid; grid-template-columns:1fr 1fr 1fr; grid-auto-rows:44px; gap:8px; padding-top:4px; min-height:calc(3*44px + 2*8px); }
 .process-option {
   padding:12px 6px; border:1.5px solid #dde3ef; border-radius:10px; text-align:center;
   cursor:pointer; font-size:14px; font-weight:600; transition:all .2s; background:#fff;
