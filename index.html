@@ -3494,6 +3494,20 @@ function _dataUrlToBlob(dataUrl) {
   return new Blob([arr], { type: mime });
 }
 
+// 업로드 프로그레스 UI 헬퍼
+function _styleUploadSetProgress(pct, label) {
+  const el = document.getElementById('style-upload-progress');
+  if (!el) return;
+  el.style.display = '';
+  document.getElementById('style-upload-pct').textContent = Math.round(pct) + '%';
+  document.getElementById('style-upload-bar').style.width = Math.round(pct) + '%';
+  if (label) document.getElementById('style-upload-label').textContent = label;
+}
+function _styleUploadHideProgress() {
+  const el = document.getElementById('style-upload-progress');
+  if (el) el.style.display = 'none';
+}
+
 async function handleStyleFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -3504,32 +3518,55 @@ async function handleStyleFileSelect(e) {
       const proj = getProject();
       const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
       const base = `styleImages/${projId}/${room}/${Date.now()}`;
-      // 업로드 전 압축 — 뷰어용 720px / 그리드 썸네일 180px (WebP)
+
+      // 1단계: 압축 (0 → 20%)
+      _styleUploadSetProgress(0, '이미지 압축 중...');
       const [viewerDataUrl, thumbDataUrl] = await Promise.all([
         _compressImage(file, 720, 0.72),
         _compressImage(file, 180, 0.50)
       ]);
-      const [viewerRef, thumbRef] = await Promise.all([
-        _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' }),
-        _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbDataUrl), { contentType: 'image/jpeg' })
-      ]);
+      _styleUploadSetProgress(20, '업로드 중...');
+
+      // 2단계: Storage 업로드 (20 → 90%), 뷰어 파일 진행률 추적
+      const viewerTask = _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' });
+      const thumbTask  = _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbDataUrl), { contentType: 'image/jpeg' });
+
+      viewerTask.on('state_changed', snap => {
+        const pct = 20 + (snap.bytesTransferred / (snap.totalBytes || 1)) * 70;
+        _styleUploadSetProgress(pct, '업로드 중...');
+      });
+
+      await Promise.all([viewerTask, thumbTask]);
+      _styleUploadSetProgress(95, '마무리 중...');
+
+      // 3단계: URL 취득
       const [url, thumb] = await Promise.all([
-        viewerRef.ref.getDownloadURL(),
-        thumbRef.ref.getDownloadURL()
+        viewerTask.snapshot.ref.getDownloadURL(),
+        thumbTask.snapshot.ref.getDownloadURL()
       ]);
+
+      _styleUploadSetProgress(100, '완료');
+      _styleUploadHideProgress();
+      showToastMessage('업로드 완료 ✅');
       addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '' });
       return;
     } catch(err) {
+      _styleUploadHideProgress();
       console.warn('Storage upload failed, fallback:', err.message);
     }
   }
 
-  // base64 폴백 — 뷰어용 720px / 그리드 썸네일 180px (WebP)
+  // base64 폴백 — 압축만 표시
+  _styleUploadSetProgress(0, '이미지 처리 중...');
   const [dataUrl, thumbUrl] = await Promise.all([
     _compressImage(file, 720, 0.72),
     _compressImage(file, 180, 0.50)
   ]);
-  if (dataUrl) addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
+  _styleUploadHideProgress();
+  if (dataUrl) {
+    showToastMessage('업로드 완료 ✅');
+    addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
+  }
 }
 
 
@@ -7700,6 +7737,17 @@ async function _checkExportOnLoad() {
   <!-- counter -->
   <div style="text-align:center;padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);flex-shrink:0;background:#fff;">
     <span id="style-viewer-counter" style="font-size:12px;color:#bbb;font-weight:500;letter-spacing:.06em;"></span>
+  </div>
+</div>
+
+<!-- 스타일 이미지 업로드 프로그레스 바 -->
+<div id="style-upload-progress" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);z-index:20000;box-shadow:0 -2px 12px rgba(0,0,0,0.08);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <span id="style-upload-label" style="font-size:13px;color:#333;font-weight:500;">업로드 중...</span>
+    <span id="style-upload-pct" style="font-size:13px;font-weight:700;color:var(--nl-blue,#5386FF);">0%</span>
+  </div>
+  <div style="height:4px;background:#eee;border-radius:4px;overflow:hidden;">
+    <div id="style-upload-bar" style="height:100%;background:var(--nl-blue,#5386FF);border-radius:4px;width:0%;transition:width 0.15s ease;"></div>
   </div>
 </div>
 
