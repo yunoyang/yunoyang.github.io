@@ -2927,12 +2927,9 @@ async function _autoUploadOnLogin() {
       const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
       const currentProj = getProject();
       const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
-      // myRole(공동작업자 역할)을 기존 로컬 프로젝트에서 복원 (parseDoc에서 누락됨)
+      // myRole + styleImages를 기존 로컬에서 복원 (parseDoc에서 누락됨)
       const prevProjs = state.projects || [];
-      const mergedProjs = allCloudProjs.map(cp => {
-        const local = prevProjs.find(lp => lp.cloudId === cp.cloudId);
-        return local?.myRole ? { ...cp, myRole: local.myRole } : cp;
-      });
+      const mergedProjs = allCloudProjs.map(cp => _mergeLocalPreserve(cp, prevProjs));
       state.projects = [...mergedProjs, ...newLocalProjs];
       state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
@@ -3381,9 +3378,16 @@ function getStyleData() {
   return proj.styleImages;
 }
 
+let _styleRecoveryAttempted = false;
 function renderStyleTab() {
   const rooms = getStyleRooms();
   const data = getStyleData();
+  // 이미지가 전혀 없으면 Firebase Storage에서 자동 복구 시도 (1회)
+  const hasAnyImage = Object.values(data).some(arr => arr?.length > 0);
+  if (!hasAnyImage && !_styleRecoveryAttempted && state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+    _styleRecoveryAttempted = true;
+    _recoverStyleImagesFromStorage().then(ok => { if (ok) showToastMessage('스타일 이미지를 복구했습니다 ✅'); });
+  }
   const container = document.getElementById('style-rooms-container');
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
@@ -6504,6 +6508,59 @@ function _genToken(len = 28) {
   return Array.from(arr, b => b.toString(16).padStart(2,'0')).join('');
 }
 
+// ===== CLOUD MERGE HELPER =====
+// 클라우드 프로젝트를 로컬 프로젝트와 병합 — myRole과 styleImages 보존
+function _mergeLocalPreserve(cp, localProjs) {
+  const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
+  if (!local) return cp;
+  const merged = { ...cp };
+  // 공동작업자 역할 보존
+  if (local.myRole) merged.myRole = local.myRole;
+  // 클라우드에 styleImages가 없거나 비어있으면 로컬 데이터 우선 적용
+  const cloudHasImages = cp.styleImages && Object.values(cp.styleImages).some(a => a?.length > 0);
+  const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
+  if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
+  return merged;
+}
+
+// Firebase Storage에서 스타일 이미지 복구 (Firestore/localStorage 데이터 소실 시)
+async function _recoverStyleImagesFromStorage() {
+  if (!_fbStorage || !state.loggedIn) return false;
+  const proj = getProject();
+  if (!proj) return false;
+  const projId = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+  try {
+    const rootRef = _fbStorage.ref(`styleImages/${projId}`);
+    const rootList = await rootRef.listAll();
+    if (!rootList.prefixes.length) return false;
+    const recovered = {};
+    for (const roomRef of rootList.prefixes) {
+      const room = decodeURIComponent(roomRef.name);
+      const roomList = await roomRef.listAll();
+      const thumbItems = roomList.items.filter(it => it.name.endsWith('_t.jpg'));
+      const viewerItems = roomList.items.filter(it => !it.name.endsWith('_t.jpg'));
+      if (!viewerItems.length) continue;
+      recovered[room] = [];
+      for (const vItem of viewerItems) {
+        const tName = vItem.name.replace(/\.jpg$/i, '_t.jpg');
+        const tItem = thumbItems.find(t => t.name === tName);
+        const [url, thumb] = await Promise.all([
+          vItem.getDownloadURL(),
+          tItem ? tItem.getDownloadURL() : vItem.getDownloadURL(),
+        ]);
+        recovered[room].push({ url, thumb, type: 'upload' });
+      }
+    }
+    if (Object.keys(recovered).length) {
+      proj.styleImages = recovered;
+      save();
+      renderStyleTab();
+      return true;
+    }
+  } catch(e) { console.warn('Style image recovery failed:', e); }
+  return false;
+}
+
 // ===== CLOUD SYNC =====
 async function _pushProjToCloud(proj) {
   if (!_db) return null;
@@ -7329,12 +7386,9 @@ async function _syncFromCloudOnStartup() {
       const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
       const currentProj = getProject();
       const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
-      // myRole(공동작업자 역할)을 기존 로컬 프로젝트에서 복원 (parseDoc에서 누락됨)
+      // myRole + styleImages를 기존 로컬에서 복원 (parseDoc에서 누락됨)
       const prevProjs2 = state.projects || [];
-      const mergedProjs2 = filteredProjs.map(cp => {
-        const local = prevProjs2.find(lp => lp.cloudId === cp.cloudId);
-        return local?.myRole ? { ...cp, myRole: local.myRole } : cp;
-      });
+      const mergedProjs2 = filteredProjs.map(cp => _mergeLocalPreserve(cp, prevProjs2));
       state.projects = [...mergedProjs2, ...newLocalProjs];
       state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
