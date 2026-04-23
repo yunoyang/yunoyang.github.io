@@ -349,7 +349,7 @@ button, input, textarea, select { font-family:var(--font); }
 .style-card-collage {
   display: flex;
   gap: 2px;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   background: #e8e8ec;
   overflow: hidden;
 }
@@ -3592,14 +3592,16 @@ function openStyleViewer(room, index) {
   styleViewerRoom = room;
   styleViewerIndex = index;
   const reel = document.getElementById('style-viewer-reel');
-  reel.innerHTML = items.map(item =>
-    `<div style="flex-shrink:0;width:100%;height:100%;display:flex;flex-direction:column;background:#fff;">
-      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;">
-        <img src="${item.url}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;">
-      </div>
-      ${item.uploadedBy ? `<div style="text-align:center;padding:6px 0;font-size:11px;color:#aaa;flex-shrink:0;">${item.uploadedBy}</div>` : ''}
-    </div>`
-  ).join('');
+  reel.innerHTML = items.map(item => {
+    const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
+    const badge = ini
+      ? '<div style="position:absolute;left:14px;bottom:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.52);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none;">' + ini + '</div>'
+      : '';
+    return '<div style="flex-shrink:0;width:100%;height:100%;position:relative;background:#fff;overflow:hidden;">'
+      + '<img src="' + item.url + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;">'
+      + badge
+      + '</div>';
+  }).join('');
   reel.style.transition = 'none';
   reel.style.transform = `translateX(-${index * 100}%)`;
   requestAnimationFrame(() => { reel.style.transition = 'transform .28s cubic-bezier(0.25,1,0.5,1)'; });
