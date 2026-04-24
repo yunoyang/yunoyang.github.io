@@ -304,24 +304,24 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding:2px 0 0; display:flex; align-items:center; background:#fff;
+  padding:2px 24px 0; display:flex; align-items:center; background:#fff;
   border-bottom:1.5px solid #eef0f5; flex-shrink:0;
 }
 .tab-toggle {
-  flex:1; display:flex; height:52px; background:transparent;
-  border-radius:0; border:none; overflow:hidden;
+  flex:1; display:flex; height:58px; background:transparent;
+  border-radius:0; border:none; overflow:visible;
 }
 .tab-btn {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
-  white-space:nowrap; font-size:15px; font-weight:500; color:#818590; text-align:center;
-  cursor:pointer; border:none; background:transparent; transition:color .15s;
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+  font-size:15px; font-weight:500; color:#818590; text-align:center;
+  cursor:pointer; border:none; background:transparent; transition:all .2s;
   border-bottom:2.5px solid transparent; margin-bottom:-1.5px; position:relative;
 }
 .tab-btn svg { width:15px; height:15px; }
 .tab-btn.active {
-  background:transparent; color:#222; font-weight:600;
+  background:transparent; color:#333333; font-weight:600;
   border-radius:0; border:none;
-  border-bottom:2.5px solid #222;
+  border-bottom:2.5px solid #333333;
 }
 
 /* ===== 컨텐츠 탭 ===== */
@@ -1970,8 +1970,8 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정계획</button>
-        <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체일정</button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획</button>
+        <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
         <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
         <button class="tab-btn" onclick="switchMainTab('content',this)">컨텐츠</button>
       </div>
