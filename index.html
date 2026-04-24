@@ -358,7 +358,7 @@ button, input, textarea, select { font-family:var(--font); }
 .content-add-confirm-btn {
   height: 46px;
   padding: 0 18px;
-  background: var(--primary);
+  background: #222;
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -851,7 +851,7 @@ button, input, textarea, select { font-family:var(--font); }
 .detail-date-label { font-size:12px; color:#888; margin-bottom:5px; }
 .detail-date-hint { font-size:11px; color:#bbb; margin-top:4px; }
 /* 삭제 버튼 (위험) */
-.btn-danger { background:#fff0f0; color:var(--danger); border:none; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font); }
+.btn-danger { background:#fff0f0; color:var(--danger); border:none; padding:10px 16px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font); }
 .btn-danger:hover { background:#ffe0e0; }
 
 /* ===== FLOATING ===== */
@@ -1123,15 +1123,15 @@ button, input, textarea, select { font-family:var(--font); }
 .date-sep { font-size:14px; color:#bbb; }
 .addr-input {
   padding:5px 14px; height:48px; box-sizing:border-box; background:#fff; border:1px solid var(--border-input);
-  border-radius:8px; font-size:16px; color:#222; width:100%; outline:none; font-family:var(--font);
+  border-radius:12px; font-size:16px; color:#222; width:100%; outline:none; font-family:var(--font);
 }
 .addr-input:focus { border-color:var(--primary); }
 .addr-search-row { display:flex; gap:8px; }
 .addr-search-btn {
-  padding:7px 16px; background:var(--btn-blue); color:#fff; border:none;
-  border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;
+  padding:0 18px; height:48px; background:var(--btn-blue); color:#fff; border:none;
+  border-radius:12px; font-size:14px; font-weight:600; cursor:pointer;
   white-space:nowrap; font-family:var(--font); flex-shrink:0;
-  display:flex; align-items:center; gap:6px;
+  display:flex; align-items:center; gap:6px; box-sizing:border-box;
 }
 .addr-search-btn svg { width:15px; height:15px; }
 .textarea-field {
@@ -1142,8 +1142,8 @@ button, input, textarea, select { font-family:var(--font); }
 .textarea-field:focus { border-color:var(--primary); }
 .form-footer { padding:16px 20px; flex-shrink:0; border-top:1px solid var(--divider); }
 .btn-primary {
-  width:100%; height:50px; background:var(--btn-blue); color:#fff; border:none;
-  border-radius:12px; font-size:16px; font-weight:500; cursor:pointer;
+  width:100%; height:50px; background:#222; color:#fff; border:none;
+  border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; font-family:var(--font);
 }
 .btn-primary:active { opacity:.88; }
 
@@ -1162,18 +1162,18 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .dialog h3 { font-size:18px; font-weight:700; }
 .dialog-input {
-  width:100%; padding:5px 14px; height:48px; box-sizing:border-box; border:1px solid #dde3ef; border-radius:8px;
+  width:100%; padding:5px 14px; height:48px; box-sizing:border-box; border:1px solid #dde3ef; border-radius:12px;
   font-size:15px; font-family:var(--font); outline:none; color:#222;
 }
 .dialog-input:focus { border-color:var(--primary); }
 .dialog-actions { display:flex; gap:8px; justify-content:flex-end; }
 .dialog-actions button {
-  padding:10px 22px; border-radius:8px; border:none;
+  padding:10px 22px; border-radius:12px; border:none;
   font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font);
 }
-.dialog-actions.split button { flex:1; height:48px; border-radius:10px; }
+.dialog-actions.split button { flex:1; height:48px; border-radius:12px; }
 .btn-cancel { background:#f0f2f5; color:#555; }
-.btn-confirm { background:#333333; color:#fff; }
+.btn-confirm { background:#222; color:#fff; }
 
 /* ===== SHARE REDESIGN ===== */
 .share-link-box {
@@ -1698,8 +1698,8 @@ button, input, textarea, select { font-family:var(--font); }
   width:100%; box-sizing:border-box; flex-shrink:0;
 }
 .landing-btn {
-  width:100%; padding:16px; background:var(--btn-blue); color:#fff; border:none;
-  border-radius:14px; font-size:16px; font-weight:500; cursor:pointer;
+  width:100%; padding:16px; background:#222; color:#fff; border:none;
+  border-radius:12px; font-size:16px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
   transition:transform .13s, opacity .13s;
   font-family:var(--font);
@@ -2654,7 +2654,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <div style="margin-top:16px;">
-      <button class="btn-cancel" onclick="closeDialog('dlg-share')" style="width:100%;height:48px;border-radius:12px;font-size:15px;font-weight:600;border:none;">닫기</button>
+      <button class="btn-cancel" onclick="closeDialog('dlg-share')" style="width:100%;height:48px;font-size:15px;font-weight:600;border:none;">닫기</button>
     </div>
   </div>
 </div>
