@@ -304,24 +304,29 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding:2px 24px 0; display:flex; align-items:center; background:#fff;
+  padding:0; display:flex; align-items:stretch; background:#fff;
   border-bottom:1.5px solid #eef0f5; flex-shrink:0;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.tab-section::-webkit-scrollbar { display:none; }
 .tab-toggle {
-  flex:1; display:flex; height:58px; background:transparent;
-  border-radius:0; border:none; overflow:visible;
+  display:flex; height:52px; background:transparent;
+  border-radius:0; border:none; flex-shrink:0; min-width:100%;
+  padding:0 8px;
 }
 .tab-btn {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+  flex:none; display:flex; align-items:center; justify-content:center; gap:5px;
+  white-space:nowrap; padding:0 16px;
   font-size:15px; font-weight:500; color:#818590; text-align:center;
-  cursor:pointer; border:none; background:transparent; transition:all .2s;
+  cursor:pointer; border:none; background:transparent; transition:color .15s;
   border-bottom:2.5px solid transparent; margin-bottom:-1.5px; position:relative;
 }
 .tab-btn svg { width:15px; height:15px; }
 .tab-btn.active {
-  background:transparent; color:#333333; font-weight:600;
+  background:transparent; color:#222; font-weight:600;
   border-radius:0; border:none;
-  border-bottom:2.5px solid #333333;
+  border-bottom:2.5px solid #222;
 }
 
 /* ===== 컨텐츠 탭 ===== */
@@ -1970,8 +1975,8 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:2px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 5px;vertical-align:middle;line-height:1.6;"></span></button>
-        <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정계획<span id="plan-count-badge" style="display:none;margin-left:4px;background:#FF3832;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 5px;vertical-align:middle;line-height:1.6;"></span></button>
+        <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체일정</button>
         <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
         <button class="tab-btn" onclick="switchMainTab('content',this)">컨텐츠</button>
       </div>
