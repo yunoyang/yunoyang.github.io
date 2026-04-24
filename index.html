@@ -324,6 +324,154 @@ button, input, textarea, select { font-family:var(--font); }
   border-bottom:2.5px solid #333333;
 }
 
+/* ===== 컨텐츠 탭 ===== */
+.content-tab-inner {
+  padding: 12px 0 100px;
+  display: flex;
+  flex-direction: column;
+}
+.content-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 12px;
+}
+.content-add-input {
+  flex: 1;
+  height: 46px;
+  border: 1.5px solid #e1e5ef;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: #222;
+  background: #fff;
+  outline: none;
+}
+.content-add-input:focus { border-color: var(--primary); }
+.content-add-input::placeholder { color: #b0b5c2; }
+.content-add-confirm-btn {
+  height: 46px;
+  padding: 0 18px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.content-add-confirm-btn:active { opacity: .85; }
+.content-link-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 16px 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  -webkit-tap-highlight-color: transparent;
+}
+.content-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #111;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+.content-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.content-play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+  transition: background .15s;
+}
+.content-play-btn:active { background: rgba(0,0,0,0.4); }
+.content-play-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.content-player-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+.content-player-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.content-link-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 12px;
+}
+.content-link-url {
+  flex: 1;
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.content-link-yt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ff0000;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.content-link-del {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: #f1f1f5;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.content-link-del:active { background: #e1e5ef; }
+.content-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 40px;
+  gap: 10px;
+  text-align: center;
+}
+.content-empty-icon { font-size: 44px; line-height: 1; }
+.content-empty-text { font-size: 15px; color: #999; font-weight: 500; line-height: 1.5; }
+.content-empty-sub { font-size: 13px; color: #b8bcc8; }
+
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
   padding: 14px 18px 80px;
@@ -1825,6 +1973,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획<span id="plan-count-badge" style="display:none;margin-left:2px;background:#FF3832;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:1px 5px;vertical-align:middle;line-height:1.6;"></span></button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
         <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
+        <button class="tab-btn" onclick="switchMainTab('content',this)">컨텐츠</button>
       </div>
     </div>
 
@@ -1842,6 +1991,20 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="tab-style" style="display:none; background:#EDF0F4;">
       <div class="style-tab-inner">
         <div id="style-rooms-container"></div>
+      </div>
+    </div>
+
+    <!-- Content Tab -->
+    <div id="tab-content" style="display:none; background:#EDF0F4; flex:1;">
+      <div class="content-tab-inner">
+        <div class="content-add-bar">
+          <input class="content-add-input" id="content-url-input"
+            placeholder="유튜브 링크를 붙여넣기 하세요"
+            onpaste="_onContentPaste(event)"
+            onkeydown="if(event.key==='Enter'){_addContentLink();event.preventDefault();}">
+          <button class="content-add-confirm-btn" onclick="_addContentLink()">추가</button>
+        </div>
+        <div id="content-list"></div>
       </div>
     </div>
 
@@ -3369,10 +3532,12 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = tab === 'style' ? 'none' : '';
+  document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content') ? 'none' : '';
   document.getElementById('floating-add-style').style.display = tab === 'style' ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
+  if (tab === 'content') { renderContentTab(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -3389,6 +3554,127 @@ function switchMainTab(tab, btn) {
     }
     renderCalendar();
   }
+}
+
+// ===== 컨텐츠 탭 =====
+function _parseYoutubeId(url) {
+  try {
+    url = url.trim();
+    // youtu.be/ID
+    let m = url.match(/youtu\.be\/([A-Za-z0-9_\-]{11})/);
+    if (m) return m[1];
+    // youtube.com/watch?v=ID
+    m = url.match(/[?&]v=([A-Za-z0-9_\-]{11})/);
+    if (m) return m[1];
+    // youtube.com/shorts/ID
+    m = url.match(/\/shorts\/([A-Za-z0-9_\-]{11})/);
+    if (m) return m[1];
+    // youtube.com/embed/ID
+    m = url.match(/\/embed\/([A-Za-z0-9_\-]{11})/);
+    if (m) return m[1];
+  } catch(e) {}
+  return null;
+}
+
+function _getContentLinks() {
+  const proj = getProject();
+  if (!proj) return [];
+  if (!proj.contentLinks) proj.contentLinks = [];
+  return proj.contentLinks;
+}
+
+function renderContentTab() {
+  const list = document.getElementById('content-list');
+  if (!list) return;
+  const links = _getContentLinks();
+  if (!links.length) {
+    list.innerHTML = `
+      <div class="content-empty-state">
+        <div class="content-empty-icon">🎬</div>
+        <div class="content-empty-text">참고할 영상을 모아두세요</div>
+        <div class="content-empty-sub">유튜브 링크를 붙여넣으면<br>바로 여기서 볼 수 있어요</div>
+      </div>`;
+    return;
+  }
+  list.innerHTML = links.map((item, idx) => {
+    const isYt = item.type === 'youtube';
+    const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg` : '';
+    const displayUrl = (() => { try { return new URL(item.url).hostname.replace('www.',''); } catch(e) { return item.url; } })();
+    return `
+      <div class="content-link-card" id="cl-card-${item.id}">
+        ${isYt ? `
+        <div class="content-thumb-wrap" id="cl-thumb-${item.id}" onclick="_playContent('${item.id}')">
+          <img src="${thumbUrl}" alt="thumbnail" onerror="this.style.display='none'">
+          <div class="content-play-btn">
+            <div class="content-play-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#333"><polygon points="6,4 20,12 6,20"/></svg>
+            </div>
+          </div>
+        </div>` : `
+        <div style="padding:14px 14px 0;font-size:13px;color:#3176ff;word-break:break-all;">
+          <a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color:#3176ff;">${item.url}</a>
+        </div>`}
+        <div class="content-link-footer">
+          ${isYt ? `<span class="content-link-yt-badge">▶ YouTube</span>` : ''}
+          <span class="content-link-url">${displayUrl}</span>
+          <button class="content-link-del" onclick="_deleteContentLink('${item.id}')" title="삭제">×</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function _playContent(id) {
+  const item = _getContentLinks().find(l => l.id === id);
+  if (!item || item.type !== 'youtube') return;
+  const thumbWrap = document.getElementById(`cl-thumb-${item.id}`);
+  if (!thumbWrap) return;
+  // iframe으로 교체
+  const player = document.createElement('div');
+  player.className = 'content-player-wrap';
+  player.innerHTML = `<iframe src="https://www.youtube.com/embed/${item.videoId}?autoplay=1&playsinline=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+  thumbWrap.replaceWith(player);
+}
+
+function _addContentLink() {
+  const input = document.getElementById('content-url-input');
+  if (!input) return;
+  const url = input.value.trim();
+  if (!url) return;
+  const proj = getProject();
+  if (!proj) return;
+  if (!proj.contentLinks) proj.contentLinks = [];
+  const videoId = _parseYoutubeId(url);
+  const newItem = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    url: url,
+    type: videoId ? 'youtube' : 'link',
+    videoId: videoId || null,
+    addedAt: Date.now()
+  };
+  proj.contentLinks.unshift(newItem);
+  save();
+  input.value = '';
+  renderContentTab();
+}
+
+function _deleteContentLink(id) {
+  const proj = getProject();
+  if (!proj || !proj.contentLinks) return;
+  proj.contentLinks = proj.contentLinks.filter(l => l.id !== id);
+  save();
+  renderContentTab();
+}
+
+function _onContentPaste(e) {
+  // 붙여넣기 후 자동으로 YouTube인지 감지해 즉시 추가
+  setTimeout(() => {
+    const input = document.getElementById('content-url-input');
+    if (!input) return;
+    const val = input.value.trim();
+    if (_parseYoutubeId(val)) {
+      _addContentLink();
+    }
+  }, 50);
 }
 
 // ===== STYLE TAB =====
@@ -6642,6 +6928,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   const cloudHasImages = cp.styleImages && Object.values(cp.styleImages).some(a => a?.length > 0);
   const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
   if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
+  // contentLinks 보존 — 클라우드에 없거나 비어있으면 로컬 데이터 우선 적용
+  if ((!cp.contentLinks || !cp.contentLinks.length) && local.contentLinks?.length) merged.contentLinks = local.contentLinks;
   // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
   if (!cp.floorplanImage && local.floorplanImage) merged.floorplanImage = local.floorplanImage;
   return merged;
