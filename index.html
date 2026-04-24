@@ -304,21 +304,16 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding:0; display:flex; align-items:stretch; background:#fff;
+  padding:2px 0 0; display:flex; align-items:center; background:#fff;
   border-bottom:1.5px solid #eef0f5; flex-shrink:0;
-  overflow-x:auto; -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
 }
-.tab-section::-webkit-scrollbar { display:none; }
 .tab-toggle {
-  display:flex; height:52px; background:transparent;
-  border-radius:0; border:none; flex-shrink:0; min-width:100%;
-  padding:0 8px;
+  flex:1; display:flex; height:52px; background:transparent;
+  border-radius:0; border:none; overflow:hidden;
 }
 .tab-btn {
-  flex:none; display:flex; align-items:center; justify-content:center; gap:5px;
-  white-space:nowrap; padding:0 16px;
-  font-size:15px; font-weight:500; color:#818590; text-align:center;
+  flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+  white-space:nowrap; font-size:15px; font-weight:500; color:#818590; text-align:center;
   cursor:pointer; border:none; background:transparent; transition:color .15s;
   border-bottom:2.5px solid transparent; margin-bottom:-1.5px; position:relative;
 }
@@ -1975,7 +1970,7 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정계획<span id="plan-count-badge" style="display:none;margin-left:4px;background:#FF3832;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 5px;vertical-align:middle;line-height:1.6;"></span></button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정계획</button>
         <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체일정</button>
         <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
         <button class="tab-btn" onclick="switchMainTab('content',this)">컨텐츠</button>
@@ -6728,12 +6723,6 @@ function renderAll() {
     updateSummary();
     renderCalendar();
     updateCollabIndicator(proj.collaborators || [], proj.owner);
-    const badge = document.getElementById('plan-count-badge');
-    if (badge) {
-      const cnt = proj.processes.length;
-      badge.textContent = cnt;
-      badge.style.display = cnt > 0 ? '' : 'none';
-    }
     // 스타일 탭이 열려있으면 함께 갱신 (공동작업자 실시간 동기화)
     const styleTabEl = document.getElementById('tab-style');
     if (styleTabEl && styleTabEl.style.display !== 'none') renderStyleTab();
