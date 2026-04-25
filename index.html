@@ -4080,64 +4080,67 @@ function _styleUploadHideProgress() {
 }
 
 async function handleStyleFileSelect(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
   const room = styleCurrentRoom;
+  const total = files.length;
+  let done = 0;
 
-  if (state.loggedIn && _fbStorage) {
-    try {
-      const proj = getProject();
-      const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const base = `styleImages/${projId}/${room}/${Date.now()}`;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const countLabel = total > 1 ? ` (${i + 1}/${total})` : '';
 
-      // 1단계: 압축 (0 → 20%) — 썸네일 180px/0.50
-      _styleUploadSetProgress(0, '이미지 압축 중...');
-      const [viewerDataUrl, thumbDataUrl] = await Promise.all([
-        _compressImage(file, 720, 0.72),
-        _compressImage(file, 360, 0.72)
-      ]);
-      _styleUploadSetProgress(20, '업로드 중...');
+    if (state.loggedIn && _fbStorage) {
+      try {
+        const proj = getProject();
+        const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const base = `styleImages/${projId}/${room}/${Date.now()}_${i}`;
 
-      // 2단계: Storage 업로드 (20 → 90%), 뷰어 파일 진행률 추적
-      const viewerTask = _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' });
-      const thumbTask  = _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbDataUrl), { contentType: 'image/jpeg' });
+        _styleUploadSetProgress(0, `압축 중${countLabel}`);
+        const [viewerDataUrl, thumbDataUrl] = await Promise.all([
+          _compressImage(file, 720, 0.72),
+          _compressImage(file, 360, 0.72)
+        ]);
+        _styleUploadSetProgress(20, `업로드 중${countLabel}`);
 
-      viewerTask.on('state_changed', snap => {
-        const pct = 20 + (snap.bytesTransferred / (snap.totalBytes || 1)) * 70;
-        _styleUploadSetProgress(pct, '업로드 중...');
-      });
+        const viewerTask = _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(viewerDataUrl), { contentType: 'image/jpeg' });
+        const thumbTask  = _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbDataUrl), { contentType: 'image/jpeg' });
 
-      await Promise.all([viewerTask, thumbTask]);
-      _styleUploadSetProgress(95, '마무리 중...');
+        viewerTask.on('state_changed', snap => {
+          const pct = 20 + (snap.bytesTransferred / (snap.totalBytes || 1)) * 70;
+          _styleUploadSetProgress(pct, `업로드 중${countLabel}`);
+        });
 
-      // 3단계: URL 취득
-      const [url, thumb] = await Promise.all([
-        viewerTask.snapshot.ref.getDownloadURL(),
-        thumbTask.snapshot.ref.getDownloadURL()
-      ]);
+        await Promise.all([viewerTask, thumbTask]);
+        _styleUploadSetProgress(95, `마무리 중${countLabel}`);
 
-      _styleUploadSetProgress(100, '완료');
-      _styleUploadHideProgress();
-      showToastMessage('업로드 완료 ✅');
-      addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '' });
-      return;
-    } catch(err) {
-      _styleUploadHideProgress();
-      console.warn('Storage upload failed, fallback:', err.message);
+        const [url, thumb] = await Promise.all([
+          viewerTask.snapshot.ref.getDownloadURL(),
+          thumbTask.snapshot.ref.getDownloadURL()
+        ]);
+
+        addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '' });
+        done++;
+        continue;
+      } catch(err) {
+        console.warn('Storage upload failed, fallback:', err.message);
+      }
+    }
+
+    // base64 폴백
+    _styleUploadSetProgress(0, `처리 중${countLabel}`);
+    const [dataUrl, thumbUrl] = await Promise.all([
+      _compressImage(file, 720, 0.72),
+      _compressImage(file, 360, 0.72)
+    ]);
+    if (dataUrl) {
+      addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
+      done++;
     }
   }
 
-  // base64 폴백 — 압축만 표시
-  _styleUploadSetProgress(0, '이미지 처리 중...');
-  const [dataUrl, thumbUrl] = await Promise.all([
-    _compressImage(file, 720, 0.72),
-    _compressImage(file, 360, 0.72)
-  ]);
   _styleUploadHideProgress();
-  if (dataUrl) {
-    showToastMessage('업로드 완료 ✅');
-    addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
-  }
+  if (done > 0) showToastMessage(done > 1 ? `${done}장 업로드 완료 ✅` : '업로드 완료 ✅');
 }
 
 
@@ -8613,7 +8616,7 @@ async function _checkExportOnLoad() {
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     사진 업로드
   </button>
-  <input type="file" id="style-file-input" accept="image/*" style="display:none;" onchange="handleStyleFileSelect(event)">
+  <input type="file" id="style-file-input" accept="image/*" multiple style="display:none;" onchange="handleStyleFileSelect(event)">
 </div>
 
 <div id="style-newspace-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleNewSpace()"></div>
