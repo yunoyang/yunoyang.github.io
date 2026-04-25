@@ -8361,11 +8361,15 @@ async function _loadBrandLogo() {
   try {
     const ok = await _initFirebase();
     if (!ok) return;
-    const snap = await _db.collection('vb_settings').doc('brand').get();
+    // source:'server' → Firestore 클라이언트 메모리/IndexedDB 캐시 완전 우회
+    const snap = await _db.collection('vb_settings').doc('brand').get({ source: 'server' });
     if (snap.exists) {
       const logo = snap.data().logoDataUrl;
       if (logo) { localStorage.setItem('vibespace_logo', logo); _applyHeaderLogo(logo); }
       else { localStorage.removeItem('vibespace_logo'); _applyHeaderLogo(null); }
+    } else {
+      localStorage.removeItem('vibespace_logo');
+      _applyHeaderLogo(null);
     }
   } catch(e) { console.warn('[Brand Logo]', e); }
 }
@@ -8374,14 +8378,17 @@ function _applyBrandLogo(dataUrl) {
   const imgEl  = document.getElementById('landing-brand-logo');
   const textEl = document.getElementById('landing-text-logo');
   if (!imgEl || !textEl) return;
+  // 항상 먼저 초기화 — 이전 src가 잠깐 보이는 현상 방지
+  imgEl.onload  = null;
+  imgEl.onerror = null;
+  imgEl.src = '';
+  imgEl.style.display = 'none';
+  textEl.style.display = '';
   if (dataUrl) {
+    // 이미지가 완전히 로드된 후에만 표시 → 깜빡임 없음
+    imgEl.onload  = () => { imgEl.style.display = 'block'; textEl.style.display = 'none'; };
+    imgEl.onerror = () => { imgEl.style.display = 'none';  textEl.style.display = ''; };
     imgEl.src = dataUrl;
-    imgEl.style.display = 'block';
-    textEl.style.display = 'none';
-  } else {
-    imgEl.src = '';
-    imgEl.style.display = 'none';
-    textEl.style.display = '';
   }
 }
 // legacy alias
