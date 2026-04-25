@@ -1985,10 +1985,13 @@ button, input, textarea, select { font-family:var(--font); }
   align-items:center; justify-content:center;
   padding:60px 32px 32px; gap:14px; text-align:center;
 }
+/* 로고 + 베타 뱃지 래퍼 — 이미지/텍스트 로고 전환과 무관하게 뱃지 항상 표시 */
+.landing-logo-wrap {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
 .landing-logo {
   font-size:38px; font-weight:800; color:#111;
   letter-spacing:-1px; line-height:1;
-  display:flex; align-items:center; gap:10px;
 }
 .landing-logo span {
   color:var(--primary);
@@ -1997,7 +2000,7 @@ button, input, textarea, select { font-family:var(--font); }
   font-size:11px; font-weight:700; color:var(--primary);
   background:transparent; border:1.5px solid var(--primary);
   border-radius:6px; padding:3px 8px; letter-spacing:0;
-  align-self:center; margin-top:4px; flex-shrink:0;
+  align-self:center; flex-shrink:0;
 }
 .landing-main-copy {
   font-size:15px; font-weight:400; color:#444444;
@@ -2227,8 +2230,12 @@ button, input, textarea, select { font-family:var(--font); }
 
   <!-- 중앙 로고 + 카피 -->
   <div class="landing-center">
-    <img id="landing-brand-logo" class="landing-logo-img" alt="Brand Logo">
-    <div class="landing-logo" id="landing-text-logo">Vibe<span>space</span><span class="landing-beta-badge">beta</span></div>
+    <!-- 로고 + 베타 뱃지: 이미지/텍스트 로고 중 하나만 표시되지만 뱃지는 항상 표시 -->
+    <div class="landing-logo-wrap">
+      <img id="landing-brand-logo" class="landing-logo-img" alt="Brand Logo">
+      <div class="landing-logo" id="landing-text-logo">Vibe<span>space</span></div>
+      <span class="landing-beta-badge">beta</span>
+    </div>
     <div class="landing-divider"></div>
     <div class="landing-main-copy">반셀프 인테리어가 막막한 분들을 위한 플래닝 툴.</div>
   </div>
@@ -8540,17 +8547,15 @@ function _applyBrandLogo(dataUrl) {
   const imgEl  = document.getElementById('landing-brand-logo');
   const textEl = document.getElementById('landing-text-logo');
   if (!imgEl || !textEl) return;
-  // 항상 먼저 초기화 — 이전 src가 잠깐 보이는 현상 방지
-  imgEl.onload  = null;
-  imgEl.onerror = null;
-  imgEl.src = '';
-  imgEl.style.display = 'none';
-  textEl.style.display = '';
   if (dataUrl) {
-    // 이미지가 완전히 로드된 후에만 표시 → 깜빡임 없음
-    imgEl.onload  = () => { imgEl.style.display = 'block'; textEl.style.display = 'none'; };
-    imgEl.onerror = () => { imgEl.style.display = 'none';  textEl.style.display = ''; };
+    // base64 data URL은 동기 디코딩 → onload 불필요, 직접 표시
     imgEl.src = dataUrl;
+    imgEl.style.display = 'block';
+    textEl.style.display = 'none';
+  } else {
+    imgEl.src = '';
+    imgEl.style.display = 'none';
+    textEl.style.display = '';
   }
 }
 // legacy alias
