@@ -3652,17 +3652,19 @@ function _addContentLink() {
     addedAt: Date.now()
   };
   proj.contentLinks.unshift(newItem);
-  save();
+  localStorage.setItem('vibespace', JSON.stringify(state));
   input.value = '';
   renderContentTab();
+  _syncContentLinksToCloud(proj);
 }
 
 function _deleteContentLink(id) {
   const proj = getProject();
   if (!proj || !proj.contentLinks) return;
   proj.contentLinks = proj.contentLinks.filter(l => l.id !== id);
-  save();
+  localStorage.setItem('vibespace', JSON.stringify(state));
   renderContentTab();
+  _syncContentLinksToCloud(proj);
 }
 
 function _onContentPaste(e) {
@@ -6922,8 +6924,16 @@ function _mergeLocalPreserve(cp, localProjs) {
   const cloudHasImages = cp.styleImages && Object.values(cp.styleImages).some(a => a?.length > 0);
   const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
   if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
-  // contentLinks 보존 — 클라우드에 없거나 비어있으면 로컬 데이터 우선 적용
-  if ((!cp.contentLinks || !cp.contentLinks.length) && local.contentLinks?.length) merged.contentLinks = local.contentLinks;
+  // contentLinks: id 기준 합집합 병합 — 클라우드·로컬 양쪽 항목 모두 보존
+  const cpLinks = cp.contentLinks || [];
+  const localLinks = local.contentLinks || [];
+  if (localLinks.length) {
+    const seen = new Set(cpLinks.map(x => x.id));
+    const extra = localLinks.filter(x => !seen.has(x.id));
+    merged.contentLinks = extra.length
+      ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
+      : cpLinks;
+  }
   // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
   if (!cp.floorplanImage && local.floorplanImage) merged.floorplanImage = local.floorplanImage;
   return merged;
@@ -7074,6 +7084,46 @@ async function _syncStyleImagesToCloud(proj) {
   }
 }
 
+// contentLinks만 Firestore에 업데이트 — read-merge-write로 덮어쓰기 방지
+async function _syncContentLinksToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (!isOwner) return; // 협업자는 쓰기 불가
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    // 1) 현재 Firestore 값 읽기
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudLinks = snap.data()?.projectData?.contentLinks || [];
+    const localLinks = proj.contentLinks || [];
+    // 2) id 기준 합집합 병합
+    const seen = new Set(cloudLinks.map(x => x.id));
+    const extra = localLinks.filter(x => !seen.has(x.id));
+    // 삭제된 항목 반영: localLinks에 없는 cloudLinks 항목은 제거
+    const localIds = new Set(localLinks.map(x => x.id));
+    const surviving = cloudLinks.filter(x => localIds.has(x.id));
+    const merged = [...localLinks.filter(x => !seen.has(x.id) || localIds.has(x.id))
+      .concat(surviving.filter(x => !localLinks.find(l => l.id === x.id)))];
+    // 더 단순하게: local이 최신 상태(추가/삭제 모두 반영됨) → local 기준 + cloud 전용 항목 추가
+    const mergedFinal = [...localLinks, ...cloudLinks.filter(x => !localIds.has(x.id))]
+      .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    // 3) 변경 없으면 스킵
+    if (JSON.stringify(mergedFinal.map(x=>x.id)) === JSON.stringify(cloudLinks.map(x=>x.id))) return;
+    // 4) Firestore에 쓰기
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.contentLinks': mergedFinal,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+    });
+    // 5) 로컬도 병합 결과로 갱신
+    proj.contentLinks = mergedFinal;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    _lastSaveTime = Date.now();
+  } catch(e) {
+    console.error('[contentSync] ❌', e.code, e.message);
+  }
+}
+
 // ===== REAL-TIME LISTENER =====
 function _startCollabListener(cloudId) {
   if (_collabUnsub) { _collabUnsub(); _collabUnsub = null; }
@@ -7091,6 +7141,7 @@ function _startCollabListener(cloudId) {
     const myRole = proj.myRole;
     const localImages = proj.styleImages || {};
     const localFloorplan = proj.floorplanImage; // 도면 보존
+    const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
     // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
     if (!proj.floorplanImage && localFloorplan) proj.floorplanImage = localFloorplan;
@@ -7105,6 +7156,13 @@ function _startCollabListener(cloudId) {
       merged[r] = [...ri, ...li.filter(x => !seen.has(x.url))];
     });
     proj.styleImages = merged;
+    // contentLinks: 클라우드와 로컬 합집합 (id 기준 중복 제거, 로컬 전용 항목 보존)
+    const cloudLinks = remote.contentLinks || [];
+    const seenIds = new Set(cloudLinks.map(x => x.id));
+    const extraLocal = localContentLinks.filter(x => !seenIds.has(x.id));
+    proj.contentLinks = extraLocal.length
+      ? [...cloudLinks, ...extraLocal].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
+      : cloudLinks;
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
