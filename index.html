@@ -7210,8 +7210,8 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
-  // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
-  if (!cp.floorplanImage && local.floorplanImage) merged.floorplanImage = local.floorplanImage;
+  // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
+  if (local.floorplanImage) merged.floorplanImage = local.floorplanImage;
   return merged;
 }
 
@@ -7419,8 +7419,8 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
-    // 도면(floorplanImage) 보존 — 클라우드에 없으면 로컬에서 복원
-    if (!proj.floorplanImage && localFloorplan) proj.floorplanImage = localFloorplan;
+    // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
+    if (localFloorplan) proj.floorplanImage = localFloorplan;
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
@@ -7972,7 +7972,17 @@ function handleFloorplanUpload(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     const proj = getProject();
-    if (proj) { proj.floorplanImage = ev.target.result; save(); }
+    if (proj) {
+      proj.floorplanImage = ev.target.result;
+      // 로컬에 즉시 저장 (cloud sync 실패해도 보존)
+      localStorage.setItem('vibespace', JSON.stringify(state));
+      _lastSaveTime = Date.now();
+      // cloud sync (base64 용량 초과 시 실패할 수 있으나 로컬은 보존됨)
+      const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+      if (proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
+        _syncProjToCloud(proj);
+      }
+    }
     _showFloorplanPreview(ev.target.result);
   };
   reader.readAsDataURL(file);
