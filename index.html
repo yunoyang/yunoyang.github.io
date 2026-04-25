@@ -7001,9 +7001,11 @@ function renderAll() {
     updateSummary();
     renderCalendar();
     updateCollabIndicator(proj.collaborators || [], proj.owner);
-    // 스타일 탭이 열려있으면 함께 갱신 (공동작업자 실시간 동기화)
+    // 열려있는 탭 갱신 (공동작업자 실시간 동기화)
     const styleTabEl = document.getElementById('tab-style');
     if (styleTabEl && styleTabEl.style.display !== 'none') renderStyleTab();
+    const contentTabEl = document.getElementById('tab-content');
+    if (contentTabEl && contentTabEl.style.display !== 'none') renderContentTab();
   }
   updateLoginUI();
 }
@@ -7313,21 +7315,37 @@ async function _pushProjToCloud(proj) {
 
 function _syncProjToCloud(proj) {
   if (!_db || !proj.cloudId) return;
-  const projData = JSON.parse(JSON.stringify(proj));
-  delete projData.myRole; // myRole은 각 클라이언트에서 결정 — Firestore에 저장 안 함
-  const payload = {
-    projectData: projData,
-    ownerEmail: state.user.email,   // 구버전 문서 ownerEmail 자동 backfill
-    'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
-    'meta.updatedBy': state.user.email,
-    // meta.collaborators는 여기서 쓰지 않음 — 초대 수락/삭제 시에만 변경
-  };
-  _db.collection('vb_projects').doc(proj.cloudId).update(payload).catch(e => console.error('sync err',e));
+  // contentLinks는 협업자가 로컬에만 저장한 데이터를 잃지 않도록 read-merge-write
+  _db.collection('vb_projects').doc(proj.cloudId).get().then(snap => {
+    const projData = JSON.parse(JSON.stringify(proj));
+    delete projData.myRole;
+    // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
+    const cloudLinks = snap.data()?.projectData?.contentLinks || [];
+    const localLinks = projData.contentLinks || [];
+    if (cloudLinks.length) {
+      const localIds = new Set(localLinks.map(x => x.id));
+      const extra = cloudLinks.filter(x => !localIds.has(x.id));
+      if (extra.length) {
+        projData.contentLinks = [...localLinks, ...extra].sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+        proj.contentLinks = projData.contentLinks; // 로컬도 갱신
+        localStorage.setItem('vibespace', JSON.stringify(state));
+      }
+    }
+    const payload = {
+      projectData: projData,
+      ownerEmail: state.user.email,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user.email,
+    };
+    return _db.collection('vb_projects').doc(proj.cloudId).update(payload);
+  }).catch(e => console.error('sync err', e));
 }
 
 // 스타일 이미지만 Firestore에 업데이트 — read-merge-write로 타인 이미지 덮어쓰기 방지
 async function _syncStyleImagesToCloud(proj) {
   if (!proj?.cloudId) return;
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (!isOwner) return; // 뷰어/협업자 권한 없음 — 오너만 스타일 이미지 쓰기 가능
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
