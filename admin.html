@@ -483,6 +483,82 @@ tr:hover td { background:#fafbfe; }
   .settings-grid { grid-template-columns:1fr; }
   .analytics-grid { grid-template-columns:1fr 1fr; }
 }
+/* ===== USER DETAIL PANEL ===== */
+#user-detail-overlay {
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;
+  align-items:flex-start;justify-content:flex-end;
+}
+#user-detail-overlay.open { display:flex; }
+#user-detail-panel {
+  width:520px;max-width:100vw;height:100vh;background:#fff;overflow-y:auto;
+  box-shadow:-8px 0 40px rgba(0,0,0,0.14);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+}
+#user-detail-overlay.open #user-detail-panel { transform:translateX(0); }
+.udp-header {
+  position:sticky;top:0;z-index:10;background:#fff;padding:20px 24px 16px;
+  border-bottom:1px solid var(--divider);display:flex;align-items:center;gap:12px;
+}
+.udp-avatar {
+  width:46px;height:46px;border-radius:50%;background:var(--primary);
+  color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+}
+.udp-avatar img { width:100%;height:100%;object-fit:cover; }
+.udp-name { font-size:16px;font-weight:700;color:var(--text-primary); }
+.udp-email { font-size:12px;color:var(--text-muted);margin-top:2px; }
+.udp-close {
+  margin-left:auto;width:34px;height:34px;border:none;background:var(--divider);
+  border-radius:50%;cursor:pointer;font-size:16px;color:var(--text-secondary);
+  display:flex;align-items:center;justify-content:center;
+}
+.udp-body { padding:20px 24px 40px; }
+.udp-section-title {
+  font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.06em;
+  text-transform:uppercase;margin:20px 0 10px;
+}
+.udp-stat-row {
+  display:flex;gap:10px;margin-bottom:16px;
+}
+.udp-stat {
+  flex:1;background:var(--bg);border-radius:10px;padding:12px 14px;
+}
+.udp-stat .val { font-size:22px;font-weight:800;color:var(--text-primary); }
+.udp-stat .lbl { font-size:11px;color:var(--text-muted);margin-top:2px; }
+.udp-proj-card {
+  background:#fff;border:1px solid var(--card-border);border-radius:12px;
+  margin-bottom:16px;overflow:hidden;
+}
+.udp-proj-name {
+  padding:12px 16px;font-size:14px;font-weight:700;color:var(--text-primary);
+  border-bottom:1px solid var(--divider);background:var(--bg);
+}
+.udp-room-section { padding:12px 16px 8px; }
+.udp-room-label {
+  font-size:11px;font-weight:600;color:var(--primary);margin-bottom:8px;
+}
+.udp-img-row {
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;
+}
+.udp-img-thumb {
+  width:60px;height:60px;border-radius:8px;background:#f4f6fb;
+  overflow:hidden;border:1px solid var(--card-border);flex-shrink:0;
+  cursor:pointer;
+}
+.udp-img-thumb img { width:100%;height:100%;object-fit:cover;display:block; }
+.udp-link-item {
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--divider);font-size:13px;
+}
+.udp-link-item:last-child { border-bottom:none; }
+.udp-yt-icon {
+  width:32px;height:32px;background:#ff0000;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.udp-link-title { flex:1;min-width:0;color:var(--text-primary);font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.udp-empty-sub { font-size:12px;color:var(--text-muted);padding:8px 0 4px;text-align:center; }
+
 /* ===== STYLE IMAGES ===== */
 .style-filter-btn {
   padding:6px 14px; border:1.5px solid var(--card-border); border-radius:20px;
@@ -2242,12 +2318,12 @@ function renderUsersPage() {
 
   tbody.innerHTML = pageUsers.map(u => {
     const isActive = (u.lastSeen || '') >= d30ago;
-    const projCount = (appState.projects || []).filter(p =>
-      (p.form?.email === u.email) || false
+    const projCount = (_fbData.projects || []).filter(p =>
+      p.meta?.owner?.email === u.email || p.ownerEmail === u.email
     ).length;
     const initials = (u.name || '?')[0].toUpperCase();
     return `
-      <tr>
+      <tr style="cursor:pointer;" onclick="openUserModal('${(u.email||'').replace(/'/g,"\\'")}')">
         <td>
           <div class="user-cell">
             <div class="u-avatar">${u.picture ? `<img src="${u.picture}" alt="">` : initials}</div>
@@ -3812,6 +3888,132 @@ function filterStyleRoom(room, btn) {
   btn.classList.add('active');
   _renderStyleGrid();
 }
+
+// ===== USER DETAIL MODAL =====
+function openUserModal(email) {
+  const appState = getAppState();
+  const user = (appState.users || []).find(u => u.email === email);
+  if (!user) return;
+
+  // 이 유저의 프로젝트 (오너 기준)
+  const userProjects = (_fbData.projects || []).filter(p =>
+    p.meta?.owner?.email === email || p.ownerEmail === email
+  );
+
+  // 통계
+  let totalStyle = 0, totalContent = 0;
+  userProjects.forEach(proj => {
+    const pd = proj.projectData || {};
+    Object.values(pd.styleImages || {}).forEach(arr => { totalStyle += arr.length; });
+    totalContent += (pd.contentLinks || []).length;
+  });
+
+  // Header
+  const initials = (user.name || user.email || '?')[0].toUpperCase();
+  const pic = user.picture ? `<img src="${user.picture}" alt="">` : initials;
+  document.getElementById('udp-header').innerHTML = `
+    <div class="udp-avatar">${pic}</div>
+    <div>
+      <div class="udp-name">${user.name || '(이름없음)'}</div>
+      <div class="udp-email">${user.email}</div>
+    </div>
+    <button class="udp-close" onclick="closeUserModal()">✕</button>
+  `;
+
+  // Body
+  const ROOMS = ['거실','욕실','침실','부엌','작은방'];
+  let html = `
+    <div class="udp-stat-row">
+      <div class="udp-stat"><div class="val">${userProjects.length}</div><div class="lbl">프로젝트</div></div>
+      <div class="udp-stat"><div class="val">${totalStyle}</div><div class="lbl">스타일 이미지</div></div>
+      <div class="udp-stat"><div class="val">${totalContent}</div><div class="lbl">컨텐츠 링크</div></div>
+    </div>
+  `;
+
+  if (!userProjects.length) {
+    html += `<div class="udp-empty-sub">등록된 프로젝트가 없습니다</div>`;
+  } else {
+    userProjects.forEach(proj => {
+      const pd = proj.projectData || {};
+      const projName = pd.form?.projectName || pd.name || proj.id;
+      const styleImages = pd.styleImages || {};
+      const contentLinks = pd.contentLinks || [];
+
+      let projHtml = `<div class="udp-proj-card">
+        <div class="udp-proj-name">📁 ${projName}</div>`;
+
+      // Style images by room
+      let hasStyle = false;
+      ROOMS.forEach(room => {
+        const imgs = styleImages[room] || [];
+        if (!imgs.length) return;
+        hasStyle = true;
+        projHtml += `<div class="udp-room-section">
+          <div class="udp-room-label">${room} (${imgs.length})</div>
+          <div class="udp-img-row">`;
+        imgs.slice(0, 8).forEach(item => {
+          if (item.type === 'link') {
+            projHtml += `<div class="udp-img-thumb" style="display:flex;align-items:center;justify-content:center;background:#f8faff;" title="${item.url}">
+              <svg width="20" height="20" fill="none" stroke="#aaa" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>`;
+          } else {
+            const pins = item.productPins?.length ? `<div style="position:relative;"><img src="${item.url}" style="width:60px;height:60px;object-fit:cover;border-radius:7px;display:block;"><div style="position:absolute;top:2px;right:2px;background:#222;color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 4px;">${item.productPins.length}핀</div></div>` : `<img src="${item.url}" style="width:60px;height:60px;object-fit:cover;display:block;">`;
+            projHtml += `<div class="udp-img-thumb" onclick="window.open('${item.url}','_blank')">${pins}</div>`;
+          }
+        });
+        if (imgs.length > 8) projHtml += `<div class="udp-img-thumb" style="display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#888;">+${imgs.length - 8}</div>`;
+        projHtml += `</div></div>`;
+      });
+      if (!hasStyle) projHtml += `<div class="udp-empty-sub" style="padding:10px 16px;">스타일 이미지 없음</div>`;
+
+      // Content links
+      projHtml += `<div class="udp-room-section" style="border-top:1px solid var(--divider);">
+        <div class="udp-room-label" style="color:#ff0000;">컨텐츠 링크 (${contentLinks.length})</div>`;
+      if (!contentLinks.length) {
+        projHtml += `<div class="udp-empty-sub">등록된 컨텐츠 없음</div>`;
+      } else {
+        contentLinks.slice(0, 10).forEach(link => {
+          const ytId = _extractYtId(link.url || '');
+          const thumb = ytId ? `<img src="https://img.youtube.com/vi/${ytId}/default.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : '';
+          const title = link.title || link.url || '';
+          projHtml += `<div class="udp-link-item">
+            <div class="udp-yt-icon" style="${ytId ? 'background:#ff0000;overflow:hidden;padding:0;' : 'background:#eee;'}">
+              ${thumb || '<svg width="14" height="14" fill="#fff" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>'}
+            </div>
+            <span class="udp-link-title" title="${link.url || ''}">${title.length > 40 ? title.slice(0,40)+'…' : title}</span>
+            ${link.url ? `<a href="${link.url}" target="_blank" style="color:var(--primary);font-size:12px;flex-shrink:0;">↗</a>` : ''}
+          </div>`;
+        });
+        if (contentLinks.length > 10) projHtml += `<div class="udp-empty-sub">외 ${contentLinks.length - 10}개</div>`;
+      }
+      projHtml += `</div></div>`;
+
+      html += projHtml;
+    });
+  }
+
+  document.getElementById('udp-body').innerHTML = html;
+  document.getElementById('user-detail-overlay').classList.add('open');
+}
+
+function _extractYtId(url) {
+  if (!url) return '';
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+
+function closeUserModal() {
+  document.getElementById('user-detail-overlay').classList.remove('open');
+}
 </script>
+
+<!-- ===== USER DETAIL PANEL ===== -->
+<div id="user-detail-overlay" onclick="if(event.target===this)closeUserModal()">
+  <div id="user-detail-panel">
+    <div class="udp-header" id="udp-header"></div>
+    <div class="udp-body" id="udp-body"></div>
+  </div>
+</div>
+
 </body>
 </html>

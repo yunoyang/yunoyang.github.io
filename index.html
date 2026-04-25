@@ -4326,6 +4326,9 @@ function _deleteProdPin(pinIndex) {
   if (!items[styleViewerIndex].productPins) return;
   items[styleViewerIndex].productPins.splice(pinIndex, 1);
   save();
+  // 협업자: _syncProjToCloud 대신 styleImages만 직접 sync
+  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
   _svBuildReel();
   _svRenderProductList();
 }
@@ -4369,6 +4372,9 @@ function _savePinDlg() {
     price: price
   });
   save();
+  // 협업자: styleImages 직접 sync (오너는 save()→_syncProjToCloud 로 이미 처리됨)
+  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
   _closePinDlg();
   _svBuildReel();
   _svRenderProductList();
@@ -7524,7 +7530,8 @@ function _syncProjToCloud(proj) {
 async function _syncStyleImagesToCloud(proj) {
   if (!proj?.cloudId) return;
   const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
-  if (!isOwner) return; // 뷰어/협업자 권한 없음 — 오너만 스타일 이미지 쓰기 가능
+  const canWrite = isOwner || proj.myRole === '편집자';
+  if (!canWrite) return; // 뷰어만 차단 — 오너·편집자는 쓰기 허용
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
@@ -7626,7 +7633,16 @@ function _startCollabListener(cloudId) {
       const ri = cloudImages[r] || [];
       const li = localImages[r] || [];
       const seen = new Set(ri.map(x => x.url));
-      merged[r] = [...ri, ...li.filter(x => !seen.has(x.url))];
+      // 같은 URL의 이미지는 productPins를 ID 기준 합집합으로 머지
+      const cloudWithPins = ri.map(cloudItem => {
+        const localItem = li.find(x => x.url === cloudItem.url);
+        if (!localItem?.productPins?.length) return cloudItem;
+        const cloudPins = cloudItem.productPins || [];
+        const seenPinIds = new Set(cloudPins.map(p => p.id));
+        const extraPins = localItem.productPins.filter(p => !seenPinIds.has(p.id));
+        return extraPins.length ? { ...cloudItem, productPins: [...cloudPins, ...extraPins] } : cloudItem;
+      });
+      merged[r] = [...cloudWithPins, ...li.filter(x => !seen.has(x.url))];
     });
     proj.styleImages = merged;
     // contentLinks: 클라우드와 로컬 합집합 (id 기준 중복 제거, 로컬 전용 항목 보존)
