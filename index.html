@@ -502,6 +502,71 @@ button, input, textarea, select { font-family:var(--font); }
   line-height: 1.5;
 }
 
+/* ===== 스타일 뷰어 — 핀 버블 ===== */
+.sv-pin-bubble {
+  position: absolute;
+  z-index: 60;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, calc(-100% - 14px));
+  /* caret + gap */
+}
+.sv-pin-bubble-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+  max-width: 220px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  pointer-events: auto;
+  cursor: default;
+}
+.sv-pin-bubble-box.has-url { cursor: pointer; }
+.sv-pin-bubble-text { flex: 1; min-width: 0; }
+.sv-pin-bubble-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.sv-pin-bubble-price {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.sv-pin-bubble-chevron { flex-shrink: 0; }
+.sv-pin-caret {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid #fff;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.08));
+  margin-top: -1px;
+}
+.sv-pin-bubble.below {
+  transform: translate(-50%, 14px);
+  flex-direction: column-reverse;
+}
+.sv-pin-bubble.below .sv-pin-caret {
+  border-top: none;
+  border-bottom: 8px solid #fff;
+  filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.08));
+  margin-top: 0;
+  margin-bottom: -1px;
+}
+
 /* ===== 스타일 뷰어 — PC 내비 화살표 ===== */
 .sv-nav-arrow {
   display: none; /* 모바일 기본: 숨김 */
@@ -4093,6 +4158,77 @@ let _svTouchX = null, _svTouchY = null;
 let _svLongPressTimer = null;
 let _svPendingPinX = 50, _svPendingPinY = 50;
 
+function _svDismissBubble() {
+  const b = document.querySelector('.sv-pin-bubble');
+  if (b) b.remove();
+}
+
+function _svTogglePinBubble(e, slideIdx, pinIdx) {
+  e.stopPropagation();
+  const existing = document.querySelector('.sv-pin-bubble');
+  const isSame = existing && existing.dataset.pin === `${slideIdx}-${pinIdx}`;
+  _svDismissBubble();
+  if (isSame) return;
+
+  const items = (getStyleData()[styleViewerRoom] || []);
+  const pin = (items[slideIdx]?.productPins || [])[pinIdx];
+  if (!pin) return;
+  const slide = document.querySelector(`.sv-slide[data-slide="${slideIdx}"]`);
+  if (!slide) return;
+
+  const name = pin.category || '제품명 없음';
+  const price = pin.price || '';
+  const hasUrl = !!pin.productUrl;
+  const showBelow = pin.y < 28;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'sv-pin-bubble' + (showBelow ? ' below' : '');
+  bubble.dataset.pin = `${slideIdx}-${pinIdx}`;
+  bubble.style.left = `${pin.x}%`;
+  bubble.style.top = `${pin.y}%`;
+
+  const safeUrl = hasUrl ? pin.productUrl.replace(/'/g,"\\'") : '';
+  bubble.innerHTML = `
+    <div class="sv-pin-bubble-box${hasUrl ? ' has-url' : ''}"
+      onclick="event.stopPropagation();${hasUrl ? `window.open('${safeUrl}','_blank')` : ''}">
+      <div class="sv-pin-bubble-text">
+        <span class="sv-pin-bubble-name">${name}</span>
+        ${price ? `<span class="sv-pin-bubble-price">${price}</span>` : ''}
+      </div>
+      ${hasUrl ? `<svg class="sv-pin-bubble-chevron" width="14" height="14" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}
+    </div>
+    <div class="sv-pin-caret"></div>
+  `;
+  slide.appendChild(bubble);
+
+  // After render: adjust horizontal position + caret alignment
+  requestAnimationFrame(() => {
+    const bw = bubble.offsetWidth;
+    const sw = slide.offsetWidth;
+    const pinPx = (pin.x / 100) * sw;
+    const left = Math.max(8, Math.min(pinPx - bw / 2, sw - bw - 8));
+    bubble.style.left = left + 'px';
+    const caretEl = bubble.querySelector('.sv-pin-caret');
+    if (caretEl) {
+      caretEl.style.alignSelf = 'flex-start';
+      caretEl.style.marginLeft = Math.max(10, Math.min(pinPx - left - 7, bw - 24)) + 'px';
+    }
+  });
+
+  // Dismiss on next outside click/touch
+  const dismiss = (ev) => {
+    if (!bubble.contains(ev.target)) {
+      _svDismissBubble();
+      document.removeEventListener('click', dismiss, true);
+      document.removeEventListener('touchstart', dismiss, true);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('click', dismiss, true);
+    document.addEventListener('touchstart', dismiss, true);
+  }, 0);
+}
+
 function _svBuildReel() {
   const items = (getStyleData()[styleViewerRoom] || []);
   const reel = document.getElementById('style-viewer-reel');
@@ -4103,7 +4239,7 @@ function _svBuildReel() {
       : '';
     const pins = (item.productPins || []).map((pin, pi) =>
       `<div class="prod-pin-dot" style="left:${pin.x}%;top:${pin.y}%;"
-        onclick="event.stopPropagation();" title="${pin.category||''}">${pi + 1}</div>`
+        onclick="_svTogglePinBubble(event,${si},${pi})">${pi + 1}</div>`
     ).join('');
     return `<div class="sv-slide" data-slide="${si}">
       <img src="${item.url}" alt="">
@@ -4131,6 +4267,7 @@ function openStyleViewer(room, index) {
 function _svGoTo(index) {
   const items = (getStyleData()[styleViewerRoom] || []);
   styleViewerIndex = Math.max(0, Math.min(index, items.length - 1));
+  _svDismissBubble();
   document.getElementById('style-viewer-reel').style.transform = `translateX(-${styleViewerIndex * 100}%)`;
   _svRenderDots(items.length);
   _svUpdateNavArrows(items.length);
