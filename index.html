@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 브랜드 로고 localStorage 캐시 제거 — 구(舊) HTML이 캐시에서 로드돼 flash가 나는 현상 방지 -->
+<script>try{localStorage.removeItem('vibespace_logo')}catch(e){}</script>
 
 <!-- ===== SEO CORE ===== -->
 <title>바이브스페이스(Vibespace) — 반셀프인테리어 공정 계획 앱 | 예산·업체·일정 한번에</title>
@@ -6887,8 +6889,8 @@ function renderExportDoc(projOverride, targetAreaId) {
     else                        calPeriod = `${syr}년 ${sm2+1}월~${eyr}년 ${em2+1}월`;
   }
 
-  // Logo / watermark
-  const logoDataUrl = localStorage.getItem('vibespace_logo') || '';
+  // Logo / watermark (메모리 캐시 우선, localStorage fallback)
+  const logoDataUrl = _cachedBrandLogo || '';
   const brandHtml = logoDataUrl
     ? `<div class="export-doc-brand"><img src="${logoDataUrl}" style="height:16px;opacity:.4;filter:grayscale(100%);" alt="Vibespace"></div>`
     : `<div class="export-doc-brand">vibespace</div>`;
@@ -8493,22 +8495,28 @@ function initSession() {
   _checkSession();
 }
 
-// Fetch brand logo from Firestore → cache in localStorage + apply to header
+// 브랜드 로고 메모리 캐시 — localStorage 대신 세션 내 메모리에만 보관
+let _cachedBrandLogo = null;
+// Fetch brand logo from Firestore → apply to header (localStorage 캐시 미사용)
+let _brandLogoLoading = false;
 async function _loadBrandLogo() {
+  if (_brandLogoLoading) return; // 중복 호출 방지
+  _brandLogoLoading = true;
   try {
     const ok = await _initFirebase();
     if (!ok) return;
     // source:'server' → Firestore 클라이언트 메모리/IndexedDB 캐시 완전 우회
     const snap = await _db.collection('vb_settings').doc('brand').get({ source: 'server' });
     if (snap.exists) {
-      const logo = snap.data().logoDataUrl;
-      if (logo) { localStorage.setItem('vibespace_logo', logo); _applyHeaderLogo(logo); }
-      else { localStorage.removeItem('vibespace_logo'); _applyHeaderLogo(null); }
+      const logo = snap.data().logoDataUrl || null;
+      _cachedBrandLogo = logo; // 메모리 캐시 (export 기능용)
+      _applyHeaderLogo(logo);
     } else {
-      localStorage.removeItem('vibespace_logo');
+      _cachedBrandLogo = null;
       _applyHeaderLogo(null);
     }
   } catch(e) { console.warn('[Brand Logo]', e); }
+  finally { _brandLogoLoading = false; }
 }
 
 function _applyBrandLogo(dataUrl) {
@@ -8537,6 +8545,12 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
+// localStorage 로고 캐시 완전 삭제 — 구(舊) HTML이 캐시에서 로드돼도 flash 불가
+localStorage.removeItem('vibespace_logo');
+// 로고 fetch를 최대한 일찍 실행 (DOMContentLoaded — window.load보다 수백ms 빠름)
+document.addEventListener('DOMContentLoaded', () => { _loadBrandLogo(); }, { once: true });
+// DOM이 이미 ready인 경우(스크립트가 body 끝에 있을 때) 즉시 실행
+if (document.readyState === 'interactive' || document.readyState === 'complete') _loadBrandLogo();
 window.addEventListener('load', () => {
   // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
@@ -8553,7 +8567,6 @@ window.addEventListener('load', () => {
   _checkExportOnLoad();
   // 공동작업 초대 처리
   _checkInviteOnLoad();
-  _loadBrandLogo(); // Firestore 최신 로고만 적용 (캐시 선적용 제거 → 구로고 깜빡임 방지)
   _loadContractors(); // 업체 DB 로드
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
