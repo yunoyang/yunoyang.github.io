@@ -3092,7 +3092,6 @@ let _lastSaveTime = 0;
 function save() {
   localStorage.setItem('vibespace', JSON.stringify(state));
   if (state.loggedIn) _updateLastActivity();
-  showToast();
   _lastSaveTime = Date.now();
   const proj = getProject();
   // 공동작업자(myRole 있음)는 로컬만 저장 — owner만 projectData를 Firestore에 씀
@@ -7659,7 +7658,6 @@ function _startCollabListener(cloudId) {
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
     updateCollabMenuBadge();
-    showToastMessage(_ti('refresh') + '팀원이 변경 사항을 업데이트했습니다');
   });
 }
 
@@ -8411,9 +8409,7 @@ window.addEventListener('load', () => {
   _checkExportOnLoad();
   // 공동작업 초대 처리
   _checkInviteOnLoad();
-  // localStorage 캐시에서 즉시 헤더 로고 적용 (Firestore 응답 전 공백 방지)
-  _applyHeaderLogo(localStorage.getItem('vibespace_logo') || null);
-  _loadBrandLogo(); // Firestore 최신 로고 반영
+  _loadBrandLogo(); // Firestore 최신 로고만 적용 (캐시 선적용 제거 → 구로고 깜빡임 방지)
   _loadContractors(); // 업체 DB 로드
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
