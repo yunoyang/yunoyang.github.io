@@ -571,19 +571,10 @@ button, input, textarea, select { font-family:var(--font); }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.22);
   transition: background .15s;
 }
 .content-play-btn:active { background: rgba(0,0,0,0.4); }
-.content-play-icon {
-  width: 52px;
-  height: 52px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 .content-player-wrap {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -601,42 +592,32 @@ button, input, textarea, select { font-family:var(--font); }
   gap: 10px;
   padding: 10px 14px 12px;
 }
-.content-link-url {
-  flex: 1;
-  font-size: 13px;
-  color: #888;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .content-link-yt-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: #ff0000;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 5px;
-  padding: 2px 6px;
+  gap: 5px;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
   flex-shrink: 0;
 }
+.content-link-yt-badge svg { flex-shrink: 0; }
 .content-link-del {
   width: 30px;
   height: 30px;
   border: none;
-  background: #f1f1f5;
-  border-radius: 8px;
-  color: #aaa;
-  font-size: 16px;
+  background: none;
+  color: #555;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   line-height: 1;
+  margin-left: auto;
 }
-.content-link-del:active { background: #e1e5ef; }
+.content-link-del:active { opacity: .6; }
 .content-empty-state {
   display: flex;
   flex-direction: column;
@@ -3783,17 +3764,21 @@ function renderContentTab() {
         <div class="content-thumb-wrap" id="cl-thumb-${item.id}" onclick="_playContent('${item.id}')">
           <img src="${thumbUrl}" alt="thumbnail" onerror="this.style.display='none'">
           <div class="content-play-btn">
-            <div class="content-play-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#333"><polygon points="6,4 20,12 6,20"/></svg>
-            </div>
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="14,10 30,20 14,30" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
         </div>` : `
         <div style="padding:14px 14px 0;font-size:13px;color:#3176ff;word-break:break-all;">
           <a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color:#3176ff;">${item.url}</a>
         </div>`}
         <div class="content-link-footer">
-          ${isYt ? `<span class="content-link-yt-badge">▶ YouTube</span>` : ''}
-          <span class="content-link-url">${displayUrl}</span>
+          ${isYt ? `<span class="content-link-yt-badge">
+            <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.6 2.03C17.39.85 16.55.04 15.37.01 13.34 0 9 0 9 0S4.66 0 2.63.01C1.45.04.61.85.4 2.03.16 3.34 0 5.09 0 6.5c0 1.41.16 3.16.4 4.47.21 1.18 1.05 1.99 2.23 2.02C4.66 13 9 13 9 13s4.34 0 6.37-.01c1.18-.03 2.02-.84 2.23-2.02.24-1.31.4-3.06.4-4.47 0-1.41-.16-3.16-.4-4.47zM7.2 9.29V3.71L12.4 6.5 7.2 9.29z" fill="#ff0000"/>
+            </svg>
+            YouTube
+          </span>` : ''}
           <button class="content-link-del" onclick="_deleteContentLink('${item.id}')" title="삭제">×</button>
         </div>
       </div>`;
