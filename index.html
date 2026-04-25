@@ -502,6 +502,39 @@ button, input, textarea, select { font-family:var(--font); }
   line-height: 1.5;
 }
 
+/* ===== 스타일 뷰어 — PC 내비 화살표 ===== */
+.sv-nav-arrow {
+  display: none; /* 모바일 기본: 숨김 */
+}
+@media (hover: hover) and (pointer: fine) {
+  .sv-nav-arrow {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.88);
+    border: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    transition: opacity .18s, background .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sv-nav-arrow:hover { background: #fff; }
+  .sv-nav-arrow:active { background: #f0f0f0; }
+  .sv-nav-arrow.sv-nav-prev { left: 14px; }
+  .sv-nav-arrow.sv-nav-next { right: 14px; }
+  .sv-nav-arrow[disabled] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 /* ===== 컨텐츠 탭 ===== */
 .content-tab-inner {
   padding: 12px 0 100px;
@@ -4100,7 +4133,16 @@ function _svGoTo(index) {
   styleViewerIndex = Math.max(0, Math.min(index, items.length - 1));
   document.getElementById('style-viewer-reel').style.transform = `translateX(-${styleViewerIndex * 100}%)`;
   _svRenderDots(items.length);
+  _svUpdateNavArrows(items.length);
   _svRenderProductList();
+}
+
+function _svUpdateNavArrows(total) {
+  const prev = document.getElementById('sv-prev');
+  const next = document.getElementById('sv-next');
+  if (!prev || !next) return;
+  prev.disabled = styleViewerIndex <= 0;
+  next.disabled = styleViewerIndex >= total - 1;
 }
 
 function _svRenderDots(total) {
@@ -8455,6 +8497,12 @@ async function _checkExportOnLoad() {
   <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
     <div id="style-viewer-reel" class="sv-reel-wrap"></div>
     <div id="sv-dots" class="sv-dots"></div>
+    <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
+      <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
+      <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
   <!-- product list -->
   <div id="sv-product-list"></div>
