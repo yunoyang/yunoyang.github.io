@@ -350,7 +350,7 @@ button, input, textarea, select { font-family:var(--font); }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   user-select: none;
   pointer-events: none;
 }
@@ -469,12 +469,38 @@ button, input, textarea, select { font-family:var(--font); }
   flex-shrink: 0;
 }
 .sv-prod-del:active { background: #e1e5ef; }
-.sv-longpress-hint {
-  text-align: center;
-  font-size: 12px;
-  color: #bbb;
-  padding: 6px 0 0;
+/* Instagram-style dot pagination */
+.sv-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
   pointer-events: none;
+  z-index: 20;
+}
+.sv-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  transition: background .2s, transform .2s;
+  flex-shrink: 0;
+}
+.sv-dot.active {
+  background: #fff;
+  transform: scale(1.2);
+}
+/* hint text in product list */
+.sv-pin-hint {
+  padding: 16px 20px 8px;
+  font-size: 13px;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* ===== 컨텐츠 탭 ===== */
@@ -4079,8 +4105,8 @@ function openStyleViewer(room, index) {
   reel.style.transform = `translateX(-${index * 100}%)`;
   requestAnimationFrame(() => { reel.style.transition = 'transform .28s cubic-bezier(0.25,1,0.5,1)'; });
   document.getElementById('style-viewer-room').textContent = room;
-  document.getElementById('style-viewer-counter').textContent = items.length > 1 ? `${index + 1} / ${items.length}` : '';
   document.getElementById('style-viewer-screen').style.display = 'flex';
+  _svRenderDots(items.length);
   _svRenderProductList();
 }
 
@@ -4088,8 +4114,17 @@ function _svGoTo(index) {
   const items = (getStyleData()[styleViewerRoom] || []);
   styleViewerIndex = Math.max(0, Math.min(index, items.length - 1));
   document.getElementById('style-viewer-reel').style.transform = `translateX(-${styleViewerIndex * 100}%)`;
-  document.getElementById('style-viewer-counter').textContent = items.length > 1 ? `${styleViewerIndex + 1} / ${items.length}` : '';
+  _svRenderDots(items.length);
   _svRenderProductList();
+}
+
+function _svRenderDots(total) {
+  const el = document.getElementById('sv-dots');
+  if (!el) return;
+  if (total <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = Array.from({length: total}, (_, i) =>
+    `<div class="sv-dot${i === styleViewerIndex ? ' active' : ''}"></div>`
+  ).join('');
 }
 
 function _svRenderProductList() {
@@ -4099,24 +4134,19 @@ function _svRenderProductList() {
   const item = items[styleViewerIndex];
   const pins = item?.productPins || [];
   if (!pins.length) {
-    el.innerHTML = `<div class="sv-prod-empty">🛍️ 아직 제품 링크가 없어요</div>`;
+    el.innerHTML = `<div class="sv-pin-hint">이미지 위를 길게 눌러<br>제품 링크를 추가하세요</div>`;
     return;
   }
-  el.innerHTML = pins.map((pin, pi) => {
-    const domain = (() => { try { return new URL(pin.productUrl||'').hostname.replace('www.',''); } catch(e){ return pin.productUrl||''; } })();
-    return `<div class="sv-prod-item" onclick="if('${pin.productUrl}')window.open('${pin.productUrl}','_blank')">
-      <div class="sv-prod-thumb">
-        <span style="font-size:18px;">🛍️</span>
-        <span class="pin-num">${pi+1}</span>
-      </div>
+  el.innerHTML = `<div style="padding:0 16px 80px;">` + pins.map((pin, pi) => {
+    return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
+      <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
       <div class="sv-prod-info">
-        <div class="sv-prod-cat">${pin.category || '제품'}</div>
-        <div class="sv-prod-name">${domain || pin.category || '링크 보기'}</div>
+        ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;">${pin.category}</div>` : ''}
         ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
       </div>
       <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 }
 
 function closeStyleViewer() {
@@ -8393,7 +8423,7 @@ async function _checkExportOnLoad() {
 <!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
 <div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
   <!-- header -->
-  <div class="form-header" style="background:#fff;justify-content:space-between;padding-bottom:0;border-bottom:none;">
+  <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;">
     <button class="back-btn" onclick="closeStyleViewer()">
       <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
     </button>
@@ -8408,14 +8438,10 @@ async function _checkExportOnLoad() {
       </button>
     </div>
   </div>
-  <!-- image area (52vh) + touch -->
+  <!-- image area (52vh) + touch + dot pagination -->
   <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
     <div id="style-viewer-reel" class="sv-reel-wrap"></div>
-  </div>
-  <!-- counter + hint -->
-  <div style="text-align:center;padding:6px 0 2px;flex-shrink:0;background:#fff;">
-    <span id="style-viewer-counter" style="font-size:12px;color:#bbb;font-weight:500;letter-spacing:.06em;"></span>
-    <div class="sv-longpress-hint">이미지를 길게 눌러 제품 링크를 추가하세요</div>
+    <div id="sv-dots" class="sv-dots"></div>
   </div>
   <!-- product list -->
   <div id="sv-product-list"></div>
@@ -8426,7 +8452,7 @@ async function _checkExportOnLoad() {
   <div class="dialog" style="gap:12px;">
     <h3 style="font-size:17px;font-weight:700;margin:0;">제품 링크 추가</h3>
     <input class="dialog-input" id="pin-url" placeholder="제품 URL 붙여넣기" style="font-size:14px;">
-    <input class="dialog-input" id="pin-category" placeholder="카테고리 (예: 소파, 조명, 바닥재)" style="font-size:14px;">
+    <input class="dialog-input" id="pin-category" placeholder="제품명 (예: 패브릭 3인 소파)" style="font-size:14px;">
     <input class="dialog-input" id="pin-price" placeholder="가격 (예: 320,000원)" style="font-size:14px;"
       onkeydown="if(event.key==='Enter')_savePinDlg()">
     <div class="dialog-actions split">
