@@ -324,6 +324,159 @@ button, input, textarea, select { font-family:var(--font); }
   border-bottom:2.5px solid #333333;
 }
 
+/* ===== 스타일 뷰어 — 제품 핀 ===== */
+#sv-image-area {
+  flex: none;
+  height: 52vh;
+  overflow: hidden;
+  position: relative;
+}
+#sv-image-area .sv-reel-wrap {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+  transition: transform .28s cubic-bezier(0.25,1,0.5,1);
+}
+.sv-slide {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+}
+.sv-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+.prod-pin-dot {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  line-height: 1;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .1s;
+}
+.prod-pin-dot:active { transform: translate(-50%,-50%) scale(0.88); }
+#sv-product-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 80px;
+}
+.sv-prod-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 16px;
+  font-size: 13px;
+  color: #bbb;
+  gap: 6px;
+}
+.sv-prod-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f1f5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-prod-item:last-child { border-bottom: none; }
+.sv-prod-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  overflow: hidden;
+  position: relative;
+}
+.sv-prod-thumb span.pin-num {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 18px;
+  height: 18px;
+  background: #222;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sv-prod-info { flex: 1; min-width: 0; }
+.sv-prod-cat {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.sv-prod-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.3;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv-prod-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  margin-top: 3px;
+}
+.sv-prod-del {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f1f1f5;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sv-prod-del:active { background: #e1e5ef; }
+.sv-longpress-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #bbb;
+  padding: 6px 0 0;
+  pointer-events: none;
+}
+
 /* ===== 컨텐츠 탭 ===== */
 .content-tab-inner {
   padding: 12px 0 100px;
@@ -497,7 +650,7 @@ button, input, textarea, select { font-family:var(--font); }
 .style-card-collage {
   display: flex;
   gap: 2px;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 8 / 3;
   background: #e8e8ec;
   overflow: hidden;
 }
@@ -2000,7 +2153,6 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="content-add-bar">
           <input class="content-add-input" id="content-url-input"
             placeholder="유튜브 링크를 붙여넣기 하세요"
-            onpaste="_onContentPaste(event)"
             onkeydown="if(event.key==='Enter'){_addContentLink();event.preventDefault();}">
           <button class="content-add-confirm-btn" onclick="_addContentLink()">추가</button>
         </div>
@@ -3667,17 +3819,6 @@ function _deleteContentLink(id) {
   _syncContentLinksToCloud(proj);
 }
 
-function _onContentPaste(e) {
-  // 붙여넣기 후 자동으로 YouTube인지 감지해 즉시 추가
-  setTimeout(() => {
-    const input = document.getElementById('content-url-input');
-    if (!input) return;
-    const val = input.value.trim();
-    if (_parseYoutubeId(val)) {
-      _addContentLink();
-    }
-  }, 50);
-}
 
 // ===== STYLE TAB =====
 const STYLE_ROOMS_DEFAULT = ['거실', '욕실', '침실', '부엌', '작은방'];
@@ -3905,29 +4046,42 @@ function addStyleImage(room, item) {
 }
 
 let _svTouchX = null, _svTouchY = null;
+let _svLongPressTimer = null;
+let _svPendingPinX = 50, _svPendingPinY = 50;
+
+function _svBuildReel() {
+  const items = (getStyleData()[styleViewerRoom] || []);
+  const reel = document.getElementById('style-viewer-reel');
+  reel.innerHTML = items.map((item, si) => {
+    const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
+    const badge = ini
+      ? '<div style="position:absolute;left:14px;bottom:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.52);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none;">' + ini + '</div>'
+      : '';
+    const pins = (item.productPins || []).map((pin, pi) =>
+      `<div class="prod-pin-dot" style="left:${pin.x}%;top:${pin.y}%;"
+        onclick="event.stopPropagation();" title="${pin.category||''}">${pi + 1}</div>`
+    ).join('');
+    return `<div class="sv-slide" data-slide="${si}">
+      <img src="${item.url}" alt="">
+      ${badge}${pins}
+    </div>`;
+  }).join('');
+}
 
 function openStyleViewer(room, index) {
   const items = (getStyleData()[room] || []);
   if (items.length === 0) { openStyleAddMenu(room); return; }
   styleViewerRoom = room;
   styleViewerIndex = index;
+  _svBuildReel();
   const reel = document.getElementById('style-viewer-reel');
-  reel.innerHTML = items.map(item => {
-    const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
-    const badge = ini
-      ? '<div style="position:absolute;left:14px;bottom:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.52);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none;">' + ini + '</div>'
-      : '';
-    return '<div style="flex-shrink:0;width:100%;height:100%;position:relative;background:#fff;overflow:hidden;">'
-      + '<img src="' + item.url + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;">'
-      + badge
-      + '</div>';
-  }).join('');
   reel.style.transition = 'none';
   reel.style.transform = `translateX(-${index * 100}%)`;
   requestAnimationFrame(() => { reel.style.transition = 'transform .28s cubic-bezier(0.25,1,0.5,1)'; });
   document.getElementById('style-viewer-room').textContent = room;
   document.getElementById('style-viewer-counter').textContent = items.length > 1 ? `${index + 1} / ${items.length}` : '';
   document.getElementById('style-viewer-screen').style.display = 'flex';
+  _svRenderProductList();
 }
 
 function _svGoTo(index) {
@@ -3935,10 +4089,95 @@ function _svGoTo(index) {
   styleViewerIndex = Math.max(0, Math.min(index, items.length - 1));
   document.getElementById('style-viewer-reel').style.transform = `translateX(-${styleViewerIndex * 100}%)`;
   document.getElementById('style-viewer-counter').textContent = items.length > 1 ? `${styleViewerIndex + 1} / ${items.length}` : '';
+  _svRenderProductList();
+}
+
+function _svRenderProductList() {
+  const el = document.getElementById('sv-product-list');
+  if (!el) return;
+  const items = (getStyleData()[styleViewerRoom] || []);
+  const item = items[styleViewerIndex];
+  const pins = item?.productPins || [];
+  if (!pins.length) {
+    el.innerHTML = `<div class="sv-prod-empty">🛍️ 아직 제품 링크가 없어요</div>`;
+    return;
+  }
+  el.innerHTML = pins.map((pin, pi) => {
+    const domain = (() => { try { return new URL(pin.productUrl||'').hostname.replace('www.',''); } catch(e){ return pin.productUrl||''; } })();
+    return `<div class="sv-prod-item" onclick="if('${pin.productUrl}')window.open('${pin.productUrl}','_blank')">
+      <div class="sv-prod-thumb">
+        <span style="font-size:18px;">🛍️</span>
+        <span class="pin-num">${pi+1}</span>
+      </div>
+      <div class="sv-prod-info">
+        <div class="sv-prod-cat">${pin.category || '제품'}</div>
+        <div class="sv-prod-name">${domain || pin.category || '링크 보기'}</div>
+        ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
+      </div>
+      <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
+    </div>`;
+  }).join('');
 }
 
 function closeStyleViewer() {
   document.getElementById('style-viewer-screen').style.display = 'none';
+}
+
+// ── 제품 핀 저장/삭제
+function _deleteProdPin(pinIndex) {
+  const proj = getProject();
+  if (!proj) return;
+  const items = proj.styleImages?.[styleViewerRoom];
+  if (!items?.[styleViewerIndex]) return;
+  if (!items[styleViewerIndex].productPins) return;
+  items[styleViewerIndex].productPins.splice(pinIndex, 1);
+  save();
+  _svBuildReel();
+  _svRenderProductList();
+}
+
+// ── 핀 다이얼로그
+let _pinDlgOpen = false;
+function _openPinDlg(xPct, yPct) {
+  _svPendingPinX = xPct;
+  _svPendingPinY = yPct;
+  document.getElementById('pin-url').value = '';
+  document.getElementById('pin-category').value = '';
+  document.getElementById('pin-price').value = '';
+  const dlg = document.getElementById('dlg-product-pin');
+  dlg.style.display = 'flex';
+  requestAnimationFrame(() => dlg.classList.add('active'));
+  setTimeout(() => document.getElementById('pin-url').focus(), 300);
+  _pinDlgOpen = true;
+}
+function _closePinDlg() {
+  const dlg = document.getElementById('dlg-product-pin');
+  dlg.classList.remove('active');
+  setTimeout(() => { dlg.style.display = 'none'; }, 200);
+  _pinDlgOpen = false;
+}
+function _savePinDlg() {
+  const url = document.getElementById('pin-url').value.trim();
+  const cat = document.getElementById('pin-category').value.trim();
+  const price = document.getElementById('pin-price').value.trim();
+  if (!url && !cat) { _closePinDlg(); return; }
+  const proj = getProject();
+  if (!proj) return;
+  const items = proj.styleImages?.[styleViewerRoom];
+  if (!items?.[styleViewerIndex]) { _closePinDlg(); return; }
+  if (!items[styleViewerIndex].productPins) items[styleViewerIndex].productPins = [];
+  items[styleViewerIndex].productPins.push({
+    id: Date.now().toString(36),
+    x: _svPendingPinX,
+    y: _svPendingPinY,
+    productUrl: url,
+    category: cat,
+    price: price
+  });
+  save();
+  _closePinDlg();
+  _svBuildReel();
+  _svRenderProductList();
 }
 
 function openStyleAddFromViewer() {
@@ -3965,18 +4204,40 @@ function deleteStyleImage() {
 }
 
 function svTouchStart(e) {
-  _svTouchX = e.touches[0].clientX;
-  _svTouchY = e.touches[0].clientY;
+  const t = e.touches[0];
+  _svTouchX = t.clientX;
+  _svTouchY = t.clientY;
+  // 롱프레스 감지 시작
+  clearTimeout(_svLongPressTimer);
+  _svLongPressTimer = setTimeout(() => {
+    _svLongPressTimer = null;
+    _svTouchX = null; // 스와이프 무효화
+    const area = document.getElementById('sv-image-area');
+    if (!area) return;
+    const rect = area.getBoundingClientRect();
+    const xPct = Math.round(((t.clientX - rect.left) / rect.width) * 100);
+    const yPct = Math.round(((t.clientY - rect.top) / rect.height) * 100);
+    // 진동 피드백
+    if (navigator.vibrate) navigator.vibrate(40);
+    _openPinDlg(xPct, yPct);
+  }, 600);
 }
 
 function svTouchMove(e) {
   if (_svTouchX === null) return;
   const dx = e.touches[0].clientX - _svTouchX;
   const dy = e.touches[0].clientY - _svTouchY;
+  // 조금이라도 움직이면 롱프레스 취소
+  if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+    clearTimeout(_svLongPressTimer);
+    _svLongPressTimer = null;
+  }
   if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
 }
 
 function svTouchEnd(e) {
+  clearTimeout(_svLongPressTimer);
+  _svLongPressTimer = null;
   if (_svTouchX === null) return;
   const dx = e.changedTouches[0].clientX - _svTouchX;
   _svTouchX = null; _svTouchY = null;
@@ -8147,13 +8408,31 @@ async function _checkExportOnLoad() {
       </button>
     </div>
   </div>
-  <!-- reel -->
-  <div style="flex:1;overflow:hidden;position:relative;" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
-    <div id="style-viewer-reel" style="display:flex;height:100%;will-change:transform;transition:transform .28s cubic-bezier(0.25,1,0.5,1);"></div>
+  <!-- image area (52vh) + touch -->
+  <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
+    <div id="style-viewer-reel" class="sv-reel-wrap"></div>
   </div>
-  <!-- counter -->
-  <div style="text-align:center;padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);flex-shrink:0;background:#fff;">
+  <!-- counter + hint -->
+  <div style="text-align:center;padding:6px 0 2px;flex-shrink:0;background:#fff;">
     <span id="style-viewer-counter" style="font-size:12px;color:#bbb;font-weight:500;letter-spacing:.06em;"></span>
+    <div class="sv-longpress-hint">이미지를 길게 눌러 제품 링크를 추가하세요</div>
+  </div>
+  <!-- product list -->
+  <div id="sv-product-list"></div>
+</div>
+
+<!-- 제품 핀 추가 다이얼로그 -->
+<div class="overlay" id="dlg-product-pin" style="z-index:99999;" onclick="if(event.target===this)_closePinDlg()">
+  <div class="dialog" style="gap:12px;">
+    <h3 style="font-size:17px;font-weight:700;margin:0;">제품 링크 추가</h3>
+    <input class="dialog-input" id="pin-url" placeholder="제품 URL 붙여넣기" style="font-size:14px;">
+    <input class="dialog-input" id="pin-category" placeholder="카테고리 (예: 소파, 조명, 바닥재)" style="font-size:14px;">
+    <input class="dialog-input" id="pin-price" placeholder="가격 (예: 320,000원)" style="font-size:14px;"
+      onkeydown="if(event.key==='Enter')_savePinDlg()">
+    <div class="dialog-actions split">
+      <button class="btn-cancel" onclick="_closePinDlg()">취소</button>
+      <button class="btn-confirm" onclick="_savePinDlg()">추가</button>
+    </div>
   </div>
 </div>
 
