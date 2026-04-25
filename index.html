@@ -8505,8 +8505,7 @@ async function _loadBrandLogo() {
   try {
     const ok = await _initFirebase();
     if (!ok) return;
-    // source:'server' → Firestore 클라이언트 메모리/IndexedDB 캐시 완전 우회
-    const snap = await _db.collection('vb_settings').doc('brand').get({ source: 'server' });
+    const snap = await _db.collection('vb_settings').doc('brand').get();
     if (snap.exists) {
       const logo = snap.data().logoDataUrl || null;
       _cachedBrandLogo = logo; // 메모리 캐시 (export 기능용)
@@ -8545,12 +8544,6 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
-// localStorage 로고 캐시 완전 삭제 — 구(舊) HTML이 캐시에서 로드돼도 flash 불가
-localStorage.removeItem('vibespace_logo');
-// 로고 fetch를 최대한 일찍 실행 (DOMContentLoaded — window.load보다 수백ms 빠름)
-document.addEventListener('DOMContentLoaded', () => { _loadBrandLogo(); }, { once: true });
-// DOM이 이미 ready인 경우(스크립트가 body 끝에 있을 때) 즉시 실행
-if (document.readyState === 'interactive' || document.readyState === 'complete') _loadBrandLogo();
 window.addEventListener('load', () => {
   // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
@@ -8567,6 +8560,7 @@ window.addEventListener('load', () => {
   _checkExportOnLoad();
   // 공동작업 초대 처리
   _checkInviteOnLoad();
+  _loadBrandLogo(); // Firestore 최신 로고 적용
   _loadContractors(); // 업체 DB 로드
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
