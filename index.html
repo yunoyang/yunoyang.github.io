@@ -3420,7 +3420,7 @@ async function _autoUploadOnLogin() {
   }
   if (uploaded > 0) {
     save();
-    showToastMessage('☁️ 클라우드에 저장됐습니다.');
+    showToastMessage(_ti('cloud') + '클라우드에 저장됐습니다.');
   }
 }
 
@@ -3957,7 +3957,7 @@ function renderStyleTab() {
   const hasAnyImage = Object.values(data).some(arr => arr?.length > 0);
   if (!hasAnyImage && !_styleRecoveryAttempted && state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
     _styleRecoveryAttempted = true;
-    _recoverStyleImagesFromStorage().then(ok => { if (ok) showToastMessage('스타일 이미지를 복구했습니다 ✅'); });
+    _recoverStyleImagesFromStorage().then(ok => { if (ok) showToastMessage(_ti('check') + '스타일 이미지를 복구했습니다'); });
   }
   const container = document.getElementById('style-rooms-container');
   container.innerHTML = rooms.map(room => {
@@ -4140,7 +4140,7 @@ async function handleStyleFileSelect(e) {
   }
 
   _styleUploadHideProgress();
-  if (done > 0) showToastMessage(done > 1 ? `${done}장 업로드 완료 ✅` : '업로드 완료 ✅');
+  if (done > 0) showToastMessage(_ti('upload') + (done > 1 ? `${done}장 업로드 완료` : '업로드 완료'));
 }
 
 
@@ -5341,7 +5341,7 @@ function addDefaultProcesses() {
     scheduleStart: '', scheduleEnd: '', company: '', details: []
   }));
   save(); renderAll();
-  showToastMessage('기본 공정이 추가되었습니다 ✅');
+  showToastMessage(_ti('check') + '기본 공정이 추가됐습니다');
 }
 
 function editField(procId, key, label) {
@@ -6562,7 +6562,7 @@ async function downloadNoticeImage() {
     link.download = '인테리어_양해안내문.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    showToastMessage('✅ 이미지가 저장됐습니다!');
+    showToastMessage(_ti('save') + '이미지가 저장됐습니다!');
   } catch(e) {
     alert('이미지 저장 실패: ' + e.message);
   }
@@ -6667,7 +6667,7 @@ function copyExportDoc() {
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => {
-      showToastMessage('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-top:-2px;"><polyline points="20 6 9 17 4 12"/></svg>복사완료');
+      showToastMessage(_ti('check') + '복사완료');
     }).catch(() => {
       _fallbackCopyText(text);
     });
@@ -6682,7 +6682,7 @@ function _fallbackCopyText(text) {
   ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
   document.body.appendChild(ta);
   ta.focus(); ta.select();
-  try { document.execCommand('copy'); showToastMessage('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-top:-2px;"><polyline points="20 6 9 17 4 12"/></svg>복사완료'); }
+  try { document.execCommand('copy'); showToastMessage(_ti('check') + '복사완료'); }
   catch(e) { alert('복사 실패. 직접 텍스트를 선택해서 복사해 주세요.'); }
   document.body.removeChild(ta);
 }
@@ -7024,15 +7024,15 @@ function shareAction(type) {
   const url = 'https://vibespacekorea.com';
   const text = `[Vibespace] ${proj ? proj.name : '시공 계획'}`;
   if (type === 'link') {
-    navigator.clipboard ? navigator.clipboard.writeText(url).then(()=>showToastMessage('링크가 복사됐습니다!')) : alert('링크: ' + url);
+    navigator.clipboard ? navigator.clipboard.writeText(url).then(()=>showToastMessage(_ti('copy') + '링크가 복사됐습니다!')) : alert('링크: ' + url);
     return;
   } else if (type === 'twitter') {
     window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url),'_blank');
   } else if (type === 'kakao') {
-    navigator.clipboard.writeText(url).then(()=>showToastMessage('링크를 복사했습니다. 카카오톡에 붙여넣기 하세요!'));
+    navigator.clipboard.writeText(url).then(()=>showToastMessage(_ti('copy') + '링크 복사 완료! 카카오톡에 붙여넣기 하세요'));
     return;
   } else if (type === 'instagram') {
-    navigator.clipboard.writeText(url).then(()=>showToastMessage('링크를 복사했습니다. 인스타그램 DM에 붙여넣기 하세요!'));
+    navigator.clipboard.writeText(url).then(()=>showToastMessage(_ti('copy') + '링크 복사 완료! 인스타그램 DM에 붙여넣기 하세요'));
     return;
   }
   closeDialog('dlg-share');
@@ -7328,7 +7328,7 @@ async function _handleFirebaseUser(user) {
     trackEvent('auth', 'login', 'google');
     closeDialog('dlg-login');
     updateLoginUI();
-    showToastMessage('로그인됐습니다! 👋');
+    showToastMessage(_ti('user') + '로그인됐습니다!');
     await _autoUploadOnLogin();
     _loadContractors();
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
@@ -7659,7 +7659,7 @@ function _startCollabListener(cloudId) {
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
     updateCollabMenuBadge();
-    showToastMessage('팀원이 변경 사항을 업데이트했습니다');
+    showToastMessage(_ti('refresh') + '팀원이 변경 사항을 업데이트했습니다');
   });
 }
 
@@ -7854,7 +7854,7 @@ async function _recoverCollaboratorsFromIndex() {
     localStorage.setItem('vibespace', JSON.stringify(state));
     updateCollabMenuBadge();
     updateCollabIndicator(recovered, proj.owner);
-    showToastMessage(`공동작업자 ${recovered.length}명 복원됐습니다 ✅`);
+    showToastMessage(_ti('check') + `공동작업자 ${recovered.length}명 복원됐습니다`);
     renderCollabTab();
   } catch(e) { console.warn('_recoverCollaboratorsFromIndex:', e); }
 }
@@ -7942,7 +7942,7 @@ async function generateInviteLink() {
 
 function copyInviteLink() {
   if (!_currentInviteLink) return;
-  navigator.clipboard?.writeText(_currentInviteLink).then(() => showToastMessage('링크가 복사되었습니다!')).catch(() => {
+  navigator.clipboard?.writeText(_currentInviteLink).then(() => showToastMessage(_ti('copy') + '링크가 복사됐습니다!')).catch(() => {
     prompt('아래 링크를 복사하세요:', _currentInviteLink);
   });
 }
@@ -7962,7 +7962,7 @@ async function sendInviteByMail() {
       role:         (document.getElementById('invite-role-select')?.value === 'viewer') ? '뷰어' : '편집자',
     });
     if (btn) { btn.disabled = false; btn.innerHTML = origText; }
-    showToastMessage('✉️ 초대 이메일을 전송했습니다!');
+    showToastMessage(_ti('mail') + '초대 이메일을 전송했습니다!');
     const linkBox = document.getElementById('invite-link-box');
     if (linkBox) linkBox.classList.add('show');
     const sentTo = document.getElementById('invite-sent-to');
@@ -7977,7 +7977,7 @@ async function sendInviteByMail() {
       `프로젝트명: ${proj?.name||''}\n\n아래 링크를 클릭해 참여하세요:\n${_currentInviteLink}\n\n(링크는 7일간 유효합니다)`
     );
     window.open(`mailto:${_currentInviteEmail}?subject=${subject}&body=${body}`);
-    showToastMessage('⚠️ 직접 전송 실패 — 메일 앱을 열었습니다.');
+    showToastMessage(_ti('warn') + '직접 전송 실패 — 메일 앱을 열었습니다.');
   }
 }
 
@@ -8158,7 +8158,7 @@ async function _acceptInvite(token, invite, cloudProjData) {
     closeAllDialogs();
     goTo('main'); renderAll();
     updateCollabIndicator(localProj.collaborators, localProj.owner);
-    showToastMessage(`${invite.ownerName||'팀원'}님의 프로젝트에 참여했습니다! 🎉`);
+    showToastMessage(_ti('users') + `${invite.ownerName||'팀원'}님의 프로젝트에 참여했습니다!`);
   } catch(e) {
     if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">참여 오류: ${esc(e.message)}</p>`;
     const actions = document.getElementById('join-invite-actions');
@@ -8169,6 +8169,25 @@ async function _acceptInvite(token, invite, cloudProjData) {
 // close all dialogs helper (for accept flow)
 function closeAllDialogs() {
   document.querySelectorAll('.overlay.active').forEach(el => el.classList.remove('active'));
+}
+
+// 토스트 라인 아이콘 헬퍼
+function _ti(type) {
+  const a = 'width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px;flex-shrink:0;"';
+  const map = {
+    check:   `<svg ${a}><polyline points="20 6 9 17 4 12"/></svg>`,
+    cloud:   `<svg ${a}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
+    mail:    `<svg ${a}><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>`,
+    warn:    `<svg ${a}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    user:    `<svg ${a}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    users:   `<svg ${a}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    upload:  `<svg ${a}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+    save:    `<svg ${a}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
+    refresh: `<svg ${a}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.5"/></svg>`,
+    copy:    `<svg ${a}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+    link:    `<svg ${a}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  };
+  return map[type] || '';
 }
 
 function showToastMessage(msg) {
@@ -8262,7 +8281,7 @@ async function submitFeedback() {
       }).catch(()=>{});
     }
     closeDialog('dlg-feedback');
-    showToastMessage('피드백이 전송되었습니다. 감사합니다! 🙏');
+    showToastMessage(_ti('check') + '피드백이 전송됐습니다. 감사합니다!');
   } catch(e) {
     console.error('Feedback send failed:', e);
     // fallback: mailto
@@ -8448,7 +8467,7 @@ async function _syncFromCloudOnStartup() {
         }
         if (uploaded > 0) {
           save();
-          showToastMessage('☁️ 로컬 데이터를 클라우드에 업로드했습니다.');
+          showToastMessage(_ti('cloud') + '로컬 데이터를 클라우드에 업로드했습니다.');
         }
       }
       for (const p of (state.projects||[])) {
@@ -8546,7 +8565,7 @@ async function generateExportLink(btn) {
       ta.value = url; ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
       document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     }
-    showToastMessage('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;margin-top:-2px;"><polyline points="20 6 9 17 4 12"/></svg>링크 복사완료! 공유해보세요.');
+    showToastMessage(_ti('check') + '링크 복사완료! 공유해보세요.');
   } catch(e) {
     showToastMessage('링크 생성 실패. 다시 시도해주세요.');
     console.error('export link error:', e);
