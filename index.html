@@ -804,6 +804,13 @@ button, input, textarea, select { font-family:var(--font); }
   display: flex; align-items: center; gap: 8px;
 }
 .style-card-meta-sep { color: #ddd; }
+.n-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 9px; font-weight: 800; flex-shrink: 0; line-height: 1;
+  margin-left: 5px; vertical-align: middle;
+}
 .style-add-btn {
   display: flex; align-items: center; gap: 5px;
   font-size: 13px; font-weight: 600; color: #555;
@@ -4017,10 +4024,13 @@ function renderContentTab() {
       </div>`;
     return;
   }
+  const _cproj = getProject();
+  const _cbadges = (_cproj?.cloudId && _cproj.isCloud) ? _getBadges(_cproj.cloudId) : {};
   list.innerHTML = links.map((item, idx) => {
     const isYt = item.type === 'youtube';
     const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg` : '';
     const displayUrl = (() => { try { return new URL(item.url).hostname.replace('www.',''); } catch(e) { return item.url; } })();
+    const isItemNew = _isNew(_cbadges.contentLinks?.[item.id]);
     return `
       <div class="content-link-card" id="cl-card-${item.id}">
         ${isYt ? `
@@ -4043,6 +4053,7 @@ function renderContentTab() {
             </svg>
             YouTube
           </span>` : ''}
+          ${isItemNew ? '<span class="n-badge" style="margin-left:4px;margin-right:auto;">N</span>' : ''}
           <button class="content-link-del" onclick="_deleteContentLink('${item.id}')" title="삭제">×</button>
         </div>
       </div>`;
@@ -4124,6 +4135,8 @@ function renderStyleTab() {
     _styleRecoveryAttempted = true;
     _recoverStyleImagesFromStorage().then(ok => { if (ok) showToastMessage(_ti('check') + '스타일 이미지를 복구했습니다'); });
   }
+  const proj = getProject();
+  const _badges = (proj?.cloudId && proj.isCloud) ? _getBadges(proj.cloudId) : {};
   const container = document.getElementById('style-rooms-container');
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
@@ -4143,11 +4156,12 @@ function renderStyleTab() {
     const onclick = items.length > 0 ? `openStyleViewer('${r}',0)` : `openStyleAddMenu('${r}')`;
     const linkCount = items.reduce((acc, img) => acc + (img.productPins||[]).filter(p=>p.url).length, 0);
     const meta = `<span>핀 ${items.length}개</span><span class="style-card-meta-sep">|</span><span>링크 ${linkCount}개</span>`;
+    const roomNew = _isNew(_badges.rooms?.[room]);
     return `<div class="style-room-card" onclick="${onclick}">
       ${collage}
       <div class="style-card-info">
         <div class="style-card-top-row">
-          <span class="style-card-title">${room}</span>
+          <span style="display:flex;align-items:center;gap:0;"><span class="style-card-title">${room}</span>${roomNew ? '<span class="n-badge">N</span>' : ''}</span>
           <button class="style-add-btn" onclick="event.stopPropagation();openStyleAddMenu('${r}')">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>추가
           </button>
@@ -4470,11 +4484,14 @@ function _svRenderProductList() {
     el.innerHTML = `<div class="sv-pin-hint">이미지 위를 길게 눌러<br>제품 링크를 추가하세요</div>`;
     return;
   }
+  const _svproj = getProject();
+  const _svbadges = (_svproj?.cloudId && _svproj.isCloud) ? _getBadges(_svproj.cloudId) : {};
   el.innerHTML = `<div style="padding:0 16px 80px;">` + pins.map((pin, pi) => {
+    const isPinNew = pin.id && _isNew(_svbadges.productPins?.[item.url + ':' + pin.id]);
     return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
       <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
       <div class="sv-prod-info">
-        ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
+        ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
         ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
       </div>
       <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
@@ -7774,6 +7791,48 @@ async function _syncContentLinksToCloud(proj) {
 }
 
 // ===== REAL-TIME LISTENER =====
+// ===== N BADGE — 협업자가 추가한 항목 24시간 표시 =====
+function _getBadges(cloudId) {
+  try {
+    const raw = localStorage.getItem('vb_new_' + cloudId);
+    return raw ? JSON.parse(raw) : { rooms: {}, contentLinks: {}, productPins: {} };
+  } catch(e) { return { rooms: {}, contentLinks: {}, productPins: {} }; }
+}
+function _saveBadges(cloudId, badges) {
+  try { localStorage.setItem('vb_new_' + cloudId, JSON.stringify(badges)); } catch(e) {}
+}
+function _isNew(ts) { return !!(ts && (Date.now() - ts) < 24 * 60 * 60 * 1000); }
+function _cleanBadges(badges) {
+  ['rooms','contentLinks','productPins'].forEach(key => {
+    if (badges[key]) Object.keys(badges[key]).forEach(k => { if (!_isNew(badges[key][k])) delete badges[key][k]; });
+  });
+  return badges;
+}
+function _markNewFromCollab(cloudId, proj, remote) {
+  const badges = _cleanBadges(_getBadges(cloudId));
+  const now = Date.now();
+  const localImages = proj.styleImages || {};
+  const cloudImages = remote.styleImages || {};
+  Object.keys(cloudImages).forEach(room => {
+    const ri = cloudImages[room] || [];
+    const li = localImages[room] || [];
+    const localUrls = new Set(li.map(x => x.url));
+    if (ri.some(x => !localUrls.has(x.url))) badges.rooms[room] = now;
+    ri.forEach(cloudItem => {
+      const localItem = li.find(x => x.url === cloudItem.url);
+      const localPinIds = new Set((localItem?.productPins || []).map(p => p.id));
+      (cloudItem.productPins || []).forEach(pin => {
+        if (pin.id && !localPinIds.has(pin.id)) badges.productPins[cloudItem.url + ':' + pin.id] = now;
+      });
+    });
+  });
+  const localLinkIds = new Set((proj.contentLinks || []).map(x => x.id));
+  (remote.contentLinks || []).forEach(link => {
+    if (link.id && !localLinkIds.has(link.id)) badges.contentLinks[link.id] = now;
+  });
+  _saveBadges(cloudId, badges);
+}
+
 function _startCollabListener(cloudId) {
   if (_collabUnsub) { _collabUnsub(); _collabUnsub = null; }
   if (!_db) return;
@@ -7791,6 +7850,8 @@ function _startCollabListener(cloudId) {
     const localImages = proj.styleImages || {};
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
+    // N 뱃지: merge 전에 새 항목 감지
+    _markNewFromCollab(cloudId, proj, remote);
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
     // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
     if (localFloorplan) proj.floorplanImage = localFloorplan;
