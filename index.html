@@ -405,7 +405,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .sv-gallery-item:active { opacity: .82; }
 #sv-gallery-area.sv-list .sv-gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-#sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+#sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; height: auto; display: block; }
 .sv-gallery-pin-badge {
   position: absolute; bottom: 7px; right: 7px;
   background: rgba(0,0,0,0.55); color: #fff;
@@ -430,26 +430,25 @@ button, input, textarea, select { font-family:var(--font); }
 #sv-view-float {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 0;
-  background: rgba(24,24,26,0.82); backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: #fff;
   border-radius: 40px; padding: 4px 5px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
   z-index: 20;
 }
 .sv-float-btn {
   display: flex; align-items: center; gap: 5px;
   padding: 7px 14px; border: none; border-radius: 30px;
-  background: none; color: rgba(255,255,255,0.45);
+  background: none; color: #bbb;
   font-size: 12px; font-weight: 600; cursor: pointer;
   font-family: var(--font); -webkit-tap-highlight-color: transparent;
   transition: background .15s, color .15s; white-space: nowrap;
 }
 .sv-float-btn.active {
-  background: rgba(255,255,255,0.14); color: #fff;
+  background: #f1f1f5; color: #111;
 }
 .sv-float-btn:active { opacity: .7; }
 .sv-float-sep {
-  width: 1px; height: 16px; background: rgba(255,255,255,0.18); flex-shrink: 0;
+  width: 1px; height: 16px; background: #e5e5ec; flex-shrink: 0;
   margin: 0 1px;
 }
 .sv-prod-empty {
