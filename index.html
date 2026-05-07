@@ -398,11 +398,12 @@ button, input, textarea, select { font-family:var(--font); }
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
 }
 #sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 4px; }
-#sv-gallery-area.sv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+#sv-gallery-area.sv-grid { columns: 2; column-gap: 4px; }
 .sv-gallery-item {
   background: #e8e8ec; border-radius: 10px; overflow: hidden;
   cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent;
 }
+#sv-gallery-area.sv-grid .sv-gallery-item { break-inside: avoid; margin-bottom: 4px; display: block; }
 .sv-gallery-item:active { opacity: .82; }
 #sv-gallery-area.sv-list .sv-gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
 #sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; height: auto; display: block; }
@@ -436,12 +437,11 @@ button, input, textarea, select { font-family:var(--font); }
   z-index: 20;
 }
 .sv-float-btn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 7px 14px; border: none; border-radius: 30px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 16px; border: none; border-radius: 30px;
   background: none; color: #bbb;
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  font-family: var(--font); -webkit-tap-highlight-color: transparent;
-  transition: background .15s, color .15s; white-space: nowrap;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background .15s, color .15s;
 }
 .sv-float-btn.active {
   background: #f1f1f5; color: #111;
@@ -9045,7 +9045,6 @@ async function _checkExportOnLoad() {
         <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
         <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
       </svg>
-      <span>그리드</span>
     </button>
     <div class="sv-float-sep"></div>
     <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
@@ -9053,7 +9052,6 @@ async function _checkExportOnLoad() {
         <rect x="0.5" y="0.5" width="16" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
         <rect x="3" y="3" width="11" height="8" rx="1.2" fill="currentColor" opacity="0.35"/>
       </svg>
-      <span>캐러셀</span>
     </button>
   </div>
 </div>
