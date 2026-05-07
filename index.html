@@ -393,6 +393,39 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-overflow-scrolling: touch;
   padding: 0 16px 80px;
 }
+/* ─── style viewer: gallery modes (list / grid) ─── */
+#sv-gallery-area {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
+}
+#sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 4px; }
+#sv-gallery-area.sv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.sv-gallery-item {
+  background: #e8e8ec; border-radius: 10px; overflow: hidden;
+  cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent;
+}
+.sv-gallery-item:active { opacity: .82; }
+#sv-gallery-area.sv-list .sv-gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+#sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.sv-gallery-pin-badge {
+  position: absolute; bottom: 7px; right: 7px;
+  background: rgba(0,0,0,0.55); color: #fff;
+  font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 20px;
+  display: flex; align-items: center; gap: 3px;
+}
+.sv-gallery-uploader {
+  position: absolute; left: 8px; bottom: 8px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0,0,0,0.50); color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+/* ─── viewer icon buttons ─── */
+.sv-icon-btn {
+  width: 36px; height: 36px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  -webkit-tap-highlight-color: transparent; color: #444;
+}
+.sv-icon-btn:active { background: #f1f1f5; }
 .sv-prod-empty {
   display: flex;
   align-items: center;
@@ -742,53 +775,15 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
-  padding: 10px 14px 80px;
+  padding: 14px 18px 80px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
-/* ─── View type toggle ─── */
-.style-view-toggle {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 2px; padding: 2px 4px 2px;
-}
-.style-view-btn {
-  width: 34px; height: 34px; border: none; border-radius: 8px;
-  background: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: #ccc; -webkit-tap-highlight-color: transparent; transition: color .15s;
-}
-.style-view-btn.active { background: #fff; color: #333; }
-.style-view-btn:active { opacity: .65; }
-
 #style-rooms-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-/* ─── Grid view (2-column) ─── */
-#style-rooms-container.grid-view {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-#style-rooms-container.grid-view .style-card-collage {
-  aspect-ratio: 3 / 4;
-}
-#style-rooms-container.grid-view .style-card-info {
-  padding: 9px 11px 11px;
-}
-#style-rooms-container.grid-view .style-card-title {
-  font-size: 13px;
-}
-#style-rooms-container.grid-view .style-card-meta {
-  font-size: 11px; margin-top: 3px; gap: 5px;
-}
-#style-rooms-container.grid-view .style-add-btn {
-  padding: 6px 8px; font-size: 0; gap: 0;
-}
-#style-rooms-container.grid-view .style-add-btn svg {
-  width: 15px; height: 15px;
 }
 /* Pinterest-style room card */
 .style-room-card {
@@ -2366,23 +2361,6 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Style Tab -->
     <div id="tab-style" style="display:none; background:#EDF0F4;">
       <div class="style-tab-inner">
-        <div class="style-view-toggle">
-          <button class="style-view-btn" data-view="list" onclick="_toggleStyleView('list')" title="리스트">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-              <rect x="0" y="1" width="17" height="3.5" rx="1.5" fill="currentColor"/>
-              <rect x="0" y="6.75" width="17" height="3.5" rx="1.5" fill="currentColor"/>
-              <rect x="0" y="12.5" width="17" height="3.5" rx="1.5" fill="currentColor"/>
-            </svg>
-          </button>
-          <button class="style-view-btn" data-view="grid" onclick="_toggleStyleView('grid')" title="그리드">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-              <rect x="0" y="0" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
-              <rect x="9.5" y="0" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
-              <rect x="0" y="9.5" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
-              <rect x="9.5" y="9.5" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
-            </svg>
-          </button>
-        </div>
         <div id="style-rooms-container"></div>
       </div>
     </div>
@@ -4182,21 +4160,6 @@ function getStyleData() {
 
 let _styleRecoveryAttempted = false;
 
-// ===== STYLE VIEW TYPE (list / grid) =====
-let _styleViewType = localStorage.getItem('vb_style_view') || 'list';
-function _toggleStyleView(type) {
-  _styleViewType = type;
-  try { localStorage.setItem('vb_style_view', type); } catch(e) {}
-  _applyStyleViewType();
-}
-function _applyStyleViewType() {
-  const container = document.getElementById('style-rooms-container');
-  if (container) container.classList.toggle('grid-view', _styleViewType === 'grid');
-  document.querySelectorAll('.style-view-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === _styleViewType);
-  });
-}
-
 function renderStyleTab() {
   const rooms = getStyleRooms();
   const data = getStyleData();
@@ -4241,7 +4204,6 @@ function renderStyleTab() {
       </div>
     </div>`;
   }).join('');
-  _applyStyleViewType();
 }
 
 function openStyleNewSpace() {
@@ -4503,6 +4465,67 @@ function _svBuildReel() {
   }).join('');
 }
 
+// ===== STYLE VIEWER — VIEW MODE (carousel / list / grid) =====
+let _svViewMode = localStorage.getItem('vb_sv_view') || 'carousel';
+
+const _SV_VIEW_ICONS = {
+  carousel: `<svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="1" y="3" width="17" height="11" rx="2" stroke="#444" stroke-width="1.8"/><circle cx="6" cy="17" r="1.2" fill="#444"/><circle cx="9.5" cy="17" r="1.2" fill="#444"/><circle cx="13" cy="17" r="1.2" fill="#444"/></svg>`,
+  list:     `<svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="0" y="1" width="19" height="4.5" rx="1.5" fill="#444"/><rect x="0" y="7.25" width="19" height="4.5" rx="1.5" fill="#444"/><rect x="0" y="13.5" width="19" height="4.5" rx="1.5" fill="#444"/></svg>`,
+  grid:     `<svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="0" y="0" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="10.5" y="0" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="0" y="10.5" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="10.5" y="10.5" width="8.5" height="8.5" rx="1.5" fill="#444"/></svg>`,
+};
+
+function _svCycleViewMode() {
+  const order = ['carousel', 'list', 'grid'];
+  _svViewMode = order[(order.indexOf(_svViewMode) + 1) % order.length];
+  try { localStorage.setItem('vb_sv_view', _svViewMode); } catch(e) {}
+  _svApplyViewMode();
+}
+
+function _svApplyViewMode() {
+  const imageArea = document.getElementById('sv-image-area');
+  const galleryArea = document.getElementById('sv-gallery-area');
+  const productList = document.getElementById('sv-product-list');
+  const viewBtn = document.getElementById('sv-view-btn');
+  const isCarousel = _svViewMode === 'carousel';
+
+  if (imageArea) imageArea.style.display = isCarousel ? '' : 'none';
+  if (productList) productList.style.display = isCarousel ? '' : 'none';
+  if (galleryArea) {
+    if (isCarousel) {
+      galleryArea.style.display = 'none';
+      galleryArea.className = '';
+    } else {
+      galleryArea.style.display = '';
+      galleryArea.className = _svViewMode === 'list' ? 'sv-list' : 'sv-grid';
+      _svBuildGallery();
+    }
+  }
+  if (isCarousel) _svRenderProductList();
+  if (viewBtn) viewBtn.innerHTML = _SV_VIEW_ICONS[_svViewMode];
+}
+
+function _svBuildGallery() {
+  const items = (getStyleData()[styleViewerRoom] || []);
+  const el = document.getElementById('sv-gallery-area');
+  if (!el) return;
+  el.innerHTML = items.map((item, i) => {
+    const pinCount = (item.productPins || []).length;
+    const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
+    return `<div class="sv-gallery-item" onclick="_svGalleryTap(${i})">
+      <img src="${item.url}" alt="" loading="lazy">
+      ${ini ? `<div class="sv-gallery-uploader">${ini}</div>` : ''}
+      ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function _svGalleryTap(index) {
+  _svViewMode = 'carousel';
+  try { localStorage.setItem('vb_sv_view', 'carousel'); } catch(e) {}
+  _svGoTo(index);
+  _svApplyViewMode();
+}
+
 function openStyleViewer(room, index) {
   const items = (getStyleData()[room] || []);
   if (items.length === 0) { openStyleAddMenu(room); return; }
@@ -4516,7 +4539,7 @@ function openStyleViewer(room, index) {
   document.getElementById('style-viewer-room').textContent = room;
   document.getElementById('style-viewer-screen').style.display = 'flex';
   _svRenderDots(items.length);
-  _svRenderProductList();
+  _svApplyViewMode();
 }
 
 function _svGoTo(index) {
@@ -8966,13 +8989,24 @@ async function _checkExportOnLoad() {
       <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
     </button>
     <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
-    <div style="display:flex;align-items:center;gap:4px;">
-      <button onclick="openStyleAddFromViewer()" style="display:flex;align-items:center;gap:5px;border:none;background:#f1f1f5;border-radius:8px;color:#333;font-size:13px;font-weight:600;padding:8px 12px;cursor:pointer;font-family:var(--font);">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        추가
+    <div style="display:flex;align-items:center;gap:2px;">
+      <!-- 뷰타입 -->
+      <button id="sv-view-btn" class="sv-icon-btn" onclick="_svCycleViewMode()" title="뷰 전환">
+        <svg id="sv-view-icon" width="19" height="19" viewBox="0 0 19 19" fill="none">
+          <!-- carousel icon (default) — single frame with dots -->
+          <rect x="1" y="3" width="17" height="11" rx="2" stroke="#444" stroke-width="1.8"/>
+          <circle cx="6" cy="17" r="1.2" fill="#444"/>
+          <circle cx="9.5" cy="17" r="1.2" fill="#444"/>
+          <circle cx="13" cy="17" r="1.2" fill="#444"/>
+        </svg>
       </button>
-      <button onclick="deleteStyleImage()" style="width:40px;height:40px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-        <svg width="20" height="20" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      <!-- 추가 -->
+      <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <!-- 삭제 -->
+      <button class="sv-icon-btn" onclick="deleteStyleImage()" title="이미지 삭제">
+        <svg width="19" height="19" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
     </div>
   </div>
@@ -8987,6 +9021,8 @@ async function _checkExportOnLoad() {
       <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
+  <!-- gallery area (list / grid) — hidden in carousel mode -->
+  <div id="sv-gallery-area" style="display:none;"></div>
   <!-- product list -->
   <div id="sv-product-list"></div>
 </div>
