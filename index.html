@@ -398,12 +398,13 @@ button, input, textarea, select { font-family:var(--font); }
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
 }
 #sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 4px; }
-#sv-gallery-area.sv-grid { columns: 2; column-gap: 4px; }
+#sv-gallery-area.sv-grid { display: block; }
+.sv-gallery-masonry { display: flex; gap: 6px; align-items: flex-start; }
+.sv-gallery-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .sv-gallery-item {
   background: #e8e8ec; border-radius: 10px; overflow: hidden;
   cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent;
 }
-#sv-gallery-area.sv-grid .sv-gallery-item { break-inside: avoid; margin-bottom: 4px; display: block; }
 .sv-gallery-item:active { opacity: .82; }
 #sv-gallery-area.sv-list .sv-gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
 #sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; height: auto; display: block; }
@@ -4530,7 +4531,7 @@ function _svBuildGallery() {
   const items = (getStyleData()[styleViewerRoom] || []);
   const el = document.getElementById('sv-gallery-area');
   if (!el) return;
-  el.innerHTML = items.map((item, i) => {
+  const renderItem = (item, i) => {
     const pinCount = (item.productPins || []).length;
     const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
     return `<div class="sv-gallery-item" onclick="_svGalleryTap(${i})">
@@ -4538,7 +4539,13 @@ function _svBuildGallery() {
       ${ini ? `<div class="sv-gallery-uploader">${ini}</div>` : ''}
       ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
     </div>`;
-  }).join('');
+  };
+  const left  = items.filter((_, i) => i % 2 === 0).map((item) => renderItem(item, items.indexOf(item))).join('');
+  const right = items.filter((_, i) => i % 2 === 1).map((item) => renderItem(item, items.indexOf(item))).join('');
+  el.innerHTML = `<div class="sv-gallery-masonry">
+    <div class="sv-gallery-col">${left}</div>
+    <div class="sv-gallery-col">${right}</div>
+  </div>`;
 }
 
 function _svGalleryTap(index) {
