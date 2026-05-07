@@ -742,15 +742,53 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
-  padding: 14px 18px 80px;
+  padding: 10px 14px 80px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
+/* ─── View type toggle ─── */
+.style-view-toggle {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 2px; padding: 2px 4px 2px;
+}
+.style-view-btn {
+  width: 34px; height: 34px; border: none; border-radius: 8px;
+  background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #ccc; -webkit-tap-highlight-color: transparent; transition: color .15s;
+}
+.style-view-btn.active { background: #fff; color: #333; }
+.style-view-btn:active { opacity: .65; }
+
 #style-rooms-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+/* ─── Grid view (2-column) ─── */
+#style-rooms-container.grid-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+#style-rooms-container.grid-view .style-card-collage {
+  aspect-ratio: 3 / 4;
+}
+#style-rooms-container.grid-view .style-card-info {
+  padding: 9px 11px 11px;
+}
+#style-rooms-container.grid-view .style-card-title {
+  font-size: 13px;
+}
+#style-rooms-container.grid-view .style-card-meta {
+  font-size: 11px; margin-top: 3px; gap: 5px;
+}
+#style-rooms-container.grid-view .style-add-btn {
+  padding: 6px 8px; font-size: 0; gap: 0;
+}
+#style-rooms-container.grid-view .style-add-btn svg {
+  width: 15px; height: 15px;
 }
 /* Pinterest-style room card */
 .style-room-card {
@@ -2328,6 +2366,23 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Style Tab -->
     <div id="tab-style" style="display:none; background:#EDF0F4;">
       <div class="style-tab-inner">
+        <div class="style-view-toggle">
+          <button class="style-view-btn" data-view="list" onclick="_toggleStyleView('list')" title="리스트">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+              <rect x="0" y="1" width="17" height="3.5" rx="1.5" fill="currentColor"/>
+              <rect x="0" y="6.75" width="17" height="3.5" rx="1.5" fill="currentColor"/>
+              <rect x="0" y="12.5" width="17" height="3.5" rx="1.5" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="style-view-btn" data-view="grid" onclick="_toggleStyleView('grid')" title="그리드">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+              <rect x="0" y="0" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
+              <rect x="9.5" y="0" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
+              <rect x="0" y="9.5" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
+              <rect x="9.5" y="9.5" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
         <div id="style-rooms-container"></div>
       </div>
     </div>
@@ -4126,6 +4181,22 @@ function getStyleData() {
 }
 
 let _styleRecoveryAttempted = false;
+
+// ===== STYLE VIEW TYPE (list / grid) =====
+let _styleViewType = localStorage.getItem('vb_style_view') || 'list';
+function _toggleStyleView(type) {
+  _styleViewType = type;
+  try { localStorage.setItem('vb_style_view', type); } catch(e) {}
+  _applyStyleViewType();
+}
+function _applyStyleViewType() {
+  const container = document.getElementById('style-rooms-container');
+  if (container) container.classList.toggle('grid-view', _styleViewType === 'grid');
+  document.querySelectorAll('.style-view-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === _styleViewType);
+  });
+}
+
 function renderStyleTab() {
   const rooms = getStyleRooms();
   const data = getStyleData();
@@ -4170,6 +4241,7 @@ function renderStyleTab() {
       </div>
     </div>`;
   }).join('');
+  _applyStyleViewType();
 }
 
 function openStyleNewSpace() {
