@@ -395,7 +395,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* ─── style viewer: gallery modes (list / grid) ─── */
 #sv-gallery-area {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
 }
 #sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 4px; }
 #sv-gallery-area.sv-grid { columns: 2; column-gap: 4px; }
@@ -431,9 +431,10 @@ button, input, textarea, select { font-family:var(--font); }
 #sv-view-float {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 0;
-  background: #fff;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-radius: 40px; padding: 4px 5px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   z-index: 20;
 }
 .sv-float-btn {
