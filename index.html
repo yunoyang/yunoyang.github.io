@@ -426,6 +426,32 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-tap-highlight-color: transparent; color: #444;
 }
 .sv-icon-btn:active { background: #f1f1f5; }
+/* ─── 뷰타입 플로팅 컨트롤 ─── */
+#sv-view-float {
+  position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0;
+  background: rgba(24,24,26,0.82); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 40px; padding: 4px 5px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  z-index: 20;
+}
+.sv-float-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border: none; border-radius: 30px;
+  background: none; color: rgba(255,255,255,0.45);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--font); -webkit-tap-highlight-color: transparent;
+  transition: background .15s, color .15s; white-space: nowrap;
+}
+.sv-float-btn.active {
+  background: rgba(255,255,255,0.14); color: #fff;
+}
+.sv-float-btn:active { opacity: .7; }
+.sv-float-sep {
+  width: 1px; height: 16px; background: rgba(255,255,255,0.18); flex-shrink: 0;
+  margin: 0 1px;
+}
 .sv-prod-empty {
   display: flex;
   align-items: center;
@@ -4468,25 +4494,19 @@ function _svBuildReel() {
 // ===== STYLE VIEWER — VIEW MODE (carousel / list / grid) =====
 let _svViewMode = (() => { const v = localStorage.getItem('vb_sv_view'); return v === 'grid' ? 'grid' : 'carousel'; })();
 
-const _SV_VIEW_ICONS = {
-  carousel: `<svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="1" y="3" width="17" height="11" rx="2" stroke="#444" stroke-width="1.8"/><circle cx="6" cy="17" r="1.2" fill="#444"/><circle cx="9.5" cy="17" r="1.2" fill="#444"/><circle cx="13" cy="17" r="1.2" fill="#444"/></svg>`,
-  grid:     `<svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="0" y="0" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="10.5" y="0" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="0" y="10.5" width="8.5" height="8.5" rx="1.5" fill="#444"/><rect x="10.5" y="10.5" width="8.5" height="8.5" rx="1.5" fill="#444"/></svg>`,
-};
-
-function _svCycleViewMode() {
-  _svViewMode = _svViewMode === 'carousel' ? 'grid' : 'carousel';
-  try { localStorage.setItem('vb_sv_view', _svViewMode); } catch(e) {}
+function _svSetViewMode(mode) {
+  _svViewMode = mode;
+  try { localStorage.setItem('vb_sv_view', mode); } catch(e) {}
   _svApplyViewMode();
 }
 
 function _svApplyViewMode() {
-  const imageArea = document.getElementById('sv-image-area');
+  const imageArea  = document.getElementById('sv-image-area');
   const galleryArea = document.getElementById('sv-gallery-area');
   const productList = document.getElementById('sv-product-list');
-  const viewBtn = document.getElementById('sv-view-btn');
-  const isCarousel = _svViewMode === 'carousel';
+  const isCarousel  = _svViewMode === 'carousel';
 
-  if (imageArea) imageArea.style.display = isCarousel ? '' : 'none';
+  if (imageArea)   imageArea.style.display   = isCarousel ? '' : 'none';
   if (productList) productList.style.display = isCarousel ? '' : 'none';
   if (galleryArea) {
     if (isCarousel) {
@@ -4499,7 +4519,11 @@ function _svApplyViewMode() {
     }
   }
   if (isCarousel) _svRenderProductList();
-  if (viewBtn) viewBtn.innerHTML = _SV_VIEW_ICONS[_svViewMode];
+  // 플로팅 버튼 활성화
+  const gBtn = document.getElementById('sv-float-grid');
+  const cBtn = document.getElementById('sv-float-carousel');
+  if (gBtn) gBtn.classList.toggle('active', !isCarousel);
+  if (cBtn) cBtn.classList.toggle('active', isCarousel);
 }
 
 function _svBuildGallery() {
@@ -8988,16 +9012,6 @@ async function _checkExportOnLoad() {
     </button>
     <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
     <div style="display:flex;align-items:center;gap:2px;">
-      <!-- 뷰타입 -->
-      <button id="sv-view-btn" class="sv-icon-btn" onclick="_svCycleViewMode()" title="뷰 전환">
-        <svg id="sv-view-icon" width="19" height="19" viewBox="0 0 19 19" fill="none">
-          <!-- carousel icon (default) — single frame with dots -->
-          <rect x="1" y="3" width="17" height="11" rx="2" stroke="#444" stroke-width="1.8"/>
-          <circle cx="6" cy="17" r="1.2" fill="#444"/>
-          <circle cx="9.5" cy="17" r="1.2" fill="#444"/>
-          <circle cx="13" cy="17" r="1.2" fill="#444"/>
-        </svg>
-      </button>
       <!-- 추가 -->
       <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -9023,6 +9037,26 @@ async function _checkExportOnLoad() {
   <div id="sv-gallery-area" style="display:none;"></div>
   <!-- product list -->
   <div id="sv-product-list"></div>
+  <!-- 뷰타입 플로팅 버튼 -->
+  <div id="sv-view-float">
+    <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
+        <rect x="9" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
+        <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
+        <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
+      </svg>
+      <span>그리드</span>
+    </button>
+    <div class="sv-float-sep"></div>
+    <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
+      <svg width="17" height="14" viewBox="0 0 17 14" fill="none">
+        <rect x="0.5" y="0.5" width="16" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+        <rect x="3" y="3" width="11" height="8" rx="1.2" fill="currentColor" opacity="0.35"/>
+      </svg>
+      <span>캐러셀</span>
+    </button>
+  </div>
 </div>
 
 <!-- 제품 핀 추가 다이얼로그 -->
