@@ -434,11 +434,18 @@ button, input, textarea, select { font-family:var(--font); }
   font-size:13px; font-weight: 600; color: #c0c0c0;
   letter-spacing: 0.04em; margin-bottom: 8px;
 }
-.sv-memo-item {
-  display: flex; gap: 9px; padding: 9px 0;
-  border-bottom: 1px solid #f7f7fb; align-items: flex-start;
+/* ─── 댓글 스레드 (Threads 스타일) ─── */
+.sv-memo-thread { border-bottom: 1px solid #f7f7fb; }
+.sv-memo-thread:last-child { border-bottom: none; }
+.sv-memo-item { display: flex; gap: 9px; padding: 9px 0; align-items: flex-start; }
+.sv-memo-thread-left {
+  display: flex; flex-direction: column; align-items: center;
+  width: 28px; flex-shrink: 0;
 }
-.sv-memo-item:last-child { border-bottom: none; }
+.sv-memo-thread-line {
+  width: 2px; flex: 1; background: #e8e8ec;
+  border-radius: 1px; min-height: 14px; margin-top: 4px;
+}
 .sv-memo-av {
   width: 28px; height: 28px; border-radius: 50%;
   background: #333; color: #fff; font-size:13px; font-weight: 700;
@@ -449,34 +456,75 @@ button, input, textarea, select { font-family:var(--font); }
 .sv-memo-name { font-size:13px; font-weight: 600; color: #222; }
 .sv-memo-ts   { font-size:13px; color: #c8c8c8; }
 .sv-memo-text { font-size: 15px; color: #444; line-height: 1.45; word-break: break-word; }
-.sv-memo-foot { display: flex; align-items: center; margin-top: 5px; }
+.sv-memo-foot { display: flex; align-items: center; gap: 2px; margin-top: 5px; }
 .sv-memo-like {
   display: flex; align-items: center; gap: 3px;
-  font-size:13px; color: #ccc; background: none; border: none;
+  font-size:13px; color: #555; background: none; border: none;
   cursor: pointer; padding: 2px 0; -webkit-tap-highlight-color: transparent;
   font-family: var(--font);
 }
 .sv-memo-like.on { color: #ff3b4e; }
+.sv-memo-reply-btn {
+  font-size:13px; color: #bbb; background: none; border: none;
+  cursor: pointer; padding: 2px 8px;
+  -webkit-tap-highlight-color: transparent; font-family: var(--font);
+}
+.sv-memo-reply-btn:active { color: #555; }
 .sv-memo-more {
-  font-size: 15px; letter-spacing: 2px; line-height: 1; color: #ccc; background: none; border: none;
+  font-size: 15px; letter-spacing: 2px; line-height: 1; color: #555; background: none; border: none;
   cursor: pointer; padding: 2px 6px; margin-left: auto;
   -webkit-tap-highlight-color: transparent; font-family: var(--font);
-  position: relative;
 }
-.sv-memo-more-menu {
-  position: absolute; right: 0; top: 22px;
-  background: #fff; border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
-  min-width: 80px; z-index: 100; padding: 4px 0;
-  display: none;
+.sv-memo-more:active { opacity: .6; }
+/* ─── 대댓글 ─── */
+.sv-memo-replies { padding-bottom: 8px; }
+.sv-reply-item { display: flex; gap: 9px; padding: 5px 0; align-items: flex-start; }
+.sv-reply-av {
+  width: 22px !important; height: 22px !important;
+  font-size: 11px !important; font-weight: 700;
+  border-radius: 50%; background: #555; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: 3px;
 }
-.sv-memo-more-menu.open { display: block; }
-.sv-memo-more-menu button {
-  width: 100%; padding: 10px 14px; border: none; background: none;
-  font-size: 13px; color: #ff3b30; cursor: pointer; font-family: var(--font);
-  text-align: left; -webkit-tap-highlight-color: transparent;
+/* ─── 댓글 액션 바텀시트 ─── */
+#sv-memo-action-sheet {
+  position: fixed; inset: 0; z-index: 99996; pointer-events: none; display: block;
 }
-.sv-memo-more-menu button:active { background: #fff5f5; border-radius: 6px; }
+#sv-memo-action-sheet.open { pointer-events: auto; }
+.sv-action-backdrop {
+  position: absolute; inset: 0; background: rgba(0,0,0,0);
+  transition: background .25s;
+}
+#sv-memo-action-sheet.open .sv-action-backdrop { background: rgba(0,0,0,0.32); }
+.sv-action-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #fff; border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom,0px);
+  transform: translateY(100%); transition: transform .28s cubic-bezier(0.25,1,0.5,1);
+}
+#sv-memo-action-sheet.open .sv-action-panel { transform: translateY(0); }
+.sv-action-handle {
+  width: 36px; height: 4px; border-radius: 4px; background: #e5e5ec;
+  margin: 12px auto 4px;
+}
+.sv-action-btn {
+  display: flex; align-items: center; width: 100%;
+  padding: 16px 20px; border: none; background: none;
+  font-size: 16px; font-weight: 500; cursor: pointer;
+  font-family: var(--font); -webkit-tap-highlight-color: transparent;
+  border-top: 1px solid #f5f5f5;
+}
+.sv-action-btn:first-of-type { border-top: none; }
+.sv-action-btn:active { background: #f9f9fa; }
+.sv-action-btn.danger { color: #ff3b30; }
+.sv-action-cancel {
+  display: block; width: calc(100% - 32px); margin: 8px 16px 16px;
+  padding: 14px; border: none; border-radius: 12px;
+  background: #f5f5f7; font-size: 16px; font-weight: 600;
+  color: #222; cursor: pointer; font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-action-cancel:active { opacity: .7; }
 /* ─── 메모 입력 오버레이 (플로팅) ─── */
 /* ─── 메모 바텀시트 ─── */
 #sv-memo-sheet {
@@ -4786,31 +4834,69 @@ function _formatMemoTime(ts) {
 function _svBuildMemosHtml(memos) {
   if (!memos?.length) return '';
   const myEmail = state.user?.email || '';
+  const _heartSvg = (on) => `<svg width="13" height="13" fill="${on?'#ff3b4e':'none'}" stroke="${on?'#ff3b4e':'#555'}" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+
   const items = memos.map(m => {
     const ini = (m.author?.name || m.author?.email || '?').charAt(0).toUpperCase();
     const liked = (m.likes||[]).includes(myEmail);
     const cnt = (m.likes||[]).length;
     const isOwn = m.author?.email === myEmail;
     const safe = (m.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<div class="sv-memo-item" id="sv-memo-${m.id}">
-      <div class="sv-memo-av">${ini}</div>
-      <div class="sv-memo-body">
-        <div class="sv-memo-head">
-          <span class="sv-memo-name">${m.author?.name || m.author?.email || '익명'}</span>
-          <span class="sv-memo-ts">${_formatMemoTime(m.createdAt)}</span>
+    const replies = m.replies || [];
+    const hasReplies = replies.length > 0;
+    const authorName = (m.author?.name || m.author?.email || '익명').replace(/'/g,"\\'");
+
+    // ── 대댓글 HTML
+    const repliesHtml = replies.map(r => {
+      const rIni = (r.author?.name || r.author?.email || '?').charAt(0).toUpperCase();
+      const rLiked = (r.likes||[]).includes(myEmail);
+      const rCnt = (r.likes||[]).length;
+      const rIsOwn = r.author?.email === myEmail;
+      const rSafe = (r.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<div class="sv-reply-item">
+        <div class="sv-reply-av">${rIni}</div>
+        <div class="sv-memo-body">
+          <div class="sv-memo-head">
+            <span class="sv-memo-name">${r.author?.name || r.author?.email || '익명'}</span>
+            <span class="sv-memo-ts">${_formatMemoTime(r.createdAt)}</span>
+          </div>
+          <div class="sv-memo-text">${rSafe}</div>
+          <div class="sv-memo-foot">
+            <button class="sv-memo-like${rLiked?' on':''}" onclick="_svToggleMemoLike('${m.id}','${r.id}')">
+              ${_heartSvg(rLiked)} ${rCnt > 0 ? rCnt : ''}
+            </button>
+            ${rIsOwn ? `<button class="sv-memo-more" onclick="event.stopPropagation();openMemoActionSheet('${m.id}','${r.id}')">···</button>` : ''}
+          </div>
         </div>
-        <div class="sv-memo-text">${safe}</div>
-        <div class="sv-memo-foot">
-          <button class="sv-memo-like${liked?' on':''}" onclick="_svToggleMemoLike('${m.id}')">
-            <svg width="13" height="13" fill="${liked?'#ff3b4e':'none'}" stroke="${liked?'#ff3b4e':'#ccc'}" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            ${cnt > 0 ? cnt : ''}
-          </button>
-          ${isOwn ? `<button class="sv-memo-more" onclick="event.stopPropagation();_svMemoMoreMenu('${m.id}',this)">···<div class="sv-memo-more-menu" id="sv-more-menu-${m.id}"><button onclick="event.stopPropagation();_svDeleteMemo('${m.id}')">삭제</button></div></button>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="sv-memo-thread" id="sv-memo-${m.id}">
+      <div class="sv-memo-item">
+        <div class="sv-memo-thread-left">
+          <div class="sv-memo-av">${ini}</div>
+          ${hasReplies ? '<div class="sv-memo-thread-line"></div>' : ''}
+        </div>
+        <div class="sv-memo-body">
+          <div class="sv-memo-head">
+            <span class="sv-memo-name">${m.author?.name || m.author?.email || '익명'}</span>
+            <span class="sv-memo-ts">${_formatMemoTime(m.createdAt)}</span>
+          </div>
+          <div class="sv-memo-text">${safe}</div>
+          <div class="sv-memo-foot">
+            <button class="sv-memo-like${liked?' on':''}" onclick="_svToggleMemoLike('${m.id}')">
+              ${_heartSvg(liked)} ${cnt > 0 ? cnt : ''}
+            </button>
+            <button class="sv-memo-reply-btn" onclick="_svReplyToMemo('${m.id}','${authorName}')">답글</button>
+            ${isOwn ? `<button class="sv-memo-more" onclick="event.stopPropagation();openMemoActionSheet('${m.id}')">···</button>` : ''}
+          </div>
         </div>
       </div>
+      ${hasReplies ? `<div class="sv-memo-replies">${repliesHtml}</div>` : ''}
     </div>`;
   }).join('');
-  return `<div class="sv-memos"><div class="sv-memos-hd">메모 ${memos.length}</div>${items}</div>`;
+  const totalCount = memos.reduce((acc, m) => acc + 1 + (m.replies?.length || 0), 0);
+  return `<div class="sv-memos"><div class="sv-memos-hd">댓글 ${totalCount}</div>${items}</div>`;
 }
 function _svAddMemo() {
   const input = document.getElementById('sv-memo-input');
@@ -4833,16 +4919,18 @@ function _svAddMemo() {
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
-function _svToggleMemoLike(memoId) {
+function _svToggleMemoLike(memoId, replyId) {
   if (!state.loggedIn) return;
   const proj = getProject();
   if (!proj) return;
   const item = (proj.styleImages?.[styleViewerRoom]||[])[styleViewerIndex];
   const memo = item?.memos?.find(m => m.id === memoId);
   if (!memo) return;
-  if (!memo.likes) memo.likes = [];
-  const idx = memo.likes.indexOf(state.user.email);
-  idx >= 0 ? memo.likes.splice(idx,1) : memo.likes.push(state.user.email);
+  const target = replyId ? memo.replies?.find(r => r.id === replyId) : memo;
+  if (!target) return;
+  if (!target.likes) target.likes = [];
+  const idx = target.likes.indexOf(state.user.email);
+  idx >= 0 ? target.likes.splice(idx,1) : target.likes.push(state.user.email);
   save();
   const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
@@ -4862,26 +4950,47 @@ function _svDeleteMemo(memoId) {
   _svRenderProductList();
 }
 
-// ─── 메모 "..." 더보기 메뉴
-function _svMemoMoreMenu(memoId, btn) {
-  const menu = document.getElementById('sv-more-menu-' + memoId);
-  if (!menu) return;
-  const isOpen = menu.classList.contains('open');
-  document.querySelectorAll('.sv-memo-more-menu.open').forEach(m => m.classList.remove('open'));
-  if (!isOpen) {
-    menu.classList.add('open');
-    setTimeout(() => {
-      const close = (e) => {
-        if (!menu.contains(e.target)) {
-          menu.classList.remove('open');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('touchstart', close, true);
-        }
-      };
-      document.addEventListener('click', close, true);
-      document.addEventListener('touchstart', close, true);
-    }, 0);
-  }
+// ─── 댓글 액션 바텀시트
+let _memoActionId = null, _replyActionId = null;
+function openMemoActionSheet(memoId, replyId) {
+  _memoActionId = memoId;
+  _replyActionId = replyId || null;
+  const sheet = document.getElementById('sv-memo-action-sheet');
+  if (sheet) sheet.classList.add('open');
+}
+function closeMemoActionSheet() {
+  const sheet = document.getElementById('sv-memo-action-sheet');
+  if (sheet) sheet.classList.remove('open');
+  _memoActionId = null; _replyActionId = null;
+}
+function _svDeleteFromActionSheet() {
+  closeMemoActionSheet();
+  if (_replyActionId) _svDeleteReply(_memoActionId, _replyActionId);
+  else _svDeleteMemo(_memoActionId);
+}
+function _svDeleteReply(memoId, replyId) {
+  const proj = getProject();
+  if (!proj) return;
+  const item = (proj.styleImages?.[styleViewerRoom]||[])[styleViewerIndex];
+  const memo = item?.memos?.find(m => m.id === memoId);
+  if (!memo?.replies) return;
+  const idx = memo.replies.findIndex(r => r.id === replyId && r.author?.email === state.user?.email);
+  if (idx < 0) return;
+  memo.replies.splice(idx, 1);
+  save();
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svRenderProductList();
+}
+// ─── 대댓글 달기
+let _memoReplyToId = null;
+function _svReplyToMemo(memoId, authorName) {
+  _memoReplyToId = memoId;
+  const title = document.querySelector('.sv-memo-sheet-title');
+  const ta = document.getElementById('sv-memo-textarea');
+  if (title) title.textContent = `${authorName}에게 답글`;
+  if (ta) ta.placeholder = `답글을 남겨보세요...`;
+  _svToggleMemoInput(true);
 }
 
 // ─── 메모 바텀시트 열기/닫기
@@ -4891,6 +5000,13 @@ function _svToggleMemoInput(force) {
   if (!sheet) return;
   const show = force !== undefined ? !!force : !sheet.classList.contains('open');
   if (show) {
+    // 새 메모 (답글 아닐 때) 타이틀 초기화
+    if (!_memoReplyToId) {
+      const title = document.querySelector('.sv-memo-sheet-title');
+      const ta2 = document.getElementById('sv-memo-textarea');
+      if (title) title.textContent = '메모';
+      if (ta2) ta2.placeholder = '이 이미지에 메모를 남겨보세요...';
+    }
     sheet.classList.add('open');
     const pencilBtn = document.querySelector('.sv-memo-float-btn');
     if (pencilBtn) pencilBtn.classList.add('active');
@@ -4908,6 +5024,11 @@ function closeMemoSheet() {
   if (sheet) sheet.classList.remove('open');
   const pencilBtn = document.querySelector('.sv-memo-float-btn');
   if (pencilBtn) pencilBtn.classList.remove('active');
+  _memoReplyToId = null;
+  const title = document.querySelector('.sv-memo-sheet-title');
+  if (title) title.textContent = '메모';
+  const ta = document.getElementById('sv-memo-textarea');
+  if (ta) ta.placeholder = '이 이미지에 메모를 남겨보세요...';
 }
 function _svUpdateMemoConfirm() {
   const btn = document.getElementById('sv-memo-confirm');
@@ -4923,12 +5044,20 @@ function _svSubmitMemoSheet() {
   if (!proj) return;
   const imgs = proj.styleImages?.[styleViewerRoom];
   if (!imgs?.[styleViewerIndex]) return;
-  if (!imgs[styleViewerIndex].memos) imgs[styleViewerIndex].memos = [];
-  imgs[styleViewerIndex].memos.push({
+  const newEntry = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
     text, author: { email: state.user.email, name: state.user.name },
     createdAt: Date.now(), likes: []
-  });
+  };
+  if (_memoReplyToId) {
+    // 대댓글 저장
+    const memo = imgs[styleViewerIndex].memos?.find(m => m.id === _memoReplyToId);
+    if (memo) { if (!memo.replies) memo.replies = []; memo.replies.push(newEntry); }
+  } else {
+    // 최상위 댓글 저장
+    if (!imgs[styleViewerIndex].memos) imgs[styleViewerIndex].memos = [];
+    imgs[styleViewerIndex].memos.push(newEntry);
+  }
   closeMemoSheet();
   save();
   const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
@@ -4995,6 +5124,7 @@ function _svRenderProductList() {
 function closeStyleViewer() {
   closeMemoSheet();
   closePinsSheet();
+  closeMemoActionSheet();
   document.getElementById('style-viewer-screen').style.display = 'none';
 }
 
@@ -9513,6 +9643,16 @@ async function _checkExportOnLoad() {
 </div>
 
 <!-- 제품 핀 추가 다이얼로그 -->
+<!-- 댓글 액션 바텀시트 (삭제하기) -->
+<div id="sv-memo-action-sheet">
+  <div class="sv-action-backdrop" onclick="closeMemoActionSheet()"></div>
+  <div class="sv-action-panel">
+    <div class="sv-action-handle"></div>
+    <button class="sv-action-btn danger" onclick="_svDeleteFromActionSheet()">삭제하기</button>
+    <button class="sv-action-cancel" onclick="closeMemoActionSheet()">취소</button>
+  </div>
+</div>
+
 <div class="overlay" id="dlg-product-pin" style="z-index:99999;" onclick="if(event.target===this)_closePinDlg()">
   <div class="dialog" style="gap:12px;">
     <h3 style="font-size:17px;font-weight:700;margin:0;">제품 링크 추가</h3>
