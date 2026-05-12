@@ -479,7 +479,7 @@ button, input, textarea, select { font-family:var(--font); }
 .sv-memo-more-menu button:active { background: #fff5f5; border-radius: 6px; }
 /* ─── 메모 입력 오버레이 (플로팅) ─── */
 #sv-memo-overlay {
-  position: absolute; bottom: 78px; left: 12px; right: 12px;
+  position: absolute; bottom: 90px; left: 12px; right: 12px;
   display: none; align-items: center; gap: 8px;
   padding: 8px 10px;
   background: rgba(255,255,255,0.96);
@@ -508,13 +508,13 @@ button, input, textarea, select { font-family:var(--font); }
   display: flex; align-items: center; gap: 0;
   background: rgba(255,255,255,0.72);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border-radius: 40px; padding: 4px 5px;
+  border-radius: 40px; padding: 5px 6px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   z-index: 20;
 }
 .sv-float-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 10px 16px; border: none; border-radius: 30px;
+  padding: 12px 19px; border: none; border-radius: 30px;
   background: none; color: #bbb;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: background .15s, color .15s;
@@ -523,6 +523,22 @@ button, input, textarea, select { font-family:var(--font); }
   background: #f1f1f5; color: #111;
 }
 .sv-float-btn:active { opacity: .7; }
+/* ─── 메모 플로팅 버튼 (우측 하단) ─── */
+#sv-memo-float {
+  position: absolute; bottom: 22px; right: 16px; z-index: 20;
+}
+.sv-memo-float-btn {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  border: none; cursor: pointer; color: #bbb;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, color .15s;
+}
+.sv-memo-float-btn.active { background: #f1f1f5; color: #111; }
+.sv-memo-float-btn:active { opacity: .7; }
 /* ─── 이미지 내 쇼핑 아이콘 ─── */
 .sv-slide-shop-btn {
   position: absolute; bottom: 10px; right: 10px;
@@ -4635,11 +4651,9 @@ function _svApplyViewMode() {
 
   if (imageArea)   imageArea.style.display   = isCarousel ? '' : 'none';
   if (productList) productList.style.display = isCarousel ? '' : 'none';
-  // 연필(메모) 버튼 — 캐러셀 + 로그인 시만 노출
-  const pencilBtn = document.getElementById('sv-float-pencil');
-  const pencilSep = document.getElementById('sv-float-pencil-sep');
-  if (pencilBtn) pencilBtn.style.display = (isCarousel && state.loggedIn) ? '' : 'none';
-  if (pencilSep) pencilSep.style.display = (isCarousel && state.loggedIn) ? '' : 'none';
+  // 메모 플로팅 — 캐러셀 + 로그인 시만 노출
+  const memoFloat = document.getElementById('sv-memo-float');
+  if (memoFloat) memoFloat.style.display = (isCarousel && state.loggedIn) ? '' : 'none';
   // 그리드 전환 시 메모 오버레이 닫기
   if (!isCarousel) _svToggleMemoInput(false);
   if (galleryArea) {
@@ -4848,7 +4862,7 @@ function _svToggleMemoInput(force) {
   if (!overlay) return;
   const show = force !== undefined ? !!force : !overlay.classList.contains('visible');
   overlay.classList.toggle('visible', show);
-  const pencilBtn = document.getElementById('sv-float-pencil');
+  const pencilBtn = document.querySelector('.sv-memo-float-btn');
   if (pencilBtn) pencilBtn.classList.toggle('active', show);
   if (show) requestAnimationFrame(() => { const inp = document.getElementById('sv-memo-input'); if (inp) inp.focus(); });
 }
@@ -4891,10 +4905,22 @@ function _svRenderProductList() {
   if (!el) return;
   const items = (getStyleData()[styleViewerRoom] || []);
   const item = items[styleViewerIndex];
+  const pins = item?.productPins || [];
   const memos = item?.memos || [];
+  // 제품 핀 접근 버튼 (핀이 있을 때만)
+  let pinsEntry = '';
+  if (pins.length) {
+    pinsEntry = `<div style="padding:12px 16px 4px;">
+      <button onclick="openPinsSheet(${styleViewerIndex})" style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:#f9f9fa;border:1px solid #eee;border-radius:12px;cursor:pointer;font-family:var(--font);-webkit-tap-highlight-color:transparent;">
+        <svg width="16" height="16" fill="none" stroke="#555" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span style="font-size:14px;font-weight:600;color:#222;flex:1;text-align:left;">제품 핀 ${pins.length}개</span>
+        <svg width="13" height="13" fill="none" stroke="#bbb" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>`;
+  }
   const memosHtml = _svBuildMemosHtml(memos);
-  const empty = !memosHtml ? `<div class="sv-pin-hint" style="padding-top:20px;">아직 메모가 없어요<br>✏️ 연필 버튼으로 첫 메모를 남겨보세요</div>` : '';
-  el.innerHTML = `<div style="padding-bottom:156px;">${memosHtml || empty}</div>`;
+  const empty = (!memosHtml && !pins.length) ? `<div class="sv-pin-hint" style="padding-top:20px;">아직 메모가 없어요<br>✏️ 연필 버튼으로 첫 메모를 남겨보세요</div>` : '';
+  el.innerHTML = `<div style="padding-bottom:156px;">${pinsEntry}${memosHtml || empty}</div>`;
 }
 
 function closeStyleViewer() {
@@ -9376,23 +9402,23 @@ async function _checkExportOnLoad() {
   <!-- 뷰타입 플로팅 버튼 -->
   <div id="sv-view-float">
     <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
         <rect x="0" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
         <rect x="9" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
         <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
         <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
       </svg>
     </button>
-    <div class="sv-float-sep"></div>
     <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
-      <svg width="17" height="14" viewBox="0 0 17 14" fill="none">
-        <rect x="0.5" y="0.5" width="16" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
-        <rect x="3" y="3" width="11" height="8" rx="1.2" fill="currentColor" opacity="0.35"/>
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+        <rect x="0" y="0" width="16" height="16" rx="3.5" fill="currentColor"/>
       </svg>
     </button>
-    <div class="sv-float-sep" id="sv-float-pencil-sep" style="display:none;"></div>
-    <button class="sv-float-btn" id="sv-float-pencil" onclick="_svToggleMemoInput()" title="메모" style="display:none;">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+  </div>
+  <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
+  <div id="sv-memo-float" style="display:none;">
+    <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     </button>
   </div>
 </div>
