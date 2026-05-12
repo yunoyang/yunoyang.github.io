@@ -428,6 +428,62 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-tap-highlight-color: transparent; color: #444;
 }
 .sv-icon-btn:active { background: #f1f1f5; }
+/* ─── 이미지 메모 / 댓글 ─── */
+.sv-memos { padding: 14px 16px 0; border-top: 1px solid #f1f1f5; margin-top: 6px; }
+.sv-memos-hd {
+  font-size: 11px; font-weight: 600; color: #c0c0c0;
+  letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.sv-memo-item {
+  display: flex; gap: 9px; padding: 9px 0;
+  border-bottom: 1px solid #f7f7fb; align-items: flex-start;
+}
+.sv-memo-item:last-child { border-bottom: none; }
+.sv-memo-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #333; color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sv-memo-body { flex: 1; min-width: 0; }
+.sv-memo-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+.sv-memo-name { font-size: 12px; font-weight: 600; color: #222; }
+.sv-memo-ts   { font-size: 11px; color: #c8c8c8; }
+.sv-memo-text { font-size: 13px; color: #444; line-height: 1.45; word-break: break-word; }
+.sv-memo-foot { display: flex; align-items: center; margin-top: 5px; }
+.sv-memo-like {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 11px; color: #ccc; background: none; border: none;
+  cursor: pointer; padding: 2px 0; -webkit-tap-highlight-color: transparent;
+  font-family: var(--font);
+}
+.sv-memo-like.on { color: #ff3b4e; }
+.sv-memo-del {
+  font-size: 11px; color: #ddd; background: none; border: none;
+  cursor: pointer; padding: 2px 0; margin-left: auto;
+  -webkit-tap-highlight-color: transparent; font-family: var(--font);
+}
+/* ─── 메모 입력 바 ─── */
+#sv-memo-bar {
+  position: absolute; bottom: 76px; left: 0; right: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #f0f0f5;
+}
+#sv-memo-input {
+  flex: 1; min-width: 0; border: 1.5px solid #e5e5ec; border-radius: 20px;
+  padding: 8px 14px; font-size: 13px; color: #222;
+  background: #f9f9fa; outline: none; font-family: var(--font);
+}
+#sv-memo-input:focus { border-color: #bbb; background: #fff; }
+#sv-memo-send {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: #222; color: #fff; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+#sv-memo-send:active { opacity: .7; }
 /* ─── 뷰타입 플로팅 컨트롤 ─── */
 #sv-view-float {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
@@ -4509,6 +4565,8 @@ function _svApplyViewMode() {
 
   if (imageArea)   imageArea.style.display   = isCarousel ? '' : 'none';
   if (productList) productList.style.display = isCarousel ? '' : 'none';
+  const memoBar = document.getElementById('sv-memo-bar');
+  if (memoBar) memoBar.style.display = (isCarousel && state.loggedIn) ? '' : 'none';
   if (galleryArea) {
     if (isCarousel) {
       galleryArea.style.display = 'none';
@@ -4598,29 +4656,120 @@ function _svRenderDots(total) {
   ).join('');
 }
 
+// ===== STYLE IMAGE MEMOS =====
+function _formatMemoTime(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return '방금 전';
+  if (d < 3600000) return Math.floor(d/60000) + '분 전';
+  if (d < 86400000) return Math.floor(d/3600000) + '시간 전';
+  if (d < 604800000) return Math.floor(d/86400000) + '일 전';
+  return new Date(ts).toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
+}
+function _svBuildMemosHtml(memos) {
+  if (!memos?.length) return '';
+  const myEmail = state.user?.email || '';
+  const items = memos.map(m => {
+    const ini = (m.author?.name || m.author?.email || '?').charAt(0).toUpperCase();
+    const liked = (m.likes||[]).includes(myEmail);
+    const cnt = (m.likes||[]).length;
+    const isOwn = m.author?.email === myEmail;
+    const safe = (m.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="sv-memo-item" id="sv-memo-${m.id}">
+      <div class="sv-memo-av">${ini}</div>
+      <div class="sv-memo-body">
+        <div class="sv-memo-head">
+          <span class="sv-memo-name">${m.author?.name || m.author?.email || '익명'}</span>
+          <span class="sv-memo-ts">${_formatMemoTime(m.createdAt)}</span>
+        </div>
+        <div class="sv-memo-text">${safe}</div>
+        <div class="sv-memo-foot">
+          <button class="sv-memo-like${liked?' on':''}" onclick="_svToggleMemoLike('${m.id}')">
+            <svg width="13" height="13" fill="${liked?'#ff3b4e':'none'}" stroke="${liked?'#ff3b4e':'#ccc'}" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            ${cnt > 0 ? cnt : ''}
+          </button>
+          ${isOwn ? `<button class="sv-memo-del" onclick="_svDeleteMemo('${m.id}')">삭제</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="sv-memos"><div class="sv-memos-hd">메모 ${memos.length}</div>${items}</div>`;
+}
+function _svAddMemo() {
+  const input = document.getElementById('sv-memo-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || !state.loggedIn) return;
+  const proj = getProject();
+  if (!proj) return;
+  const imgs = proj.styleImages?.[styleViewerRoom];
+  if (!imgs?.[styleViewerIndex]) return;
+  if (!imgs[styleViewerIndex].memos) imgs[styleViewerIndex].memos = [];
+  imgs[styleViewerIndex].memos.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    text, author: { email: state.user.email, name: state.user.name },
+    createdAt: Date.now(), likes: []
+  });
+  input.value = '';
+  save();
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svRenderProductList();
+}
+function _svToggleMemoLike(memoId) {
+  if (!state.loggedIn) return;
+  const proj = getProject();
+  if (!proj) return;
+  const item = (proj.styleImages?.[styleViewerRoom]||[])[styleViewerIndex];
+  const memo = item?.memos?.find(m => m.id === memoId);
+  if (!memo) return;
+  if (!memo.likes) memo.likes = [];
+  const idx = memo.likes.indexOf(state.user.email);
+  idx >= 0 ? memo.likes.splice(idx,1) : memo.likes.push(state.user.email);
+  save();
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svRenderProductList();
+}
+function _svDeleteMemo(memoId) {
+  const proj = getProject();
+  if (!proj) return;
+  const item = (proj.styleImages?.[styleViewerRoom]||[])[styleViewerIndex];
+  if (!item?.memos) return;
+  const idx = item.memos.findIndex(m => m.id === memoId && m.author?.email === state.user?.email);
+  if (idx < 0) return;
+  item.memos.splice(idx,1);
+  save();
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svRenderProductList();
+}
+
 function _svRenderProductList() {
   const el = document.getElementById('sv-product-list');
   if (!el) return;
   const items = (getStyleData()[styleViewerRoom] || []);
   const item = items[styleViewerIndex];
   const pins = item?.productPins || [];
-  if (!pins.length) {
-    el.innerHTML = `<div class="sv-pin-hint">이미지 위를 길게 눌러<br>제품 링크를 추가하세요</div>`;
-    return;
-  }
+  const memos = item?.memos || [];
   const _svproj = getProject();
   const _svbadges = (_svproj?.cloudId && _svproj.isCloud) ? _getBadges(_svproj.cloudId) : {};
-  el.innerHTML = `<div style="padding:0 16px 80px;">` + pins.map((pin, pi) => {
-    const isPinNew = pin.id && _isNew(_svbadges.productPins?.[item.url + ':' + pin.id]);
-    return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
-      <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
-      <div class="sv-prod-info">
-        ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
-        ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
-      </div>
-      <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
-    </div>`;
-  }).join('') + `</div>`;
+  let pinsHtml = '';
+  if (!pins.length) {
+    pinsHtml = `<div class="sv-pin-hint">이미지 위를 길게 눌러<br>제품 링크를 추가하세요</div>`;
+  } else {
+    pinsHtml = `<div style="padding:0 16px;">` + pins.map((pin, pi) => {
+      const isPinNew = pin.id && _isNew(_svbadges.productPins?.[item.url + ':' + pin.id]);
+      return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
+        <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
+        <div class="sv-prod-info">
+          ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
+          ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
+        </div>
+        <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+  el.innerHTML = `<div style="padding-bottom:156px;">${pinsHtml}${_svBuildMemosHtml(memos)}</div>`;
 }
 
 function closeStyleViewer() {
@@ -7848,14 +7997,35 @@ async function _syncStyleImagesToCloud(proj) {
     // 1) 현재 Firestore 값 읽기
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudImages = snap.data()?.projectData?.styleImages || {};
-    // 2) cloud + local 병합 (URL 기준 중복 제거) — 모든 방의 이미지 보존
+    // 2) cloud + local 병합 (URL 기준 + productPins·memos 내부 머지)
     const merged = {};
     const allRooms = new Set([...Object.keys(cloudImages), ...Object.keys(proj.styleImages || {})]);
     allRooms.forEach(r => {
       const ci = cloudImages[r] || [];
       const li = (proj.styleImages || {})[r] || [];
-      const seen = new Set(ci.map(x => x.url));
-      const m = [...ci, ...li.filter(x => !seen.has(x.url))];
+      // cloud 기준으로 핀·메모 병합
+      const cloudUrlMap = new Map(ci.map(x => [x.url, x]));
+      const result = ci.map(cloudItem => {
+        const lc = li.find(x => x.url === cloudItem.url);
+        if (!lc) return cloudItem;
+        let it = cloudItem;
+        // pins
+        const cP = cloudItem.productPins || [], lP = lc.productPins || [];
+        if (lP.length) { const s=new Set(cP.map(p=>p.id)); const ex=lP.filter(p=>!s.has(p.id)); if(ex.length) it={...it,productPins:[...cP,...ex]}; }
+        // memos
+        const cM = cloudItem.memos || [], lM = lc.memos || [];
+        if (lM.length) {
+          const s=new Set(cM.map(m=>m.id));
+          const ex=lM.filter(m=>!s.has(m.id));
+          const mg=cM.map(cm=>{const lm=lM.find(m=>m.id===cm.id);if(!lm)return cm;const lk=[...new Set([...(cm.likes||[]),...(lm.likes||[])])];return lk.length!==(cm.likes||[]).length?{...cm,likes:lk}:cm;});
+          if(ex.length||JSON.stringify(mg)!==JSON.stringify(cM)) it={...it,memos:[...mg,...ex]};
+        }
+        return it;
+      });
+      // local에만 있는 이미지 추가
+      const cloudUrls = new Set(ci.map(x => x.url));
+      const localOnly = li.filter(x => !cloudUrls.has(x.url));
+      const m = [...result, ...localOnly];
       if (m.length) merged[r] = m;
     });
     // 3) 병합 결과 쓰기
@@ -7987,14 +8157,35 @@ function _startCollabListener(cloudId) {
       const ri = cloudImages[r] || [];
       const li = localImages[r] || [];
       const seen = new Set(ri.map(x => x.url));
-      // 같은 URL의 이미지는 productPins를 ID 기준 합집합으로 머지
+      // 같은 URL의 이미지는 productPins·memos를 ID 기준 합집합으로 머지
       const cloudWithPins = ri.map(cloudItem => {
         const localItem = li.find(x => x.url === cloudItem.url);
-        if (!localItem?.productPins?.length) return cloudItem;
-        const cloudPins = cloudItem.productPins || [];
-        const seenPinIds = new Set(cloudPins.map(p => p.id));
-        const extraPins = localItem.productPins.filter(p => !seenPinIds.has(p.id));
-        return extraPins.length ? { ...cloudItem, productPins: [...cloudPins, ...extraPins] } : cloudItem;
+        if (!localItem) return cloudItem;
+        let result = cloudItem;
+        // productPins 머지
+        const cPins = cloudItem.productPins || [];
+        const lPins = localItem.productPins || [];
+        if (lPins.length) {
+          const seenP = new Set(cPins.map(p => p.id));
+          const extra = lPins.filter(p => !seenP.has(p.id));
+          if (extra.length) result = {...result, productPins: [...cPins, ...extra]};
+        }
+        // memos 머지 (ID 기준 합집합 + likes union)
+        const cMemos = cloudItem.memos || [];
+        const lMemos = localItem.memos || [];
+        if (lMemos.length) {
+          const seenM = new Set(cMemos.map(m => m.id));
+          const extraM = lMemos.filter(m => !seenM.has(m.id));
+          const mergedM = cMemos.map(cm => {
+            const lm = lMemos.find(m => m.id === cm.id);
+            if (!lm) return cm;
+            const likes = [...new Set([...(cm.likes||[]), ...(lm.likes||[])])];
+            return likes.length !== (cm.likes||[]).length ? {...cm, likes} : cm;
+          });
+          if (extraM.length || JSON.stringify(mergedM) !== JSON.stringify(cMemos))
+            result = {...result, memos: [...mergedM, ...extraM]};
+        }
+        return result;
       });
       merged[r] = [...cloudWithPins, ...li.filter(x => !seen.has(x.url))];
     });
@@ -9044,6 +9235,14 @@ async function _checkExportOnLoad() {
   <div id="sv-gallery-area" style="display:none;"></div>
   <!-- product list -->
   <div id="sv-product-list"></div>
+  <!-- 메모 입력 바 -->
+  <div id="sv-memo-bar" style="display:none;">
+    <input id="sv-memo-input" type="text" placeholder="메모 추가..." maxlength="200"
+      onkeydown="if(event.key==='Enter')_svAddMemo()">
+    <button id="sv-memo-send" onclick="_svAddMemo()" title="전송">
+      <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
   <!-- 뷰타입 플로팅 버튼 -->
   <div id="sv-view-float">
     <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
