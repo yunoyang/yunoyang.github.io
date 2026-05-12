@@ -338,30 +338,29 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
 #sv-image-area {
   flex: none;
-  height: 52vh;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
+  background: #000;
+  /* 이미지 로드 전 fallback — JS로 실제 이미지 비율에 맞게 덮어씀 */
+  min-height: 30vh;
 }
 #sv-image-area .sv-reel-wrap {
   display: flex;
-  height: 100%;
+  align-items: flex-start;
   will-change: transform;
   transition: transform .28s cubic-bezier(0.25,1,0.5,1);
 }
 .sv-slide {
   flex-shrink: 0;
   width: 100%;
-  height: 100%;
   position: relative;
-  background: #fff;
-  overflow: hidden;
+  background: #000;
 }
 .sv-slide img {
-  position: absolute;
-  inset: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 72vh;
+  display: block;
   user-select: none;
   pointer-events: none;
 }
@@ -4800,6 +4799,7 @@ function openStyleViewer(room, index) {
   document.getElementById('style-viewer-screen').style.display = 'flex';
   _svRenderDots(items.length);
   _svApplyViewMode();
+  requestAnimationFrame(_svSyncImageAreaHeight);
 }
 
 function _svGoTo(index) {
@@ -4810,6 +4810,26 @@ function _svGoTo(index) {
   _svRenderDots(items.length);
   _svUpdateNavArrows(items.length);
   _svRenderProductList();
+  _svSyncImageAreaHeight();
+}
+
+// 이미지 영역 높이를 현재 슬라이드의 렌더링된 이미지 높이에 맞게 동기화
+function _svSyncImageAreaHeight() {
+  const area = document.getElementById('sv-image-area');
+  if (!area) return;
+  const slide = document.querySelector(`.sv-slide[data-slide="${styleViewerIndex}"]`);
+  const img = slide?.querySelector('img');
+  if (!img) return;
+  const apply = () => {
+    // img.offsetHeight: CSS max-height:72vh 적용 후 실제 렌더 높이
+    const h = img.offsetHeight;
+    if (h > 50) area.style.height = h + 'px';
+  };
+  if (img.complete && img.naturalWidth) {
+    requestAnimationFrame(apply);
+  } else {
+    img.onload = () => requestAnimationFrame(apply);
+  }
 }
 
 function _svUpdateNavArrows(total) {
