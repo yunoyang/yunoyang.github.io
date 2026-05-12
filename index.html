@@ -389,10 +389,13 @@ button, input, textarea, select { font-family:var(--font); }
 .prod-pin-dot:active { transform: translate(-50%,-50%) scale(0.88); }
 #sv-product-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 0 16px 80px;
 }
+/* 제품 핀은 sv-pins-sheet 바텀시트에서만 표시 — 이 영역에서는 무조건 숨김 */
+#sv-product-list .sv-prod-item { display: none; }
 /* ─── style viewer: gallery modes (list / grid) ─── */
 #sv-gallery-area {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
@@ -4554,8 +4557,8 @@ async function handleStyleFileSelect(e) {
 
         _styleUploadSetProgress(0, `압축 중${countLabel}`);
         const [viewerDataUrl, thumbDataUrl] = await Promise.all([
-          _compressImage(file, 720, 0.72),
-          _compressImage(file, 360, 0.72)
+          _compressImage(file, 1200, 0.85),
+          _compressImage(file, 480, 0.78)
         ]);
         _styleUploadSetProgress(20, `업로드 중${countLabel}`);
 
@@ -4586,8 +4589,8 @@ async function handleStyleFileSelect(e) {
     // base64 폴백
     _styleUploadSetProgress(0, `처리 중${countLabel}`);
     const [dataUrl, thumbUrl] = await Promise.all([
-      _compressImage(file, 720, 0.72),
-      _compressImage(file, 360, 0.72)
+      _compressImage(file, 1200, 0.85),
+      _compressImage(file, 480, 0.78)
     ]);
     if (dataUrl) {
       addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
@@ -5103,32 +5106,14 @@ function _svRenderProductList() {
   if (!el) return;
   const items = (getStyleData()[styleViewerRoom] || []);
   const item = items[styleViewerIndex];
-  const pins = item?.productPins || [];
+  // 제품 핀은 쇼핑 아이콘 탭 시 sv-pins-sheet 바텀시트에서만 표시
+  // 여기에는 메모(댓글)만 렌더링
   const memos = item?.memos || [];
-  const _svproj = getProject();
-  const _svbadges = (_svproj?.cloudId && _svproj.isCloud) ? _getBadges(_svproj.cloudId) : {};
-
-  // ── 제품 핀 목록 (직접 노출)
-  let pinsHtml = '';
-  if (pins.length) {
-    pinsHtml = `<div style="padding:4px 16px 0;">` + pins.map((pin, pi) => {
-      const isPinNew = pin.id && _isNew(_svbadges.productPins?.[item.url + ':' + pin.id]);
-      return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
-        <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
-        <div class="sv-prod-info">
-          ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
-          ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
-        </div>
-        <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
-      </div>`;
-    }).join('') + `</div>`;
-  }
-
   const memosHtml = _svBuildMemosHtml(memos);
-  const empty = (!memosHtml && !pins.length)
+  const empty = !memosHtml
     ? `<div class="sv-pin-hint" style="padding-top:20px;">아직 메모가 없어요<br>✏️ 연필 버튼으로 첫 메모를 남겨보세요</div>`
     : '';
-  el.innerHTML = `<div style="padding-bottom:156px;">${pinsHtml}${memosHtml || empty}</div>`;
+  el.innerHTML = `<div style="padding-bottom:156px;">${memosHtml || empty}</div>`;
 }
 
 function closeStyleViewer() {
