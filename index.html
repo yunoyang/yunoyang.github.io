@@ -478,30 +478,59 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .sv-memo-more-menu button:active { background: #fff5f5; border-radius: 6px; }
 /* ─── 메모 입력 오버레이 (플로팅) ─── */
-#sv-memo-overlay {
-  position: absolute; bottom: 90px; left: 12px; right: 12px;
-  display: none; align-items: center; gap: 8px;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border-radius: 22px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-  z-index: 21;
+/* ─── 메모 바텀시트 ─── */
+#sv-memo-sheet {
+  position: fixed; inset: 0; z-index: 99997; pointer-events: none; display: block;
 }
-#sv-memo-overlay.visible { display: flex; }
-#sv-memo-input {
-  flex: 1; min-width: 0; border: 1.5px solid #e5e5ec; border-radius: 20px;
-  padding: 8px 14px; font-size: 13px; color: #222;
-  background: #f9f9fa; outline: none; font-family: var(--font);
+#sv-memo-sheet.open { pointer-events: auto; }
+.sv-memo-sheet-backdrop {
+  position: absolute; inset: 0; background: rgba(0,0,0,0);
+  transition: background .25s;
 }
-#sv-memo-input:focus { border-color: #bbb; background: #fff; }
-#sv-memo-send {
-  width: 32px; height: 32px; border-radius: 50%; border: none;
-  background: #222; color: #fff; flex-shrink: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  -webkit-tap-highlight-color: transparent;
+#sv-memo-sheet.open .sv-memo-sheet-backdrop { background: rgba(0,0,0,0.36); }
+.sv-memo-sheet-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #fff; border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom,0px);
+  transform: translateY(100%); transition: transform .28s cubic-bezier(0.25,1,0.5,1);
+  display: flex; flex-direction: column;
 }
-#sv-memo-send:active { opacity: .7; }
+#sv-memo-sheet.open .sv-memo-sheet-panel { transform: translateY(0); }
+.sv-memo-sheet-handle {
+  width: 36px; height: 4px; border-radius: 4px; background: #e5e5ec;
+  margin: 12px auto 0; flex-shrink: 0;
+}
+.sv-memo-sheet-title {
+  font-size: 15px; font-weight: 700; color: #222;
+  padding: 14px 18px 12px; flex-shrink: 0;
+}
+#sv-memo-textarea {
+  display: block; width: 100%; box-sizing: border-box;
+  margin: 0 0 0; padding: 12px 16px;
+  border: none; border-top: 1px solid #f1f1f5;
+  font-size: 15px; color: #222; line-height: 1.55;
+  font-family: var(--font); resize: none; outline: none;
+  min-height: 100px; max-height: 220px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+#sv-memo-textarea::placeholder { color: #c8c8c8; }
+.sv-memo-sheet-actions {
+  display: flex; gap: 8px; padding: 12px 16px 16px; flex-shrink: 0;
+  border-top: 1px solid #f1f1f5;
+}
+.sv-memo-sheet-cancel {
+  flex: 1; height: 48px; border: 1.5px solid #e1e5ef; border-radius: 12px;
+  background: #fff; font-size: 15px; font-weight: 600; color: #555;
+  cursor: pointer; font-family: var(--font); -webkit-tap-highlight-color: transparent;
+}
+.sv-memo-sheet-cancel:active { background: #f9f9fa; }
+.sv-memo-sheet-confirm {
+  flex: 1; height: 48px; border: none; border-radius: 12px;
+  background: #222; font-size: 15px; font-weight: 600; color: #fff;
+  cursor: pointer; font-family: var(--font); -webkit-tap-highlight-color: transparent;
+}
+.sv-memo-sheet-confirm:active { opacity: .8; }
+.sv-memo-sheet-confirm:disabled { background: #ddd; color: #bbb; cursor: default; }
 /* ─── 뷰타입 플로팅 컨트롤 ─── */
 #sv-view-float {
   position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
@@ -4855,16 +4884,56 @@ function _svMemoMoreMenu(memoId, btn) {
   }
 }
 
-// ─── 메모 입력 오버레이 토글
+// ─── 메모 바텀시트 열기/닫기
 function _svToggleMemoInput(force) {
   if (!state.loggedIn) return;
-  const overlay = document.getElementById('sv-memo-overlay');
-  if (!overlay) return;
-  const show = force !== undefined ? !!force : !overlay.classList.contains('visible');
-  overlay.classList.toggle('visible', show);
+  const sheet = document.getElementById('sv-memo-sheet');
+  if (!sheet) return;
+  const show = force !== undefined ? !!force : !sheet.classList.contains('open');
+  if (show) {
+    sheet.classList.add('open');
+    const pencilBtn = document.querySelector('.sv-memo-float-btn');
+    if (pencilBtn) pencilBtn.classList.add('active');
+    requestAnimationFrame(() => {
+      const ta = document.getElementById('sv-memo-textarea');
+      if (ta) { ta.value = ''; ta.style.height = 'auto'; ta.focus(); }
+      _svUpdateMemoConfirm();
+    });
+  } else {
+    closeMemoSheet();
+  }
+}
+function closeMemoSheet() {
+  const sheet = document.getElementById('sv-memo-sheet');
+  if (sheet) sheet.classList.remove('open');
   const pencilBtn = document.querySelector('.sv-memo-float-btn');
-  if (pencilBtn) pencilBtn.classList.toggle('active', show);
-  if (show) requestAnimationFrame(() => { const inp = document.getElementById('sv-memo-input'); if (inp) inp.focus(); });
+  if (pencilBtn) pencilBtn.classList.remove('active');
+}
+function _svUpdateMemoConfirm() {
+  const btn = document.getElementById('sv-memo-confirm');
+  const ta  = document.getElementById('sv-memo-textarea');
+  if (btn && ta) btn.disabled = !ta.value.trim();
+}
+function _svSubmitMemoSheet() {
+  const ta = document.getElementById('sv-memo-textarea');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text || !state.loggedIn) { closeMemoSheet(); return; }
+  const proj = getProject();
+  if (!proj) return;
+  const imgs = proj.styleImages?.[styleViewerRoom];
+  if (!imgs?.[styleViewerIndex]) return;
+  if (!imgs[styleViewerIndex].memos) imgs[styleViewerIndex].memos = [];
+  imgs[styleViewerIndex].memos.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    text, author: { email: state.user.email, name: state.user.name },
+    createdAt: Date.now(), likes: []
+  });
+  closeMemoSheet();
+  save();
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svRenderProductList();
 }
 
 // ─── 제품핀 바텀시트
@@ -4924,7 +4993,7 @@ function _svRenderProductList() {
 }
 
 function closeStyleViewer() {
-  _svToggleMemoInput(false);
+  closeMemoSheet();
   closePinsSheet();
   document.getElementById('style-viewer-screen').style.display = 'none';
 }
@@ -9391,14 +9460,6 @@ async function _checkExportOnLoad() {
   <div id="sv-gallery-area" style="display:none;"></div>
   <!-- product list -->
   <div id="sv-product-list"></div>
-  <!-- 메모 입력 오버레이 (연필 버튼 탭 시 노출) -->
-  <div id="sv-memo-overlay">
-    <input id="sv-memo-input" type="text" placeholder="메모 추가..." maxlength="200"
-      onkeydown="if(event.key==='Enter')_svAddMemo()">
-    <button id="sv-memo-send" onclick="_svAddMemo()" title="전송">
-      <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-    </button>
-  </div>
   <!-- 뷰타입 플로팅 버튼 -->
   <div id="sv-view-float">
     <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
@@ -9433,6 +9494,21 @@ async function _checkExportOnLoad() {
       <button onclick="closePinsSheet()" style="border:none;background:none;font-size:22px;color:#bbb;cursor:pointer;padding:0;line-height:1;-webkit-tap-highlight-color:transparent;">×</button>
     </div>
     <div class="sv-pins-body" id="sv-pins-body"></div>
+  </div>
+</div>
+
+<!-- 메모 바텀시트 -->
+<div id="sv-memo-sheet">
+  <div class="sv-memo-sheet-backdrop" onclick="closeMemoSheet()"></div>
+  <div class="sv-memo-sheet-panel">
+    <div class="sv-memo-sheet-handle"></div>
+    <div class="sv-memo-sheet-title">메모</div>
+    <textarea id="sv-memo-textarea" placeholder="이 이미지에 메모를 남겨보세요..." maxlength="500"
+      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';_svUpdateMemoConfirm()"></textarea>
+    <div class="sv-memo-sheet-actions">
+      <button class="sv-memo-sheet-cancel" onclick="closeMemoSheet()">취소</button>
+      <button class="sv-memo-sheet-confirm" id="sv-memo-confirm" onclick="_svSubmitMemoSheet()" disabled>완료</button>
+    </div>
   </div>
 </div>
 
