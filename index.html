@@ -4504,7 +4504,11 @@ function _compressImage(file, maxW = 1200, quality = 0.75) {
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      // 고화질 다운샘플링 — 기본(bilinear) 대비 선명도 개선
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(blobUrl);
       // WebP 지원 시 WebP 우선 (동일 화질에서 JPEG 대비 ~35% 작은 용량)
       const webp = canvas.toDataURL('image/webp', quality);
@@ -4557,8 +4561,8 @@ async function handleStyleFileSelect(e) {
 
         _styleUploadSetProgress(0, `압축 중${countLabel}`);
         const [viewerDataUrl, thumbDataUrl] = await Promise.all([
-          _compressImage(file, 1200, 0.85),
-          _compressImage(file, 480, 0.78)
+          _compressImage(file, 2400, 0.92),  // 레티나(2x) 대응 고화질
+          _compressImage(file, 600, 0.82)
         ]);
         _styleUploadSetProgress(20, `업로드 중${countLabel}`);
 
@@ -4586,11 +4590,11 @@ async function handleStyleFileSelect(e) {
       }
     }
 
-    // base64 폴백
+    // base64 폴백 (localStorage 용량 고려해 1600px)
     _styleUploadSetProgress(0, `처리 중${countLabel}`);
     const [dataUrl, thumbUrl] = await Promise.all([
-      _compressImage(file, 1200, 0.85),
-      _compressImage(file, 480, 0.78)
+      _compressImage(file, 1600, 0.88),
+      _compressImage(file, 600, 0.82)
     ]);
     if (dataUrl) {
       addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
