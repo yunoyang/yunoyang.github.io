@@ -338,11 +338,11 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
 #sv-image-area {
   flex: none;
+  height: 52vh;           /* 초기 fallback — JS가 실제 이미지 비율로 덮어씀 */
   position: relative;
   overflow: hidden;
   background: #000;
-  /* 이미지 로드 전 fallback — JS로 실제 이미지 비율에 맞게 덮어씀 */
-  min-height: 30vh;
+  transition: height 0.25s ease;
 }
 #sv-image-area .sv-reel-wrap {
   display: flex;
@@ -4821,15 +4821,20 @@ function _svSyncImageAreaHeight() {
   const img = slide?.querySelector('img');
   if (!img) return;
   const apply = () => {
-    // img.offsetHeight: CSS max-height:72vh 적용 후 실제 렌더 높이
-    const h = img.offsetHeight;
-    if (h > 50) area.style.height = h + 'px';
+    // Primary: rendered height (layout 완료 후 실제 높이)
+    let h = img.offsetHeight;
+    // Fallback: naturalWidth/Height 로 직접 계산 (offsetHeight 아직 0일 때)
+    if (h < 50 && img.naturalWidth) {
+      const w = Math.max(area.offsetWidth, document.body.offsetWidth, 320);
+      const maxH = window.innerHeight * 0.72;
+      h = Math.min(w * img.naturalHeight / img.naturalWidth, maxH);
+    }
+    if (h > 20) area.style.height = Math.round(h) + 'px';
   };
-  if (img.complete && img.naturalWidth) {
-    requestAnimationFrame(apply);
-  } else {
-    img.onload = () => requestAnimationFrame(apply);
-  }
+  // double rAF: 첫 번째 rAF 로 paint 전 layout flush, 두 번째에서 실제 높이 읽기
+  const run = () => requestAnimationFrame(() => requestAnimationFrame(apply));
+  if (img.complete && img.naturalWidth) run();
+  else img.onload = run;
 }
 
 function _svUpdateNavArrows(total) {
