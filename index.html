@@ -9995,6 +9995,11 @@ function openFpEditor() {
   const ed = document.getElementById('fp-editor');
   ed.style.display = 'flex';
 
+  // URL hash → 직접 링크 지원
+  if (location.hash !== '#floor-editor') {
+    history.pushState(null, '', location.pathname + location.search + '#floor-editor');
+  }
+
   // Mobile: show warning
   const isMobile = window.innerWidth < 768;
   document.getElementById('fp-mobile-warn').style.display = isMobile ? 'flex' : 'none';
@@ -10005,8 +10010,6 @@ function openFpEditor() {
 
   fpShowCategory('가구', document.getElementById('fp-tab-furniture'));
   setTimeout(() => fpInitCanvas(imgUrl), 80);
-
-  // Keyboard shortcuts
   document.addEventListener('keydown', fpOnKeyDown);
 }
 
@@ -10014,7 +10017,25 @@ function closeFpEditor() {
   document.getElementById('fp-editor').style.display = 'none';
   document.removeEventListener('keydown', fpOnKeyDown);
   if (fpCanvas) { fpCanvas.dispose(); fpCanvas = null; }
+  // URL 해시 복원
+  if (location.hash === '#floor-editor') {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
 }
+
+// 브라우저 뒤로가기로 에디터 닫기
+window.addEventListener('popstate', () => {
+  if (location.hash !== '#floor-editor') {
+    const ed = document.getElementById('fp-editor');
+    if (ed && ed.style.display !== 'none') closeFpEditor();
+  }
+});
+// 페이지 로드 시 해시 감지
+window.addEventListener('load', () => {
+  if (location.hash === '#floor-editor') {
+    setTimeout(openFpEditor, 500);
+  }
+});
 
 function fpOnKeyDown(e) {
   if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -10093,6 +10114,9 @@ function fpSetTool(tool) {
 // ──────────────────────────────────────────
 function fpOnMouseDown(opt) {
   if (fpActiveTool === 'select') return;
+  // 기존 객체 클릭 시 그리기 시작 안 함
+  if (opt.target) return;
+
   if (fpActiveTool === 'text') {
     const p = fpCanvas.getPointer(opt.e);
     const txt = new fabric.IText('텍스트', {
@@ -10100,14 +10124,17 @@ function fpOnMouseDown(opt) {
       fontSize: fpTextSize, fill: fpTextColor,
       fontFamily: 'Pretendard, sans-serif',
       selectable: true, editable: true,
+      hasControls: true, hasBorders: true,
     });
     fpCanvas.add(txt);
+    fpSetTool('select');          // selection=true 먼저
+    txt.setCoords();
     fpCanvas.setActiveObject(txt);
-    txt.enterEditing();
-    fpSetTool('select');
+    fpCanvas.renderAll();
     fpSaveHistory();
     return;
   }
+
   const p = fpCanvas.getPointer(opt.e);
   fpIsDrawing = true;
   fpDrawStart = { x: p.x, y: p.y };
@@ -10117,11 +10144,11 @@ function fpOnMouseDown(opt) {
   const fill = fpFillEnabled ? color + '33' : 'transparent';
 
   if (fpActiveTool === 'rect') {
-    fpDrawObj = new fabric.Rect({ left:p.x, top:p.y, width:1, height:1, fill, stroke:color, strokeWidth:sw, selectable:false });
+    fpDrawObj = new fabric.Rect({ left:p.x, top:p.y, width:1, height:1, fill, stroke:color, strokeWidth:sw, selectable:false, evented:false });
   } else if (fpActiveTool === 'circle') {
-    fpDrawObj = new fabric.Ellipse({ left:p.x, top:p.y, rx:1, ry:1, fill, stroke:color, strokeWidth:sw, selectable:false });
+    fpDrawObj = new fabric.Ellipse({ left:p.x, top:p.y, rx:1, ry:1, fill, stroke:color, strokeWidth:sw, selectable:false, evented:false });
   } else if (fpActiveTool === 'line' || fpActiveTool === 'arrow') {
-    fpDrawObj = new fabric.Line([p.x, p.y, p.x, p.y], { stroke:color, strokeWidth:sw, selectable:false });
+    fpDrawObj = new fabric.Line([p.x, p.y, p.x, p.y], { stroke:color, strokeWidth:sw, selectable:false, evented:false });
   }
   if (fpDrawObj) fpCanvas.add(fpDrawObj);
 }
@@ -10148,26 +10175,35 @@ function fpOnMouseUp(opt) {
   if (!fpIsDrawing || !fpDrawObj) return;
   fpIsDrawing = false;
 
-  // Arrow: add arrowhead as triangle
-  if (fpActiveTool === 'arrow') {
+  const prevTool = fpActiveTool; // fpSetTool 호출 전에 저장
+  let finalObj;
+
+  if (prevTool === 'arrow') {
     const x1 = fpDrawObj.x1, y1 = fpDrawObj.y1, x2 = fpDrawObj.x2, y2 = fpDrawObj.y2;
     const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
     const head = new fabric.Triangle({
       left: x2, top: y2, width: 14, height: 14,
       fill: fpShapeColor, stroke: fpShapeColor, strokeWidth: 1,
-      angle: angle + 90, originX:'center', originY:'center', selectable:false
+      angle: angle + 90, originX:'center', originY:'center',
     });
-    const grp = new fabric.Group([fpDrawObj, head], { selectable:true });
+    const grp = new fabric.Group([fpDrawObj, head], {
+      selectable:true, hasControls:true, hasBorders:true, evented:true
+    });
     fpCanvas.remove(fpDrawObj);
     fpCanvas.add(grp);
-    fpCanvas.setActiveObject(grp);
-    fpDrawObj = grp;
+    finalObj = grp;
   } else {
-    fpDrawObj.set({ selectable: true });
-    fpCanvas.setActiveObject(fpDrawObj);
+    fpDrawObj.set({ selectable:true, evented:true, hasControls:true, hasBorders:true });
+    finalObj = fpDrawObj;
   }
+
   fpDrawObj = null;
-  fpSetTool('select');
+  fpSetTool('select');           // ★ canvas.selection=true 먼저 설정
+  if (finalObj) {
+    finalObj.setCoords();        // ★ bounding box 좌표 갱신
+    fpCanvas.setActiveObject(finalObj);
+    fpCanvas.renderAll();
+  }
   fpSaveHistory();
 }
 
@@ -10410,6 +10446,16 @@ function fpDownload() {
   a.click();
 }
 
+function fpCopyLink() {
+  const url = location.origin + location.pathname + location.search + '#floor-editor';
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ 복사됨';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }).catch(() => prompt('에디터 링크:', url));
+}
+
 async function fpShareLink() {
   const proj = getProject();
   if (!proj) return;
@@ -10640,6 +10686,11 @@ async function fpShareLink() {
       </button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" id="fp-gray-btn" onclick="fpToggleGrayscale()">흑백</button>
+      <div class="fp-sep"></div>
+      <button class="fp-hbtn" onclick="fpCopyLink()" title="에디터 링크 복사">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        링크 복사
+      </button>
     </div>
   </div>
 
