@@ -1690,6 +1690,50 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .btn-primary:active { opacity:.88; }
 
+/* ===== INFO VIEW (공사 정보 보기 모드) ===== */
+.form-edit-icon-btn {
+  margin-left:auto; background:none; border:none; cursor:pointer;
+  padding:6px; border-radius:8px; color:#555;
+  display:none; align-items:center; justify-content:center; flex-shrink:0;
+}
+.form-edit-icon-btn:hover { background:#f0f0f0; }
+.info-view-body {
+  flex:1; overflow-y:auto;
+  padding:16px 16px calc(32px + env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:10px;
+  background:#f5f5f8;
+}
+.info-view-hero {
+  background:#fff; border-radius:16px; padding:20px 18px 18px;
+}
+.info-view-project-name {
+  font-size:22px; font-weight:700; color:#111; line-height:1.3;
+}
+.info-view-card {
+  background:#fff; border-radius:16px; overflow:hidden;
+}
+.info-view-row {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:12px; padding:14px 18px;
+}
+.info-view-label {
+  font-size:13px; font-weight:600; color:#999; flex-shrink:0; padding-top:1px;
+}
+.info-view-value {
+  font-size:15px; font-weight:500; color:#111;
+  text-align:right; word-break:keep-all; line-height:1.45;
+  white-space:pre-line;
+}
+.info-view-value.empty { color:#ccc; font-weight:400; }
+.info-view-divider { height:1px; background:#f2f2f5; margin:0 18px; }
+.info-view-memo-wrap { padding:14px 18px; }
+.info-view-memo-label { font-size:13px; font-weight:600; color:#999; margin-bottom:8px; }
+.info-view-memo-text {
+  font-size:15px; color:#333; line-height:1.65; white-space:pre-wrap;
+}
+.info-view-floorplan-wrap { padding:14px 18px; }
+.info-view-floorplan-label { font-size:13px; font-weight:600; color:#999; margin-bottom:10px; }
+
 /* ===== DIALOGS (bottom sheet) ===== */
 .overlay {
   position:fixed; top:0; left:0; right:0; bottom:0;
@@ -2664,8 +2708,65 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="form-screen-inner">
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
-      <h2 id="form-title">내 공사 기본 정보</h2>
+      <h2 id="form-title">공사 정보</h2>
+      <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
     </div>
+
+    <!-- ▶ VIEW MODE (읽기 전용) -->
+    <div id="form-view-panel" class="info-view-body" style="display:none;">
+      <div class="info-view-hero">
+        <div style="font-size:12px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
+        <div class="info-view-project-name" id="iv-project-name">-</div>
+      </div>
+      <div class="info-view-card">
+        <div class="info-view-row">
+          <span class="info-view-label">시공종류</span>
+          <span class="info-view-value" id="iv-type">-</span>
+        </div>
+        <div class="info-view-divider"></div>
+        <div class="info-view-row">
+          <span class="info-view-label">평형</span>
+          <span class="info-view-value" id="iv-size">-</span>
+        </div>
+        <div class="info-view-divider"></div>
+        <div class="info-view-row">
+          <span class="info-view-label">진행 방식</span>
+          <span class="info-view-value" id="iv-method">-</span>
+        </div>
+      </div>
+      <div class="info-view-card">
+        <div class="info-view-row">
+          <span class="info-view-label">공사 기간</span>
+          <span class="info-view-value" id="iv-period">-</span>
+        </div>
+      </div>
+      <div class="info-view-card">
+        <div class="info-view-row">
+          <span class="info-view-label">시공 주소</span>
+          <span class="info-view-value" id="iv-address">-</span>
+        </div>
+      </div>
+      <div class="info-view-card" id="iv-memo-card">
+        <div class="info-view-memo-wrap">
+          <div class="info-view-memo-label">메모</div>
+          <div class="info-view-memo-text" id="iv-memo"></div>
+        </div>
+      </div>
+      <div class="info-view-card" id="iv-floorplan-card" style="display:none;">
+        <div class="info-view-floorplan-wrap">
+          <div class="info-view-floorplan-label">아파트 도면</div>
+          <img id="iv-floorplan-img" style="width:100%;border-radius:8px;display:block;" alt="도면 이미지">
+        </div>
+      </div>
+    </div>
+
+    <!-- ▶ EDIT MODE (기존 폼) -->
+    <div id="form-edit-panel" style="display:contents;">
     <div class="form-body">
       <div class="form-group">
         <span class="form-label">프로젝트명</span>
@@ -2751,6 +2852,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="form-footer">
       <button class="btn-primary" id="form-submit-btn" onclick="saveFormAndBack()">저장하기</button>
     </div>
+    </div><!-- /#form-edit-panel -->
   </div>
 </div>
 
@@ -4060,10 +4162,7 @@ function _startNewProject() {
   state.currentProjectId = proj.id;
   save();
   formMode = 'new';
-  document.getElementById('form-title').textContent = '내 공사 기본 정보';
-  document.getElementById('form-submit-btn').textContent = '시작하기';
   goTo('form');
-  loadFormData();
 }
 function loadExistingProjects() {
   if (!state.projects.length) { alert('저장된 프로젝트가 없습니다.'); return; }
@@ -4083,7 +4182,14 @@ function formGoBack() {
     formMode = 'edit';
     goTo('landing');
   } else {
-    goTo('main');
+    // 편집 모드였다면 보기 모드로, 보기 모드였다면 메인으로
+    const editPanel = document.getElementById('form-edit-panel');
+    const isEditVisible = editPanel && editPanel.style.display !== 'none';
+    if (isEditVisible) {
+      _showInfoViewPanel(true);
+    } else {
+      goTo('main');
+    }
   }
 }
 function goTo(screen) {
@@ -4095,11 +4201,15 @@ function goTo(screen) {
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
   if (screen === 'main') renderAll();
   if (screen === 'form') {
-    if (formMode !== 'new') {
-      document.getElementById('form-title').textContent = '내 공사 기본 정보';
+    if (formMode === 'new') {
+      // 신규 프로젝트 → 편집 모드 바로 진입
+      document.getElementById('form-submit-btn').textContent = '시작하기';
+      _showInfoViewPanel(false);
+    } else {
+      // 기존 프로젝트 → 보기 모드로 진입
       document.getElementById('form-submit-btn').textContent = '저장하기';
+      _showInfoViewPanel(true);
     }
-    loadFormData();
   }
   if (screen === 'account') {
     document.getElementById('acct-name').textContent = state.user.name || '사용자';
@@ -7299,6 +7409,67 @@ function saveFormData() {
   f.addressDetail = document.getElementById('f-address-detail').value;
   save();
 }
+// ===== INFO VIEW / EDIT TOGGLE =====
+function _showInfoViewPanel(visible) {
+  const vp = document.getElementById('form-view-panel');
+  const ep = document.getElementById('form-edit-panel');
+  const btn = document.getElementById('form-edit-icon-btn');
+  const title = document.getElementById('form-title');
+  if (visible) {
+    if (vp) vp.style.display = 'flex';
+    if (ep) ep.style.display = 'none';
+    if (btn) btn.style.display = 'flex';
+    if (title) title.textContent = '공사 정보';
+    _loadInfoView();
+  } else {
+    if (vp) vp.style.display = 'none';
+    if (ep) ep.style.display = 'contents';
+    if (btn) btn.style.display = 'none';
+    if (title) title.textContent = formMode === 'new' ? '내 공사 기본 정보' : '공사 정보 수정';
+    loadFormData();
+  }
+}
+function switchToFormEdit() { _showInfoViewPanel(false); }
+
+function _loadInfoView() {
+  const proj = getProject(); if (!proj) return;
+  const f = proj.form || {};
+  const set = (id, val) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.textContent = val || '-';
+    el.classList.toggle('empty', !val);
+  };
+  // 프로젝트명
+  set('iv-project-name', proj.name);
+  // 시공종류
+  set('iv-type', f.type?.[0] || '');
+  // 평형
+  const size = f.size?.[0] || '';
+  const exact = f.sizeExact ? ` (${f.sizeExact})` : '';
+  set('iv-size', size ? size + exact : '');
+  // 진행방식
+  set('iv-method', f.method?.length ? f.method.join(', ') : '');
+  // 공사 기간
+  const s = f.startDate ? formatDate(f.startDate) : '';
+  const e = f.endDate ? formatDate(f.endDate) : '';
+  set('iv-period', s && e ? `${s} ~ ${e}` : s ? `${s} ~` : '');
+  // 시공 주소
+  const addr = [f.address, f.addressDetail].filter(Boolean).join('\n');
+  set('iv-address', addr);
+  // 메모
+  const memoEl = document.getElementById('iv-memo');
+  if (memoEl) { memoEl.textContent = f.memo || ''; }
+  const memoCard = document.getElementById('iv-memo-card');
+  if (memoCard) memoCard.style.display = f.memo ? 'block' : 'none';
+  // 도면
+  const fpCard = document.getElementById('iv-floorplan-card');
+  const fpImg  = document.getElementById('iv-floorplan-img');
+  if (fpCard && fpImg) {
+    if (proj.floorplanImage) { fpImg.src = proj.floorplanImage; fpCard.style.display = 'block'; }
+    else { fpCard.style.display = 'none'; }
+  }
+}
+
 function saveFormAndBack() {
   saveFormData();
   if (formMode === 'new') {
@@ -7306,11 +7477,12 @@ function saveFormAndBack() {
     const _np = getProject();
     gtag('event', 'create_project', { project_name: _np?.name || '', type: _np?.form?.type?.[0] || '' });
     trackEvent('project', 'create', _np?.name || '');
-    document.getElementById('form-title').textContent = '내 공사 기본 정보';
-    document.getElementById('form-submit-btn').textContent = '저장하기';
     goTo('main');
     renderAll();
-  } else { goTo('main'); }
+  } else {
+    // 편집 완료 → 보기 모드로 전환
+    _showInfoViewPanel(true);
+  }
 }
 
 // ===== ADDRESS =====
