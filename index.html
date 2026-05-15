@@ -10037,14 +10037,58 @@ window.addEventListener('load', () => {
   }
 });
 
+let _fpClipboard = null; // 복사된 객체 저장
+
 function fpOnKeyDown(e) {
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      fpDeleteSelected();
-    }
+  const tag = document.activeElement.tagName;
+  const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !isInput) {
+    fpDeleteSelected();
   }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); fpUndo(); }
   if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); fpRedo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isInput) { e.preventDefault(); fpCopySelected(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInput) { e.preventDefault(); fpPasteSelected(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isInput) { e.preventDefault(); fpDuplicateSelected(); }
+}
+
+function fpCopySelected() {
+  if (!fpCanvas) return;
+  const obj = fpCanvas.getActiveObject();
+  if (!obj) return;
+  obj.clone((cloned) => { _fpClipboard = cloned; });
+}
+
+function fpPasteSelected() {
+  if (!fpCanvas || !_fpClipboard) return;
+  _fpClipboard.clone((cloned) => {
+    fpCanvas.discardActiveObject();
+    cloned.set({
+      left: (_fpClipboard.left || 0) + 20,
+      top:  (_fpClipboard.top  || 0) + 20,
+      evented: true, selectable: true,
+      hasControls: true, hasBorders: true,
+    });
+    if (cloned.type === 'activeSelection') {
+      cloned.canvas = fpCanvas;
+      cloned.forEachObject(o => fpCanvas.add(o));
+      cloned.setCoords();
+    } else {
+      fpCanvas.add(cloned);
+    }
+    // 다음 붙여넣기 시 20px씩 추가 오프셋
+    _fpClipboard.set({ left: (_fpClipboard.left || 0) + 20, top: (_fpClipboard.top || 0) + 20 });
+    cloned.setCoords();
+    fpCanvas.setActiveObject(cloned);
+    fpCanvas.renderAll();
+    fpSaveHistory();
+  });
+}
+
+function fpDuplicateSelected() {
+  fpCopySelected();
+  setTimeout(fpPasteSelected, 0);
 }
 
 // ──────────────────────────────────────────
