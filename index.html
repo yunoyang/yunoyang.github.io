@@ -10227,13 +10227,38 @@ function fpAddSymbol(id) {
   const all = [...FP_SYMBOLS['가구'], ...FP_SYMBOLS['전기']];
   const sym = all.find(s => s.id === id);
   if (!sym || !fpCanvas) return;
-  const svgStr = sym.svg;
+
+  // viewBox에서 자연 크기 추출
+  const vbMatch = sym.svg.match(/viewBox="([^"]+)"/);
+  let natW = 80, natH = 80;
+  if (vbMatch) {
+    const p = vbMatch[1].trim().split(/[\s,]+/);
+    natW = parseFloat(p[2]) || 80;
+    natH = parseFloat(p[3]) || 80;
+  }
+  // SVG에 명시적 width/height 강제 지정 (브라우저 기본 300px 방지)
+  const svgStr = sym.svg.replace(/<svg\s/, `<svg width="${natW}" height="${natH}" `);
+
   const blob = new Blob([svgStr], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
+
   fabric.Image.fromURL(url, (img) => {
-    const scale = 80 / Math.max(img.width, img.height);
-    img.set({ left: 80, top: 80, scaleX: scale, scaleY: scale, selectable:true });
+    // 캔버스 짧은 변의 약 8% 크기로 배치 (도면 비율에 적합)
+    const targetPx = Math.min(fpCanvas.width, fpCanvas.height) * 0.08;
+    const imgDim = Math.max(img.width || natW, img.height || natH);
+    const scale = targetPx / imgDim;
+
+    // 캔버스 중앙 배치
+    img.set({
+      left: fpCanvas.width / 2,
+      top: fpCanvas.height / 2,
+      originX: 'center', originY: 'center',
+      scaleX: scale, scaleY: scale,
+      selectable: true, hasControls: true, hasBorders: true,
+    });
     fpCanvas.add(img);
+    fpSetTool('select');
+    img.setCoords();
     fpCanvas.setActiveObject(img);
     fpCanvas.renderAll();
     URL.revokeObjectURL(url);
