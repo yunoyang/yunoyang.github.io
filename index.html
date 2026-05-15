@@ -1745,126 +1745,130 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .fp-edit-btn:hover { background:#444; }
 
-/* ===== FLOOR PLAN EDITOR ===== */
+/* ===== FLOOR PLAN EDITOR (Light Mode) ===== */
 #fp-editor {
   position:fixed; inset:0; z-index:11000;
-  flex-direction:column; background:#1e1e2e;
-  font-family:var(--font); color:#f0f0f0;
+  flex-direction:column; background:#f0f2f5;
+  font-family:var(--font); color:#111;
 }
 #fp-header {
-  display:flex; align-items:center; gap:8px; padding:10px 14px;
-  background:#13131f; border-bottom:1px solid #333; flex-shrink:0; flex-wrap:wrap;
+  display:flex; align-items:center; gap:8px; padding:9px 14px;
+  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0; flex-wrap:wrap;
 }
 #fp-header-left { display:flex; align-items:center; gap:6px; }
 #fp-tools { display:flex; align-items:center; gap:4px; flex:1; flex-wrap:wrap; }
 #fp-header-right { display:flex; align-items:center; gap:6px; }
 .fp-hbtn {
-  background:#2a2a40; border:none; border-radius:7px; color:#ccc;
+  background:#f0f2f5; border:1px solid #e0e0e8; border-radius:7px; color:#444;
   padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; gap:5px; white-space:nowrap;
   font-family:var(--font);
 }
-.fp-hbtn:hover { background:#3a3a55; color:#fff; }
-.fp-hbtn.active { background:#5252D9; color:#fff; }
-.fp-hbtn.danger { background:#c0392b; }
+.fp-hbtn:hover { background:#e8eaf0; color:#111; }
+.fp-hbtn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
+.fp-hbtn.danger { background:#fff0f0; color:#c0392b; border-color:#f5c6c6; }
+.fp-hbtn.danger:hover { background:#fde0e0; }
 .fp-hbtn svg { flex-shrink:0; }
-.fp-sep { width:1px; height:24px; background:#333; margin:0 4px; }
-#fp-body {
-  display:flex; flex:1; overflow:hidden;
-}
+.fp-sep { width:1px; height:22px; background:#e5e5ec; margin:0 4px; }
+#fp-body { display:flex; flex:1; overflow:hidden; }
+
 /* Palette */
 #fp-palette {
-  width:130px; flex-shrink:0; background:#13131f; border-right:1px solid #333;
+  width:160px; flex-shrink:0; background:#fff; border-right:1px solid #e5e5ec;
   display:flex; flex-direction:column; overflow:hidden;
 }
-.fp-pal-tabs { display:flex; border-bottom:1px solid #333; }
+.fp-pal-tabs { display:flex; border-bottom:1px solid #e5e5ec; }
 .fp-pal-tab {
-  flex:1; padding:9px 4px; text-align:center; font-size:12px; font-weight:600;
-  color:#888; background:none; border:none; cursor:pointer; font-family:var(--font);
+  flex:1; padding:10px 4px; text-align:center; font-size:12px; font-weight:700;
+  color:#aaa; background:none; border:none; cursor:pointer; font-family:var(--font);
 }
-.fp-pal-tab.active { color:#fff; border-bottom:2px solid #5252D9; }
+.fp-pal-tab.active { color:#5252D9; border-bottom:2.5px solid #5252D9; }
 #fp-symbols-grid {
-  flex:1; overflow-y:auto; padding:8px;
-  display:grid; grid-template-columns:1fr 1fr; gap:6px;
+  flex:1; overflow-y:auto; padding:10px 8px;
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
   -webkit-overflow-scrolling:touch;
+  align-content:start;
 }
 .fp-sym-item {
-  background:#2a2a40; border-radius:8px; padding:8px 4px 6px;
-  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:#f5f5fa; border-radius:10px; padding:10px 4px 7px;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
   cursor:pointer; border:1.5px solid transparent;
   transition:border-color .15s, background .15s;
 }
-.fp-sym-item:hover { background:#3a3a55; border-color:#5252D9; }
-.fp-sym-item svg { width:36px; height:36px; }
-.fp-sym-item span { font-size:10px; color:#aaa; text-align:center; line-height:1.2; }
+.fp-sym-item:hover { background:#eeecff; border-color:#5252D9; }
+.fp-sym-item svg, .fp-sym-item img { width:40px; height:40px; }
+.fp-sym-item span { font-size:10px; color:#666; text-align:center; line-height:1.3; font-weight:600; }
+
 /* Canvas area */
 #fp-canvas-wrap {
   flex:1; display:flex; align-items:center; justify-content:center;
-  overflow:hidden; padding:16px; background:#1e1e2e;
-  position:relative;
+  overflow:hidden; padding:16px; background:#e8eaf0; position:relative;
 }
-#fp-canvas-wrap canvas { box-shadow:0 4px 32px rgba(0,0,0,0.5); }
+#fp-canvas-wrap canvas { box-shadow:0 2px 20px rgba(0,0,0,0.15); border-radius:2px; }
+
 /* Property panel */
 #fp-props {
-  width:170px; flex-shrink:0; background:#13131f; border-left:1px solid #333;
-  padding:14px 12px; display:flex; flex-direction:column; gap:14px; overflow-y:auto;
+  width:180px; flex-shrink:0; background:#fff; border-left:1px solid #e5e5ec;
+  padding:14px 12px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;
 }
 .fp-prop-group { display:flex; flex-direction:column; gap:7px; }
-.fp-prop-label { font-size:11px; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:.05em; }
+.fp-prop-label { font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:.05em; }
 .fp-prop-colors { display:flex; gap:5px; flex-wrap:wrap; }
 .fp-color-dot {
-  width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent;
-  transition:border-color .15s;
+  width:22px; height:22px; border-radius:50%; cursor:pointer; border:2.5px solid transparent;
+  transition:border-color .15s; flex-shrink:0;
 }
-.fp-color-dot.active { border-color:#fff; }
+.fp-color-dot.active { border-color:#5252D9; box-shadow:0 0 0 1px #5252D9; }
 .fp-prop-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .fp-prop-val {
-  background:#2a2a40; border:none; border-radius:6px; color:#fff;
-  padding:4px 8px; font-size:12px; width:60px; text-align:right; font-family:var(--font);
+  background:#f5f5fa; border:1px solid #e0e0e8; border-radius:6px; color:#111;
+  padding:4px 8px; font-size:12px; width:62px; text-align:right; font-family:var(--font);
 }
-.fp-prop-val:focus { outline:none; border:1px solid #5252D9; }
-.fp-prop-mini { font-size:11px; color:#888; }
-.fp-props-empty { font-size:12px; color:#555; text-align:center; padding-top:40px; line-height:1.6; }
+.fp-prop-val:focus { outline:none; border-color:#5252D9; }
+.fp-prop-mini { font-size:11px; color:#aaa; }
+.fp-props-empty { font-size:12px; color:#bbb; text-align:center; padding-top:40px; line-height:1.7; }
+
 /* Footer */
 #fp-footer {
   display:flex; align-items:center; justify-content:center; gap:10px;
-  padding:10px 16px; background:#13131f; border-top:1px solid #333; flex-shrink:0;
+  padding:10px 16px; background:#fff; border-top:1px solid #e5e5ec; flex-shrink:0;
 }
 .fp-fbtn {
-  padding:9px 20px; border-radius:10px; font-size:14px; font-weight:700;
+  padding:9px 22px; border-radius:10px; font-size:14px; font-weight:700;
   border:none; cursor:pointer; font-family:var(--font);
   display:flex; align-items:center; gap:7px;
 }
 .fp-fbtn-save { background:#5252D9; color:#fff; }
-.fp-fbtn-save:hover { background:#6363e0; }
-.fp-fbtn-dl { background:#2a2a40; color:#ccc; }
-.fp-fbtn-dl:hover { background:#3a3a55; color:#fff; }
-.fp-fbtn-share { background:#2a2a40; color:#ccc; }
-.fp-fbtn-share:hover { background:#3a3a55; color:#fff; }
-/* Text options bar */
+.fp-fbtn-save:hover { background:#4343c8; }
+.fp-fbtn-dl { background:#f0f2f5; color:#444; border:1px solid #e0e0e8; }
+.fp-fbtn-dl:hover { background:#e8eaf0; color:#111; }
+.fp-fbtn-share { background:#f0f2f5; color:#444; border:1px solid #e0e0e8; }
+.fp-fbtn-share:hover { background:#e8eaf0; color:#111; }
+
+/* Sub-bars */
 #fp-text-bar {
-  display:none; align-items:center; gap:8px; padding:0 14px;
-  background:#13131f; border-bottom:1px solid #333; flex-shrink:0;
+  display:none; align-items:center; gap:8px; padding:6px 14px;
+  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0;
 }
 .fp-text-size-btn {
-  padding:4px 10px; background:#2a2a40; border:none; border-radius:6px;
-  color:#aaa; font-size:12px; cursor:pointer; font-family:var(--font);
+  padding:4px 10px; background:#f0f2f5; border:1px solid #e0e0e8; border-radius:6px;
+  color:#555; font-size:12px; cursor:pointer; font-family:var(--font);
 }
-.fp-text-size-btn.active { background:#5252D9; color:#fff; }
-/* Shape options bar */
+.fp-text-size-btn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
 #fp-shape-bar {
-  display:none; align-items:center; gap:8px; padding:7px 14px;
-  background:#13131f; border-bottom:1px solid #333; flex-shrink:0; flex-wrap:wrap;
+  display:none; align-items:center; gap:8px; padding:6px 14px;
+  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0; flex-wrap:wrap;
 }
 .fp-stroke-btn {
-  width:28px; height:28px; border-radius:6px; background:#2a2a40; border:none;
-  cursor:pointer; display:flex; align-items:center; justify-content:center; color:#aaa;
+  width:28px; height:28px; border-radius:6px; background:#f0f2f5; border:1px solid #e0e0e8;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; color:#555;
 }
-.fp-stroke-btn:hover, .fp-stroke-btn.active { background:#5252D9; color:#fff; }
+.fp-stroke-btn:hover, .fp-stroke-btn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
+
 /* Mobile warning */
 #fp-mobile-warn {
-  display:none; position:fixed; inset:0; z-index:11001;
-  background:#1e1e2e; align-items:center; justify-content:center;
+  display:none; position:absolute; inset:0; z-index:1;
+  background:#f5f5f8; align-items:center; justify-content:center;
   flex-direction:column; gap:16px; padding:32px; text-align:center;
 }
 
@@ -10589,9 +10593,9 @@ async function fpShareLink() {
   <!-- Mobile warning -->
   <div id="fp-mobile-warn">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-    <div style="font-size:17px;font-weight:700;color:#fff;">데스크탑에서 이용하세요</div>
+    <div style="font-size:17px;font-weight:700;color:#111;">데스크탑에서 이용하세요</div>
     <div style="font-size:14px;color:#888;line-height:1.6;">도면 에디터는 PC 브라우저에서<br>이용 가능합니다.</div>
-    <button class="fp-hbtn" onclick="closeFpEditor()" style="margin-top:8px;background:#2a2a40;">닫기</button>
+    <button class="fp-hbtn" onclick="closeFpEditor()" style="margin-top:8px;">닫기</button>
   </div>
 
   <!-- Header toolbar -->
@@ -10692,7 +10696,7 @@ async function fpShareLink() {
     <!-- Property panel -->
     <div id="fp-props">
       <div class="fp-props-empty" id="fp-props-hint">객체를 선택하면<br>속성이 표시됩니다</div>
-      <div id="fp-props-panel" style="display:none; display:flex; flex-direction:column; gap:14px; height:100%;">
+      <div id="fp-props-panel" style="display:none; flex-direction:column; gap:14px; height:100%;">
         <div class="fp-prop-group">
           <div class="fp-prop-label">색상</div>
           <div class="fp-prop-colors" id="pp-colors">
