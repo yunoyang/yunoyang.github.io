@@ -144,6 +144,7 @@
 <script src="icons-sprite.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
 <style>
 :root {
@@ -1736,6 +1737,136 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .info-view-floorplan-wrap { padding:17px 18px; }
 .info-view-floorplan-label { font-size:14px; font-weight:600; color:#999; margin-bottom:12px; }
+.fp-edit-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.fp-edit-btn {
+  font-size:12px; font-weight:600; color:#fff; background:#222;
+  border:none; border-radius:8px; padding:5px 12px; cursor:pointer;
+  display:flex; align-items:center; gap:5px; white-space:nowrap;
+}
+.fp-edit-btn:hover { background:#444; }
+
+/* ===== FLOOR PLAN EDITOR ===== */
+#fp-editor {
+  position:fixed; inset:0; z-index:11000;
+  flex-direction:column; background:#1e1e2e;
+  font-family:var(--font); color:#f0f0f0;
+}
+#fp-header {
+  display:flex; align-items:center; gap:8px; padding:10px 14px;
+  background:#13131f; border-bottom:1px solid #333; flex-shrink:0; flex-wrap:wrap;
+}
+#fp-header-left { display:flex; align-items:center; gap:6px; }
+#fp-tools { display:flex; align-items:center; gap:4px; flex:1; flex-wrap:wrap; }
+#fp-header-right { display:flex; align-items:center; gap:6px; }
+.fp-hbtn {
+  background:#2a2a40; border:none; border-radius:7px; color:#ccc;
+  padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; gap:5px; white-space:nowrap;
+  font-family:var(--font);
+}
+.fp-hbtn:hover { background:#3a3a55; color:#fff; }
+.fp-hbtn.active { background:#5252D9; color:#fff; }
+.fp-hbtn.danger { background:#c0392b; }
+.fp-hbtn svg { flex-shrink:0; }
+.fp-sep { width:1px; height:24px; background:#333; margin:0 4px; }
+#fp-body {
+  display:flex; flex:1; overflow:hidden;
+}
+/* Palette */
+#fp-palette {
+  width:130px; flex-shrink:0; background:#13131f; border-right:1px solid #333;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.fp-pal-tabs { display:flex; border-bottom:1px solid #333; }
+.fp-pal-tab {
+  flex:1; padding:9px 4px; text-align:center; font-size:12px; font-weight:600;
+  color:#888; background:none; border:none; cursor:pointer; font-family:var(--font);
+}
+.fp-pal-tab.active { color:#fff; border-bottom:2px solid #5252D9; }
+#fp-symbols-grid {
+  flex:1; overflow-y:auto; padding:8px;
+  display:grid; grid-template-columns:1fr 1fr; gap:6px;
+  -webkit-overflow-scrolling:touch;
+}
+.fp-sym-item {
+  background:#2a2a40; border-radius:8px; padding:8px 4px 6px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  cursor:pointer; border:1.5px solid transparent;
+  transition:border-color .15s, background .15s;
+}
+.fp-sym-item:hover { background:#3a3a55; border-color:#5252D9; }
+.fp-sym-item svg { width:36px; height:36px; }
+.fp-sym-item span { font-size:10px; color:#aaa; text-align:center; line-height:1.2; }
+/* Canvas area */
+#fp-canvas-wrap {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  overflow:hidden; padding:16px; background:#1e1e2e;
+  position:relative;
+}
+#fp-canvas-wrap canvas { box-shadow:0 4px 32px rgba(0,0,0,0.5); }
+/* Property panel */
+#fp-props {
+  width:170px; flex-shrink:0; background:#13131f; border-left:1px solid #333;
+  padding:14px 12px; display:flex; flex-direction:column; gap:14px; overflow-y:auto;
+}
+.fp-prop-group { display:flex; flex-direction:column; gap:7px; }
+.fp-prop-label { font-size:11px; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:.05em; }
+.fp-prop-colors { display:flex; gap:5px; flex-wrap:wrap; }
+.fp-color-dot {
+  width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+  transition:border-color .15s;
+}
+.fp-color-dot.active { border-color:#fff; }
+.fp-prop-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.fp-prop-val {
+  background:#2a2a40; border:none; border-radius:6px; color:#fff;
+  padding:4px 8px; font-size:12px; width:60px; text-align:right; font-family:var(--font);
+}
+.fp-prop-val:focus { outline:none; border:1px solid #5252D9; }
+.fp-prop-mini { font-size:11px; color:#888; }
+.fp-props-empty { font-size:12px; color:#555; text-align:center; padding-top:40px; line-height:1.6; }
+/* Footer */
+#fp-footer {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:10px 16px; background:#13131f; border-top:1px solid #333; flex-shrink:0;
+}
+.fp-fbtn {
+  padding:9px 20px; border-radius:10px; font-size:14px; font-weight:700;
+  border:none; cursor:pointer; font-family:var(--font);
+  display:flex; align-items:center; gap:7px;
+}
+.fp-fbtn-save { background:#5252D9; color:#fff; }
+.fp-fbtn-save:hover { background:#6363e0; }
+.fp-fbtn-dl { background:#2a2a40; color:#ccc; }
+.fp-fbtn-dl:hover { background:#3a3a55; color:#fff; }
+.fp-fbtn-share { background:#2a2a40; color:#ccc; }
+.fp-fbtn-share:hover { background:#3a3a55; color:#fff; }
+/* Text options bar */
+#fp-text-bar {
+  display:none; align-items:center; gap:8px; padding:0 14px;
+  background:#13131f; border-bottom:1px solid #333; flex-shrink:0;
+}
+.fp-text-size-btn {
+  padding:4px 10px; background:#2a2a40; border:none; border-radius:6px;
+  color:#aaa; font-size:12px; cursor:pointer; font-family:var(--font);
+}
+.fp-text-size-btn.active { background:#5252D9; color:#fff; }
+/* Shape options bar */
+#fp-shape-bar {
+  display:none; align-items:center; gap:8px; padding:7px 14px;
+  background:#13131f; border-bottom:1px solid #333; flex-shrink:0; flex-wrap:wrap;
+}
+.fp-stroke-btn {
+  width:28px; height:28px; border-radius:6px; background:#2a2a40; border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; color:#aaa;
+}
+.fp-stroke-btn:hover, .fp-stroke-btn.active { background:#5252D9; color:#fff; }
+/* Mobile warning */
+#fp-mobile-warn {
+  display:none; position:fixed; inset:0; z-index:11001;
+  background:#1e1e2e; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px; padding:32px; text-align:center;
+}
 
 /* ===== DIALOGS (bottom sheet) ===== */
 .overlay {
@@ -2762,7 +2893,16 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
       <div class="info-view-card" id="iv-floorplan-card" style="display:none;">
         <div class="info-view-floorplan-wrap">
-          <div class="info-view-floorplan-label">아파트 도면</div>
+          <div class="fp-edit-row">
+            <div class="info-view-floorplan-label" style="margin-bottom:0;">아파트 도면</div>
+            <button class="fp-edit-btn" onclick="openFpEditor()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              도면 편집
+            </button>
+          </div>
           <img id="iv-floorplan-img" style="width:100%;border-radius:8px;display:block;" alt="도면 이미지">
         </div>
       </div>
@@ -9718,6 +9858,568 @@ async function _checkExportOnLoad() {
 }
 </script>
 
+<!-- ===== FLOOR PLAN EDITOR SCRIPT ===== -->
+<script>
+// ──────────────────────────────────────────
+// Symbol definitions (top-down floor plan SVG)
+// ──────────────────────────────────────────
+const FP_SYMBOLS = {
+  '가구': [
+    { id:'sofa', name:'소파', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
+      <rect x="2" y="14" width="76" height="36" rx="4" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="16" rx="4" fill="#bbb" stroke="#555" stroke-width="1.5"/>
+      <rect x="2" y="14" width="11" height="36" rx="3" fill="#bbb" stroke="#555" stroke-width="1.5"/>
+      <rect x="67" y="14" width="11" height="36" rx="3" fill="#bbb" stroke="#555" stroke-width="1.5"/>
+    </svg>` },
+    { id:'bed-single', name:'침대(싱글)', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 80">
+      <rect x="2" y="2" width="48" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="6" y="6" width="40" height="22" rx="20" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <line x1="2" y1="32" x2="50" y2="32" stroke="#555" stroke-width="1.5"/>
+    </svg>` },
+    { id:'bed-double', name:'침대(더블)', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+      <rect x="2" y="2" width="76" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="6" y="6" width="32" height="22" rx="16" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="42" y="6" width="32" height="22" rx="16" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <line x1="2" y1="32" x2="78" y2="32" stroke="#555" stroke-width="1.5"/>
+    </svg>` },
+    { id:'dining-table', name:'식탁', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+      <rect x="18" y="18" width="44" height="44" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="24" y="4" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="44" y="4" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="24" y="64" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="44" y="64" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="4" y="24" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="4" y="44" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="64" y="24" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="64" y="44" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+    </svg>` },
+    { id:'desk', name:'책상', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 60">
+      <rect x="2" y="2" width="76" height="38" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="40" width="28" height="18" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
+      <rect x="6" y="8" width="20" height="26" rx="2" fill="#e8e8e8" stroke="#777" stroke-width="1" stroke-dasharray="3,2"/>
+    </svg>` },
+    { id:'wardrobe', name:'옷장', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
+      <rect x="2" y="2" width="76" height="48" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <line x1="40" y1="2" x2="40" y2="50" stroke="#555" stroke-width="1.5"/>
+      <circle cx="35" cy="26" r="2.5" fill="#888"/>
+      <circle cx="45" cy="26" r="2.5" fill="#888"/>
+    </svg>` },
+    { id:'toilet', name:'변기', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 72">
+      <rect x="10" y="2" width="32" height="20" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <ellipse cx="26" cy="50" rx="22" ry="20" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <ellipse cx="26" cy="50" rx="14" ry="12" fill="#fff" stroke="#888" stroke-width="1.5"/>
+    </svg>` },
+    { id:'bathtub', name:'욕조', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
+      <rect x="2" y="2" width="76" height="48" rx="8" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <ellipse cx="40" cy="26" rx="30" ry="18" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+      <circle cx="66" cy="12" r="4" fill="#bbb" stroke="#888" stroke-width="1"/>
+    </svg>` },
+    { id:'sink', name:'세면대', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 52">
+      <rect x="2" y="2" width="56" height="48" rx="6" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <ellipse cx="30" cy="28" rx="20" ry="16" fill="#fff" stroke="#888" stroke-width="1.5"/>
+      <circle cx="30" cy="20" r="3" fill="#bbb" stroke="#777" stroke-width="1"/>
+      <line x1="30" y1="40" x2="30" y2="48" stroke="#888" stroke-width="2"/>
+    </svg>` },
+  ],
+  '전기': [
+    { id:'light-surface', name:'직부등', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="2"/>
+      <circle cx="26" cy="26" r="6" fill="#ffe082" stroke="#888" stroke-width="1.5"/>
+      <line x1="26" y1="4" x2="26" y2="14" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="26" y1="38" x2="26" y2="48" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="4" y1="26" x2="14" y2="26" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="38" y1="26" x2="48" y2="26" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="9" y1="9" x2="16" y2="16" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="36" y1="36" x2="43" y2="43" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="43" y1="9" x2="36" y2="16" stroke="#aaa" stroke-width="1.5"/>
+      <line x1="16" y1="36" x2="9" y2="43" stroke="#aaa" stroke-width="1.5"/>
+    </svg>` },
+    { id:'light-recessed', name:'매립등', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="2"/>
+      <circle cx="26" cy="26" r="12" fill="#ffe082" stroke="#888" stroke-width="1.5"/>
+      <circle cx="26" cy="26" r="4" fill="#ffca28"/>
+    </svg>` },
+    { id:'outlet', name:'콘센트', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+      <rect x="4" y="4" width="44" height="44" rx="8" fill="#eee" stroke="#666" stroke-width="2"/>
+      <circle cx="26" cy="26" r="14" fill="#fff" stroke="#888" stroke-width="1.5"/>
+      <rect x="21" y="18" width="4" height="8" rx="2" fill="#666"/>
+      <rect x="27" y="18" width="4" height="8" rx="2" fill="#666"/>
+      <circle cx="26" cy="32" r="2.5" fill="#666"/>
+    </svg>` },
+    { id:'switch', name:'스위치', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 64">
+      <rect x="2" y="2" width="40" height="60" rx="6" fill="#eee" stroke="#666" stroke-width="2"/>
+      <rect x="10" y="12" width="24" height="20" rx="4" fill="#ddd" stroke="#888" stroke-width="1.5"/>
+      <rect x="10" y="36" width="24" height="20" rx="4" fill="#fff" stroke="#888" stroke-width="1.5"/>
+    </svg>` },
+    { id:'tv', name:'TV', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56">
+      <rect x="2" y="2" width="76" height="46" rx="4" fill="#333" stroke="#555" stroke-width="2"/>
+      <rect x="8" y="8" width="64" height="34" rx="2" fill="#1a1a2e"/>
+      <rect x="28" y="50" width="24" height="4" rx="2" fill="#555"/>
+      <circle cx="72" cy="40" r="2" fill="#4CAF50"/>
+    </svg>` },
+  ]
+};
+
+// ──────────────────────────────────────────
+// Editor state
+// ──────────────────────────────────────────
+let fpCanvas = null;
+let fpActiveTool = 'select';
+let fpHistory = [];
+let fpHistoryIdx = -1;
+let fpGrayscale = false;
+let fpBgImg = null;
+let fpShapeColor = '#111111';
+let fpStrokeW = 1;
+let fpFillEnabled = false;
+let fpTextSize = 16;
+let fpTextColor = '#111111';
+let fpIsDrawing = false;
+let fpDrawStart = null;
+let fpDrawObj = null;
+
+// ──────────────────────────────────────────
+// Open / Close
+// ──────────────────────────────────────────
+function openFpEditor() {
+  const proj = getProject();
+  const imgUrl = proj?.floorplanImage;
+  if (!imgUrl) { alert('도면 이미지를 먼저 업로드하세요.'); return; }
+  const ed = document.getElementById('fp-editor');
+  ed.style.display = 'flex';
+
+  // Mobile: show warning
+  const isMobile = window.innerWidth < 768;
+  document.getElementById('fp-mobile-warn').style.display = isMobile ? 'flex' : 'none';
+  document.getElementById('fp-header').style.display = isMobile ? 'none' : 'flex';
+  document.getElementById('fp-body').style.display = isMobile ? 'none' : 'flex';
+  document.getElementById('fp-footer').style.display = isMobile ? 'none' : 'flex';
+  if (isMobile) return;
+
+  fpShowCategory('가구', document.getElementById('fp-tab-furniture'));
+  setTimeout(() => fpInitCanvas(imgUrl), 80);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', fpOnKeyDown);
+}
+
+function closeFpEditor() {
+  document.getElementById('fp-editor').style.display = 'none';
+  document.removeEventListener('keydown', fpOnKeyDown);
+  if (fpCanvas) { fpCanvas.dispose(); fpCanvas = null; }
+}
+
+function fpOnKeyDown(e) {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      fpDeleteSelected();
+    }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); fpUndo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); fpRedo(); }
+}
+
+// ──────────────────────────────────────────
+// Canvas init
+// ──────────────────────────────────────────
+function fpInitCanvas(bgUrl) {
+  const wrap = document.getElementById('fp-canvas-wrap');
+  const W = Math.max(wrap.clientWidth - 40, 300);
+  const H = Math.max(wrap.clientHeight - 40, 300);
+
+  const canvasEl = document.getElementById('fp-canvas');
+  if (fpCanvas) fpCanvas.dispose();
+
+  fpCanvas = new fabric.Canvas('fp-canvas', {
+    width: W, height: H,
+    backgroundColor: '#ffffff',
+    preserveObjectStacking: true,
+    selection: true,
+  });
+
+  fabric.Image.fromURL(bgUrl, (img) => {
+    fpBgImg = img;
+    const scaleX = W / img.width;
+    const scaleY = H / img.height;
+    const scale = Math.min(scaleX, scaleY);
+    img.set({ scaleX: scale, scaleY: scale, originX:'left', originY:'top',
+               left: (W - img.width * scale) / 2, top: (H - img.height * scale) / 2 });
+    fpCanvas.setBackgroundImage(img, fpCanvas.renderAll.bind(fpCanvas));
+    fpSaveHistory();
+  }, { crossOrigin: 'anonymous' });
+
+  fpCanvas.on('selection:created', fpOnSelect);
+  fpCanvas.on('selection:updated', fpOnSelect);
+  fpCanvas.on('selection:cleared', () => {
+    document.getElementById('fp-props-hint').style.display = 'block';
+    document.getElementById('fp-props-panel').style.display = 'none';
+  });
+  fpCanvas.on('object:modified', fpSaveHistory);
+  fpCanvas.on('mouse:down', fpOnMouseDown);
+  fpCanvas.on('mouse:move', fpOnMouseMove);
+  fpCanvas.on('mouse:up', fpOnMouseUp);
+}
+
+// ──────────────────────────────────────────
+// Tool management
+// ──────────────────────────────────────────
+function fpSetTool(tool) {
+  fpActiveTool = tool;
+  document.querySelectorAll('#fp-tools .fp-hbtn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('fp-tool-' + tool);
+  if (btn) btn.classList.add('active');
+
+  const textBar = document.getElementById('fp-text-bar');
+  const shapeBar = document.getElementById('fp-shape-bar');
+  textBar.style.display = tool === 'text' ? 'flex' : 'none';
+  shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow') ? 'flex' : 'none';
+
+  if (!fpCanvas) return;
+  fpCanvas.isDrawingMode = false;
+  fpCanvas.selection = (tool === 'select');
+  fpCanvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
+  fpCanvas.forEachObject(o => { o.selectable = (tool === 'select'); });
+}
+
+// ──────────────────────────────────────────
+// Drawing (rect / circle / line / arrow)
+// ──────────────────────────────────────────
+function fpOnMouseDown(opt) {
+  if (fpActiveTool === 'select') return;
+  if (fpActiveTool === 'text') {
+    const p = fpCanvas.getPointer(opt.e);
+    const txt = new fabric.IText('텍스트', {
+      left: p.x, top: p.y,
+      fontSize: fpTextSize, fill: fpTextColor,
+      fontFamily: 'Pretendard, sans-serif',
+      selectable: true, editable: true,
+    });
+    fpCanvas.add(txt);
+    fpCanvas.setActiveObject(txt);
+    txt.enterEditing();
+    fpSetTool('select');
+    fpSaveHistory();
+    return;
+  }
+  const p = fpCanvas.getPointer(opt.e);
+  fpIsDrawing = true;
+  fpDrawStart = { x: p.x, y: p.y };
+
+  const color = fpShapeColor;
+  const sw = fpStrokeW;
+  const fill = fpFillEnabled ? color + '33' : 'transparent';
+
+  if (fpActiveTool === 'rect') {
+    fpDrawObj = new fabric.Rect({ left:p.x, top:p.y, width:1, height:1, fill, stroke:color, strokeWidth:sw, selectable:false });
+  } else if (fpActiveTool === 'circle') {
+    fpDrawObj = new fabric.Ellipse({ left:p.x, top:p.y, rx:1, ry:1, fill, stroke:color, strokeWidth:sw, selectable:false });
+  } else if (fpActiveTool === 'line' || fpActiveTool === 'arrow') {
+    fpDrawObj = new fabric.Line([p.x, p.y, p.x, p.y], { stroke:color, strokeWidth:sw, selectable:false });
+  }
+  if (fpDrawObj) fpCanvas.add(fpDrawObj);
+}
+
+function fpOnMouseMove(opt) {
+  if (!fpIsDrawing || !fpDrawObj) return;
+  const p = fpCanvas.getPointer(opt.e);
+  const dx = p.x - fpDrawStart.x;
+  const dy = p.y - fpDrawStart.y;
+
+  if (fpActiveTool === 'rect') {
+    fpDrawObj.set({ width: Math.abs(dx), height: Math.abs(dy),
+      left: dx < 0 ? p.x : fpDrawStart.x, top: dy < 0 ? p.y : fpDrawStart.y });
+  } else if (fpActiveTool === 'circle') {
+    fpDrawObj.set({ rx: Math.abs(dx)/2, ry: Math.abs(dy)/2,
+      left: dx < 0 ? p.x : fpDrawStart.x, top: dy < 0 ? p.y : fpDrawStart.y });
+  } else if (fpActiveTool === 'line' || fpActiveTool === 'arrow') {
+    fpDrawObj.set({ x2: p.x, y2: p.y });
+  }
+  fpCanvas.renderAll();
+}
+
+function fpOnMouseUp(opt) {
+  if (!fpIsDrawing || !fpDrawObj) return;
+  fpIsDrawing = false;
+
+  // Arrow: add arrowhead as triangle
+  if (fpActiveTool === 'arrow') {
+    const x1 = fpDrawObj.x1, y1 = fpDrawObj.y1, x2 = fpDrawObj.x2, y2 = fpDrawObj.y2;
+    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    const head = new fabric.Triangle({
+      left: x2, top: y2, width: 14, height: 14,
+      fill: fpShapeColor, stroke: fpShapeColor, strokeWidth: 1,
+      angle: angle + 90, originX:'center', originY:'center', selectable:false
+    });
+    const grp = new fabric.Group([fpDrawObj, head], { selectable:true });
+    fpCanvas.remove(fpDrawObj);
+    fpCanvas.add(grp);
+    fpCanvas.setActiveObject(grp);
+    fpDrawObj = grp;
+  } else {
+    fpDrawObj.set({ selectable: true });
+    fpCanvas.setActiveObject(fpDrawObj);
+  }
+  fpDrawObj = null;
+  fpSetTool('select');
+  fpSaveHistory();
+}
+
+// ──────────────────────────────────────────
+// Symbol palette
+// ──────────────────────────────────────────
+function fpShowCategory(cat, btn) {
+  document.querySelectorAll('.fp-pal-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const grid = document.getElementById('fp-symbols-grid');
+  const items = FP_SYMBOLS[cat] || [];
+  grid.innerHTML = items.map(s => `
+    <div class="fp-sym-item" onclick="fpAddSymbol('${s.id}')" title="${s.name}">
+      ${s.svg}
+      <span>${s.name}</span>
+    </div>
+  `).join('');
+}
+
+function fpAddSymbol(id) {
+  const all = [...FP_SYMBOLS['가구'], ...FP_SYMBOLS['전기']];
+  const sym = all.find(s => s.id === id);
+  if (!sym || !fpCanvas) return;
+  const svgStr = sym.svg;
+  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  fabric.Image.fromURL(url, (img) => {
+    const scale = 80 / Math.max(img.width, img.height);
+    img.set({ left: 80, top: 80, scaleX: scale, scaleY: scale, selectable:true });
+    fpCanvas.add(img);
+    fpCanvas.setActiveObject(img);
+    fpCanvas.renderAll();
+    URL.revokeObjectURL(url);
+    fpSaveHistory();
+  });
+}
+
+// ──────────────────────────────────────────
+// Shape color / stroke / fill
+// ──────────────────────────────────────────
+function fpSetShapeColor(color, el) {
+  fpShapeColor = color;
+  document.querySelectorAll('#fp-shape-colors .fp-color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+function fpSetStrokeW(w, el) {
+  fpStrokeW = parseInt(w);
+  document.querySelectorAll('.fp-stroke-btn[data-w]').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+function fpToggleFill() {
+  fpFillEnabled = !fpFillEnabled;
+  const btn = document.getElementById('fp-fill-toggle');
+  if (btn) btn.classList.toggle('active', fpFillEnabled);
+}
+function fpSetTextSize(size) {
+  fpTextSize = size;
+  document.querySelectorAll('.fp-text-size-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.size) === size));
+  const obj = fpCanvas?.getActiveObject();
+  if (obj && (obj.type === 'i-text' || obj.type === 'text')) { obj.set('fontSize', size); fpCanvas.renderAll(); }
+}
+function fpSetTextColor(color) {
+  fpTextColor = color;
+  const obj = fpCanvas?.getActiveObject();
+  if (obj && (obj.type === 'i-text' || obj.type === 'text')) { obj.set('fill', color); fpCanvas.renderAll(); }
+}
+
+// ──────────────────────────────────────────
+// Grayscale
+// ──────────────────────────────────────────
+function fpToggleGrayscale() {
+  fpGrayscale = !fpGrayscale;
+  const wrap = document.getElementById('fp-canvas-wrap');
+  wrap.style.filter = fpGrayscale ? 'grayscale(1)' : '';
+  const btn = document.getElementById('fp-gray-btn');
+  if (btn) btn.classList.toggle('active', fpGrayscale);
+}
+
+// ──────────────────────────────────────────
+// History (undo / redo)
+// ──────────────────────────────────────────
+function fpSaveHistory() {
+  if (!fpCanvas) return;
+  const json = fpCanvas.toJSON();
+  fpHistory = fpHistory.slice(0, fpHistoryIdx + 1);
+  fpHistory.push(json);
+  if (fpHistory.length > 50) fpHistory.shift();
+  fpHistoryIdx = fpHistory.length - 1;
+}
+function fpUndo() {
+  if (!fpCanvas || fpHistoryIdx <= 0) return;
+  fpHistoryIdx--;
+  fpCanvas.loadFromJSON(fpHistory[fpHistoryIdx], () => {
+    fpCanvas.renderAll();
+    fpRestoreBg();
+  });
+}
+function fpRedo() {
+  if (!fpCanvas || fpHistoryIdx >= fpHistory.length - 1) return;
+  fpHistoryIdx++;
+  fpCanvas.loadFromJSON(fpHistory[fpHistoryIdx], () => {
+    fpCanvas.renderAll();
+    fpRestoreBg();
+  });
+}
+function fpRestoreBg() {
+  if (!fpBgImg) return;
+  fpCanvas.setBackgroundImage(fpBgImg, fpCanvas.renderAll.bind(fpCanvas));
+}
+
+// ──────────────────────────────────────────
+// Property panel
+// ──────────────────────────────────────────
+function fpOnSelect() {
+  const obj = fpCanvas?.getActiveObject();
+  if (!obj) return;
+  document.getElementById('fp-props-hint').style.display = 'none';
+  document.getElementById('fp-props-panel').style.display = 'flex';
+
+  document.getElementById('pp-rotate-val').value = Math.round(obj.angle || 0);
+  document.getElementById('pp-w-val').value = Math.round(obj.getScaledWidth ? obj.getScaledWidth() : (obj.width || 100));
+  document.getElementById('pp-h-val').value = Math.round(obj.getScaledHeight ? obj.getScaledHeight() : (obj.height || 100));
+  const stroke = obj.strokeWidth || obj.stroke ? (obj.strokeWidth || 2) : 2;
+  document.getElementById('pp-stroke-val').value = stroke;
+}
+function ppSetColor(color, el) {
+  document.querySelectorAll('#pp-colors .fp-color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const obj = fpCanvas?.getActiveObject(); if (!obj) return;
+  if (obj.type === 'i-text' || obj.type === 'text') {
+    obj.set('fill', color);
+  } else {
+    obj.set({ stroke: color });
+    if (obj.fill !== 'transparent') obj.set('fill', color + '33');
+  }
+  fpCanvas.renderAll(); fpSaveHistory();
+}
+function ppSetStroke(v) {
+  const obj = fpCanvas?.getActiveObject(); if (!obj) return;
+  obj.set('strokeWidth', Math.max(1, parseInt(v) || 1));
+  fpCanvas.renderAll(); fpSaveHistory();
+}
+function ppSetRotation(v) {
+  const obj = fpCanvas?.getActiveObject(); if (!obj) return;
+  obj.set('angle', parseFloat(v) || 0);
+  fpCanvas.renderAll(); fpSaveHistory();
+}
+function ppSetSize(axis, v) {
+  const obj = fpCanvas?.getActiveObject(); if (!obj) return;
+  const val = Math.max(10, parseInt(v) || 10);
+  if (axis === 'w') {
+    const cur = obj.getScaledWidth ? obj.getScaledWidth() : (obj.width || val);
+    obj.scaleX = (obj.scaleX || 1) * val / cur;
+  } else {
+    const cur = obj.getScaledHeight ? obj.getScaledHeight() : (obj.height || val);
+    obj.scaleY = (obj.scaleY || 1) * val / cur;
+  }
+  fpCanvas.renderAll(); fpSaveHistory();
+}
+
+// ──────────────────────────────────────────
+// Delete
+// ──────────────────────────────────────────
+function fpDeleteSelected() {
+  if (!fpCanvas) return;
+  const objs = fpCanvas.getActiveObjects();
+  if (!objs.length) return;
+  objs.forEach(o => fpCanvas.remove(o));
+  fpCanvas.discardActiveObject();
+  fpCanvas.renderAll();
+  fpSaveHistory();
+  document.getElementById('fp-props-hint').style.display = 'block';
+  document.getElementById('fp-props-panel').style.display = 'none';
+}
+
+// ──────────────────────────────────────────
+// Save / Download / Share
+// ──────────────────────────────────────────
+async function fpSave() {
+  if (!fpCanvas) return;
+  const proj = getProject();
+  if (!proj) return;
+
+  const btn = document.querySelector('.fp-fbtn-save');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '저장 중...'; btn.disabled = true;
+
+  try {
+    const wasGray = fpGrayscale;
+    if (wasGray) { document.getElementById('fp-canvas-wrap').style.filter = ''; }
+
+    const dataURL = fpCanvas.toDataURL({ format: 'png', multiplier: 2 });
+
+    if (wasGray) { document.getElementById('fp-canvas-wrap').style.filter = 'grayscale(1)'; }
+
+    // Firebase Storage에 저장
+    if (_fbStorage && state.loggedIn) {
+      const blob = await (await fetch(dataURL)).blob();
+      const userId = state.user?.uid || 'anon';
+      const path = `floor-plans/${proj.id}/${userId}/${Date.now()}.png`;
+      const ref = _fbStorage.ref(path);
+      await ref.put(blob, { contentType: 'image/png' });
+      const url = await ref.getDownloadURL();
+      proj.floorplanEditedImage = url;
+      save();
+      // view 모드 이미지 업데이트
+      const fpImg = document.getElementById('iv-floorplan-img');
+      if (fpImg) fpImg.src = url;
+    } else {
+      // 로컬 저장 fallback
+      proj.floorplanEditedImage = dataURL;
+      save();
+      const fpImg = document.getElementById('iv-floorplan-img');
+      if (fpImg) fpImg.src = dataURL;
+    }
+    // 토스트
+    if (typeof show === 'function' || (window.useToast)) {
+      // use app's toast if available
+    }
+    btn.innerHTML = '✓ 저장됨';
+    setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 2000);
+  } catch(e) {
+    console.error('fpSave error:', e);
+    btn.innerHTML = origText; btn.disabled = false;
+    alert('저장 중 오류가 발생했습니다.');
+  }
+}
+
+function fpDownload() {
+  if (!fpCanvas) return;
+  const wasGray = fpGrayscale;
+  if (wasGray) document.getElementById('fp-canvas-wrap').style.filter = '';
+  const dataURL = fpCanvas.toDataURL({ format: 'png', multiplier: 2 });
+  if (wasGray) document.getElementById('fp-canvas-wrap').style.filter = 'grayscale(1)';
+  const proj = getProject();
+  const name = proj?.name || '도면';
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = `${name}_도면.png`;
+  a.click();
+}
+
+async function fpShareLink() {
+  const proj = getProject();
+  if (!proj) return;
+  const url = proj.floorplanEditedImage;
+  if (!url || url.startsWith('data:')) {
+    alert('먼저 저장 버튼을 눌러 저장해주세요.');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('공유 링크가 클립보드에 복사되었습니다!');
+  } catch(e) {
+    prompt('아래 링크를 복사하세요:', url);
+  }
+}
+</script>
+
 <!-- ===== 공사계획 공유 뷰어 화면 ===== -->
 <div id="screen-export-view" style="display:none;position:fixed;inset:0;background:#f0f2f7;z-index:99998;overflow-y:auto;">
   <!-- 뷰어 헤더 -->
@@ -9878,6 +10580,179 @@ async function _checkExportOnLoad() {
     <div style="height:5px;background:#eee;border-radius:5px;overflow:hidden;">
       <div id="style-upload-bar" style="height:100%;background:#222;border-radius:5px;width:0%;transition:width 0.15s ease;"></div>
     </div>
+  </div>
+</div>
+
+<!-- ===== FLOOR PLAN EDITOR MODAL ===== -->
+<div id="fp-editor" style="display:none;">
+
+  <!-- Mobile warning -->
+  <div id="fp-mobile-warn">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <div style="font-size:17px;font-weight:700;color:#fff;">데스크탑에서 이용하세요</div>
+    <div style="font-size:14px;color:#888;line-height:1.6;">도면 에디터는 PC 브라우저에서<br>이용 가능합니다.</div>
+    <button class="fp-hbtn" onclick="closeFpEditor()" style="margin-top:8px;background:#2a2a40;">닫기</button>
+  </div>
+
+  <!-- Header toolbar -->
+  <div id="fp-header">
+    <div id="fp-header-left">
+      <button class="fp-hbtn danger" onclick="closeFpEditor()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        닫기
+      </button>
+    </div>
+    <div class="fp-sep"></div>
+    <div id="fp-tools">
+      <button class="fp-hbtn active" id="fp-tool-select" onclick="fpSetTool('select')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 6z"/></svg>선택
+      </button>
+      <button class="fp-hbtn" id="fp-tool-text" onclick="fpSetTool('text')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>텍스트
+      </button>
+      <button class="fp-hbtn" id="fp-tool-rect" onclick="fpSetTool('rect')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>사각형
+      </button>
+      <button class="fp-hbtn" id="fp-tool-circle" onclick="fpSetTool('circle')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>원
+      </button>
+      <button class="fp-hbtn" id="fp-tool-line" onclick="fpSetTool('line')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>선
+      </button>
+      <button class="fp-hbtn" id="fp-tool-arrow" onclick="fpSetTool('arrow')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>화살표
+      </button>
+    </div>
+    <div class="fp-sep"></div>
+    <div id="fp-header-right">
+      <button class="fp-hbtn" onclick="fpUndo()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>취소
+      </button>
+      <button class="fp-hbtn" onclick="fpRedo()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-4.5"/></svg>다시
+      </button>
+      <div class="fp-sep"></div>
+      <button class="fp-hbtn" id="fp-gray-btn" onclick="fpToggleGrayscale()">흑백</button>
+    </div>
+  </div>
+
+  <!-- Text options sub-bar -->
+  <div id="fp-text-bar">
+    <span style="font-size:11px;color:#666;font-weight:700;padding:7px 0;">크기</span>
+    <button class="fp-text-size-btn" data-size="12" onclick="fpSetTextSize(12)">12</button>
+    <button class="fp-text-size-btn active" data-size="16" onclick="fpSetTextSize(16)">16</button>
+    <button class="fp-text-size-btn" data-size="20" onclick="fpSetTextSize(20)">20</button>
+    <button class="fp-text-size-btn" data-size="28" onclick="fpSetTextSize(28)">28</button>
+    <div class="fp-sep"></div>
+    <span style="font-size:11px;color:#666;font-weight:700;">색상</span>
+    <div onclick="fpSetTextColor('#111111')" style="width:20px;height:20px;border-radius:50%;background:#eee;cursor:pointer;border:2px solid #555;flex-shrink:0;"></div>
+    <div onclick="fpSetTextColor('#e74c3c')" style="width:20px;height:20px;border-radius:50%;background:#e74c3c;cursor:pointer;border:2px solid #555;flex-shrink:0;"></div>
+    <div onclick="fpSetTextColor('#2980b9')" style="width:20px;height:20px;border-radius:50%;background:#2980b9;cursor:pointer;border:2px solid #555;flex-shrink:0;"></div>
+    <div onclick="fpSetTextColor('#27ae60')" style="width:20px;height:20px;border-radius:50%;background:#27ae60;cursor:pointer;border:2px solid #555;flex-shrink:0;"></div>
+  </div>
+
+  <!-- Shape options sub-bar -->
+  <div id="fp-shape-bar">
+    <span style="font-size:11px;color:#666;font-weight:700;padding:7px 0;">색상</span>
+    <div id="fp-shape-colors" style="display:flex;gap:5px;align-items:center;">
+      <div class="fp-color-dot active" data-color="#111111" style="background:#111;" onclick="fpSetShapeColor('#111111',this)"></div>
+      <div class="fp-color-dot" data-color="#e74c3c" style="background:#e74c3c;" onclick="fpSetShapeColor('#e74c3c',this)"></div>
+      <div class="fp-color-dot" data-color="#2980b9" style="background:#2980b9;" onclick="fpSetShapeColor('#2980b9',this)"></div>
+      <div class="fp-color-dot" data-color="#27ae60" style="background:#27ae60;" onclick="fpSetShapeColor('#27ae60',this)"></div>
+      <div class="fp-color-dot" data-color="#f39c12" style="background:#f39c12;" onclick="fpSetShapeColor('#f39c12',this)"></div>
+    </div>
+    <div class="fp-sep"></div>
+    <span style="font-size:11px;color:#666;font-weight:700;">두께</span>
+    <button class="fp-stroke-btn active" data-w="1" onclick="fpSetStrokeW(1,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1"/></svg></button>
+    <button class="fp-stroke-btn" data-w="2" onclick="fpSetStrokeW(2,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="2"/></svg></button>
+    <button class="fp-stroke-btn" data-w="4" onclick="fpSetStrokeW(4,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="4"/></svg></button>
+    <div class="fp-sep"></div>
+    <span style="font-size:11px;color:#666;font-weight:700;">채우기</span>
+    <button class="fp-stroke-btn" id="fp-fill-toggle" onclick="fpToggleFill()">
+      <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="10" rx="1" fill="currentColor" opacity="0.5" stroke="currentColor" stroke-width="1"/></svg>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div id="fp-body">
+    <!-- Symbol palette -->
+    <div id="fp-palette">
+      <div class="fp-pal-tabs">
+        <button class="fp-pal-tab active" id="fp-tab-furniture" onclick="fpShowCategory('가구',this)">가구</button>
+        <button class="fp-pal-tab" id="fp-tab-electric" onclick="fpShowCategory('전기',this)">전기</button>
+      </div>
+      <div id="fp-symbols-grid"></div>
+    </div>
+
+    <!-- Canvas -->
+    <div id="fp-canvas-wrap">
+      <canvas id="fp-canvas"></canvas>
+    </div>
+
+    <!-- Property panel -->
+    <div id="fp-props">
+      <div class="fp-props-empty" id="fp-props-hint">객체를 선택하면<br>속성이 표시됩니다</div>
+      <div id="fp-props-panel" style="display:none; display:flex; flex-direction:column; gap:14px; height:100%;">
+        <div class="fp-prop-group">
+          <div class="fp-prop-label">색상</div>
+          <div class="fp-prop-colors" id="pp-colors">
+            <div class="fp-color-dot active" style="background:#111;" onclick="ppSetColor('#111111',this)"></div>
+            <div class="fp-color-dot" style="background:#e74c3c;" onclick="ppSetColor('#e74c3c',this)"></div>
+            <div class="fp-color-dot" style="background:#2980b9;" onclick="ppSetColor('#2980b9',this)"></div>
+            <div class="fp-color-dot" style="background:#27ae60;" onclick="ppSetColor('#27ae60',this)"></div>
+            <div class="fp-color-dot" style="background:#f39c12;" onclick="ppSetColor('#f39c12',this)"></div>
+            <div class="fp-color-dot" style="background:#fff;border-color:#555;" onclick="ppSetColor('#ffffff',this)"></div>
+          </div>
+        </div>
+        <div class="fp-prop-group">
+          <div class="fp-prop-label">선 두께</div>
+          <div class="fp-prop-row">
+            <input class="fp-prop-val" type="number" id="pp-stroke-val" min="1" max="20" value="2" oninput="ppSetStroke(this.value)">
+            <span class="fp-prop-mini">px</span>
+          </div>
+        </div>
+        <div class="fp-prop-group">
+          <div class="fp-prop-label">회전</div>
+          <div class="fp-prop-row">
+            <input class="fp-prop-val" type="number" id="pp-rotate-val" min="-180" max="180" value="0" oninput="ppSetRotation(this.value)">
+            <span class="fp-prop-mini">°</span>
+          </div>
+        </div>
+        <div class="fp-prop-group">
+          <div class="fp-prop-label">크기</div>
+          <div class="fp-prop-row">
+            <input class="fp-prop-val" type="number" id="pp-w-val" min="10" max="2000" value="100" oninput="ppSetSize('w',this.value)">
+            <span class="fp-prop-mini">W</span>
+          </div>
+          <div class="fp-prop-row">
+            <input class="fp-prop-val" type="number" id="pp-h-val" min="10" max="2000" value="100" oninput="ppSetSize('h',this.value)">
+            <span class="fp-prop-mini">H</span>
+          </div>
+        </div>
+        <div class="fp-prop-group" style="margin-top:auto;padding-top:8px;">
+          <button class="fp-hbtn danger" onclick="fpDeleteSelected()" style="width:100%;justify-content:center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div id="fp-footer">
+    <button class="fp-fbtn fp-fbtn-save" onclick="fpSave()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      저장
+    </button>
+    <button class="fp-fbtn fp-fbtn-dl" onclick="fpDownload()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      다운로드
+    </button>
+    <button class="fp-fbtn fp-fbtn-share" onclick="fpShareLink()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      공유 링크
+    </button>
   </div>
 </div>
 
