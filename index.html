@@ -316,14 +316,13 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== TABS ===== */
 .tab-section {
-  padding: 10px 16px 10px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   background: #fff;
-  border-bottom: none;
+  border-bottom: 1.5px solid #eef0f5;
   flex-shrink: 0;
   overflow-x: auto;
-  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -332,7 +331,7 @@ button, input, textarea, select { font-family:var(--font); }
 .tab-toggle {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0;
   width: max-content;
   background: transparent;
   border: none;
@@ -341,25 +340,25 @@ button, input, textarea, select { font-family:var(--font); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 8px 16px;
-  border-radius: 999px;
+  height: 52px;
+  padding: 0 14px;
   border: none;
-  font-size: 14px;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  font-size: 15px;
   font-weight: 500;
-  color: #555;
-  background: #efefef;
+  color: #9a9da8;
+  background: transparent;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .18s, color .18s;
+  transition: color .18s, border-color .18s;
   flex-shrink: 0;
 }
-.tab-btn svg { width: 14px; height: 14px; }
 .tab-btn.active {
-  background: #111;
-  color: #fff;
-  font-weight: 600;
-  border-bottom: none;
+  color: #111;
+  font-weight: 700;
+  border-bottom-color: #111;
+  background: transparent;
 }
 
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
@@ -1051,9 +1050,12 @@ button, input, textarea, select { font-family:var(--font); }
 }
 #style-rooms-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   padding: 14px 14px 80px;
+}
+@media (min-width: 660px) {
+  #style-rooms-container { grid-template-columns: 1fr 1fr; }
 }
 /* Pinterest-style room card */
 .style-room-card {
@@ -1661,10 +1663,10 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .back-btn {
   background:none; border:none; cursor:pointer; padding:4px;
-  display:flex; align-items:center; color:#555; border-radius:6px;
+  display:flex; align-items:center; color:#222; border-radius:6px;
 }
 .back-btn:hover { background:#f0f0f0; }
-.back-btn svg { width:22px; height:22px; }
+.back-btn svg { width:24px; height:24px; stroke-width:2.8; }
 .form-header h2 { font-size:18px; font-weight:700; }
 .form-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:28px; }
 .form-group { display:flex; flex-direction:column; gap:10px; }
@@ -2953,7 +2955,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-form">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
+      <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="form-title">공사 정보</h2>
       <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3115,7 +3117,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-account">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
+      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>계정 관리</h2>
     </div>
     <div class="form-body" style="padding:0;">
@@ -3144,7 +3146,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-tip">
   <div class="form-screen-inner">
     <div class="form-header" id="tip-page-header">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
+      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="tip-page-title">공정팁</h2>
     </div>
     <div class="screen-scroll" id="tip-page-content">
@@ -3157,7 +3159,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-notice">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-arrow-left"/></svg></button>
+      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>인테리어 양해 안내문</h2>
       <button onclick="downloadNoticeImage()" id="notice-download-btn" style="
         margin-left:auto; display:flex; align-items:center; gap:5px;
@@ -3236,7 +3238,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 헤더: Back + 제목 -->
   <div class="form-header">
     <button class="back-btn" onclick="_closeContractorDetail()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="cdetail-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></h2>
     <div style="width:30px;"></div>
@@ -3284,7 +3286,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header" style="background:#fff;flex-shrink:0;">
     <button class="back-btn" onclick="_closeProcDetailScreen()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="proc-detail-screen-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;"></h2>
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
@@ -4838,9 +4840,6 @@ function renderStyleTab() {
       <div class="style-card-info">
         <div class="style-card-top-row">
           <span style="display:flex;align-items:center;gap:0;"><span class="style-card-title">${room}</span>${roomNew ? '<span class="n-badge">N</span>' : ''}</span>
-          <button class="style-add-btn" onclick="event.stopPropagation();openStyleAddMenu('${r}')">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>추가
-          </button>
         </div>
         <div class="style-card-meta">${meta}</div>
       </div>
@@ -10819,17 +10818,17 @@ async function fpShareLink() {
   <!-- header -->
   <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;">
     <button class="back-btn" onclick="closeStyleViewer()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-arrow-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
     <div style="display:flex;align-items:center;gap:2px;">
       <!-- 추가 -->
       <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="20" height="20" fill="none" stroke="#333" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <!-- 삭제 -->
       <button class="sv-icon-btn" onclick="deleteStyleImage()" title="이미지 삭제">
-        <svg width="19" height="19" fill="none" stroke="#888" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        <svg width="20" height="20" fill="none" stroke="#333" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
     </div>
   </div>
@@ -10867,7 +10866,7 @@ async function fpShareLink() {
   <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
   <div id="sv-memo-float" style="display:none;">
     <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#333"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
     </button>
   </div>
 </div>
