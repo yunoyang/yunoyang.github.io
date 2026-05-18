@@ -3725,7 +3725,32 @@ function getProject() { return state.projects.find(p => p.id === state.currentPr
 let saveTimer = null;
 let _lastSaveTime = 0;
 function save() {
-  localStorage.setItem('vibespace', JSON.stringify(state));
+  const json = JSON.stringify(state);
+  try {
+    localStorage.setItem('vibespace', json);
+  } catch(e) {
+    // QuotaExceededError — 대용량 이미지(data URL) 제거 후 재시도
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.warn('[save] localStorage 용량 초과 → 대용량 이미지 제외 후 재저장');
+      try {
+        const lite = JSON.parse(json);
+        (lite.projects || []).forEach(p => {
+          // floorplanEditedImage는 별도 키로 분리 저장
+          if (p.floorplanEditedImage) {
+            try { localStorage.setItem(`vb_fp_${p.id}`, p.floorplanEditedImage); } catch(_) {}
+            p.floorplanEditedImage = '__vb_fp__'; // 플레이스홀더
+          }
+          // styleImages data URL만 제거 (Firebase URL은 보존)
+          if (p.styleImages) {
+            Object.keys(p.styleImages).forEach(room => {
+              p.styleImages[room] = (p.styleImages[room] || []).filter(u => !u.startsWith('data:'));
+            });
+          }
+        });
+        localStorage.setItem('vibespace', JSON.stringify(lite));
+      } catch(e2) { console.error('[save] 재저장 실패:', e2); }
+    }
+  }
   if (state.loggedIn) _updateLastActivity();
   _lastSaveTime = Date.now();
   const proj = getProject();
@@ -3748,6 +3773,13 @@ function load() {
   const d = localStorage.getItem('vibespace');
   if (d) { try { state = JSON.parse(d); } catch(e) {} }
   if (!state.projects || !state.projects.length) initDefaultProject();
+  // 분리 저장된 floorplanEditedImage 복원
+  (state.projects || []).forEach(p => {
+    if (p.floorplanEditedImage === '__vb_fp__') {
+      const stored = localStorage.getItem(`vb_fp_${p.id}`);
+      p.floorplanEditedImage = stored || null;
+    }
+  });
   // migrate old p.schedule strings
   state.projects && state.projects.forEach(proj => {
     proj.processes && proj.processes.forEach(p => {
@@ -4446,6 +4478,7 @@ function deleteProjectDD(id) {
   state.projects = state.projects.filter(p => p.id !== id);
   if (state.currentProjectId === id) state.currentProjectId = state.projects[0]?.id || null;
   if (!state.projects.length) initDefaultProject();
+  try { localStorage.removeItem(`vb_fp_${id}`); } catch(_) {} // 분리 저장 이미지 정리
   save();
   closeAllMenus();
   renderAll();
@@ -10529,22 +10562,23 @@ function fpDeleteSelected() {
 // ──────────────────────────────────────────
 // Save / Download / Share
 // ──────────────────────────────────────────
-// ── 공통: 캔버스 → dataURL (CORS 오류 시 multiplier 자동 강등) ──
-function _fpGetDataURL() {
-  // 흑백 필터는 CSS filter이므로 canvas 내용에 영향 없음 — 별도 처리 불필요
-  // multiplier:2 → 실패 시 1로 재시도
-  const tryExport = (mul) => {
-    try {
-      return fpCanvas.toDataURL({ format: 'png', multiplier: mul });
-    } catch(e) {
-      console.warn(`toDataURL multiplier=${mul} failed:`, e.message);
-      return null;
+// ── 공통: 캔버스 → dataURL ──
+// 저장용(save): JPEG 0.82 품질 — localStorage 용량 절약 (~10x 압축)
+// 다운로드용(download): PNG 2x — 고해상도
+function _fpGetDataURL({ forDownload = false } = {}) {
+  if (forDownload) {
+    // 다운로드: PNG 2배율, 실패 시 1배율
+    for (const mul of [2, 1]) {
+      try { return fpCanvas.toDataURL({ format: 'png', multiplier: mul }); }
+      catch(e) { console.warn(`PNG multiplier=${mul} failed:`, e.message); }
     }
-  };
-  let url = tryExport(2);
-  if (!url) url = tryExport(1);
-  if (!url) throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.');
-  return url;
+    throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.');
+  }
+  // 저장: JPEG (훨씬 작음) — 실패 시 PNG 1x 폴백
+  try { return fpCanvas.toDataURL({ format: 'jpeg', quality: 0.82, multiplier: 1 }); }
+  catch(e) { console.warn('JPEG export failed, PNG fallback:', e.message); }
+  try { return fpCanvas.toDataURL({ format: 'png', multiplier: 1 }); }
+  catch(e) { throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.'); }
 }
 
 async function fpSave() {
@@ -10604,7 +10638,7 @@ function fpDownload() {
   btn.innerHTML = '저장 중…'; btn.disabled = true;
 
   try {
-    const dataURL = _fpGetDataURL();
+    const dataURL = _fpGetDataURL({ forDownload: true }); // 다운로드는 PNG 고해상도
     const proj = getProject();
     const name = (proj?.name || '도면').replace(/[\\/:*?"<>|]/g, '_');
 
