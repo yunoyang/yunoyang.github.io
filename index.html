@@ -7615,7 +7615,8 @@ function _loadInfoView() {
   const fpCard = document.getElementById('iv-floorplan-card');
   const fpImg  = document.getElementById('iv-floorplan-img');
   if (fpCard && fpImg) {
-    if (proj.floorplanImage) { fpImg.src = proj.floorplanImage; fpCard.style.display = 'block'; }
+    const fpSrc = proj.floorplanEditedImage || proj.floorplanImage;
+    if (fpSrc) { fpImg.src = fpSrc; fpCard.style.display = 'block'; }
     else { fpCard.style.display = 'none'; }
   }
 }
@@ -8559,6 +8560,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   }
   // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
   if (local.floorplanImage) merged.floorplanImage = local.floorplanImage;
+  // 편집 도면(floorplanEditedImage) 보존 — 로컬이 있으면 우선 (에디터 결과물)
+  if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   return merged;
 }
 
@@ -8844,12 +8847,14 @@ function _startCollabListener(cloudId) {
     const myRole = proj.myRole;
     const localImages = proj.styleImages || {};
     const localFloorplan = proj.floorplanImage; // 도면 보존
+    const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     // N 뱃지: merge 전에 새 항목 감지
     _markNewFromCollab(cloudId, proj, remote);
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
     // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
     if (localFloorplan) proj.floorplanImage = localFloorplan;
+    if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
@@ -10285,10 +10290,12 @@ function fpAddSymbol(id) {
   // SVG에 명시적 width/height 강제 지정 (브라우저 기본 300px 방지)
   const svgStr = sym.svg.replace(/<svg\s/, `<svg width="${natW}" height="${natH}" `);
 
-  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
+  // blob URL 대신 base64 data URL 사용 → 캔버스 오염(tainted canvas) 방지
+  // blob: URL은 toDataURL() 호출 시 SecurityError를 유발함
+  const b64 = btoa(unescape(encodeURIComponent(svgStr)));
+  const dataUrl = `data:image/svg+xml;base64,${b64}`;
 
-  fabric.Image.fromURL(url, (img) => {
+  fabric.Image.fromURL(dataUrl, (img) => {
     // 캔버스 짧은 변의 약 8% 크기로 배치 (도면 비율에 적합)
     const targetPx = Math.min(fpCanvas.width, fpCanvas.height) * 0.08;
     const imgDim = Math.max(img.width || natW, img.height || natH);
@@ -10307,7 +10314,6 @@ function fpAddSymbol(id) {
     img.setCoords();
     fpCanvas.setActiveObject(img);
     fpCanvas.renderAll();
-    URL.revokeObjectURL(url);
     fpSaveHistory();
   });
 }
