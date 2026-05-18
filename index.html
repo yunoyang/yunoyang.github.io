@@ -320,7 +320,7 @@ button, input, textarea, select { font-family:var(--font); }
   display: flex;
   align-items: center;
   background: #fff;
-  border-bottom: 1.5px solid #eef0f5;
+  border-bottom: none;
   flex-shrink: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -344,7 +344,6 @@ button, input, textarea, select { font-family:var(--font); }
   padding: 0 14px;
   border: none;
   border-bottom: 2.5px solid transparent;
-  margin-bottom: -1.5px;
   font-size: 15px;
   font-weight: 500;
   color: #9a9da8;
@@ -363,7 +362,6 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
 #sv-image-area {
-  flex: none;
   height: auto;
   min-height: 180px;
   position: relative;
@@ -415,17 +413,13 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .prod-pin-dot:active { transform: translate(-50%,-50%) scale(0.88); }
 #sv-product-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 16px 80px;
+  padding: 0 16px 120px;
 }
 /* 제품 핀은 sv-pins-sheet 바텀시트에서만 표시 — 이 영역에서는 무조건 숨김 */
 #sv-product-list .sv-prod-item { display: none; }
 /* ─── style viewer: gallery modes (list / grid) ─── */
 #sv-gallery-area {
-  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
+  padding: 4px 4px 80px;
 }
 #sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 8px; }
 #sv-gallery-area.sv-grid { display: block; }
@@ -2029,7 +2023,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* 공동작업자 — 플로팅 다크 버블 (dot + 아바타 + 텍스트 전체 감싸기) */
 .collab-bar {
-  /* flex column 내에서 중앙 정렬 */
+  display: none !important;  /* 메인 화면에서 콜라보 바 숨김 */
   align-self: center;
   width: fit-content;
   max-width: calc(100% - 32px);
@@ -8445,21 +8439,11 @@ function _closeContractorMoreSheet() {
 }
 function toggleMainMenu(e) {
   e.stopPropagation();
-  if (_isMobile()) {
-    // 모바일: 오버레이 바텀시트 사용
-    const sheet = document.getElementById('mobile-main-menu-sheet');
-    const isOpen = sheet.classList.contains('active');
-    closeAllMenus();
-    if (!isOpen) { openDialog('mobile-main-menu-sheet'); updateCollabMenuBadge(); }
-    return;
-  }
-  const menu = document.getElementById('main-menu');
-  const wasActive = menu.classList.contains('active');
+  // 모바일·PC 모두 바텀시트 사용
+  const sheet = document.getElementById('mobile-main-menu-sheet');
+  const isOpen = sheet.classList.contains('active');
   closeAllMenus();
-  if (!wasActive) {
-    menu.classList.add('active');
-    updateCollabMenuBadge();
-  }
+  if (!isOpen) { openDialog('mobile-main-menu-sheet'); updateCollabMenuBadge(); }
 }
 function closeAllMenus() {
   document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
@@ -8897,16 +8881,9 @@ async function _syncContentLinksToCloud(proj) {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudLinks = snap.data()?.projectData?.contentLinks || [];
     const localLinks = proj.contentLinks || [];
-    // 2) id 기준 합집합 병합
-    const seen = new Set(cloudLinks.map(x => x.id));
-    const extra = localLinks.filter(x => !seen.has(x.id));
-    // 삭제된 항목 반영: localLinks에 없는 cloudLinks 항목은 제거
-    const localIds = new Set(localLinks.map(x => x.id));
-    const surviving = cloudLinks.filter(x => localIds.has(x.id));
-    const merged = [...localLinks.filter(x => !seen.has(x.id) || localIds.has(x.id))
-      .concat(surviving.filter(x => !localLinks.find(l => l.id === x.id)))];
-    // 더 단순하게: local이 최신 상태(추가/삭제 모두 반영됨) → local 기준 + cloud 전용 항목 추가
-    const mergedFinal = [...localLinks, ...cloudLinks.filter(x => !localIds.has(x.id))]
+    // 2) local이 최신 상태(추가/삭제 모두 반영) → local을 정본으로 사용
+    //    삭제된 항목이 cloud에서 되살아나는 버그를 방지하기 위해 cloud 전용 항목은 병합하지 않음
+    const mergedFinal = [...localLinks]
       .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
     // 3) 변경 없으면 스킵
     if (JSON.stringify(mergedFinal.map(x=>x.id)) === JSON.stringify(cloudLinks.map(x=>x.id))) return;
@@ -10832,21 +10809,24 @@ async function fpShareLink() {
       </button>
     </div>
   </div>
-  <!-- image area (52vh) + touch + dot pagination -->
-  <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
-    <div id="style-viewer-reel" class="sv-reel-wrap"></div>
-    <div id="sv-dots" class="sv-dots"></div>
-    <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
-      <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
-      <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
+  <!-- 스크롤 바디: 이미지 + 내용 함께 스크롤 -->
+  <div id="sv-scroll-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;">
+    <!-- image area + touch + dot pagination -->
+    <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
+      <div id="style-viewer-reel" class="sv-reel-wrap"></div>
+      <div id="sv-dots" class="sv-dots"></div>
+      <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
+        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
+        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <!-- gallery area (list / grid) — hidden in carousel mode -->
+    <div id="sv-gallery-area" style="display:none;"></div>
+    <!-- product list + memos -->
+    <div id="sv-product-list"></div>
   </div>
-  <!-- gallery area (list / grid) — hidden in carousel mode -->
-  <div id="sv-gallery-area" style="display:none;"></div>
-  <!-- product list -->
-  <div id="sv-product-list"></div>
   <!-- 뷰타입 플로팅 버튼 -->
   <div id="sv-view-float">
     <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
