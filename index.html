@@ -1031,19 +1031,21 @@ button, input, textarea, select { font-family:var(--font); }
 .style-room-card {
   background: #fff;
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;       /* 카드 외곽 대신 콜라주가 자체 radius 보유 */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  border: 1px solid var(--border-light);
+  border: none;            /* 카드 스트로크 삭제 */
 }
 .style-room-card:active { opacity: .85; }
-/* collage */
+/* collage: 인셋 + 자체 radius (Pinterest 스타일) */
 .style-card-collage {
   display: flex;
   gap: 2px;
   aspect-ratio: 4 / 3;
   background: #e8e8ec;
   overflow: hidden;
+  border-radius: 12px;     /* 이미지 프레임 radius */
+  margin: 8px 8px 0;       /* 카드 엣지에서 살짝 인셋 */
 }
 .style-card-col-main {
   flex: 1; min-width: 0; overflow: hidden;
@@ -1067,13 +1069,13 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* card info */
 .style-card-info {
-  padding: 12px 14px 16px;
+  padding: 10px 8px 14px;  /* 콜라주 인셋 margin(8px)과 정렬 */
 }
 .style-card-top-row {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
 }
 .style-card-title {
-  font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1;
+  font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1.2;
 }
 .style-card-meta {
   font-size: 13px; color: #555; margin-top: 2px;
@@ -1159,6 +1161,11 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-body {
   max-height:0; overflow:hidden; opacity:0; padding:0 18px;
   transition:max-height .35s cubic-bezier(.22,1,.36,1), padding .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
+}
+.work-card.expanded {
+  /* Toss-style elevation shadow */
+  box-shadow: 0px 4px 16px rgba(0,0,0,0.10), 0px 1px 4px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.04);
+  border-color: transparent;
 }
 .work-card.expanded .work-card-body {
   max-height:800px; opacity:1; padding:2px 18px 0;
@@ -1990,29 +1997,41 @@ button, input, textarea, select { font-family:var(--font); }
 .share-tab-pane { display:none; }
 .share-tab-pane.active { display:block; }
 
-/* collab indicator in header */
+/* 공동작업자 — 플로팅 다크 버블 (dot + 아바타 + 텍스트 전체 감싸기) */
 .collab-bar {
-  display:flex; align-items:center; gap:8px; padding:6px 16px;
-  background:#fff;
-  border-bottom:1px solid #e0e8ff; font-size:12.5px;
+  /* flex column 내에서 중앙 정렬 */
+  align-self: center;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 6px 0 0;
+  /* 버블 스타일 */
+  background: rgba(17,17,17,0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px 8px 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.10);
+  gap: 8px;
+  cursor: pointer;
 }
-.collab-bar-dot { width:7px; height:7px; background:#10b981; border-radius:50%; flex-shrink:0; animation:pulse-dot 2s infinite; }
+.collab-bar:hover { background: rgba(30,30,30,0.96); }
+.collab-bar-dot { width:7px; height:7px; background:#4ade80; border-radius:50%; flex-shrink:0; animation:pulse-dot 2s infinite; }
 @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
-/* 공동작업자 캡슐 필 */
+/* 아바타: 버블 내부에서 별도 배경 불필요 */
 .collab-avatars {
-  display:flex; align-items:center; gap:3px;
-  background:#333; border-radius:999px;
-  padding:3px 10px 3px 4px;
+  display:flex; align-items:center; gap:2px;
+  background:transparent; border-radius:0; padding:0;
 }
 .collab-avatar {
   width:20px; height:20px; border-radius:50%;
-  background:rgba(255,255,255,0.18); color:#fff;
+  background:rgba(255,255,255,0.22); color:#fff;
   font-size:10px; font-weight:700;
   display:flex; align-items:center; justify-content:center;
   flex-shrink:0; border:none; margin-left:0;
 }
 .collab-avatar:first-child { margin-left:0; }
-.collab-bar-text { font-size:13px; color:#5b6a8c; font-weight:500; }
+.collab-bar-text { font-size:13px; color:rgba(255,255,255,0.85); font-weight:500; white-space:nowrap; }
 
 /* invite row */
 .collab-member-list { display:flex; flex-direction:column; gap:6px; margin:12px 0 4px; }
