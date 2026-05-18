@@ -10109,6 +10109,8 @@ function fpInitCanvas(bgUrl) {
     selection: true,
   });
 
+  // data URL은 crossOrigin 불필요 (일부 브라우저에서 오히려 오류 발생)
+  const bgOpts = bgUrl.startsWith('data:') ? {} : { crossOrigin: 'anonymous' };
   fabric.Image.fromURL(bgUrl, (img) => {
     fpBgImg = img;
     const scaleX = W / img.width;
@@ -10118,7 +10120,7 @@ function fpInitCanvas(bgUrl) {
                left: (W - img.width * scale) / 2, top: (H - img.height * scale) / 2 });
     fpCanvas.setBackgroundImage(img, fpCanvas.renderAll.bind(fpCanvas));
     fpSaveHistory();
-  }, { crossOrigin: 'anonymous' });
+  }, bgOpts);
 
   fpCanvas.on('selection:created', fpOnSelect);
   fpCanvas.on('selection:updated', fpOnSelect);
@@ -10451,68 +10453,92 @@ function fpDeleteSelected() {
 // ──────────────────────────────────────────
 // Save / Download / Share
 // ──────────────────────────────────────────
+// ── 공통: 캔버스 → dataURL (CORS 오류 시 multiplier 자동 강등) ──
+function _fpGetDataURL() {
+  // 흑백 필터는 CSS filter이므로 canvas 내용에 영향 없음 — 별도 처리 불필요
+  // multiplier:2 → 실패 시 1로 재시도
+  const tryExport = (mul) => {
+    try {
+      return fpCanvas.toDataURL({ format: 'png', multiplier: mul });
+    } catch(e) {
+      console.warn(`toDataURL multiplier=${mul} failed:`, e.message);
+      return null;
+    }
+  };
+  let url = tryExport(2);
+  if (!url) url = tryExport(1);
+  if (!url) throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.');
+  return url;
+}
+
 async function fpSave() {
   if (!fpCanvas) return;
   const proj = getProject();
   if (!proj) return;
 
   const btn = document.querySelector('.fp-fbtn-save');
-  const origText = btn.innerHTML;
-  btn.innerHTML = '저장 중...'; btn.disabled = true;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '저장 중…'; btn.disabled = true;
 
   try {
-    const wasGray = fpGrayscale;
-    if (wasGray) { document.getElementById('fp-canvas-wrap').style.filter = ''; }
+    const dataURL = _fpGetDataURL();
 
-    const dataURL = fpCanvas.toDataURL({ format: 'png', multiplier: 2 });
-
-    if (wasGray) { document.getElementById('fp-canvas-wrap').style.filter = 'grayscale(1)'; }
-
-    // Firebase Storage에 저장
     if (_fbStorage && state.loggedIn) {
-      const blob = await (await fetch(dataURL)).blob();
+      // Firebase Storage 업로드 — fetch 대신 _dataUrlToBlob 사용 (안정적)
+      const blob = _dataUrlToBlob(dataURL);
       const userId = state.user?.uid || 'anon';
       const path = `floor-plans/${proj.id}/${userId}/${Date.now()}.png`;
       const ref = _fbStorage.ref(path);
       await ref.put(blob, { contentType: 'image/png' });
-      const url = await ref.getDownloadURL();
-      proj.floorplanEditedImage = url;
+      const downloadUrl = await ref.getDownloadURL();
+      proj.floorplanEditedImage = downloadUrl;
       save();
-      // view 모드 이미지 업데이트
       const fpImg = document.getElementById('iv-floorplan-img');
-      if (fpImg) fpImg.src = url;
+      if (fpImg) fpImg.src = downloadUrl;
     } else {
-      // 로컬 저장 fallback
+      // 로그인 안 됐거나 Storage 없을 때 — 앱 내 보관
       proj.floorplanEditedImage = dataURL;
       save();
       const fpImg = document.getElementById('iv-floorplan-img');
       if (fpImg) fpImg.src = dataURL;
     }
-    // 토스트
-    if (typeof show === 'function' || (window.useToast)) {
-      // use app's toast if available
-    }
+
     btn.innerHTML = '✓ 저장됨';
-    setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 2000);
+    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 2500);
   } catch(e) {
     console.error('fpSave error:', e);
-    btn.innerHTML = origText; btn.disabled = false;
-    alert('저장 중 오류가 발생했습니다.');
+    btn.innerHTML = origHTML; btn.disabled = false;
+    alert('저장 오류: ' + (e.message || e));
   }
 }
 
 function fpDownload() {
   if (!fpCanvas) return;
-  const wasGray = fpGrayscale;
-  if (wasGray) document.getElementById('fp-canvas-wrap').style.filter = '';
-  const dataURL = fpCanvas.toDataURL({ format: 'png', multiplier: 2 });
-  if (wasGray) document.getElementById('fp-canvas-wrap').style.filter = 'grayscale(1)';
-  const proj = getProject();
-  const name = proj?.name || '도면';
-  const a = document.createElement('a');
-  a.href = dataURL;
-  a.download = `${name}_도면.png`;
-  a.click();
+  const btn = document.querySelector('.fp-fbtn-dl');
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '저장 중…'; btn.disabled = true;
+
+  try {
+    const dataURL = _fpGetDataURL();
+    const proj = getProject();
+    const name = (proj?.name || '도면').replace(/[\\/:*?"<>|]/g, '_');
+
+    // DOM에 추가 후 클릭해야 Safari/Firefox에서 동작
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `${name}_편집도면.png`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 500);
+
+    btn.innerHTML = '✓ 완료';
+    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 2000);
+  } catch(e) {
+    console.error('fpDownload error:', e);
+    btn.innerHTML = origHTML; btn.disabled = false;
+    alert('다운로드 오류: ' + (e.message || e));
+  }
 }
 
 function fpCopyLink() {
