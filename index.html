@@ -1017,30 +1017,31 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
-  padding: 14px 18px 80px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 #style-rooms-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 14px 80px;
 }
 /* Pinterest-style room card */
 .style-room-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--border-light);
 }
 .style-room-card:active { opacity: .85; }
 /* collage */
 .style-card-collage {
   display: flex;
   gap: 2px;
-  aspect-ratio: 8 / 3;
+  aspect-ratio: 4 / 3;
   background: #e8e8ec;
   overflow: hidden;
 }
@@ -1127,18 +1128,18 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== CARDS ===== */
 .cards-area {
-  padding:14px 18px 80px;
+  padding:12px 18px 80px;
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap:8px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap:10px;
 }
 .work-card {
   background:#fff; border-radius:18px;
-  box-shadow:var(--card-shadow);
+  border:1px solid var(--border-light);
   will-change:transform; overflow:hidden;
 }
 .work-card-row {
-  display:flex; align-items:center; padding:16px 18px; gap:8px; min-height:60px;
+  display:flex; align-items:center; padding:16px 18px; gap:8px; min-height:56px;
 }
 .work-card-name-area {
   display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer;
@@ -1997,12 +1998,18 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .collab-bar-dot { width:7px; height:7px; background:#10b981; border-radius:50%; flex-shrink:0; animation:pulse-dot 2s infinite; }
 @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
-.collab-avatars { display:flex; gap:-4px; }
+/* 공동작업자 캡슐 필 */
+.collab-avatars {
+  display:flex; align-items:center; gap:3px;
+  background:#333; border-radius:999px;
+  padding:3px 10px 3px 4px;
+}
 .collab-avatar {
-  width:24px; height:24px; border-radius:50%; border:2px solid #fff;
-  background:var(--primary); color:#fff; font-size:13px; font-weight:700;
-  display:flex; align-items:center; justify-content:center; margin-left:-4px;
-  flex-shrink:0;
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(255,255,255,0.18); color:#fff;
+  font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; border:none; margin-left:0;
 }
 .collab-avatar:first-child { margin-left:0; }
 .collab-bar-text { font-size:13px; color:#5b6a8c; font-weight:500; }
@@ -2823,24 +2830,24 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan" style="background:#EDF0F4; flex:1;">
+    <div id="tab-plan" style="background:#fff; flex:1;">
       <div class="cards-area" id="work-cards"></div>
     </div>
 
     <!-- Calendar Tab -->
-    <div id="tab-calendar" style="display:none; background:#EDF0F4; flex:1;">
+    <div id="tab-calendar" style="display:none; background:#fff; flex:1;">
       <div id="calendar-container"></div>
     </div>
 
     <!-- Style Tab -->
-    <div id="tab-style" style="display:none; background:#EDF0F4;">
+    <div id="tab-style" style="display:none; background:#fff;">
       <div class="style-tab-inner">
         <div id="style-rooms-container"></div>
       </div>
     </div>
 
     <!-- Content Tab -->
-    <div id="tab-content" style="display:none; background:#EDF0F4; flex:1;">
+    <div id="tab-content" style="display:none; background:#fff; flex:1;">
       <div class="content-tab-inner">
         <div class="content-add-bar">
           <input class="content-add-input" id="content-url-input"
