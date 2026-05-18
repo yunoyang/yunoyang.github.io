@@ -400,7 +400,7 @@ button, input, textarea, select { font-family:var(--font); }
 #sv-gallery-area {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 4px 80px;
 }
-#sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 4px; }
+#sv-gallery-area.sv-list { display: flex; flex-direction: column; gap: 8px; }
 #sv-gallery-area.sv-grid { display: block; }
 .sv-gallery-masonry { display: flex; gap: 6px; align-items: flex-start; }
 .sv-gallery-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
@@ -409,8 +409,11 @@ button, input, textarea, select { font-family:var(--font); }
   cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent;
 }
 .sv-gallery-item:active { opacity: .82; }
-#sv-gallery-area.sv-list .sv-gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-#sv-gallery-area.sv-grid .sv-gallery-item img { width: 100%; height: auto; display: block; }
+/* 모든 갤러리 이미지: 자연 비율 유지 — aspect-ratio 강제 크롭 제거 */
+.sv-gallery-item img {
+  width: 100%; height: auto; display: block;
+  object-fit: contain; /* 깨짐 없이 전체 표시 */
+}
 .sv-gallery-pin-badge {
   position: absolute; bottom: 7px; right: 7px;
   background: rgba(0,0,0,0.55); color: #fff;
@@ -2571,6 +2574,23 @@ button, input, textarea, select { font-family:var(--font); }
 @media (max-width:599px) {
   .export-hdr-btn { padding:8px 10px; gap:0; }
   .export-hdr-label { display:none; }
+}
+
+/* ===== PC 레이아웃: 640px 센터 컨테이너 (Threads.com 기준 ~620px) ===== */
+@media (min-width: 660px) {
+  html, body { height: 100%; background: #dcdce2; }
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    /* position:relative 유지 — absolute children은 이 컨테이너 안에 자동 제한 */
+    box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 8px 56px rgba(0,0,0,.18);
+  }
+  /* 갤러리: 좌우 패딩 늘려서 이미지가 엣지에 붙지 않게 */
+  #sv-gallery-area { padding: 8px 12px 80px; }
+  .sv-gallery-masonry { gap: 8px; }
+  .sv-gallery-col { gap: 8px; }
+  /* 리스트 모드 gap 확대 */
+  #sv-gallery-area.sv-list { gap: 10px; }
 }
 
 /* ===== EXPORT / PRINT ===== */
