@@ -1260,10 +1260,14 @@ button, input, textarea, select { font-family:var(--font); }
   will-change:transform; overflow:hidden;
 }
 .work-card-row {
-  display:flex; align-items:center; padding:16px 18px; gap:8px; min-height:56px;
+  display:flex; align-items:center; padding:0 18px; gap:8px;
+  height:56px; overflow:hidden; flex-shrink:0;
 }
 .work-card-name-area {
-  display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer;
+  display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer; overflow:hidden;
+}
+.work-card-name-area .work-card-title {
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .work-card-name-area:active { opacity:.7; }
 .work-card-nav-chev { display:none; }
