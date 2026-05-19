@@ -1085,66 +1085,48 @@ button, input, textarea, select { font-family:var(--font); }
   #cv-product-sheet { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
 }
 
-/* ===== PLAN PHASE STEPPER ===== */
+/* ===== PLAN PHASE SEGMENT CONTROL ===== */
 .plan-phase-bar {
   display: flex;
   align-items: center;
-  padding: 14px 20px 10px;
+  padding: 12px 16px 10px;
   background: #fff;
   flex-shrink: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+}
+/* 세그먼트 컨트롤 컨테이너 */
+.phase-segment {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #f0f0f3;
+  border-radius: 999px;
+  padding: 3px;
   gap: 0;
 }
-.plan-phase-bar::-webkit-scrollbar { display: none; }
+/* 각 세그먼트 버튼 */
 .phase-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-}
-.phase-circle {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: #efefef;
-  color: #aaa;
-  font-size: 13px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .18s, color .18s;
-  flex-shrink: 0;
-}
-.phase-circle.phase-all {
-  font-size: 11px;
-}
-.phase-step.active .phase-circle {
-  background: #111;
-  color: #fff;
-}
-.phase-label {
-  font-size: 11px; font-weight: 600;
-  color: #b0b5c2;
-  white-space: nowrap;
-  transition: color .18s;
-}
-.phase-step.active .phase-label {
-  color: #111;
-}
-.phase-line {
   flex: 1;
-  min-width: 16px;
-  max-width: 40px;
-  height: 1.5px;
-  background: #e5e5ec;
-  margin-bottom: 17px; /* align with circle center */
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9a9da8;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .15s;
+  font-family: var(--font);
+}
+.phase-step.active {
+  background: #fff;
+  color: #111;
+  font-weight: 700;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.04);
 }
 
 /* ===== STYLE TAB ===== */
@@ -2985,32 +2967,14 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- Plan Tab -->
     <div id="tab-plan" style="background:#fff; flex:1; display:flex; flex-direction:column;">
-      <!-- 공정 단계 필터 -->
+      <!-- 공정 단계 필터 (세그먼트 컨트롤) -->
       <div class="plan-phase-bar" id="plan-phase-bar">
-        <button class="phase-step active" data-phase="" onclick="setPlanPhase('',this)">
-          <div class="phase-circle phase-all">전체</div>
-          <span class="phase-label">전체</span>
-        </button>
-        <div class="phase-line"></div>
-        <button class="phase-step" data-phase="planning" onclick="setPlanPhase('planning',this)">
-          <div class="phase-circle">1</div>
-          <span class="phase-label">플래닝</span>
-        </button>
-        <div class="phase-line"></div>
-        <button class="phase-step" data-phase="structure" onclick="setPlanPhase('structure',this)">
-          <div class="phase-circle">2</div>
-          <span class="phase-label">구조공사</span>
-        </button>
-        <div class="phase-line"></div>
-        <button class="phase-step" data-phase="finish" onclick="setPlanPhase('finish',this)">
-          <div class="phase-circle">3</div>
-          <span class="phase-label">마감</span>
-        </button>
-        <div class="phase-line"></div>
-        <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)">
-          <div class="phase-circle">4</div>
-          <span class="phase-label">공사후</span>
-        </button>
+        <div class="phase-segment">
+          <button class="phase-step active" data-phase="planning" onclick="setPlanPhase('planning',this)">플래닝</button>
+          <button class="phase-step" data-phase="structure" onclick="setPlanPhase('structure',this)">구조공사</button>
+          <button class="phase-step" data-phase="finish" onclick="setPlanPhase('finish',this)">마감</button>
+          <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)">공사후</button>
+        </div>
       </div>
       <div class="cards-area" id="work-cards" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
     </div>
@@ -6720,7 +6684,7 @@ function _clearProcCompany() {
 // ===== WORK CARDS =====
 let editingProcessId = null, editingFieldKey = null;
 let _pendingNewProcId = null;
-let _planPhase = ''; // '' = 전체
+let _planPhase = 'planning'; // 기본: 플래닝
 
 function _getProcPhase(proc) {
   for (const cat of PROCESS_CATEGORIES) {
@@ -6752,11 +6716,9 @@ function renderWorkCards() {
     .sort((a, b) => new Date(a.p.scheduleStart) - new Date(b.p.scheduleStart));
   const noSched = originalOrder.filter(x => !x.p.scheduleStart);
   let sorted = [...withSched, ...noSched].map(x => x.p);
-  // phase 필터
-  if (_planPhase) {
-    sorted = sorted.filter(p => _getProcPhase(p) === _planPhase);
-  }
-  if (!sorted.length && _planPhase) {
+  // phase 필터 (항상 적용)
+  sorted = sorted.filter(p => _getProcPhase(p) === _planPhase);
+  if (!sorted.length) {
     container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;font-size:14px;color:#aaa;">해당 단계에 등록된 공정이 없습니다</div>`;
     return;
   }
