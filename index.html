@@ -313,6 +313,15 @@ button, input, textarea, select { font-family:var(--font); }
 .summary-row .label { font-size:16px; font-weight:500; color:var(--text-muted); }
 .summary-row .value { font-size:16px; font-weight:700; }
 .summary-divider { display:none; }
+.summary-more-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; height: 40px; margin-top: 10px;
+  border: none; background: none; cursor: pointer;
+  font-size: 14px; font-weight: 500; color: #888;
+  font-family: var(--font); border-top: 1px solid #f0f2f5;
+  -webkit-tap-highlight-color: transparent;
+}
+.summary-more-btn:active { color: #333; }
 
 /* ===== TABS ===== */
 .tab-section {
@@ -2960,6 +2969,10 @@ button, input, textarea, select { font-family:var(--font); }
             <div class="summary-row"><span class="label">전체 공사 기간</span><span class="value" id="sum-duration">-</span></div>
             <div class="summary-row"><span class="label">함께하는 업체</span><span class="value" id="sum-companies">0개 업체</span></div>
           </div>
+          <button class="summary-more-btn" onclick="goTo('form')">
+            내 공사 정보 더보기
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
       </div>
     </div>
