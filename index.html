@@ -1085,48 +1085,56 @@ button, input, textarea, select { font-family:var(--font); }
   #cv-product-sheet { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
 }
 
-/* ===== PLAN PHASE SEGMENT CONTROL ===== */
+/* ===== PLAN PHASE SUB-TAB ===== */
 .plan-phase-bar {
   display: flex;
   align-items: center;
-  padding: 12px 16px 10px;
+  padding: 0 20px;
   background: #fff;
+  border-bottom: 1px solid #f0f0f5;
   flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-/* 세그먼트 컨트롤 컨테이너 */
+.plan-phase-bar::-webkit-scrollbar { display: none; }
 .phase-segment {
   display: flex;
   align-items: center;
-  width: 100%;
-  background: #f0f0f3;
-  border-radius: 999px;
-  padding: 3px;
   gap: 0;
+  width: max-content;
 }
-/* 각 세그먼트 버튼 */
 .phase-step {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
+  height: 44px;
+  padding: 0 12px;
   border: none;
   background: transparent;
-  border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
-  color: #9a9da8;
+  color: #b0b5c2;
   cursor: pointer;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
-  transition: color .15s;
+  transition: color .18s;
   font-family: var(--font);
+  flex-shrink: 0;
+}
+.phase-step .phase-label {
+  display: inline-block;
+  padding: 2px 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color .18s;
 }
 .phase-step.active {
-  background: #fff;
-  color: #111;
+  color: #333;
   font-weight: 700;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.04);
+}
+.phase-step.active .phase-label {
+  border-bottom-color: #333;
 }
 
 /* ===== STYLE TAB ===== */
@@ -2970,10 +2978,10 @@ button, input, textarea, select { font-family:var(--font); }
       <!-- 공정 단계 필터 (세그먼트 컨트롤) -->
       <div class="plan-phase-bar" id="plan-phase-bar">
         <div class="phase-segment">
-          <button class="phase-step active" data-phase="planning" onclick="setPlanPhase('planning',this)">플래닝</button>
-          <button class="phase-step" data-phase="structure" onclick="setPlanPhase('structure',this)">구조공사</button>
-          <button class="phase-step" data-phase="finish" onclick="setPlanPhase('finish',this)">마감</button>
-          <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)">공사후</button>
+          <button class="phase-step active" data-phase="planning" onclick="setPlanPhase('planning',this)"><span class="phase-label">플래닝</span></button>
+          <button class="phase-step" data-phase="structure" onclick="setPlanPhase('structure',this)"><span class="phase-label">구조공사</span></button>
+          <button class="phase-step" data-phase="finish" onclick="setPlanPhase('finish',this)"><span class="phase-label">마감</span></button>
+          <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)"><span class="phase-label">공사후</span></button>
         </div>
       </div>
       <div class="cards-area" id="work-cards" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
