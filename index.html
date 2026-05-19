@@ -1251,8 +1251,11 @@ button, input, textarea, select { font-family:var(--font); }
 .cards-area {
   padding:12px 18px 80px;
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap:10px;
+  grid-template-columns: 1fr;
+  gap:8px;
+}
+@media (min-width: 660px) {
+  .cards-area { grid-template-columns: 1fr 1fr; }
 }
 .work-card {
   background:#fff; border-radius:18px;
