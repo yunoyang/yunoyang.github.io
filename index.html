@@ -4760,15 +4760,44 @@ function renderContentTab() {
       </div>
     </button>`;
   }).join('');
+  // 제목 없는 기존 영상 자동 fetch
+  _fetchMissingYTTitles();
 }
 
-/* ─── 메타데이터 자동 fetch (noembed, CORS-safe) ─── */
+/* ─── YouTube oEmbed 메타데이터 fetch ─── */
 async function _fetchYTMeta(videoId) {
-  try {
-    const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
-    const data = await res.json();
-    return { title: data.title || '', channel: data.author_name || '' };
-  } catch(e) { return { title: '', channel: '' }; }
+  const endpoints = [
+    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+    `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+  ];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.title) return { title: data.title, channel: data.author_name || '' };
+    } catch(e) { /* try next */ }
+  }
+  return { title: '', channel: '' };
+}
+
+/* ─── 제목 없는 기존 영상 일괄 fetch ─── */
+function _fetchMissingYTTitles() {
+  const proj = getProject();
+  if (!proj?.contentLinks) return;
+  const missing = proj.contentLinks.filter(l => l.type === 'youtube' && l.videoId && !l.title);
+  if (!missing.length) return;
+  missing.forEach(item => {
+    _fetchYTMeta(item.videoId).then(meta => {
+      if (!meta.title) return;
+      const it = (getProject()?.contentLinks || []).find(l => l.id === item.id);
+      if (!it) return;
+      it.title = meta.title;
+      it.channel = meta.channel;
+      save();
+      renderContentTab();
+    });
+  });
 }
 
 function _addContentLink() {
