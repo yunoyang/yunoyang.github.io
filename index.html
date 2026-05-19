@@ -2959,27 +2959,28 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="collab-bar-text" id="collab-bar-text"></div>
   </div>
 
-  <div class="screen-scroll" id="main-scroll">
-    <!-- Summary -->
-    <div class="summary-wrap">
-      <div class="summary-unified">
-        <div class="summary-toggle-row" onclick="toggleSummary()">
-          <span>공사 한눈에 보기</span>
-          <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
+  <!-- Summary (스크롤 영역 밖 — 항상 최상단 고정) -->
+  <div class="summary-wrap">
+    <div class="summary-unified">
+      <div class="summary-toggle-row" onclick="toggleSummary()">
+        <span>공사 한눈에 보기</span>
+        <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
+      </div>
+      <div class="summary-card" id="summary-card">
+        <div class="summary-list">
+          <div class="summary-row"><span class="label">예상 총 비용</span><span class="value" id="sum-cost">0원</span></div>
+          <div class="summary-row"><span class="label">전체 공사 기간</span><span class="value" id="sum-duration">-</span></div>
+          <div class="summary-row"><span class="label">함께하는 업체</span><span class="value" id="sum-companies">0개 업체</span></div>
         </div>
-        <div class="summary-card" id="summary-card">
-          <div class="summary-list">
-            <div class="summary-row"><span class="label">예상 총 비용</span><span class="value" id="sum-cost">0원</span></div>
-            <div class="summary-row"><span class="label">전체 공사 기간</span><span class="value" id="sum-duration">-</span></div>
-            <div class="summary-row"><span class="label">함께하는 업체</span><span class="value" id="sum-companies">0개 업체</span></div>
-          </div>
-          <button class="summary-more-btn" onclick="goTo('form')">
-            내 공사 정보 더보기
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
+        <button class="summary-more-btn" onclick="goTo('form')">
+          내 공사 정보 더보기
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </div>
+  </div>
+
+  <div class="screen-scroll" id="main-scroll">
 
     <!-- Tabs -->
     <div class="tab-section">
