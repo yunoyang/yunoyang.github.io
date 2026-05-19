@@ -343,21 +343,30 @@ button, input, textarea, select { font-family:var(--font); }
   height: 60px;
   padding: 0 14px;
   border: none;
-  border-bottom: 2.5px solid transparent;
+  border-bottom: none;
   font-size: 15px;
   font-weight: 500;
   color: #9a9da8;
   background: transparent;
   cursor: pointer;
   white-space: nowrap;
-  transition: color .18s, border-color .18s;
+  transition: color .18s;
   flex-shrink: 0;
+}
+/* underline은 span에 적용 — 텍스트 바로 아래에 위치 */
+.tab-btn .tab-label {
+  display: inline-block;
+  padding: 2px 0;
+  border-bottom: 2.5px solid transparent;
+  transition: border-color .18s;
 }
 .tab-btn.active {
   color: #111;
   font-weight: 700;
-  border-bottom-color: #111;
   background: transparent;
+}
+.tab-btn.active .tab-label {
+  border-bottom-color: #111;
 }
 
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
@@ -1074,6 +1083,68 @@ button, input, textarea, select { font-family:var(--font); }
 @media (min-width: 660px) {
   #content-viewer-screen { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
   #cv-product-sheet { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
+}
+
+/* ===== PLAN PHASE STEPPER ===== */
+.plan-phase-bar {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px 10px;
+  background: #fff;
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 0;
+}
+.plan-phase-bar::-webkit-scrollbar { display: none; }
+.phase-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.phase-circle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #efefef;
+  color: #aaa;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .18s, color .18s;
+  flex-shrink: 0;
+}
+.phase-circle.phase-all {
+  font-size: 11px;
+}
+.phase-step.active .phase-circle {
+  background: #111;
+  color: #fff;
+}
+.phase-label {
+  font-size: 11px; font-weight: 600;
+  color: #b0b5c2;
+  white-space: nowrap;
+  transition: color .18s;
+}
+.phase-step.active .phase-label {
+  color: #111;
+}
+.phase-line {
+  flex: 1;
+  min-width: 16px;
+  max-width: 40px;
+  height: 1.5px;
+  background: #e5e5ec;
+  margin-bottom: 17px; /* align with circle center */
+  flex-shrink: 0;
 }
 
 /* ===== STYLE TAB ===== */
@@ -2905,16 +2976,43 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Tabs -->
     <div class="tab-section">
       <div class="tab-toggle">
-        <button class="tab-btn active" onclick="switchMainTab('plan',this)">공정 계획</button>
-        <button class="tab-btn" onclick="switchMainTab('calendar',this)">전체 일정</button>
-        <button class="tab-btn" onclick="switchMainTab('style',this)">스타일</button>
-        <button class="tab-btn" onclick="switchMainTab('content',this)">컨텐츠</button>
+        <button class="tab-btn active" onclick="switchMainTab('plan',this)"><span class="tab-label">공정</span></button>
+        <button class="tab-btn" onclick="switchMainTab('calendar',this)"><span class="tab-label">일정</span></button>
+        <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
+        <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
       </div>
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan" style="background:#fff; flex:1;">
-      <div class="cards-area" id="work-cards"></div>
+    <div id="tab-plan" style="background:#fff; flex:1; display:flex; flex-direction:column;">
+      <!-- 공정 단계 필터 -->
+      <div class="plan-phase-bar" id="plan-phase-bar">
+        <button class="phase-step active" data-phase="" onclick="setPlanPhase('',this)">
+          <div class="phase-circle phase-all">전체</div>
+          <span class="phase-label">전체</span>
+        </button>
+        <div class="phase-line"></div>
+        <button class="phase-step" data-phase="planning" onclick="setPlanPhase('planning',this)">
+          <div class="phase-circle">1</div>
+          <span class="phase-label">플래닝</span>
+        </button>
+        <div class="phase-line"></div>
+        <button class="phase-step" data-phase="structure" onclick="setPlanPhase('structure',this)">
+          <div class="phase-circle">2</div>
+          <span class="phase-label">구조공사</span>
+        </button>
+        <div class="phase-line"></div>
+        <button class="phase-step" data-phase="finish" onclick="setPlanPhase('finish',this)">
+          <div class="phase-circle">3</div>
+          <span class="phase-label">마감</span>
+        </button>
+        <div class="phase-line"></div>
+        <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)">
+          <div class="phase-circle">4</div>
+          <span class="phase-label">공사후</span>
+        </button>
+      </div>
+      <div class="cards-area" id="work-cards" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
     </div>
 
     <!-- Calendar Tab -->
@@ -6622,6 +6720,21 @@ function _clearProcCompany() {
 // ===== WORK CARDS =====
 let editingProcessId = null, editingFieldKey = null;
 let _pendingNewProcId = null;
+let _planPhase = ''; // '' = 전체
+
+function _getProcPhase(proc) {
+  for (const cat of PROCESS_CATEGORIES) {
+    if (cat.items.includes(proc.name)) return cat.id;
+  }
+  return null;
+}
+
+function setPlanPhase(phase, btn) {
+  _planPhase = phase;
+  document.querySelectorAll('.phase-step').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderWorkCards();
+}
 
 function renderWorkCards() {
   const proj = getProject(); if (!proj) return;
@@ -6638,7 +6751,15 @@ function renderWorkCards() {
   const withSched = originalOrder.filter(x => x.p.scheduleStart)
     .sort((a, b) => new Date(a.p.scheduleStart) - new Date(b.p.scheduleStart));
   const noSched = originalOrder.filter(x => !x.p.scheduleStart);
-  const sorted = [...withSched, ...noSched].map(x => x.p);
+  let sorted = [...withSched, ...noSched].map(x => x.p);
+  // phase 필터
+  if (_planPhase) {
+    sorted = sorted.filter(p => _getProcPhase(p) === _planPhase);
+  }
+  if (!sorted.length && _planPhase) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;font-size:14px;color:#aaa;">해당 단계에 등록된 공정이 없습니다</div>`;
+    return;
+  }
 
   // FLIP: 기존 카드 위치 기록
   const oldRects = {};
