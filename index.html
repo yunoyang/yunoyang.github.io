@@ -344,7 +344,7 @@ button, input, textarea, select { font-family:var(--font); }
   padding: 0 14px;
   border: none;
   border-bottom: none;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   color: #9a9da8;
   background: transparent;
@@ -1085,13 +1085,12 @@ button, input, textarea, select { font-family:var(--font); }
   #cv-product-sheet { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
 }
 
-/* ===== PLAN PHASE SUB-TAB ===== */
+/* ===== PLAN PHASE SUB-TAB (pill chip) ===== */
 .plan-phase-bar {
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 10px 16px 10px;
   background: #fff;
-  border-bottom: 1px solid #f0f0f5;
   flex-shrink: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -1102,39 +1101,34 @@ button, input, textarea, select { font-family:var(--font); }
 .phase-segment {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 6px;
   width: max-content;
 }
 .phase-step {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  padding: 0 12px;
-  border: none;
-  background: transparent;
-  font-size: 13px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1.5px solid #d8dae3;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 14px;
   font-weight: 500;
-  color: #b0b5c2;
+  color: #888;
   cursor: pointer;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
-  transition: color .18s;
+  transition: background .15s, color .15s, border-color .15s;
   font-family: var(--font);
   flex-shrink: 0;
 }
-.phase-step .phase-label {
-  display: inline-block;
-  padding: 2px 0;
-  border-bottom: 2px solid transparent;
-  transition: border-color .18s;
-}
+.phase-step .phase-label { display: inline; }
 .phase-step.active {
-  color: #333;
+  background: #111;
+  border-color: #111;
+  color: #fff;
   font-weight: 700;
-}
-.phase-step.active .phase-label {
-  border-bottom-color: #333;
 }
 
 /* ===== STYLE TAB ===== */
