@@ -293,6 +293,11 @@ button, input, textarea, select { font-family:var(--font); }
 .summary-unified {
   background:#fff; border-radius:18px;
   border:1px solid var(--border-light); overflow:hidden;
+  transition: box-shadow .3s ease, border-color .3s ease;
+}
+.summary-unified.expanded {
+  box-shadow: 0px 4px 16px rgba(0,0,0,0.10), 0px 1px 4px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.04), 0px 6px 24px rgba(55,109,255,0.03);
+  border-color: transparent;
 }
 .summary-toggle-row {
   display:flex; align-items:center; justify-content:space-between;
@@ -1298,8 +1303,7 @@ button, input, textarea, select { font-family:var(--font); }
   transition:max-height .35s cubic-bezier(.22,1,.36,1), padding .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
 }
 .work-card.expanded {
-  /* Toss-style elevation shadow */
-  box-shadow: 0px 4px 16px rgba(0,0,0,0.10), 0px 1px 4px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.04);
+  box-shadow: 0px 4px 16px rgba(0,0,0,0.10), 0px 1px 4px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.04), 0px 6px 24px rgba(55,109,255,0.03);
   border-color: transparent;
 }
 .work-card.expanded .work-card-body {
@@ -4733,6 +4737,8 @@ function updateSummary() {
   document.getElementById('sum-companies').textContent = companies.size + '개 업체';
   const isOpen = state.summaryOpen !== false;
   document.getElementById('summary-card').classList.toggle('collapsed', !isOpen);
+  const unified = document.querySelector('.summary-unified');
+  if (unified) unified.classList.toggle('expanded', isOpen);
   const chev = document.getElementById('sum-chev');
   if (chev) chev.classList.toggle('open', isOpen);
 }
