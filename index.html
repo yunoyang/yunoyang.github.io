@@ -908,8 +908,8 @@ button, input, textarea, select { font-family:var(--font); }
 }
 
 /* ===== 컨텐츠 탭 ===== */
+/* ===== CONTENT TAB ===== */
 .content-tab-inner {
-  padding: 12px 0 100px;
   display: flex;
   flex-direction: column;
 }
@@ -917,124 +917,164 @@ button, input, textarea, select { font-family:var(--font); }
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 16px 12px;
+  margin: 12px 14px 8px;
 }
 .content-add-input {
-  flex: 1;
-  height: 46px;
-  border: 1.5px solid #e1e5ef;
-  border-radius: 12px;
-  padding: 0 14px;
-  font-size: 14px;
-  font-family: var(--font);
-  color: #222;
-  background: #fff;
-  outline: none;
+  flex: 1; height: 46px;
+  border: 1.5px solid #e1e5ef; border-radius: 12px;
+  padding: 0 14px; font-size: 14px; font-family: var(--font);
+  color: #222; background: #fff; outline: none;
 }
 .content-add-input:focus { border-color: var(--primary); }
 .content-add-input::placeholder { color: #b0b5c2; }
 .content-add-confirm-btn {
-  height: 46px;
-  padding: 0 18px;
-  background: #222;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font);
-  white-space: nowrap;
-  flex-shrink: 0;
+  height: 46px; padding: 0 18px; background: #222; color: #fff;
+  border: none; border-radius: 12px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: var(--font); white-space: nowrap; flex-shrink: 0;
 }
 .content-add-confirm-btn:active { opacity: .85; }
-.content-link-card {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  margin: 0 16px 12px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
-  -webkit-tap-highlight-color: transparent;
+/* Card grid — 1열 모바일 / 2열 PC */
+#content-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 6px 14px 100px;
 }
-.content-thumb-wrap {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #111;
+@media (min-width: 660px) { #content-list { grid-template-columns: 1fr 1fr; } }
+/* Card */
+.content-card {
+  background: #fff; border-radius: 14px; overflow: visible;
+  cursor: pointer; border: none; -webkit-tap-highlight-color: transparent;
+  text-align: left; font-family: var(--font);
+}
+.content-card:active { opacity: .85; }
+.content-card-thumb {
+  aspect-ratio: 16 / 9; background: #111;
+  overflow: hidden; border-radius: 12px; margin: 8px 8px 0;
   position: relative;
-  cursor: pointer;
-  overflow: hidden;
 }
-.content-thumb-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.content-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.content-card-play {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.20);
 }
-.content-play-btn {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.22);
-  transition: background .15s;
+.content-card-info { padding: 10px 8px 14px; }
+.content-card-title {
+  font-size: 14px; font-weight: 700; color: #1a1a1a; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.content-play-btn:active { background: rgba(0,0,0,0.4); }
-.content-player-wrap {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
+.content-card-channel { font-size: 12px; color: #999; margin-top: 3px; font-weight: 500; }
+.content-card-products { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.content-product-chip {
+  font-size: 11px; font-weight: 500; background: #f1f1f5; color: #555;
+  border-radius: 6px; padding: 3px 8px;
+  max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.content-player-wrap iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-}
-.content-link-footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px 12px;
-}
-.content-link-yt-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #888;
-  font-size:13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.content-link-yt-badge svg { flex-shrink: 0; }
-.content-link-del {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: none;
-  color: #555;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  line-height: 1;
-  margin-left: auto;
-}
-.content-link-del:active { opacity: .6; }
+/* Empty state */
 .content-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px 40px;
-  gap: 10px;
-  text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 24px 40px; gap: 10px; text-align: center;
 }
 .content-empty-icon { font-size: 44px; line-height: 1; }
 .content-empty-text { font-size: 15px; color: #999; font-weight: 500; line-height: 1.5; }
 .content-empty-sub { font-size: 13px; color: #b8bcc8; }
+/* ===== CONTENT VIEWER SCREEN ===== */
+#content-viewer-screen {
+  position: fixed; inset: 0; background: #fff; z-index: 9999;
+  display: none; flex-direction: column;
+}
+.cv-player-wrap {
+  width: 100%; aspect-ratio: 16 / 9; background: #000; flex-shrink: 0;
+}
+.cv-player-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+#cv-channel {
+  padding: 10px 16px 2px; font-size: 13px; color: #999; font-weight: 500;
+}
+/* product list in viewer */
+#cv-product-list { padding: 4px 16px 120px; }
+.cv-prod-section-title {
+  font-size: 13px; font-weight: 700; color: #bbb; letter-spacing: .04em;
+  padding: 14px 0 8px; text-transform: uppercase;
+}
+.cv-product-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 0; border-bottom: 1px solid #f5f5f7;
+}
+.cv-product-item:last-child { border-bottom: none; }
+.cv-product-name { font-size: 15px; font-weight: 500; color: #222; }
+.cv-product-link {
+  font-size: 12px; color: #3176ff; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;
+}
+.cv-product-del {
+  background: none; border: none; color: #ccc;
+  font-size: 20px; cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
+}
+.cv-product-del:active { color: #e03535; }
+.cv-empty-products {
+  text-align: center; padding: 36px 20px;
+  font-size: 14px; color: #c8c8c8; line-height: 1.6;
+}
+/* floating pencil */
+#cv-product-float {
+  position: absolute; bottom: 22px; right: 16px; z-index: 20;
+}
+/* product add sheet */
+#cv-product-sheet {
+  display: none; position: fixed; inset: 0; z-index: 10100; pointer-events: none;
+}
+#cv-product-sheet.open { pointer-events: auto; }
+.cv-sheet-backdrop {
+  position: absolute; inset: 0; background: transparent; transition: background .28s;
+}
+#cv-product-sheet.open .cv-sheet-backdrop { background: rgba(0,0,0,0.36); }
+.cv-sheet-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #fff; border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateY(100%); transition: transform .28s cubic-bezier(0.25,1,0.5,1);
+  display: flex; flex-direction: column;
+}
+#cv-product-sheet.open .cv-sheet-panel { transform: translateY(0); }
+.cv-sheet-handle {
+  width: 36px; height: 4px; border-radius: 4px; background: #e5e5ec;
+  margin: 12px auto 0; flex-shrink: 0;
+}
+.cv-sheet-title {
+  font-size: 16px; font-weight: 700; color: #222;
+  padding: 14px 18px 6px; flex-shrink: 0;
+}
+.cv-sheet-field {
+  padding: 8px 16px;
+}
+.cv-sheet-input {
+  width: 100%; box-sizing: border-box;
+  height: 48px; border: 1.5px solid #e1e5ef; border-radius: 12px;
+  padding: 0 14px; font-size: 15px; color: #222;
+  font-family: var(--font); outline: none; background: #fff;
+}
+.cv-sheet-input:focus { border-color: var(--primary); }
+.cv-sheet-input::placeholder { color: #c0c5d0; }
+.cv-sheet-actions {
+  display: flex; gap: 8px; padding: 12px 16px 20px; flex-shrink: 0;
+}
+.cv-sheet-cancel {
+  flex: 1; height: 48px; border: 1.5px solid #e1e5ef; border-radius: 12px;
+  background: #fff; font-size: 15px; font-weight: 600; color: #555;
+  cursor: pointer; font-family: var(--font);
+}
+.cv-sheet-confirm {
+  flex: 2; height: 48px; border: none; border-radius: 12px;
+  background: #222; font-size: 15px; font-weight: 600; color: #fff;
+  cursor: pointer; font-family: var(--font);
+}
+.cv-sheet-confirm:active { opacity: .85; }
+/* PC 640px 제한 */
+@media (min-width: 660px) {
+  #content-viewer-screen { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
+  #cv-product-sheet { left: 50% !important; right: auto !important; width: 640px !important; transform: translateX(-50%); }
+}
 
 /* ===== STYLE TAB ===== */
 .style-tab-inner {
@@ -2890,7 +2930,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Content Tab -->
-    <div id="tab-content" style="display:none; background:#fff; flex:1;">
+    <div id="tab-content" style="display:none; background:#fff; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
       <div class="content-tab-inner">
         <div class="content-add-bar">
           <input class="content-add-input" id="content-url-input"
@@ -4685,56 +4725,50 @@ function renderContentTab() {
       <div class="content-empty-state">
         <div class="content-empty-icon">🎬</div>
         <div class="content-empty-text">참고할 영상을 모아두세요</div>
-        <div class="content-empty-sub">유튜브 링크를 붙여넣으면<br>바로 여기서 볼 수 있어요</div>
+        <div class="content-empty-sub">유튜브 링크를 붙여넣으면<br>영상·제품을 함께 관리할 수 있어요</div>
       </div>`;
     return;
   }
   const _cproj = getProject();
   const _cbadges = (_cproj?.cloudId && _cproj.isCloud) ? _getBadges(_cproj.cloudId) : {};
-  list.innerHTML = links.map((item, idx) => {
+  list.innerHTML = links.map(item => {
     const isYt = item.type === 'youtube';
-    const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg` : '';
-    const displayUrl = (() => { try { return new URL(item.url).hostname.replace('www.',''); } catch(e) { return item.url; } })();
+    const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : '';
+    const title = esc(item.title || (isYt ? 'YouTube 영상' : item.url));
+    const channel = esc(item.channel || '');
+    const products = item.products || [];
     const isItemNew = _isNew(_cbadges.contentLinks?.[item.id]);
-    return `
-      <div class="content-link-card" id="cl-card-${item.id}">
-        ${isYt ? `
-        <div class="content-thumb-wrap" id="cl-thumb-${item.id}" onclick="_playContent('${item.id}')">
-          <img src="${thumbUrl}" alt="thumbnail" onerror="this.style.display='none'">
-          <div class="content-play-btn">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14.5,9 Q11,7 11,11 L11,29 Q11,33 14.5,31 L30.5,22 Q34,20 30.5,18 Z"
-                fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>` : `
-        <div style="padding:14px 14px 0;font-size:13px;color:#3176ff;word-break:break-all;">
-          <a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color:#3176ff;">${item.url}</a>
-        </div>`}
-        <div class="content-link-footer">
-          ${isYt ? `<span class="content-link-yt-badge">
-            <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.6 2.03C17.39.85 16.55.04 15.37.01 13.34 0 9 0 9 0S4.66 0 2.63.01C1.45.04.61.85.4 2.03.16 3.34 0 5.09 0 6.5c0 1.41.16 3.16.4 4.47.21 1.18 1.05 1.99 2.23 2.02C4.66 13 9 13 9 13s4.34 0 6.37-.01c1.18-.03 2.02-.84 2.23-2.02.24-1.31.4-3.06.4-4.47 0-1.41-.16-3.16-.4-4.47zM7.2 9.29V3.71L12.4 6.5 7.2 9.29z" fill="#ff0000"/>
-            </svg>
-            YouTube
-          </span>` : ''}
-          ${isItemNew ? '<span class="n-badge" style="margin-left:4px;margin-right:auto;">N</span>' : ''}
-          <button class="content-link-del" onclick="_deleteContentLink('${item.id}')" title="삭제">×</button>
+    const chipsHtml = products.length
+      ? `<div class="content-card-products">${products.slice(0,4).map(p =>
+          `<span class="content-product-chip">${esc(p.name)}</span>`).join('')}
+         ${products.length > 4 ? `<span class="content-product-chip">+${products.length-4}</span>` : ''}
+        </div>` : '';
+    return `<button class="content-card" onclick="openContentViewer('${item.id}')">
+      <div class="content-card-thumb">
+        ${isYt ? `<img src="${thumbUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="content-card-play">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="rgba(0,0,0,0.45)"/>
+            <path d="M14 11.5 L27 18 L14 24.5Z" fill="#fff"/>
+          </svg>
         </div>
-      </div>`;
+      </div>
+      <div class="content-card-info">
+        <div class="content-card-title">${title}${isItemNew ? '<span class="n-badge" style="margin-left:6px;">N</span>' : ''}</div>
+        ${channel ? `<div class="content-card-channel">${channel}</div>` : ''}
+        ${chipsHtml}
+      </div>
+    </button>`;
   }).join('');
 }
 
-function _playContent(id) {
-  const item = _getContentLinks().find(l => l.id === id);
-  if (!item || item.type !== 'youtube') return;
-  const thumbWrap = document.getElementById(`cl-thumb-${item.id}`);
-  if (!thumbWrap) return;
-  // iframe으로 교체
-  const player = document.createElement('div');
-  player.className = 'content-player-wrap';
-  player.innerHTML = `<iframe src="https://www.youtube.com/embed/${item.videoId}?autoplay=1&playsinline=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-  thumbWrap.replaceWith(player);
+/* ─── 메타데이터 자동 fetch (noembed, CORS-safe) ─── */
+async function _fetchYTMeta(videoId) {
+  try {
+    const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+    const data = await res.json();
+    return { title: data.title || '', channel: data.author_name || '' };
+  } catch(e) { return { title: '', channel: '' }; }
 }
 
 function _addContentLink() {
@@ -4748,25 +4782,130 @@ function _addContentLink() {
   const videoId = _parseYoutubeId(url);
   const newItem = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    url: url,
-    type: videoId ? 'youtube' : 'link',
-    videoId: videoId || null,
-    addedAt: Date.now()
+    url, type: videoId ? 'youtube' : 'link',
+    videoId: videoId || null, addedAt: Date.now(),
+    title: '', channel: '', products: []
   };
   proj.contentLinks.unshift(newItem);
-  localStorage.setItem('vibespace', JSON.stringify(state));
+  save();
   input.value = '';
   renderContentTab();
   _syncContentLinksToCloud(proj);
+  // 비동기 메타 fetch — 완료 시 카드 갱신
+  if (videoId) {
+    _fetchYTMeta(videoId).then(meta => {
+      if (!meta.title) return;
+      const it = (getProject()?.contentLinks || []).find(l => l.id === newItem.id);
+      if (!it) return;
+      it.title = meta.title;
+      it.channel = meta.channel;
+      save();
+      renderContentTab();
+    });
+  }
 }
 
 function _deleteContentLink(id) {
   const proj = getProject();
   if (!proj || !proj.contentLinks) return;
   proj.contentLinks = proj.contentLinks.filter(l => l.id !== id);
-  localStorage.setItem('vibespace', JSON.stringify(state));
+  save();
   renderContentTab();
   _syncContentLinksToCloud(proj);
+}
+
+/* ─── Content Viewer ─── */
+let _cvCurrentId = null;
+
+function openContentViewer(id) {
+  const item = (_getContentLinks()).find(l => l.id === id);
+  if (!item) return;
+  _cvCurrentId = id;
+  document.getElementById('cv-title').textContent = item.title || 'YouTube 영상';
+  document.getElementById('cv-channel').textContent = item.channel || '';
+  const playerWrap = document.getElementById('cv-player-wrap');
+  if (item.videoId) {
+    playerWrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${item.videoId}?playsinline=1&rel=0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+  } else {
+    playerWrap.innerHTML = '';
+  }
+  _renderCvProducts(item);
+  // 스크롤 최상단
+  const scrollBody = document.getElementById('cv-scroll-body');
+  if (scrollBody) scrollBody.scrollTop = 0;
+  document.getElementById('content-viewer-screen').style.display = 'flex';
+}
+
+function closeContentViewer() {
+  document.getElementById('content-viewer-screen').style.display = 'none';
+  const playerWrap = document.getElementById('cv-player-wrap');
+  if (playerWrap) playerWrap.innerHTML = ''; // 영상 정지
+  _cvCurrentId = null;
+}
+
+function _renderCvProducts(item) {
+  const list = document.getElementById('cv-product-list');
+  if (!list) return;
+  const products = item.products || [];
+  if (!products.length) {
+    list.innerHTML = `<div class="cv-empty-products">✏️ 아래 버튼을 눌러<br>영상에 나오는 제품을 추가해보세요</div>`;
+    return;
+  }
+  list.innerHTML = `<div class="cv-prod-section-title">제품 리스트 ${products.length}</div>` +
+    products.map(p => `
+      <div class="cv-product-item">
+        <div style="flex:1;min-width:0;">
+          <div class="cv-product-name">${esc(p.name)}</div>
+          ${p.url ? `<div class="cv-product-link"><a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.url)}</a></div>` : ''}
+        </div>
+        <button class="cv-product-del" onclick="_deleteCvProduct('${p.id}')">×</button>
+      </div>`).join('');
+}
+
+function openCvProductSheet() {
+  const sheet = document.getElementById('cv-product-sheet');
+  document.getElementById('cv-prod-name-input').value = '';
+  document.getElementById('cv-prod-url-input').value = '';
+  sheet.classList.add('open');
+  setTimeout(() => document.getElementById('cv-prod-name-input').focus(), 120);
+}
+
+function closeCvProductSheet() {
+  document.getElementById('cv-product-sheet').classList.remove('open');
+}
+
+function _addCvProduct() {
+  const name = document.getElementById('cv-prod-name-input')?.value.trim();
+  if (!name) { document.getElementById('cv-prod-name-input')?.focus(); return; }
+  const url = document.getElementById('cv-prod-url-input')?.value.trim() || '';
+  const proj = getProject();
+  const item = (proj?.contentLinks || []).find(l => l.id === _cvCurrentId);
+  if (!item) return;
+  if (!item.products) item.products = [];
+  item.products.push({ id: Date.now().toString(36), name, url });
+  save();
+  _renderCvProducts(item);
+  renderContentTab();
+  closeCvProductSheet();
+  _syncContentLinksToCloud(proj);
+}
+
+function _deleteCvProduct(productId) {
+  const proj = getProject();
+  const item = (proj?.contentLinks || []).find(l => l.id === _cvCurrentId);
+  if (!item) return;
+  item.products = (item.products || []).filter(p => p.id !== productId);
+  save();
+  _renderCvProducts(item);
+  renderContentTab();
+  _syncContentLinksToCloud(proj);
+}
+
+function _deleteCvCurrent() {
+  if (!_cvCurrentId) return;
+  const id = _cvCurrentId;
+  closeContentViewer();
+  _deleteContentLink(id);
 }
 
 
@@ -11112,6 +11251,53 @@ async function fpShareLink() {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       공유 링크
     </button>
+  </div>
+</div>
+
+<!-- ===== CONTENT VIEWER SCREEN ===== -->
+<div id="content-viewer-screen">
+  <!-- header -->
+  <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;flex-shrink:0;">
+    <button class="back-btn" onclick="closeContentViewer()">
+      <svg class="icon" width="24" height="24" style="stroke-width:2.8"><use href="#icon-chevron-left"/></svg>
+    </button>
+    <h2 id="cv-title" style="flex:1;font-size:16px;font-weight:700;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px;"></h2>
+    <button class="sv-icon-btn" onclick="_deleteCvCurrent()" title="삭제">
+      <svg width="20" height="20" fill="none" stroke="#333" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
+  <!-- scroll body: player + products -->
+  <div id="cv-scroll-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;">
+    <div class="cv-player-wrap" id="cv-player-wrap"></div>
+    <div id="cv-channel"></div>
+    <div id="cv-product-list"></div>
+  </div>
+  <!-- floating pencil button -->
+  <div id="cv-product-float">
+    <button class="sv-memo-float-btn" onclick="openCvProductSheet()" title="제품 추가">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#333"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- 제품 추가 바텀시트 -->
+<div id="cv-product-sheet">
+  <div class="cv-sheet-backdrop" onclick="closeCvProductSheet()"></div>
+  <div class="cv-sheet-panel">
+    <div class="cv-sheet-handle"></div>
+    <div class="cv-sheet-title">제품 추가</div>
+    <div class="cv-sheet-field">
+      <input class="cv-sheet-input" id="cv-prod-name-input" placeholder="제품명 (필수)"
+        onkeydown="if(event.key==='Enter')document.getElementById('cv-prod-url-input').focus()">
+    </div>
+    <div class="cv-sheet-field">
+      <input class="cv-sheet-input" id="cv-prod-url-input" placeholder="제품 링크 (선택)"
+        onkeydown="if(event.key==='Enter')_addCvProduct()">
+    </div>
+    <div class="cv-sheet-actions">
+      <button class="cv-sheet-cancel" onclick="closeCvProductSheet()">취소</button>
+      <button class="cv-sheet-confirm" onclick="_addCvProduct()">추가하기</button>
+    </div>
   </div>
 </div>
 
