@@ -320,13 +320,13 @@ button, input, textarea, select { font-family:var(--font); }
 .summary-divider { display:none; }
 .summary-more-btn {
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  width: 100%; height: 40px; margin-top: 10px;
+  width: 100%; height: 40px; margin-top: 14px;
   border: none; background: none; cursor: pointer;
-  font-size: 14px; font-weight: 500; color: #888;
+  font-size: 14px; font-weight: 600; color: #555555;
   font-family: var(--font); border-top: 1px solid #f0f2f5;
   -webkit-tap-highlight-color: transparent;
 }
-.summary-more-btn:active { color: #333; }
+.summary-more-btn:active { color: #111; }
 
 /* ===== TABS ===== */
 .tab-section {
@@ -1106,28 +1106,36 @@ button, input, textarea, select { font-family:var(--font); }
   padding: 12px 16px 12px;
   background: #fff;
   flex-shrink: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
-.plan-phase-bar::-webkit-scrollbar { display: none; }
 .phase-segment {
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: max-content;
+  width: 100%;
+  position: relative;
+}
+/* 탭 사이를 연결하는 가운데 수평 라인 */
+.phase-segment::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  right: 19px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1.5px;
+  background: #d8dae3;
+  z-index: 0;
 }
 .phase-step {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
   height: 38px;
-  padding: 2px 14px;
+  padding: 2px 4px;
   border: 1.5px solid #d8dae3;
   border-radius: 999px;
   background: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #888;
   cursor: pointer;
@@ -1135,7 +1143,8 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-tap-highlight-color: transparent;
   transition: background .15s, color .15s, border-color .15s;
   font-family: var(--font);
-  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 .phase-step .phase-label { display: inline; }
 .phase-step.active {
@@ -1307,7 +1316,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-color: transparent;
 }
 .work-card.expanded .work-card-body {
-  max-height:800px; opacity:1; padding:2px 18px 0;
+  max-height:420px; overflow-y:auto; opacity:1; padding:2px 18px 0;
   border-top:1px solid #f0f2f5;
 }
 .work-card-body .work-field { pointer-events:none; }
@@ -2705,6 +2714,70 @@ button, input, textarea, select { font-family:var(--font); }
 }
 
 /* ===== FLOOR PLAN UPLOAD ===== */
+/* 도면 다중 업로드 */
+.floorplan-multi-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin: 0 -20px;
+  padding: 0 20px 4px;
+}
+.floorplan-multi-scroll::-webkit-scrollbar { display: none; }
+.floorplan-slot {
+  flex-shrink: 0;
+  width: 220px;
+  height: 160px;
+  border-radius: 12px;
+  border: 1.5px dashed #c8cdd8;
+  background: #fafbfc;
+  position: relative;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+.floorplan-slot img {
+  width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 10px;
+}
+.floorplan-slot-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.floorplan-slot-placeholder span { font-size: 12px; color: #bbb; }
+.floorplan-slot-del {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.5); border: none; border-radius: 50%;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #fff; font-size: 14px; z-index: 2;
+}
+/* 도면 뷰 다중 이미지 스크롤 */
+.iv-floorplan-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin: 0 -18px;
+  padding: 0 18px 4px;
+}
+.iv-floorplan-scroll::-webkit-scrollbar { display: none; }
+.iv-floorplan-scroll img {
+  flex-shrink: 0;
+  width: 240px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  scroll-snap-align: start;
+  display: block;
+}
+
 .floorplan-upload-area {
   border:1.5px dashed #dde3ef; border-radius:12px;
   min-height:120px; display:flex; align-items:center; justify-content:center;
@@ -2963,7 +3036,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="summary-wrap">
     <div class="summary-unified">
       <div class="summary-toggle-row" onclick="toggleSummary()">
-        <span>공사 한눈에 보기</span>
+        <span>공사정보</span>
         <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
       </div>
       <div class="summary-card" id="summary-card">
@@ -3087,6 +3160,18 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
     <div id="form-view-panel" class="info-view-body" style="display:none;">
+      <div class="info-view-card" id="iv-floorplan-card" style="display:none;">
+        <div class="info-view-floorplan-wrap">
+          <div class="fp-edit-row">
+            <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
+            <button class="fp-edit-btn" onclick="openFpEditor()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#333"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              도면 편집
+            </button>
+          </div>
+          <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
+        </div>
+      </div>
       <div class="info-view-hero">
         <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
         <div class="info-view-project-name" id="iv-project-name">-</div>
@@ -3125,23 +3210,37 @@ button, input, textarea, select { font-family:var(--font); }
           <div class="info-view-memo-text" id="iv-memo"></div>
         </div>
       </div>
-      <div class="info-view-card" id="iv-floorplan-card" style="display:none;">
-        <div class="info-view-floorplan-wrap">
-          <div class="fp-edit-row">
-            <div class="info-view-floorplan-label" style="margin-bottom:0;">아파트 도면</div>
-            <button class="fp-edit-btn" onclick="openFpEditor()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="#333"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-              도면 편집
-            </button>
-          </div>
-          <img id="iv-floorplan-img" style="width:100%;border-radius:8px;display:block;" alt="도면 이미지">
-        </div>
-      </div>
     </div>
 
     <!-- ▶ EDIT MODE (기존 폼) -->
     <div id="form-edit-panel" style="display:contents;">
     <div class="form-body">
+      <div class="form-group" id="floorplan-group">
+        <span class="form-label">도면 이미지 <span style="font-weight:400;color:#aaa;font-size:13px;">(최대 3장, 선택)</span></span>
+        <div class="floorplan-multi-scroll" id="floorplan-multi-scroll">
+          <div class="floorplan-slot" id="fp-slot-0" onclick="_fpSlotClick(0)">
+            <input type="file" id="fp-input-0" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,0)">
+            <div class="floorplan-slot-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>도면 추가</span>
+            </div>
+          </div>
+          <div class="floorplan-slot" id="fp-slot-1" onclick="_fpSlotClick(1)">
+            <input type="file" id="fp-input-1" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,1)">
+            <div class="floorplan-slot-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>도면 추가</span>
+            </div>
+          </div>
+          <div class="floorplan-slot" id="fp-slot-2" onclick="_fpSlotClick(2)">
+            <input type="file" id="fp-input-2" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,2)">
+            <div class="floorplan-slot-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>도면 추가</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="form-group">
         <span class="form-label">프로젝트명</span>
         <input class="addr-input" id="f-project-name" placeholder="예: 서울 마포 34평 리모델링" oninput="saveFormData()">
@@ -3206,21 +3305,6 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="form-group">
         <span class="form-label">메모</span>
         <textarea class="textarea-field" id="f-memo" onchange="saveFormData()" placeholder="업체에 전달할 사항, 요청 사항 등을 메모해두세요"></textarea>
-      </div>
-      <div class="form-group" id="floorplan-group">
-        <span class="form-label">아파트 도면 이미지 <span style="font-weight:400;color:#aaa;font-size:13px;">(선택)</span></span>
-        <div class="floorplan-upload-area" id="floorplan-drop-area" onclick="document.getElementById('floorplan-input').click()">
-          <input type="file" id="floorplan-input" accept="image/*" style="display:none;" onchange="handleFloorplanUpload(event)">
-          <div id="floorplan-preview-wrap" style="display:none;">
-            <img id="floorplan-preview-img" style="width:100%;border-radius:8px;display:block;" alt="도면 이미지">
-            <button type="button" onclick="clearFloorplan(event)" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;">✕</button>
-          </div>
-          <div id="floorplan-placeholder">
-            <svg class="icon" width="32" height="32" style="color:#bbb;stroke-width:1.5"><use href="#icon-layout-grid"/></svg>
-            <div style="font-size:13px;color:#bbb;margin-top:8px;">도면 이미지를 업로드하세요</div>
-            <div style="font-size:13px;color:#ddd;margin-top:4px;">JPG, PNG, PDF 등 이미지 파일</div>
-          </div>
-        </div>
       </div>
     </div>
     <div class="form-footer">
@@ -7927,15 +8011,8 @@ function loadFormData() {
   document.getElementById('f-memo').value = f.memo || '';
   document.getElementById('f-address').value = f.address || '';
   document.getElementById('f-address-detail').value = f.addressDetail || '';
-  // Load floor plan
-  const fpImg = proj?.floorplanImage;
-  if (fpImg) _showFloorplanPreview(fpImg);
-  else {
-    const pw = document.getElementById('floorplan-preview-wrap');
-    const pp = document.getElementById('floorplan-placeholder');
-    if (pw) pw.style.display = 'none';
-    if (pp) pp.style.display = 'flex';
-  }
+  // 도면 슬롯 렌더링 (하위 호환: floorplanImages 없으면 floorplanImage로 초기화)
+  _renderFpSlots();
 }
 function onSizeChange() {
   const wrap = document.getElementById('size-exact-wrap');
@@ -8016,13 +8093,23 @@ function _loadInfoView() {
   if (memoEl) { memoEl.textContent = f.memo || ''; }
   const memoCard = document.getElementById('iv-memo-card');
   if (memoCard) memoCard.style.display = f.memo ? 'block' : 'none';
-  // 도면
-  const fpCard = document.getElementById('iv-floorplan-card');
-  const fpImg  = document.getElementById('iv-floorplan-img');
-  if (fpCard && fpImg) {
-    const fpSrc = proj.floorplanEditedImage || proj.floorplanImage;
-    if (fpSrc) { fpImg.src = fpSrc; fpCard.style.display = 'block'; }
-    else { fpCard.style.display = 'none'; }
+  // 도면 (다중 이미지)
+  const fpCard   = document.getElementById('iv-floorplan-card');
+  const fpScroll = document.getElementById('iv-floorplan-scroll');
+  if (fpCard && fpScroll) {
+    const images = _getFpImages(proj);
+    const editedSrc = proj.floorplanEditedImage;
+    // 편집 이미지가 있으면 슬롯 0 자리에 표시
+    const displayImages = images.map((src, i) => (i === 0 && editedSrc) ? editedSrc : src);
+    const validImgs = displayImages.filter(Boolean);
+    if (validImgs.length) {
+      fpScroll.innerHTML = validImgs.map((src, i) =>
+        `<img src="${src}" alt="도면 ${i+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">`
+      ).join('');
+      fpCard.style.display = 'block';
+    } else {
+      fpCard.style.display = 'none';
+    }
   }
 }
 
@@ -9836,6 +9923,17 @@ function showToastMessage(msg) {
 
 // ===== FLOOR PLAN IMAGE =====
 function handleFloorplanUpload(e) {
+  // 하위 호환: 기존 단일 업로드 호출 시 슬롯 0으로 처리
+  _fpSlotUpload(e, 0);
+}
+function _fpSlotClick(idx) {
+  const proj = getProject();
+  const images = _getFpImages(proj);
+  // 이미 이미지가 있으면 삭제 버튼으로 처리(슬롯 클릭은 업로드만)
+  if (images[idx]) return;
+  document.getElementById('fp-input-' + idx)?.click();
+}
+function _fpSlotUpload(e, idx) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 10 * 1024 * 1024) { alert('10MB 이하 이미지만 업로드 가능합니다.'); return; }
@@ -9843,36 +9941,92 @@ function handleFloorplanUpload(e) {
   reader.onload = ev => {
     const proj = getProject();
     if (proj) {
-      proj.floorplanImage = ev.target.result;
-      // 로컬에 즉시 저장 (cloud sync 실패해도 보존)
+      if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
+      while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
+      proj.floorplanImages[idx] = ev.target.result;
+      // 슬롯 0의 이미지를 floorplanImage에도 동기화 (fp-editor 호환)
+      if (idx === 0) proj.floorplanImage = ev.target.result;
       localStorage.setItem('vibespace', JSON.stringify(state));
       _lastSaveTime = Date.now();
-      // cloud sync (base64 용량 초과 시 실패할 수 있으나 로컬은 보존됨)
       const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
       if (proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
         _syncProjToCloud(proj);
       }
     }
-    _showFloorplanPreview(ev.target.result);
+    _renderFpSlots();
+    if (e.target) e.target.value = '';
   };
   reader.readAsDataURL(file);
 }
-function _showFloorplanPreview(src) {
-  const placeholder = document.getElementById('floorplan-placeholder');
-  const previewWrap = document.getElementById('floorplan-preview-wrap');
-  const previewImg = document.getElementById('floorplan-preview-img');
-  if (!placeholder || !previewWrap || !previewImg) return;
-  previewImg.src = src;
-  placeholder.style.display = 'none';
-  previewWrap.style.display = 'block';
-}
-function clearFloorplan(e) {
+function _fpSlotDelete(e, idx) {
   e.stopPropagation();
   const proj = getProject();
-  if (proj) { delete proj.floorplanImage; save(); }
-  document.getElementById('floorplan-preview-wrap').style.display = 'none';
-  document.getElementById('floorplan-placeholder').style.display = 'flex';
-  document.getElementById('floorplan-input').value = '';
+  if (proj) {
+    if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
+    proj.floorplanImages[idx] = null;
+    if (idx === 0) {
+      // 슬롯 0 삭제 시 floorplanImage를 다음 유효 이미지로 대체
+      proj.floorplanImage = proj.floorplanImages.find(Boolean) || null;
+      if (!proj.floorplanImage) delete proj.floorplanImage;
+    }
+    save();
+  }
+  _renderFpSlots();
+}
+function _getFpImages(proj) {
+  if (!proj) return [null, null, null];
+  // 하위 호환: floorplanImages 없으면 floorplanImage로 초기화
+  if (!proj.floorplanImages) {
+    proj.floorplanImages = [proj.floorplanImage || null, null, null];
+  }
+  while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
+  return proj.floorplanImages;
+}
+function _renderFpSlots() {
+  const proj = getProject();
+  const images = _getFpImages(proj);
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById('fp-slot-' + i);
+    if (!slot) continue;
+    const src = images[i];
+    if (src) {
+      slot.innerHTML = `
+        <img src="${src}" alt="도면 ${i+1}">
+        <button class="floorplan-slot-del" onclick="_fpSlotDelete(event,${i})">✕</button>
+      `;
+      slot.style.border = 'none';
+    } else {
+      slot.innerHTML = `
+        <input type="file" id="fp-input-${i}" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,${i})">
+        <div class="floorplan-slot-placeholder">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>도면 추가</span>
+        </div>
+      `;
+      slot.style.border = '1.5px dashed #c8cdd8';
+      slot.onclick = () => document.getElementById('fp-input-' + i)?.click();
+    }
+  }
+}
+function _showFloorplanPreview(src) {
+  // 하위 호환용 — 슬롯 0에 반영
+  const proj = getProject();
+  if (proj) {
+    if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
+    proj.floorplanImages[0] = src;
+    proj.floorplanImage = src;
+  }
+  _renderFpSlots();
+}
+function clearFloorplan(e) {
+  if (e) e.stopPropagation();
+  const proj = getProject();
+  if (proj) {
+    delete proj.floorplanImage;
+    proj.floorplanImages = [null, null, null];
+    save();
+  }
+  _renderFpSlots();
 }
 
 // ===== FEEDBACK =====
@@ -10410,9 +10564,24 @@ let fpDrawObj = null;
 // ──────────────────────────────────────────
 // Open / Close
 // ──────────────────────────────────────────
+function openPhotoModalFp(src) {
+  let modal = document.getElementById('fp-photo-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'fp-photo-modal';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;';
+    modal.onclick = () => modal.remove();
+    modal.innerHTML = '<img style="max-width:100vw;max-height:100vh;object-fit:contain;" /><button onclick="event.stopPropagation();this.parentNode.remove()" style="position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>';
+    document.body.appendChild(modal);
+  }
+  modal.querySelector('img').src = src;
+  modal.style.display = 'flex';
+}
+
 function openFpEditor() {
   const proj = getProject();
-  const imgUrl = proj?.floorplanImage;
+  const images = _getFpImages(proj);
+  const imgUrl = proj?.floorplanEditedImage || images.find(Boolean) || proj?.floorplanImage;
   if (!imgUrl) { alert('도면 이미지를 먼저 업로드하세요.'); return; }
   const ed = document.getElementById('fp-editor');
   ed.style.display = 'flex';
@@ -10563,6 +10732,19 @@ function fpInitCanvas(bgUrl) {
   fpCanvas.on('mouse:down', fpOnMouseDown);
   fpCanvas.on('mouse:move', fpOnMouseMove);
   fpCanvas.on('mouse:up', fpOnMouseUp);
+  fpCanvas.on('path:created', () => { fpSaveHistory(); });
+}
+
+function fpSetPenColor(color, el) {
+  fpShapeColor = color;
+  document.querySelectorAll('#fp-pen-colors .fp-color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (fpCanvas && fpCanvas.isDrawingMode) fpCanvas.freeDrawingBrush.color = color;
+}
+function fpSetPenW(w, btn) {
+  if (fpCanvas && fpCanvas.isDrawingMode) fpCanvas.freeDrawingBrush.width = w;
+  document.querySelectorAll('[data-pw]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 }
 
 // ──────────────────────────────────────────
@@ -10576,14 +10758,24 @@ function fpSetTool(tool) {
 
   const textBar = document.getElementById('fp-text-bar');
   const shapeBar = document.getElementById('fp-shape-bar');
+  const penBar = document.getElementById('fp-pen-bar');
   textBar.style.display = tool === 'text' ? 'flex' : 'none';
   shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow') ? 'flex' : 'none';
+  if (penBar) penBar.style.display = tool === 'pen' ? 'flex' : 'none';
 
   if (!fpCanvas) return;
-  fpCanvas.isDrawingMode = false;
-  fpCanvas.selection = (tool === 'select');
-  fpCanvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
-  fpCanvas.forEachObject(o => { o.selectable = (tool === 'select'); });
+  if (tool === 'pen') {
+    fpCanvas.isDrawingMode = true;
+    fpCanvas.freeDrawingBrush.color = fpShapeColor;
+    fpCanvas.freeDrawingBrush.width = fpStrokeW * 2;
+    fpCanvas.selection = false;
+    fpCanvas.forEachObject(o => { o.selectable = false; });
+  } else {
+    fpCanvas.isDrawingMode = false;
+    fpCanvas.selection = (tool === 'select');
+    fpCanvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
+    fpCanvas.forEachObject(o => { o.selectable = (tool === 'select'); });
+  }
 }
 
 // ──────────────────────────────────────────
@@ -10944,22 +11136,17 @@ async function fpSave() {
         const downloadUrl = await ref.getDownloadURL();
         proj.floorplanEditedImage = downloadUrl;
         save();
-        const fpImg = document.getElementById('iv-floorplan-img');
-        if (fpImg) fpImg.src = downloadUrl;
+        _loadInfoView();
       } catch(storageErr) {
-        // Storage 권한 오류 등 → 로컬 data URL로 폴백
         console.warn('Storage 업로드 실패, 로컬 저장으로 전환:', storageErr.message);
         proj.floorplanEditedImage = dataURL;
         save();
-        const fpImg = document.getElementById('iv-floorplan-img');
-        if (fpImg) fpImg.src = dataURL;
+        _loadInfoView();
       }
     } else {
-      // 로그인 안 됐거나 UID 없을 때 — 앱 내 data URL로 보관
       proj.floorplanEditedImage = dataURL;
       save();
-      const fpImg = document.getElementById('iv-floorplan-img');
-      if (fpImg) fpImg.src = dataURL;
+      _loadInfoView();
     }
 
     btn.innerHTML = '✓ 저장됨';
@@ -11232,6 +11419,9 @@ async function fpShareLink() {
       <button class="fp-hbtn" id="fp-tool-arrow" onclick="fpSetTool('arrow')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>화살표
       </button>
+      <button class="fp-hbtn" id="fp-tool-pen" onclick="fpSetTool('pen')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>펜
+      </button>
     </div>
     <div class="fp-sep"></div>
     <div id="fp-header-right">
@@ -11286,6 +11476,23 @@ async function fpShareLink() {
     <button class="fp-stroke-btn" id="fp-fill-toggle" onclick="fpToggleFill()">
       <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="10" rx="1" fill="currentColor" opacity="0.5" stroke="currentColor" stroke-width="1"/></svg>
     </button>
+  </div>
+
+  <!-- Pen options sub-bar -->
+  <div id="fp-pen-bar" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:#fff;border-bottom:1px solid #e5e5ec;flex-wrap:wrap;">
+    <span style="font-size:11px;color:#666;font-weight:700;padding:7px 0;">색상</span>
+    <div id="fp-pen-colors" style="display:flex;gap:5px;align-items:center;">
+      <div class="fp-color-dot active" data-color="#111111" style="background:#111;" onclick="fpSetPenColor('#111111',this)"></div>
+      <div class="fp-color-dot" data-color="#e74c3c" style="background:#e74c3c;" onclick="fpSetPenColor('#e74c3c',this)"></div>
+      <div class="fp-color-dot" data-color="#2980b9" style="background:#2980b9;" onclick="fpSetPenColor('#2980b9',this)"></div>
+      <div class="fp-color-dot" data-color="#27ae60" style="background:#27ae60;" onclick="fpSetPenColor('#27ae60',this)"></div>
+      <div class="fp-color-dot" data-color="#f39c12" style="background:#f39c12;" onclick="fpSetPenColor('#f39c12',this)"></div>
+    </div>
+    <div class="fp-sep"></div>
+    <span style="font-size:11px;color:#666;font-weight:700;">굵기</span>
+    <button class="fp-stroke-btn active" data-pw="2" onclick="fpSetPenW(2,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1"/></svg></button>
+    <button class="fp-stroke-btn" data-pw="4" onclick="fpSetPenW(4,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="2"/></svg></button>
+    <button class="fp-stroke-btn" data-pw="8" onclick="fpSetPenW(8,this)"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="4"/></svg></button>
   </div>
 
   <!-- Body -->
