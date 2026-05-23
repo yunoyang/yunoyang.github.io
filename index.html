@@ -4208,13 +4208,16 @@ function _saveMeetingImagesToLS(projects) {
   // 회의록 이미지(base64)를 별도 키에 분리 저장 → 메인 JSON 용량 절감
   (projects || []).forEach(p => {
     (p.meetings || []).forEach(m => {
-      if (!m.images || !m.images.length) return;
+      if (!Array.isArray(m.images) || !m.images.length) return;
       const hasDataUrl = m.images.some(img => (img||'').startsWith('data:'));
-      if (!hasDataUrl) return; // 이미 분리됐거나 없음
+      if (!hasDataUrl) return; // Firebase URL이거나 없음
       try {
         localStorage.setItem(`vb_mi_${p.id}_${m.id}`, JSON.stringify(m.images));
-      } catch(_) {}
-      m.images = '__vb_mi__'; // 플레이스홀더
+        m.images = '__vb_mi__'; // 저장 성공 후에만 플레이스홀더 설정
+      } catch(e) {
+        console.warn('[vb_mi] 이미지 분리저장 실패:', e);
+        // 저장 실패 시 플레이스홀더 설정 안 함 → 메인 JSON에 그대로 포함
+      }
     });
   });
 }
@@ -9393,8 +9396,13 @@ function _syncProjToCloud(proj) {
     const projData = JSON.parse(JSON.stringify(proj));
     delete projData.myRole;
     // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
-    // contentLinks: 로컬이 정본 (삭제 반영). 협업자가 추가한 항목도 로컬에 이미 sync됨
     projData.contentLinks = proj.contentLinks || [];
+    // base64 회의록 이미지 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage vb_mi_* 에 분리 저장)
+    (projData.meetings || []).forEach(m => {
+      if (Array.isArray(m.images)) {
+        m.images = m.images.filter(img => img && !img.startsWith('data:'));
+      }
+    });
     const payload = {
       projectData: projData,
       ownerEmail: state.user.email,
@@ -9558,12 +9566,21 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
+    // 회의록 이미지 보존 (base64는 localStorage vb_mi_* 에 분리 저장, Firestore에 없음)
+    const localMeetingImgMap = {};
+    (proj.meetings || []).forEach(m => {
+      if (Array.isArray(m.images) && m.images.length) localMeetingImgMap[m.id] = m.images;
+    });
     // N 뱃지: merge 전에 새 항목 감지
     _markNewFromCollab(cloudId, proj, remote);
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
     // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
     if (localFloorplan) proj.floorplanImage = localFloorplan;
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
+    // 회의록 이미지 복원 — cloud merge 후 로컬 이미지가 지워지지 않도록
+    (proj.meetings || []).forEach(m => {
+      if (localMeetingImgMap[m.id]) m.images = localMeetingImgMap[m.id];
+    });
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
@@ -10958,8 +10975,15 @@ async function _syncMeetingsToCloud(proj) {
   const ok = await _initFirebase();
   if (!ok || !_db || !proj.cloudId) return;
   try {
+    // base64 이미지는 localStorage에만 저장 → Firestore 1MB 제한 방지
+    const meetingsLite = (proj.meetings || []).map(m => ({
+      ...m,
+      images: Array.isArray(m.images)
+        ? m.images.filter(img => img && !img.startsWith('data:'))
+        : [],
+    }));
     await _db.collection('vb_projects').doc(proj.cloudId).update({
-      'projectData.meetings': proj.meetings || [],
+      'projectData.meetings': meetingsLite,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
     });
