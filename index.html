@@ -4245,7 +4245,7 @@ const _MIdb = (() => {
         tx.objectStore(STORE).delete(meetId);
       } catch(e) {}
     },
-    // 앱 시작 시 state의 모든 meeting.images를 IDB에서 복원
+    // 앱 시작 시 IDB base64 이미지를 state에 합산 (Firebase URL은 이미 state에 있음)
     async loadAll() {
       try {
         const db = await open();
@@ -4257,7 +4257,12 @@ const _MIdb = (() => {
         if (!keys.length) return;
         for (const p of (state.projects||[])) {
           for (const m of (p.meetings||[])) {
-            if (keys.includes(m.id)) m.images = await this.get(m.id);
+            if (!keys.includes(m.id)) continue;
+            const idbImgs = await this.get(m.id);
+            // Firebase URL은 이미 m.images에 있음 → base64만 추가(합집합)
+            const existing = Array.isArray(m.images) ? m.images : [];
+            const newB64 = idbImgs.filter(img => img.startsWith('data:') && !existing.includes(img));
+            if (newB64.length) m.images = [...existing, ...newB64];
           }
         }
       } catch(e) { console.warn('[MIdb.loadAll]', e); }
@@ -4284,9 +4289,15 @@ async function _migrateMeetingImgLS() {
 }
 
 function _stripMeetingImages(projects) {
-  // localStorage JSON에서 이미지 제거 (IDB에 저장하므로 불필요)
+  // localStorage JSON: Firebase URL은 보존 (다기기 공유), base64만 제거
   (projects||[]).forEach(p => {
-    (p.meetings||[]).forEach(m => { m.images = []; });
+    (p.meetings||[]).forEach(m => {
+      if (Array.isArray(m.images)) {
+        m.images = m.images.filter(img => img && !img.startsWith('data:'));
+      } else {
+        m.images = [];
+      }
+    });
   });
 }
 
@@ -10894,7 +10905,8 @@ function _mwEditorInput() {
   const matches = query ? all.filter(p=>p.name.toLowerCase().includes(query)||p.email.toLowerCase().includes(query)) : all;
   if (!matches.length) { dropdown.style.display='none'; return; }
   dropdown.style.display = 'block';
-  dropdown.innerHTML = matches.map(p=>`<div onclick="_mwInsertMention('${p.email}','${esc(p.name)}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
+  // onmousedown + preventDefault: 클릭 시 에디터 포커스 유지 (getSelection 보존)
+  dropdown.innerHTML = matches.map(p=>`<div onmousedown="event.preventDefault();_mwInsertMention('${p.email}','${esc(p.name)}')" ontouchstart="event.preventDefault();_mwInsertMention('${p.email}','${esc(p.name)}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
 }
 
 function _mwEditorKeydown(e) {
@@ -10942,8 +10954,8 @@ function _mwRenderMentionChips() {
   }).join('');
 }
 
-// 이미지 압축: 최대 800px, JPEG 72% — localStorage 용량 초과 방지
-function _compressImage(dataUrl, maxW = 800, quality = 0.72) {
+// 회의록 전용 이미지 압축 (dataUrl → dataUrl) — _compressImage(File)와 별도
+function _compressMeetingImg(dataUrl, maxW = 900, quality = 0.75) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -10954,27 +10966,44 @@ function _compressImage(dataUrl, maxW = 800, quality = 0.72) {
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
+    img.onerror = () => resolve(null);
     img.src = dataUrl;
   });
 }
 
-function _meetingImagePreview(input) {
+async function _meetingImagePreview(input) {
   const files = Array.from(input.files);
   const preview = document.getElementById('meeting-images-preview');
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = async e => {
-      const compressed = await _compressImage(e.target.result);
-      _meetingImages.push(compressed);
-      const idx = _meetingImages.length - 1;
-      const div = document.createElement('div');
-      div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
-      div.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;">
-        <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
-      preview.appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
+  for (const file of files) {
+    // FileReader → dataUrl
+    const raw = await new Promise(res => {
+      const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file);
+    });
+    const compressed = await _compressMeetingImg(raw);
+    if (!compressed) continue;
+    let finalSrc = compressed;
+    // 로그인 + Firebase Storage 사용 가능 시 → Storage 업로드 (다기기 공유)
+    if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+      try {
+        const proj = getProject();
+        const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
+        const path = `meetingImages/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
+        const ref = _fbStorage.ref(path);
+        await ref.put(_dataUrlToBlob(compressed), { contentType:'image/jpeg' });
+        finalSrc = await ref.getDownloadURL();
+      } catch(err) {
+        console.warn('[meetingImg] Storage 실패, base64 사용:', err.message);
+        finalSrc = compressed;
+      }
+    }
+    _meetingImages.push(finalSrc);
+    const idx = _meetingImages.length - 1;
+    const div = document.createElement('div');
+    div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
+    div.innerHTML = `<img src="${finalSrc}" style="width:100%;height:100%;object-fit:cover;">
+      <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
+    preview.appendChild(div);
+  }
 }
 
 function _removeMeetingImage(idx, el) {
@@ -11016,8 +11045,9 @@ async function saveMeeting() {
         mentions: mentionEmails,
         updatedAt: Date.now(),
       };
-      // IDB에 이미지 저장 (localStorage 한도 우회)
-      _MIdb.put(_editingMeetingId, imgSnapshot);
+      // IDB에 base64만 저장 (Firebase URL은 localStorage/Firestore에 있음)
+      const b64Edit = imgSnapshot.filter(img => img.startsWith('data:'));
+      b64Edit.length ? _MIdb.put(_editingMeetingId, b64Edit) : _MIdb.del(_editingMeetingId);
     }
     _editingMeetingId = null;
     save();
@@ -11039,8 +11069,9 @@ async function saveMeeting() {
       createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
     };
     proj.meetings.push(meeting);
-    // IDB에 이미지 저장 (localStorage 한도 우회)
-    _MIdb.put(meeting.id, imgSnapshot);
+    // IDB에 base64만 저장 (Firebase URL은 localStorage/Firestore에 있음)
+    const b64New = imgSnapshot.filter(img => img.startsWith('data:'));
+    if (b64New.length) _MIdb.put(meeting.id, b64New);
     save();
     closeMeetingAdd();
     renderMeetingTab();
