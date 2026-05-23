@@ -3016,7 +3016,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-main">
   <div class="header">
     <button class="header-home-btn" onclick="goTo('landing')" title="홈으로">
-      <svg width="24" height="24" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="3"/></svg>
+      <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="3"/></svg>
     </button>
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
@@ -3163,7 +3163,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="form-title">공사 정보</h2>
       <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
-        <svg width="20" height="20" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+        <svg width="24" height="24" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
       </button>
     </div>
 
@@ -5660,7 +5660,7 @@ function _formatMemoTime(ts) {
 function _svBuildMemosHtml(memos) {
   if (!memos?.length) return '';
   const myEmail = state.user?.email || '';
-  const _heartSvg = (on) => `<svg width="14" height="14" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8983 7.38503C20.594 4.72027 17.2151 7.38502 16 8.60992C14.7848 7.38502 11.406 4.72027 8.10169 7.38503C4.79734 10.0498 4.07919 15.5791 8.70925 20.2464C13.3393 24.9137 16 25.7585 16 25.7585C16 25.7585 18.6607 24.9137 23.2907 20.2464C27.9208 15.5791 27.2026 10.0498 23.8983 7.38503Z" stroke="${on?'#ff3b4e':'#333'}" stroke-width="3" fill="${on?'#ff3b4e':'none'}"/></svg>`;
+  const _heartSvg = (on) => `<svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8983 7.38503C20.594 4.72027 17.2151 7.38502 16 8.60992C14.7848 7.38502 11.406 4.72027 8.10169 7.38503C4.79734 10.0498 4.07919 15.5791 8.70925 20.2464C13.3393 24.9137 16 25.7585 16 25.7585C16 25.7585 18.6607 24.9137 23.2907 20.2464C27.9208 15.5791 27.2026 10.0498 23.8983 7.38503Z" stroke="${on?'#ff3b4e':'#333'}" stroke-width="3" fill="${on?'#ff3b4e':'none'}"/></svg>`;
 
   const items = memos.map(m => {
     const ini = (m.author?.name || m.author?.email || '?').charAt(0).toUpperCase();
