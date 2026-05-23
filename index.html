@@ -3016,7 +3016,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-main">
   <div class="header">
     <button class="header-home-btn" onclick="goTo('landing')" title="홈으로">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.02 2.84004L3.63 7.04004C2.73 7.74004 2 9.23004 2 10.36V17.77C2 20.09 3.89 21.99 6.21 21.99H17.79C20.11 21.99 22 20.09 22 17.78V10.5C22 9.29004 21.19 7.74004 20.2 7.05004L14.02 2.72004C12.62 1.74004 10.37 1.79004 9.02 2.84004Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 17.99V14.99" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="24" height="24" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="3"/></svg>
     </button>
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
@@ -3065,6 +3065,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('calendar',this)"><span class="tab-label">일정</span></button>
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
+        <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">회의</span></button>
       </div>
     </div>
 
@@ -3105,6 +3106,11 @@ button, input, textarea, select { font-family:var(--font); }
         </div>
         <div id="content-list"></div>
       </div>
+    </div>
+
+    <!-- Meeting Tab -->
+    <div id="tab-meeting" style="display:none; background:#f7f8fa; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+      <div id="meeting-list" style="padding:14px 16px 100px;"></div>
     </div>
 
 
@@ -3157,7 +3163,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="form-title">공사 정보</h2>
       <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.0176 5C17.7571 5 17.5072 5.1035 17.323 5.28773L6.42504 16.1856C6.04056 16.5701 5.76781 17.0519 5.63593 17.5794L5.37437 18.6256L6.42064 18.3641C6.94813 18.2322 7.42987 17.9594 7.81435 17.575L18.7123 6.67704C18.8035 6.58582 18.8758 6.47752 18.9252 6.35833C18.9746 6.23915 19 6.1114 19 5.98239C19 5.85338 18.9746 5.72563 18.9252 5.60645C18.8758 5.48726 18.8035 5.37896 18.7123 5.28773C18.621 5.19651 18.5127 5.12415 18.3936 5.07478C18.2744 5.02541 18.1466 5 18.0176 5ZM15.9087 3.87352C16.468 3.31421 17.2266 3 18.0176 3C18.4093 3 18.7971 3.07714 19.1589 3.22702C19.5208 3.3769 19.8495 3.59658 20.1265 3.87352C20.4034 4.15046 20.6231 4.47924 20.773 4.84108C20.9229 5.20292 21 5.59074 21 5.98239C21 6.37404 20.9229 6.76186 20.773 7.1237C20.6231 7.48554 20.4034 7.81432 20.1265 8.09126L9.22856 18.9892C8.58777 19.63 7.78487 20.0846 6.90571 20.3043L4.24253 20.9701C3.90176 21.0553 3.54127 20.9555 3.29289 20.7071C3.04451 20.4587 2.94466 20.0982 3.02986 19.7575L3.69565 17.0943C3.91544 16.2151 4.37003 15.4122 5.01083 14.7714L15.9087 3.87352Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.2929 10.7071L13.2929 7.70712L14.7071 6.29291L17.7071 9.29291L16.2929 10.7071Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 20C12 19.4477 12.4477 19 13 19L20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21L13 21C12.4477 21 12 20.5523 12 20Z" fill="black"/></svg>
+        <svg width="20" height="20" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
       </button>
     </div>
 
@@ -3168,7 +3174,7 @@ button, input, textarea, select { font-family:var(--font); }
           <div class="fp-edit-row">
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
             <button class="fp-edit-btn" onclick="openFpEditor()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.0176 5C17.7571 5 17.5072 5.1035 17.323 5.28773L6.42504 16.1856C6.04056 16.5701 5.76781 17.0519 5.63593 17.5794L5.37437 18.6256L6.42064 18.3641C6.94813 18.2322 7.42987 17.9594 7.81435 17.575L18.7123 6.67704C18.8035 6.58582 18.8758 6.47752 18.9252 6.35833C18.9746 6.23915 19 6.1114 19 5.98239C19 5.85338 18.9746 5.72563 18.9252 5.60645C18.8758 5.48726 18.8035 5.37896 18.7123 5.28773C18.621 5.19651 18.5127 5.12415 18.3936 5.07478C18.2744 5.02541 18.1466 5 18.0176 5ZM15.9087 3.87352C16.468 3.31421 17.2266 3 18.0176 3C18.4093 3 18.7971 3.07714 19.1589 3.22702C19.5208 3.3769 19.8495 3.59658 20.1265 3.87352C20.4034 4.15046 20.6231 4.47924 20.773 4.84108C20.9229 5.20292 21 5.59074 21 5.98239C21 6.37404 20.9229 6.76186 20.773 7.1237C20.6231 7.48554 20.4034 7.81432 20.1265 8.09126L9.22856 18.9892C8.58777 19.63 7.78487 20.0846 6.90571 20.3043L4.24253 20.9701C3.90176 21.0553 3.54127 20.9555 3.29289 20.7071C3.04451 20.4587 2.94466 20.0982 3.02986 19.7575L3.69565 17.0943C3.91544 16.2151 4.37003 15.4122 5.01083 14.7714L15.9087 3.87352Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.2929 10.7071L13.2929 7.70712L14.7071 6.29291L17.7071 9.29291L16.2929 10.7071Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 20C12 19.4477 12.4477 19 13 19L20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21L13 21C12.4477 21 12 20.5523 12 20Z" fill="black"/></svg>
+              <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
               도면 편집
             </button>
           </div>
@@ -3435,6 +3441,49 @@ button, input, textarea, select { font-family:var(--font); }
   <button class="floating-btn" onclick="openStyleNewSpace()">
     <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 스타일 추가
   </button>
+</div>
+<div class="floating-group" id="floating-add-meeting" style="display:none;">
+  <button class="floating-btn" onclick="openAddMeeting()">
+    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 회의록 추가
+  </button>
+</div>
+
+<!-- Meeting Add Sheet -->
+<div class="overlay" id="dlg-meeting-add" onclick="if(event.target===this)closeMeetingAdd()" style="display:none;z-index:9200;">
+  <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 env(safe-area-inset-bottom,0);max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div style="width:36px;height:4px;background:#e5e5ec;border-radius:4px;margin:12px auto 0;"></div>
+    <div style="padding:16px 18px 6px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:17px;font-weight:700;color:#111;">회의록 작성</span>
+      <button onclick="closeMeetingAdd()" style="background:none;border:none;padding:4px;cursor:pointer;">
+        <svg class="icon" width="20" height="20"><use href="#icon-x"/></svg>
+      </button>
+    </div>
+    <div style="padding:0 18px 16px;">
+      <input id="meeting-title-input" placeholder="제목을 입력하세요" style="width:100%;box-sizing:border-box;height:48px;border:1.5px solid #e1e5ef;border-radius:12px;padding:0 14px;font-size:16px;font-family:var(--font);margin-bottom:10px;outline:none;">
+      <div style="position:relative;">
+        <textarea id="meeting-content-input" placeholder="미팅 내용, @이름 으로 멘션" style="width:100%;box-sizing:border-box;min-height:120px;border:1.5px solid #e1e5ef;border-radius:12px;padding:12px 14px;font-size:15px;font-family:var(--font);resize:none;outline:none;line-height:1.5;" oninput="_meetingMentionCheck(this)"></textarea>
+        <div id="meeting-mention-dropdown" style="display:none;position:absolute;left:0;right:0;bottom:100%;background:#fff;border:1px solid #e1e5ef;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:10;max-height:160px;overflow-y:auto;"></div>
+      </div>
+      <div id="meeting-mention-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+      <div id="meeting-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+      <label style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;font-size:14px;color:#555;background:#f5f7fa;border-radius:10px;padding:8px 14px;border:1.5px solid #e1e5ef;">
+        <svg class="icon" width="16" height="16"><use href="#icon-plus"/></svg> 이미지 추가
+        <input type="file" accept="image/*" multiple id="meeting-image-input" style="display:none;" onchange="_meetingImagePreview(this)">
+      </label>
+      <button onclick="saveMeeting()" style="width:100%;height:48px;background:#222;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:14px;">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting Detail Screen -->
+<div id="screen-meeting-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+  <div class="form-header">
+    <button class="back-btn" onclick="closeMeetingDetail()">
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+    </button>
+    <h2 id="meeting-detail-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;"></h2>
+  </div>
+  <div id="meeting-detail-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;"></div>
 </div>
 
 <!-- ===== 업체 상세 스크린 (슬라이드 업) ===== -->
@@ -4017,6 +4066,17 @@ let pendingAction = null;
 let calMonth = { year: new Date().getFullYear(), month: new Date().getMonth() };
 
 function getProject() { return state.projects.find(p => p.id === state.currentProjectId); }
+
+// ===== EXPERT ROLE =====
+function isExpert() {
+  return state.user?.email === 'wooonegun@gmail.com';
+}
+function canEdit() {
+  const proj = getProject();
+  if (!proj) return false;
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  return isOwner || isExpert();
+}
 
 let saveTimer = null;
 let _lastSaveTime = 0;
@@ -4838,11 +4898,14 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content') ? 'none' : '';
+  document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = tab === 'style' ? '' : 'none';
+  document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); }
+  if (tab === 'meeting') { renderMeetingTab(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -5597,7 +5660,7 @@ function _formatMemoTime(ts) {
 function _svBuildMemosHtml(memos) {
   if (!memos?.length) return '';
   const myEmail = state.user?.email || '';
-  const _heartSvg = (on) => `<svg width="13" height="13" fill="${on?'#ff3b4e':'none'}" stroke="${on?'#ff3b4e':'#555'}" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  const _heartSvg = (on) => `<svg width="14" height="14" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8983 7.38503C20.594 4.72027 17.2151 7.38502 16 8.60992C14.7848 7.38502 11.406 4.72027 8.10169 7.38503C4.79734 10.0498 4.07919 15.5791 8.70925 20.2464C13.3393 24.9137 16 25.7585 16 25.7585C16 25.7585 18.6607 24.9137 23.2907 20.2464C27.9208 15.5791 27.2026 10.0498 23.8983 7.38503Z" stroke="${on?'#ff3b4e':'#333'}" stroke-width="3" fill="${on?'#ff3b4e':'none'}"/></svg>`;
 
   const items = memos.map(m => {
     const ini = (m.author?.name || m.author?.email || '?').charAt(0).toUpperCase();
@@ -9153,17 +9216,8 @@ function _syncProjToCloud(proj) {
     const projData = JSON.parse(JSON.stringify(proj));
     delete projData.myRole;
     // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
-    const cloudLinks = snap.data()?.projectData?.contentLinks || [];
-    const localLinks = projData.contentLinks || [];
-    if (cloudLinks.length) {
-      const localIds = new Set(localLinks.map(x => x.id));
-      const extra = cloudLinks.filter(x => !localIds.has(x.id));
-      if (extra.length) {
-        projData.contentLinks = [...localLinks, ...extra].sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
-        proj.contentLinks = projData.contentLinks; // 로컬도 갱신
-        localStorage.setItem('vibespace', JSON.stringify(state));
-      }
-    }
+    // contentLinks: 로컬이 정본 (삭제 반영). 협업자가 추가한 항목도 로컬에 이미 sync됨
+    projData.contentLinks = proj.contentLinks || [];
     const payload = {
       projectData: projData,
       ownerEmail: state.user.email,
@@ -9236,8 +9290,8 @@ async function _syncStyleImagesToCloud(proj) {
 // contentLinks만 Firestore에 업데이트 — read-merge-write로 덮어쓰기 방지
 async function _syncContentLinksToCloud(proj) {
   if (!proj?.cloudId) return;
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
-  if (!isOwner) return; // 협업자는 쓰기 불가
+  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email || isExpert();
+  if (!isOwner) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
@@ -10413,6 +10467,201 @@ async function _checkExportOnLoad() {
     console.error('export view error:', e);
   }
 }
+
+// ===== MEETING TAB =====
+let _meetingMentions = [];
+let _meetingImages = [];
+
+function renderMeetingTab() {
+  const proj = getProject();
+  const list = document.getElementById('meeting-list');
+  if (!list) return;
+  const meetings = (proj?.meetings || []).slice().sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+  if (!meetings.length) {
+    list.innerHTML = `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 회의록이 없습니다</div>`;
+    return;
+  }
+  list.innerHTML = meetings.map(m => {
+    const d = new Date(m.createdAt||0);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const imgThumb = m.images?.length ? `<div style="width:56px;height:56px;border-radius:10px;background:url('${m.images[0]}') center/cover;flex-shrink:0;"></div>` : '';
+    const mentionHtml = m.mentions?.length ? `<div style="margin-top:6px;font-size:12px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
+    return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}</div>
+        <div style="font-size:13px;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(m.content||'')}</div>
+        ${mentionHtml}
+        <div style="margin-top:6px;font-size:12px;color:#bbb;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
+      </div>
+      ${imgThumb}
+    </div>`;
+  }).join('');
+}
+
+function openAddMeeting() {
+  _meetingMentions = [];
+  _meetingImages = [];
+  const t = document.getElementById('meeting-title-input');
+  const c = document.getElementById('meeting-content-input');
+  if (t) t.value = '';
+  if (c) c.value = '';
+  document.getElementById('meeting-images-preview').innerHTML = '';
+  document.getElementById('meeting-mention-chips').innerHTML = '';
+  document.getElementById('dlg-meeting-add').style.display = 'flex';
+}
+
+function closeMeetingAdd() {
+  document.getElementById('dlg-meeting-add').style.display = 'none';
+}
+
+function _meetingImagePreview(input) {
+  const files = Array.from(input.files);
+  const preview = document.getElementById('meeting-images-preview');
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      _meetingImages.push(e.target.result);
+      const idx = _meetingImages.length - 1;
+      const div = document.createElement('div');
+      div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
+      div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">
+        <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function _removeMeetingImage(idx, el) {
+  _meetingImages.splice(idx, 1);
+  el.remove();
+}
+
+function _meetingMentionCheck(textarea) {
+  const val = textarea.value;
+  const lastAt = val.lastIndexOf('@');
+  const dropdown = document.getElementById('meeting-mention-dropdown');
+  if (lastAt === -1 || val.slice(lastAt).includes(' ')) { dropdown.style.display='none'; return; }
+  const query = val.slice(lastAt+1).toLowerCase();
+  const proj = getProject();
+  const all = [
+    ...(proj?.collaborators||[]).map(c=>({email:c.email,name:c.name||c.email.split('@')[0]})),
+    proj?.owner ? {email:proj.owner.email,name:proj.owner.name||proj.owner.email.split('@')[0]} : null
+  ].filter(Boolean).filter(p => p.email !== state.user?.email);
+  const matches = query ? all.filter(p=>p.name.toLowerCase().includes(query)||p.email.toLowerCase().includes(query)) : all;
+  if (!matches.length) { dropdown.style.display='none'; return; }
+  dropdown.style.display='block';
+  dropdown.innerHTML = matches.map(p=>`<div onclick="_insertMention('${p.email}','${p.name}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
+}
+
+function _insertMention(email, name) {
+  const ta = document.getElementById('meeting-content-input');
+  const val = ta.value;
+  const lastAt = val.lastIndexOf('@');
+  ta.value = val.slice(0,lastAt) + '@' + name + ' ';
+  document.getElementById('meeting-mention-dropdown').style.display = 'none';
+  if (!_meetingMentions.includes(email)) {
+    _meetingMentions.push(email);
+    const chips = document.getElementById('meeting-mention-chips');
+    const chip = document.createElement('div');
+    chip.style.cssText = 'background:#e8f0ff;color:#4070e0;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;';
+    chip.textContent = '@'+name;
+    chips.appendChild(chip);
+  }
+  ta.focus();
+}
+
+async function saveMeeting() {
+  const proj = getProject();
+  if (!proj) return;
+  const title = document.getElementById('meeting-title-input').value.trim();
+  const content = document.getElementById('meeting-content-input').value.trim();
+  if (!title) { showToastMessage('⚠️ 제목을 입력해주세요'); return; }
+  // parse @mentions from content
+  const mentionMatches = content.match(/@[\w가-힣]+/g) || [];
+  const allPeople = [...(proj.collaborators||[]), proj.owner].filter(Boolean);
+  const mentionEmails = [..._meetingMentions];
+  mentionMatches.forEach(m => {
+    const name = m.slice(1);
+    const found = allPeople.find(p=>(p.name||'').includes(name)||(p.email||'').includes(name));
+    if (found && !mentionEmails.includes(found.email)) mentionEmails.push(found.email);
+  });
+  const meeting = {
+    id: 'meet_' + Date.now() + Math.random().toString(36).slice(2,6),
+    title, content,
+    images: [..._meetingImages],
+    mentions: mentionEmails,
+    createdAt: Date.now(),
+    createdBy: state.user?.email || '',
+    createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
+  };
+  if (!proj.meetings) proj.meetings = [];
+  proj.meetings.push(meeting);
+  save();
+  closeMeetingAdd();
+  renderMeetingTab();
+  showToastMessage('✅ 회의록이 저장됐습니다');
+  // 클라우드 저장
+  if (proj.cloudId) _syncMeetingsToCloud(proj);
+  // @멘션 이메일 알림
+  if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
+}
+
+async function _syncMeetingsToCloud(proj) {
+  const ok = await _initFirebase();
+  if (!ok || !_db || !proj.cloudId) return;
+  try {
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.meetings': proj.meetings || [],
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+    });
+  } catch(e) { console.error('[meetingSync]', e); }
+}
+
+async function _sendMentionNotifications(meeting, emails, proj) {
+  const projName = proj.name || '시공 프로젝트';
+  const sender = state.user?.name || state.user?.email?.split('@')[0] || '';
+  for (const email of emails) {
+    try {
+      await emailjs.send('service_elvk718', 'template_11ldrbw', {
+        to_email: email,
+        to_name: email.split('@')[0],
+        from_name: sender,
+        project_name: projName,
+        invite_link: location.href,
+        role: `회의록 "${meeting.title}"에서 멘션됐습니다:\n${meeting.content.slice(0,100)}`,
+      });
+    } catch(e) { console.error('[mentionNotify]', e); }
+  }
+}
+
+function openMeetingDetail(id) {
+  const proj = getProject();
+  const m = (proj?.meetings||[]).find(x=>x.id===id);
+  if (!m) return;
+  document.getElementById('meeting-detail-title').textContent = m.title||'(제목 없음)';
+  const d = new Date(m.createdAt||0);
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const contentHtml = esc(m.content||'').replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>');
+  const imgsHtml = (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
+  const mentionHtml = m.mentions?.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f2f5;font-size:13px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
+  document.getElementById('meeting-detail-body').innerHTML = `
+    <div style="font-size:12px;color:#aaa;margin-bottom:14px;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
+    <div style="font-size:15px;color:#222;line-height:1.7;word-break:break-word;">${contentHtml}</div>
+    ${mentionHtml}
+    ${imgsHtml ? `<div style="margin-top:16px;">${imgsHtml}</div>` : ''}
+  `;
+  const scr = document.getElementById('screen-meeting-detail');
+  scr.style.transform = 'translateY(0)';
+  scr.style.pointerEvents = 'all';
+}
+
+function closeMeetingDetail() {
+  const scr = document.getElementById('screen-meeting-detail');
+  scr.style.transform = 'translateY(100%)';
+  scr.style.pointerEvents = 'none';
+}
 </script>
 
 <!-- ===== FLOOR PLAN EDITOR SCRIPT ===== -->
@@ -11310,7 +11559,7 @@ async function fpShareLink() {
   <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
   <div id="sv-memo-float" style="display:none;">
     <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.0176 5C17.7571 5 17.5072 5.1035 17.323 5.28773L6.42504 16.1856C6.04056 16.5701 5.76781 17.0519 5.63593 17.5794L5.37437 18.6256L6.42064 18.3641C6.94813 18.2322 7.42987 17.9594 7.81435 17.575L18.7123 6.67704C18.8035 6.58582 18.8758 6.47752 18.9252 6.35833C18.9746 6.23915 19 6.1114 19 5.98239C19 5.85338 18.9746 5.72563 18.9252 5.60645C18.8758 5.48726 18.8035 5.37896 18.7123 5.28773C18.621 5.19651 18.5127 5.12415 18.3936 5.07478C18.2744 5.02541 18.1466 5 18.0176 5ZM15.9087 3.87352C16.468 3.31421 17.2266 3 18.0176 3C18.4093 3 18.7971 3.07714 19.1589 3.22702C19.5208 3.3769 19.8495 3.59658 20.1265 3.87352C20.4034 4.15046 20.6231 4.47924 20.773 4.84108C20.9229 5.20292 21 5.59074 21 5.98239C21 6.37404 20.9229 6.76186 20.773 7.1237C20.6231 7.48554 20.4034 7.81432 20.1265 8.09126L9.22856 18.9892C8.58777 19.63 7.78487 20.0846 6.90571 20.3043L4.24253 20.9701C3.90176 21.0553 3.54127 20.9555 3.29289 20.7071C3.04451 20.4587 2.94466 20.0982 3.02986 19.7575L3.69565 17.0943C3.91544 16.2151 4.37003 15.4122 5.01083 14.7714L15.9087 3.87352Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.2929 10.7071L13.2929 7.70712L14.7071 6.29291L17.7071 9.29291L16.2929 10.7071Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 20C12 19.4477 12.4477 19 13 19L20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21L13 21C12.4477 21 12 20.5523 12 20Z" fill="black"/></svg>
+      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
     </button>
   </div>
 </div>
@@ -11620,7 +11869,7 @@ async function fpShareLink() {
   <!-- floating pencil button -->
   <div id="cv-product-float">
     <button class="sv-memo-float-btn" onclick="openCvProductSheet()" title="제품 추가">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.0176 5C17.7571 5 17.5072 5.1035 17.323 5.28773L6.42504 16.1856C6.04056 16.5701 5.76781 17.0519 5.63593 17.5794L5.37437 18.6256L6.42064 18.3641C6.94813 18.2322 7.42987 17.9594 7.81435 17.575L18.7123 6.67704C18.8035 6.58582 18.8758 6.47752 18.9252 6.35833C18.9746 6.23915 19 6.1114 19 5.98239C19 5.85338 18.9746 5.72563 18.9252 5.60645C18.8758 5.48726 18.8035 5.37896 18.7123 5.28773C18.621 5.19651 18.5127 5.12415 18.3936 5.07478C18.2744 5.02541 18.1466 5 18.0176 5ZM15.9087 3.87352C16.468 3.31421 17.2266 3 18.0176 3C18.4093 3 18.7971 3.07714 19.1589 3.22702C19.5208 3.3769 19.8495 3.59658 20.1265 3.87352C20.4034 4.15046 20.6231 4.47924 20.773 4.84108C20.9229 5.20292 21 5.59074 21 5.98239C21 6.37404 20.9229 6.76186 20.773 7.1237C20.6231 7.48554 20.4034 7.81432 20.1265 8.09126L9.22856 18.9892C8.58777 19.63 7.78487 20.0846 6.90571 20.3043L4.24253 20.9701C3.90176 21.0553 3.54127 20.9555 3.29289 20.7071C3.04451 20.4587 2.94466 20.0982 3.02986 19.7575L3.69565 17.0943C3.91544 16.2151 4.37003 15.4122 5.01083 14.7714L15.9087 3.87352Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.2929 10.7071L13.2929 7.70712L14.7071 6.29291L17.7071 9.29291L16.2929 10.7071Z" fill="black"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 20C12 19.4477 12.4477 19 13 19L20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21L13 21C12.4477 21 12 20.5523 12 20Z" fill="black"/></svg>
+      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
     </button>
   </div>
 </div>
