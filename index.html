@@ -3490,6 +3490,19 @@ button, input, textarea, select { font-family:var(--font); }
   <div id="meeting-detail-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;"></div>
 </div>
 
+<!-- ===== Anthropic API 키 입력 Bottom Sheet ===== -->
+<div class="overlay" id="dlg-anthropic-key" onclick="if(event.target===this)document.getElementById('dlg-anthropic-key').style.display='none'" style="display:none;z-index:9500;">
+  <div class="bottom-sheet" style="padding:24px 20px 32px;">
+    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:6px;">Anthropic API 키 입력</div>
+    <div style="font-size:13px;color:#888;margin-bottom:18px;line-height:1.6;">
+      <a href="https://console.anthropic.com" target="_blank" style="color:#5084ff;">console.anthropic.com</a> → API Keys → Create Key<br>
+      <span style="color:#aaa;">입력 후 기기에 저장됩니다 (1회만 입력)</span>
+    </div>
+    <input id="anthropic-key-input" type="password" placeholder="sk-ant-api03-..." style="width:100%;padding:12px 14px;border:1.5px solid #e8eaf0;border-radius:12px;font-size:14px;color:#111;background:#fafafa;box-sizing:border-box;outline:none;margin-bottom:14px;" onfocus="this.style.borderColor='#5084ff'" onblur="this.style.borderColor='#e8eaf0'">
+    <button onclick="_saveAnthropicKey()" style="width:100%;padding:14px;background:#5084ff;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">저장하고 계속</button>
+  </div>
+</div>
+
 <!-- ===== 블로그 SEO 미리보기 스크린 ===== -->
 <div id="screen-blog-preview" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:9000;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header">
@@ -10672,18 +10685,26 @@ async function _sendMentionNotifications(meeting, emails, proj) {
 // ── InBlog 연동 ──────────────────────────────────────────────────────────────
 const INBLOG_API_KEY = '33f3a8e6ed9eb76f1504b662438cb072682ec383a0d9442eaefad375c1e9bb1b';
 const INBLOG_API_BASE = 'https://inblog.ai/api/v1';
-// Anthropic API 키는 localStorage에 저장 (코드에 직접 포함 금지)
+// Anthropic API 키 관리 (localStorage 저장, 코드에 직접 포함 금지)
+let _pendingPublishAfterKey = false;
+
 function _getAnthropicKey() {
-  let key = localStorage.getItem('vs_anthropic_key') || '';
-  if (!key) {
-    key = prompt('Anthropic API 키를 입력하세요 (최초 1회):\n(sk-ant-api03-... 형태)', '');
-    if (key?.startsWith('sk-ant')) {
-      localStorage.setItem('vs_anthropic_key', key.trim());
-    } else {
-      return null;
-    }
+  return (localStorage.getItem('vs_anthropic_key') || '').trim();
+}
+
+function _saveAnthropicKey() {
+  const input = document.getElementById('anthropic-key-input');
+  const key = (input?.value || '').trim();
+  if (!key.startsWith('sk-ant')) {
+    showToastMessage('⚠️ 올바른 API 키 형식이 아닙니다 (sk-ant... 로 시작해야 함)');
+    return;
   }
-  return key.trim();
+  localStorage.setItem('vs_anthropic_key', key);
+  document.getElementById('dlg-anthropic-key').style.display = 'none';
+  if (_pendingPublishAfterKey) {
+    _pendingPublishAfterKey = false;
+    publishMeetingToInblog();
+  }
 }
 const SEO_KEYWORDS = ['반셀프 인테리어','턴키 인테리어','분당 구축 인테리어','분당 국평 인테리어','성남 인테리어','판교 인테리어','분당 인테리어','인테리어 공정 관리','시공 회의'];
 let _currentMeetingId = null;
@@ -10745,6 +10766,14 @@ async function publishMeetingToInblog() {
   const m = (proj?.meetings||[]).find(x=>x.id===_currentMeetingId);
   if (!m) return;
 
+  // API 키 없으면 입력 Bottom Sheet 표시
+  if (!_getAnthropicKey()) {
+    _pendingPublishAfterKey = true;
+    document.getElementById('anthropic-key-input').value = '';
+    document.getElementById('dlg-anthropic-key').style.display = 'flex';
+    return;
+  }
+
   const btn = document.getElementById('btn-publish-blog');
   btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> AI 생성 중...`;
   btn.style.opacity = '0.7';
@@ -10775,7 +10804,7 @@ async function publishMeetingToInblog() {
     scr.style.pointerEvents = 'all';
 
   } catch(e) {
-    _showToast('AI 생성 실패: ' + e.message);
+    showToastMessage('AI 생성 실패: ' + e.message);
   } finally {
     btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 블로그 발행`;
     btn.style.opacity = '1';
@@ -10785,7 +10814,7 @@ async function publishMeetingToInblog() {
 
 async function _generateSEOPost(meeting, proj) {
   const apiKey = _getAnthropicKey();
-  if (!apiKey) throw new Error('API 키가 필요합니다.');
+  if (!apiKey) throw new Error('Anthropic API 키가 설정되지 않았습니다.');
 
   const d = new Date(meeting.createdAt||0);
   const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
@@ -10951,7 +10980,7 @@ async function confirmPublishToInblog() {
       }
 
       closeInblogPreview();
-      _showToast('블로그에 발행되었습니다! 🎉');
+      showToastMessage('블로그에 발행되었습니다! 🎉');
 
     } else {
       throw new Error(json.errors?.[0]?.detail || `오류 ${res.status}`);
@@ -10959,7 +10988,7 @@ async function confirmPublishToInblog() {
   } catch(e) {
     btn.textContent = '발행하기';
     btn.disabled = false;
-    _showToast('발행 실패: ' + e.message);
+    showToastMessage('발행 실패: ' + e.message);
   }
 }
 </script>
