@@ -4204,28 +4204,96 @@ function canEdit() {
 
 let saveTimer = null;
 let _lastSaveTime = 0;
-function _saveMeetingImagesToLS(projects) {
-  // 회의록 이미지(base64)를 별도 키에 분리 저장 → 메인 JSON 용량 절감
-  (projects || []).forEach(p => {
-    (p.meetings || []).forEach(m => {
-      if (!Array.isArray(m.images) || !m.images.length) return;
-      const hasDataUrl = m.images.some(img => (img||'').startsWith('data:'));
-      if (!hasDataUrl) return; // Firebase URL이거나 없음
-      try {
-        localStorage.setItem(`vb_mi_${p.id}_${m.id}`, JSON.stringify(m.images));
-        m.images = '__vb_mi__'; // 저장 성공 후에만 플레이스홀더 설정
-      } catch(e) {
-        console.warn('[vb_mi] 이미지 분리저장 실패:', e);
-        // 저장 실패 시 플레이스홀더 설정 안 함 → 메인 JSON에 그대로 포함
-      }
+// ── IndexedDB: 회의록 이미지 전용 저장소 (localStorage 5MB 한도 우회) ────────
+const _MIdb = (() => {
+  const DB = 'vb_meeting_imgs', STORE = 'imgs', VER = 1;
+  let _db = null;
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open(DB, VER);
+      r.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+      r.onsuccess = e => { _db = e.target.result; res(_db); };
+      r.onerror = rej;
     });
+  }
+  return {
+    async put(meetId, imgs) {
+      try {
+        const db = await open();
+        await new Promise((res, rej) => {
+          const tx = db.transaction(STORE, 'readwrite');
+          tx.objectStore(STORE).put(imgs, meetId);
+          tx.oncomplete = res; tx.onerror = rej;
+        });
+      } catch(e) { console.warn('[MIdb.put]', e); }
+    },
+    async get(meetId) {
+      try {
+        const db = await open();
+        return await new Promise(res => {
+          const r = db.transaction(STORE, 'readonly').objectStore(STORE).get(meetId);
+          r.onsuccess = e => res(Array.isArray(e.target.result) ? e.target.result : []);
+          r.onerror = () => res([]);
+        });
+      } catch(e) { return []; }
+    },
+    async del(meetId) {
+      try {
+        const db = await open();
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(meetId);
+      } catch(e) {}
+    },
+    // 앱 시작 시 state의 모든 meeting.images를 IDB에서 복원
+    async loadAll() {
+      try {
+        const db = await open();
+        const keys = await new Promise(res => {
+          const r = db.transaction(STORE,'readonly').objectStore(STORE).getAllKeys();
+          r.onsuccess = e => res(e.target.result||[]);
+          r.onerror = () => res([]);
+        });
+        if (!keys.length) return;
+        for (const p of (state.projects||[])) {
+          for (const m of (p.meetings||[])) {
+            if (keys.includes(m.id)) m.images = await this.get(m.id);
+          }
+        }
+      } catch(e) { console.warn('[MIdb.loadAll]', e); }
+    }
+  };
+})();
+
+// 구 localStorage vb_mi_* → IDB 마이그레이션 (1회)
+async function _migrateMeetingImgLS() {
+  for (const p of (state.projects||[])) {
+    for (const m of (p.meetings||[])) {
+      // 구 플레이스홀더
+      if (m.images === '__vb_mi__') {
+        try {
+          const raw = localStorage.getItem(`vb_mi_${p.id}_${m.id}`);
+          const imgs = raw ? JSON.parse(raw) : [];
+          m.images = imgs;
+          if (imgs.length) await _MIdb.put(m.id, imgs);
+          localStorage.removeItem(`vb_mi_${p.id}_${m.id}`);
+        } catch(_) { m.images = []; }
+      }
+    }
+  }
+}
+
+function _stripMeetingImages(projects) {
+  // localStorage JSON에서 이미지 제거 (IDB에 저장하므로 불필요)
+  (projects||[]).forEach(p => {
+    (p.meetings||[]).forEach(m => { m.images = []; });
   });
 }
 
 function save() {
-  // 회의록 이미지를 메인 JSON에서 분리 → deep copy 후 처리
+  // 회의록 이미지는 IDB에 저장 → localStorage JSON에서 제거
   const lite = JSON.parse(JSON.stringify(state));
-  _saveMeetingImagesToLS(lite.projects);
+  _stripMeetingImages(lite.projects);
   const json = JSON.stringify(lite);
   try {
     localStorage.setItem('vibespace', json);
@@ -4284,15 +4352,7 @@ function load() {
       const stored = localStorage.getItem(`vb_fp_${p.id}`);
       p.floorplanEditedImage = stored || null;
     }
-    // 분리 저장된 회의록 이미지 복원
-    (p.meetings || []).forEach(m => {
-      if (m.images === '__vb_mi__') {
-        try {
-          const stored = localStorage.getItem(`vb_mi_${p.id}_${m.id}`);
-          m.images = stored ? JSON.parse(stored) : [];
-        } catch(_) { m.images = []; }
-      }
-    });
+    // meeting.images는 IDB에서 비동기 복원 (_initMeetingImages 에서 처리)
   });
   // migrate old p.schedule strings
   state.projects && state.projects.forEach(proj => {
@@ -9566,21 +9626,25 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
-    // 회의록 이미지 보존 (base64는 localStorage vb_mi_* 에 분리 저장, Firestore에 없음)
+    // 회의록 이미지 보존 (IDB에 저장, Firestore에 없음)
     const localMeetingImgMap = {};
     (proj.meetings || []).forEach(m => {
       if (Array.isArray(m.images) && m.images.length) localMeetingImgMap[m.id] = m.images;
     });
+    const allMeetingIds = (proj.meetings||[]).map(m=>m.id);
     // N 뱃지: merge 전에 새 항목 감지
     _markNewFromCollab(cloudId, proj, remote);
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
     // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
     if (localFloorplan) proj.floorplanImage = localFloorplan;
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
-    // 회의록 이미지 복원 — cloud merge 후 로컬 이미지가 지워지지 않도록
+    // 회의록 이미지 복원 (memory 우선, 없으면 IDB에서 async 로드)
     (proj.meetings || []).forEach(m => {
       if (localMeetingImgMap[m.id]) m.images = localMeetingImgMap[m.id];
     });
+    // 새로 추가된 meeting은 IDB에서 async 복원
+    const newIds = (proj.meetings||[]).map(m=>m.id).filter(id=>!allMeetingIds.includes(id));
+    if (newIds.length) _MIdb.loadAll().then(()=>renderMeetingTab());
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
@@ -10441,6 +10505,13 @@ const _applyHeaderLogo = _applyBrandLogo;
 
 // ===== INIT =====
 load();
+// 회의록 이미지: localStorage 구 포맷 마이그레이션 후 IDB에서 복원
+async function _initMeetingImages() {
+  await _migrateMeetingImgLS(); // 구 vb_mi_* → IDB 1회 이전
+  await _MIdb.loadAll();        // IDB → state.meetings[].images
+  renderMeetingTab();           // 이미지 로드 후 탭 갱신
+}
+_initMeetingImages();
 initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
@@ -10768,7 +10839,9 @@ function deleteMeeting() {
   if (!confirm('이 회의록을 삭제하시겠습니까?')) return;
   const proj = getProject();
   if (!proj) return;
-  proj.meetings = (proj.meetings||[]).filter(m => m.id !== _currentMeetingId);
+  const delId = _currentMeetingId;
+  proj.meetings = (proj.meetings||[]).filter(m => m.id !== delId);
+  _MIdb.del(delId); // IDB 이미지도 삭제
   save();
   if (proj.cloudId) _syncMeetingsToCloud(proj);
   closeMeetingDetail();
@@ -10930,6 +11003,8 @@ async function saveMeeting() {
   }
   if (!proj.meetings) proj.meetings = [];
 
+  const imgSnapshot = [..._meetingImages]; // 저장 시점 이미지 스냅샷
+
   if (_editingMeetingId) {
     // ── 수정 모드 ──────────────────────────────
     const idx = proj.meetings.findIndex(m => m.id === _editingMeetingId);
@@ -10937,10 +11012,12 @@ async function saveMeeting() {
       proj.meetings[idx] = {
         ...proj.meetings[idx],
         title, content,
-        images: [..._meetingImages],
+        images: imgSnapshot,
         mentions: mentionEmails,
         updatedAt: Date.now(),
       };
+      // IDB에 이미지 저장 (localStorage 한도 우회)
+      _MIdb.put(_editingMeetingId, imgSnapshot);
     }
     _editingMeetingId = null;
     save();
@@ -10955,13 +11032,15 @@ async function saveMeeting() {
     const meeting = {
       id: 'meet_' + Date.now() + Math.random().toString(36).slice(2,6),
       title, content,
-      images: [..._meetingImages],
+      images: imgSnapshot,
       mentions: mentionEmails,
       createdAt: Date.now(),
       createdBy: state.user?.email || '',
       createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
     };
     proj.meetings.push(meeting);
+    // IDB에 이미지 저장 (localStorage 한도 우회)
+    _MIdb.put(meeting.id, imgSnapshot);
     save();
     closeMeetingAdd();
     renderMeetingTab();
