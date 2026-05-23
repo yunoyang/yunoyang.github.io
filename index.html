@@ -3466,30 +3466,64 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
-<!-- Meeting Add Sheet -->
-<div class="overlay" id="dlg-meeting-add" onclick="if(event.target===this)closeMeetingAdd()" style="display:none;z-index:9200;">
-  <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 env(safe-area-inset-bottom,0);max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-    <div style="width:36px;height:4px;background:#e5e5ec;border-radius:4px;margin:12px auto 0;"></div>
-    <div style="padding:16px 18px 6px;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:17px;font-weight:700;color:#111;">회의록 작성</span>
-      <button onclick="closeMeetingAdd()" style="background:none;border:none;padding:4px;cursor:pointer;">
-        <svg class="icon" width="20" height="20"><use href="#icon-x"/></svg>
-      </button>
-    </div>
-    <div style="padding:0 18px 16px;">
-      <input id="meeting-title-input" placeholder="제목을 입력하세요" style="width:100%;box-sizing:border-box;height:48px;border:1.5px solid #e1e5ef;border-radius:12px;padding:0 14px;font-size:16px;font-family:var(--font);margin-bottom:10px;outline:none;">
-      <div style="position:relative;">
-        <textarea id="meeting-content-input" placeholder="미팅 내용, @이름 으로 멘션" style="width:100%;box-sizing:border-box;min-height:120px;border:1.5px solid #e1e5ef;border-radius:12px;padding:12px 14px;font-size:15px;font-family:var(--font);resize:none;outline:none;line-height:1.5;" oninput="_meetingMentionCheck(this)"></textarea>
-        <div id="meeting-mention-dropdown" style="display:none;position:absolute;left:0;right:0;bottom:100%;background:#fff;border:1px solid #e1e5ef;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:10;max-height:160px;overflow-y:auto;"></div>
-      </div>
-      <div id="meeting-mention-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
-      <div id="meeting-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
-      <label style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;font-size:14px;color:#555;background:#f5f7fa;border-radius:10px;padding:8px 14px;border:1.5px solid #e1e5ef;">
-        <svg class="icon" width="16" height="16"><use href="#icon-plus"/></svg> 이미지 추가
+<!-- ===== 회의록 작성/수정 전체화면 에디터 ===== -->
+<div id="screen-meeting-write" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8700;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+
+  <!-- 헤더 -->
+  <div class="form-header">
+    <button class="back-btn" onclick="closeMeetingWrite()">
+      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+    </button>
+    <span id="meeting-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">회의록 작성</span>
+    <button id="btn-meeting-save" onclick="saveMeeting()" style="padding:8px 18px;background:#222;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
+  </div>
+
+  <!-- 스크롤 영역 -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;">
+
+    <!-- 제목 입력 -->
+    <input id="meeting-title-input" placeholder="제목을 입력하세요"
+      style="width:100%;box-sizing:border-box;border:none;border-bottom:1px solid #f0f2f5;padding:18px 20px 14px;font-size:22px;font-weight:700;color:#111;font-family:var(--font);outline:none;background:transparent;">
+
+    <!-- 멘션 칩 영역 -->
+    <div id="meeting-mention-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 20px;min-height:0;"></div>
+
+    <!-- 에디터 툴바 -->
+    <div id="editor-toolbar" style="display:flex;align-items:center;gap:2px;padding:6px 12px;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
+      <button onclick="_mwFmt('bold')" title="굵게" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-weight:900;color:#333;font-family:serif;">B</button>
+      <button onclick="_mwFmt('italic')" title="기울임" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
+      <button onclick="_mwFmt('underline')" title="밑줄" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
+      <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;"></div>
+      <button onclick="_mwFmt('insertUnorderedList')" title="목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#333;">•≡</button>
+      <button onclick="_mwFmt('insertOrderedList')" title="번호 목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;color:#333;">1≡</button>
+      <button onclick="_mwInsertHr()" title="구분선" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#aaa;">—</button>
+      <div style="flex:1;"></div>
+      <button onclick="_mwAtBtn()" title="@멘션" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;font-weight:700;color:#5084ff;">@</button>
+      <label title="이미지 추가" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <input type="file" accept="image/*" multiple id="meeting-image-input" style="display:none;" onchange="_meetingImagePreview(this)">
       </label>
-      <button onclick="saveMeeting()" style="width:100%;height:48px;background:#222;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:14px;">저장하기</button>
     </div>
+
+    <!-- contenteditable 에디터 -->
+    <div style="position:relative;flex:1;min-height:240px;">
+      <div id="meeting-editor"
+        contenteditable="true"
+        spellcheck="false"
+        style="min-height:240px;padding:16px 20px 20px;font-size:16px;line-height:1.85;color:#222;font-family:var(--font);outline:none;word-break:break-word;"
+        oninput="_mwEditorInput()"
+        onkeydown="_mwEditorKeydown(event)">
+      </div>
+      <div id="meeting-editor-ph" style="position:absolute;top:16px;left:20px;font-size:16px;color:#bbb;pointer-events:none;line-height:1.85;">내용을 입력하세요. @이름 으로 멘션</div>
+      <!-- 멘션 드롭다운 -->
+      <div id="meeting-mention-dropdown" style="display:none;position:absolute;left:20px;right:20px;top:56px;background:#fff;border:1px solid #e1e5ef;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.12);z-index:20;max-height:200px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- 이미지 미리보기 -->
+    <div id="meeting-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;"></div>
+
+    <!-- 하단 여백 (키보드 대응) -->
+    <div style="height:env(keyboard-inset-height,200px);min-height:100px;flex-shrink:0;"></div>
   </div>
 </div>
 
@@ -10596,24 +10630,39 @@ function renderMeetingTab() {
   }).join('');
 }
 
+// ── 회의록 에디터 화면 열기/닫기 ────────────────────────────────────────────
+function _openMeetingWrite(isEdit) {
+  document.getElementById('meeting-write-header').textContent = isEdit ? '회의록 수정' : '회의록 작성';
+  document.getElementById('btn-meeting-save').textContent = isEdit ? '수정' : '저장';
+  const scr = document.getElementById('screen-meeting-write');
+  scr.style.transform = 'translateY(0)';
+  scr.style.pointerEvents = 'all';
+  // 에디터 포커스
+  setTimeout(() => {
+    const ed = document.getElementById('meeting-editor');
+    if (ed && !isEdit) { ed.focus(); _mwUpdatePlaceholder(); }
+  }, 380);
+}
+
+function closeMeetingWrite() {
+  const scr = document.getElementById('screen-meeting-write');
+  scr.style.transform = 'translateY(100%)';
+  scr.style.pointerEvents = 'none';
+  _editingMeetingId = null;
+}
+// 하위호환: closeMeetingAdd → closeMeetingWrite
+function closeMeetingAdd() { closeMeetingWrite(); }
+
 function openAddMeeting() {
   _editingMeetingId = null;
   _meetingMentions = [];
   _meetingImages = [];
-  const t = document.getElementById('meeting-title-input');
-  const c = document.getElementById('meeting-content-input');
-  if (t) t.value = '';
-  if (c) c.value = '';
+  document.getElementById('meeting-title-input').value = '';
+  document.getElementById('meeting-editor').innerHTML = '';
   document.getElementById('meeting-images-preview').innerHTML = '';
   document.getElementById('meeting-mention-chips').innerHTML = '';
-  _meetingSheetTitle('회의록 작성');
-  _meetingSheetSaveBtn('저장하기');
-  document.getElementById('dlg-meeting-add').style.display = 'flex';
-}
-
-function closeMeetingAdd() {
-  document.getElementById('dlg-meeting-add').style.display = 'none';
-  _editingMeetingId = null;
+  _mwUpdatePlaceholder();
+  _openMeetingWrite(false);
 }
 
 function openEditMeeting() {
@@ -10624,11 +10673,17 @@ function openEditMeeting() {
   _editingMeetingId = m.id;
   _meetingMentions = [...(m.mentions||[])];
   _meetingImages = [...(m.images||[])];
-  // 폼 채우기
-  const t = document.getElementById('meeting-title-input');
-  const c = document.getElementById('meeting-content-input');
-  if (t) t.value = m.title || '';
-  if (c) c.value = m.content || '';
+  // 제목
+  document.getElementById('meeting-title-input').value = m.title || '';
+  // 본문 (HTML or plain)
+  const raw = m.content || '';
+  const editor = document.getElementById('meeting-editor');
+  if (/^[\s]*</.test(raw)) {
+    editor.innerHTML = raw;
+  } else {
+    editor.innerHTML = esc(raw).replace(/\n/g,'<br>');
+  }
+  _mwUpdatePlaceholder();
   // 이미지 미리보기
   const preview = document.getElementById('meeting-images-preview');
   preview.innerHTML = '';
@@ -10640,14 +10695,8 @@ function openEditMeeting() {
     preview.appendChild(div);
   });
   // 멘션 칩
-  const chips = document.getElementById('meeting-mention-chips');
-  chips.innerHTML = _meetingMentions.map(email => {
-    const name = email.split('@')[0];
-    return `<span style="display:inline-flex;align-items:center;gap:4px;background:#e8f0fe;color:#5084ff;border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;">@${name}<button onclick="this.parentElement.remove();_meetingMentions=_meetingMentions.filter(e=>e!=='${email}')" style="background:none;border:none;cursor:pointer;color:#5084ff;font-size:15px;padding:0;line-height:1;">×</button></span>`;
-  }).join('');
-  _meetingSheetTitle('회의록 수정');
-  _meetingSheetSaveBtn('수정하기');
-  document.getElementById('dlg-meeting-add').style.display = 'flex';
+  _mwRenderMentionChips();
+  _openMeetingWrite(true);
 }
 
 function deleteMeeting() {
@@ -10663,14 +10712,97 @@ function deleteMeeting() {
   showToastMessage('🗑️ 회의록이 삭제됐습니다');
 }
 
-// 헬퍼: 바텀시트 제목/버튼 텍스트 변경
-function _meetingSheetTitle(text) {
-  const el = document.querySelector('#dlg-meeting-add span[style*="font-size:17px"]');
-  if (el) el.textContent = text;
+// ── 에디터 툴바 포맷 ────────────────────────────────────────────────────────
+function _mwFmt(cmd) {
+  document.getElementById('meeting-editor').focus();
+  document.execCommand(cmd, false, null);
 }
-function _meetingSheetSaveBtn(text) {
-  const el = document.querySelector('#dlg-meeting-add button[onclick="saveMeeting()"]');
-  if (el) el.textContent = text;
+function _mwInsertHr() {
+  document.getElementById('meeting-editor').focus();
+  document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid #e8eaf0;margin:14px 0;">');
+}
+function _mwAtBtn() {
+  const ed = document.getElementById('meeting-editor');
+  ed.focus();
+  document.execCommand('insertText', false, '@');
+  _mwEditorInput();
+}
+
+// ── 플레이스홀더 표시/숨김 ──────────────────────────────────────────────────
+function _mwUpdatePlaceholder() {
+  const ed = document.getElementById('meeting-editor');
+  const ph = document.getElementById('meeting-editor-ph');
+  if (!ed || !ph) return;
+  ph.style.display = (ed.textContent.trim() === '' && ed.innerHTML.trim() === '') ? 'block' : 'none';
+}
+
+// ── @멘션 감지 (contenteditable) ────────────────────────────────────────────
+function _mwEditorInput() {
+  _mwUpdatePlaceholder();
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) { document.getElementById('meeting-mention-dropdown').style.display='none'; return; }
+  const textBefore = node.textContent.slice(0, range.startOffset);
+  const atIdx = textBefore.lastIndexOf('@');
+  const dropdown = document.getElementById('meeting-mention-dropdown');
+  if (atIdx === -1 || textBefore.slice(atIdx).includes(' ')) { dropdown.style.display='none'; return; }
+  const query = textBefore.slice(atIdx+1).toLowerCase();
+  const proj = getProject();
+  const all = [
+    ...(proj?.collaborators||[]).map(c=>({email:c.email,name:c.name||c.email.split('@')[0]})),
+    proj?.owner ? {email:proj.owner.email,name:proj.owner.name||proj.owner.email.split('@')[0]} : null
+  ].filter(Boolean).filter(p=>p.email!==state.user?.email);
+  const matches = query ? all.filter(p=>p.name.toLowerCase().includes(query)||p.email.toLowerCase().includes(query)) : all;
+  if (!matches.length) { dropdown.style.display='none'; return; }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = matches.map(p=>`<div onclick="_mwInsertMention('${p.email}','${esc(p.name)}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
+}
+
+function _mwEditorKeydown(e) {
+  if (e.key === 'Escape') document.getElementById('meeting-mention-dropdown').style.display='none';
+}
+
+function _mwInsertMention(email, name) {
+  const ed = document.getElementById('meeting-editor');
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return;
+  const textBefore = node.textContent.slice(0, range.startOffset);
+  const atIdx = textBefore.lastIndexOf('@');
+  // @ 부터 커서까지 삭제
+  const delRange = document.createRange();
+  delRange.setStart(node, atIdx);
+  delRange.setEnd(node, range.startOffset);
+  delRange.deleteContents();
+  // 멘션 스팬 삽입
+  const span = document.createElement('span');
+  span.style.cssText = 'color:#5084ff;font-weight:600;';
+  span.textContent = '@' + name;
+  span.contentEditable = 'false';
+  span.dataset.email = email;
+  delRange.insertNode(span);
+  // 커서를 스팬 뒤로
+  const after = document.createRange();
+  after.setStartAfter(span); after.collapse(true);
+  sel.removeAllRanges(); sel.addRange(after);
+  document.execCommand('insertText', false, ' ');
+  document.getElementById('meeting-mention-dropdown').style.display='none';
+  if (!_meetingMentions.includes(email)) {
+    _meetingMentions.push(email);
+    _mwRenderMentionChips();
+  }
+}
+
+function _mwRenderMentionChips() {
+  const chips = document.getElementById('meeting-mention-chips');
+  chips.innerHTML = _meetingMentions.map(email => {
+    const name = email.split('@')[0];
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:#e8f0fe;color:#5084ff;border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;">@${name}<button onclick="this.parentElement.remove();_meetingMentions=_meetingMentions.filter(e=>e!=='${email}')" style="background:none;border:none;cursor:pointer;color:#5084ff;font-size:15px;padding:0;line-height:1;">×</button></span>`;
+  }).join('');
 }
 
 // 이미지 압축: 최대 800px, JPEG 72% — localStorage 용량 초과 방지
@@ -10713,55 +10845,25 @@ function _removeMeetingImage(idx, el) {
   el.remove();
 }
 
-function _meetingMentionCheck(textarea) {
-  const val = textarea.value;
-  const lastAt = val.lastIndexOf('@');
-  const dropdown = document.getElementById('meeting-mention-dropdown');
-  if (lastAt === -1 || val.slice(lastAt).includes(' ')) { dropdown.style.display='none'; return; }
-  const query = val.slice(lastAt+1).toLowerCase();
-  const proj = getProject();
-  const all = [
-    ...(proj?.collaborators||[]).map(c=>({email:c.email,name:c.name||c.email.split('@')[0]})),
-    proj?.owner ? {email:proj.owner.email,name:proj.owner.name||proj.owner.email.split('@')[0]} : null
-  ].filter(Boolean).filter(p => p.email !== state.user?.email);
-  const matches = query ? all.filter(p=>p.name.toLowerCase().includes(query)||p.email.toLowerCase().includes(query)) : all;
-  if (!matches.length) { dropdown.style.display='none'; return; }
-  dropdown.style.display='block';
-  dropdown.innerHTML = matches.map(p=>`<div onclick="_insertMention('${p.email}','${p.name}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
-}
-
-function _insertMention(email, name) {
-  const ta = document.getElementById('meeting-content-input');
-  const val = ta.value;
-  const lastAt = val.lastIndexOf('@');
-  ta.value = val.slice(0,lastAt) + '@' + name + ' ';
-  document.getElementById('meeting-mention-dropdown').style.display = 'none';
-  if (!_meetingMentions.includes(email)) {
-    _meetingMentions.push(email);
-    const chips = document.getElementById('meeting-mention-chips');
-    const chip = document.createElement('div');
-    chip.style.cssText = 'background:#e8f0ff;color:#4070e0;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;';
-    chip.textContent = '@'+name;
-    chips.appendChild(chip);
-  }
-  ta.focus();
-}
+// _meetingMentionCheck / _insertMention — 구 textarea 기반 함수 (deprecated, 사용 안 함)
+// 새로운 contenteditable 에디터는 _mwEditorInput / _mwInsertMention 사용
 
 async function saveMeeting() {
   const proj = getProject();
   if (!proj) return;
   const title = document.getElementById('meeting-title-input').value.trim();
-  const content = document.getElementById('meeting-content-input').value.trim();
+  // read content from contenteditable editor
+  const editorEl = document.getElementById('meeting-editor');
+  const content = editorEl ? editorEl.innerHTML.trim() : '';
   if (!title) { showToastMessage('⚠️ 제목을 입력해주세요'); return; }
-  // parse @mentions from content
-  const mentionMatches = content.match(/@[\w가-힣]+/g) || [];
-  const allPeople = [...(proj.collaborators||[]), proj.owner].filter(Boolean);
+  // extract @mentions from data-email spans in editor
   const mentionEmails = [..._meetingMentions];
-  mentionMatches.forEach(m => {
-    const name = m.slice(1);
-    const found = allPeople.find(p=>(p.name||'').includes(name)||(p.email||'').includes(name));
-    if (found && !mentionEmails.includes(found.email)) mentionEmails.push(found.email);
-  });
+  if (editorEl) {
+    editorEl.querySelectorAll('[data-email]').forEach(span => {
+      const email = span.getAttribute('data-email');
+      if (email && !mentionEmails.includes(email)) mentionEmails.push(email);
+    });
+  }
   if (!proj.meetings) proj.meetings = [];
 
   if (_editingMeetingId) {
@@ -10871,13 +10973,16 @@ function openMeetingDetail(id) {
   document.getElementById('meeting-detail-title').textContent = m.title||'(제목 없음)';
   const d = new Date(m.createdAt||0);
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  const contentHtml = esc(m.content||'').replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>');
+  // HTML 또는 plain text 모두 지원
+  const rawContent = m.content || '';
+  const isHtml = /^[\s]*</.test(rawContent);
+  const contentHtml = isHtml
+    ? rawContent
+    : esc(rawContent).replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
   const imgsHtml = (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
-  const mentionHtml = m.mentions?.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f2f5;font-size:13px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
   document.getElementById('meeting-detail-body').innerHTML = `
-    <div style="font-size:12px;color:#aaa;margin-bottom:14px;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
-    <div style="font-size:15px;color:#222;line-height:1.7;word-break:break-word;">${contentHtml}</div>
-    ${mentionHtml}
+    <div style="font-size:12px;color:#aaa;margin-bottom:16px;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
+    <div class="meeting-content-view" style="font-size:15px;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
     ${imgsHtml ? `<div style="margin-top:16px;">${imgsHtml}</div>` : ''}
   `;
   // 발행 버튼 상태 업데이트
