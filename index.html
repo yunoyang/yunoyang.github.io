@@ -4365,7 +4365,15 @@ function load() {
       const stored = localStorage.getItem(`vb_fp_${p.id}`);
       p.floorplanEditedImage = stored || null;
     }
-    // meeting.images는 IDB에서 비동기 복원 (_initMeetingImages 에서 처리)
+    // meeting.images: localStorage vb_mi_* 폴백 즉시 복원 (IDB는 _initMeetingImages에서 비동기)
+    (p.meetings || []).forEach(m => {
+      if (!Array.isArray(m.images) || !m.images.length) {
+        try {
+          const raw = localStorage.getItem(`vb_mi_${m.id}`);
+          if (raw) { const imgs = JSON.parse(raw); if (imgs.length) m.images = imgs; }
+        } catch(_) {}
+      }
+    });
   });
   // migrate old p.schedule strings
   state.projects && state.projects.forEach(proj => {
@@ -11042,25 +11050,40 @@ async function saveMeeting() {
   }
   if (!proj.meetings) proj.meetings = [];
 
-  // base64 → Firebase Storage URL 변환 (로그인 시, 5초 타임아웃)
+  // base64 → Firebase Storage URL 변환 (Firebase Auth 확인 + styleImages/ 경로 사용)
   let imgSnapshot = [..._meetingImages];
-  if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+  const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
+  if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
     const proj0 = getProject();
     const projId = (proj0?.cloudId || proj0?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
     imgSnapshot = await Promise.all(imgSnapshot.map(async img => {
       if (!img.startsWith('data:')) return img;
       try {
-        const path = `meetingImages/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
+        // styleImages/ 경로 사용 — 기존 Storage 규칙과 동일하게 적용됨
+        // _fetchStyleFromCloud는 prefixes(하위폴더)만 스캔하므로 루트 파일은 무시됨
+        const path = `styleImages/${projId}/mtg_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
         const ref = _fbStorage.ref(path);
         const uploadPromise = ref.put(_dataUrlToBlob(img), { contentType:'image/jpeg' })
           .then(() => ref.getDownloadURL());
-        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
-        return await Promise.race([uploadPromise, timeoutPromise]);
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
+        return await Promise.race([uploadPromise, timeout]);
       } catch(e) {
-        console.warn('[meetingImg] 업로드 실패, base64 유지:', e.message);
-        return img; // 실패 시 base64 유지
+        console.warn('[meetingImg] Firebase 업로드 실패, 로컬 저장:', e.message);
+        return img;
       }
     }));
+  }
+
+  // base64 이미지 로컬 저장 (IDB 우선, 실패 시 localStorage 폴백)
+  async function _saveMeetingImgLocal(meetId, imgs) {
+    const b64 = imgs.filter(img => img && img.startsWith('data:'));
+    if (!b64.length) return;
+    try {
+      await _MIdb.put(meetId, b64);
+    } catch(e) {
+      // IDB 실패 시 localStorage vb_mi_* 에 폴백
+      try { localStorage.setItem(`vb_mi_${meetId}`, JSON.stringify(b64)); } catch(_) {}
+    }
   }
 
   if (_editingMeetingId) {
@@ -11074,15 +11097,12 @@ async function saveMeeting() {
         mentions: mentionEmails,
         updatedAt: Date.now(),
       };
-      // IDB에 base64만 저장 (Firebase URL은 localStorage/Firestore에 있음)
-      const b64Edit = imgSnapshot.filter(img => img.startsWith('data:'));
-      b64Edit.length ? _MIdb.put(_editingMeetingId, b64Edit) : _MIdb.del(_editingMeetingId);
+      await _saveMeetingImgLocal(_editingMeetingId, imgSnapshot);
     }
     _editingMeetingId = null;
     save();
     closeMeetingAdd();
     renderMeetingTab();
-    // 상세 화면도 갱신
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
     showToastMessage('✅ 회의록이 수정됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
@@ -11098,9 +11118,7 @@ async function saveMeeting() {
       createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
     };
     proj.meetings.push(meeting);
-    // IDB에 base64만 저장 (Firebase URL은 localStorage/Firestore에 있음)
-    const b64New = imgSnapshot.filter(img => img.startsWith('data:'));
-    if (b64New.length) _MIdb.put(meeting.id, b64New);
+    await _saveMeetingImgLocal(meeting.id, imgSnapshot);
     save();
     closeMeetingAdd();
     renderMeetingTab();
