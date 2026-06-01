@@ -4302,10 +4302,27 @@ function _stripMeetingImages(projects) {
   });
 }
 
+function _saveFpImagesToLS(projects) {
+  // 도면 슬롯 이미지(base64)를 vb_fpi_{projId} 별도 키로 분리 → 메인 JSON 용량 절감
+  (projects || []).forEach(p => {
+    const imgs = p.floorplanImages;
+    if (!Array.isArray(imgs)) return;
+    const hasB64 = imgs.some(img => img && img.startsWith('data:'));
+    if (!hasB64) return;
+    try {
+      localStorage.setItem(`vb_fpi_${p.id}`, JSON.stringify(imgs));
+      p.floorplanImages = '__vb_fpi__'; // 플레이스홀더
+    } catch(e) {
+      console.warn('[vb_fpi] 분리저장 실패:', e.message);
+    }
+  });
+}
+
 function save() {
-  // 회의록 이미지는 IDB에 저장 → localStorage JSON에서 제거
+  // 회의록 이미지 IDB, 도면 이미지 별도 키로 분리 → localStorage JSON 용량 절감
   const lite = JSON.parse(JSON.stringify(state));
   _stripMeetingImages(lite.projects);
+  _saveFpImagesToLS(lite.projects);
   const json = JSON.stringify(lite);
   try {
     localStorage.setItem('vibespace', json);
@@ -4358,11 +4375,18 @@ function load() {
   const d = localStorage.getItem('vibespace');
   if (d) { try { state = JSON.parse(d); } catch(e) {} }
   if (!state.projects || !state.projects.length) initDefaultProject();
-  // 분리 저장된 floorplanEditedImage 복원
+  // 분리 저장된 floorplan 이미지 복원
   (state.projects || []).forEach(p => {
     if (p.floorplanEditedImage === '__vb_fp__') {
       const stored = localStorage.getItem(`vb_fp_${p.id}`);
       p.floorplanEditedImage = stored || null;
+    }
+    // 도면 슬롯 이미지 복원 (vb_fpi_*)
+    if (p.floorplanImages === '__vb_fpi__') {
+      try {
+        const raw = localStorage.getItem(`vb_fpi_${p.id}`);
+        p.floorplanImages = raw ? JSON.parse(raw) : [null, null, null];
+      } catch(_) { p.floorplanImages = [null, null, null]; }
     }
     // meeting.images: localStorage vb_mi_* 폴백 즉시 복원 (IDB는 _initMeetingImages에서 비동기)
     (p.meetings || []).forEach(m => {
@@ -10295,20 +10319,19 @@ function _fpSlotUpload(e, idx) {
   if (!file) return;
   if (file.size > 10 * 1024 * 1024) { alert('10MB 이하 이미지만 업로드 가능합니다.'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
+    // 압축 (1400px, 82% quality) — 용량 절감
+    const compressed = await _compressMeetingImg(ev.target.result, 1400, 0.82) || ev.target.result;
     const proj = getProject();
     if (proj) {
       if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
       while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
-      proj.floorplanImages[idx] = ev.target.result;
+      proj.floorplanImages[idx] = compressed;
       // 슬롯 0의 이미지를 floorplanImage에도 동기화 (fp-editor 호환)
-      if (idx === 0) proj.floorplanImage = ev.target.result;
-      localStorage.setItem('vibespace', JSON.stringify(state));
-      _lastSaveTime = Date.now();
-      const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
-      if (proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
-        _syncProjToCloud(proj);
-      }
+      if (idx === 0) proj.floorplanImage = compressed;
+      // vb_fpi_* 에 직접 저장 (동기 보장) + save() 호출
+      try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
+      save(); // QuotaExceeded 핸들링 포함
     }
     _renderFpSlots();
     if (e.target) e.target.value = '';
