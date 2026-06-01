@@ -3552,9 +3552,8 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="deleteMeeting()" style="background:none;border:none;cursor:pointer;padding:6px;color:#e53935;border-radius:8px;display:flex;align-items:center;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
-      <button id="btn-publish-blog" onclick="publishMeetingToInblog()" style="flex-shrink:0;padding:6px 10px;border-radius:20px;border:1.5px solid #5084ff;background:#fff;color:#5084ff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        발행
+      <button onclick="shareMeetingUrl()" title="URL 공유" style="background:none;border:none;cursor:pointer;padding:6px;color:#555;border-radius:8px;display:flex;align-items:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
     </div>
   </div>
@@ -10573,6 +10572,8 @@ window.addEventListener('load', () => {
   }
   // 공사계획 공유 링크 뷰어
   _checkExportOnLoad();
+  // 회의록 공유 URL 뷰어
+  _checkMeetingShareUrl();
   // 공동작업 초대 처리
   _checkInviteOnLoad();
   _loadBrandLogo(); // Firestore 최신 로고 적용
@@ -11232,25 +11233,6 @@ function openMeetingDetail(id) {
     <div class="meeting-content-view" style="font-size:15px;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
     ${imgsHtml ? `<div style="margin-top:16px;">${imgsHtml}</div>` : ''}
   `;
-  // 발행 버튼 상태 업데이트
-  const btn = document.getElementById('btn-publish-blog');
-  if (m.inblogPostId) {
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
-    btn.style.background = '#f0f5ff';
-    btn.style.color = '#5084ff';
-    btn.style.borderColor = '#c7d9ff';
-    btn.onclick = () => {
-      if (confirm('이미 발행된 글입니다.\n블로그에서 보시겠습니까?')) {
-        window.open(`https://vibespace.inblog.ai/${m.inblogSlug||''}`, '_blank');
-      }
-    };
-  } else {
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 블로그 발행`;
-    btn.style.background = '#fff';
-    btn.style.color = '#5084ff';
-    btn.style.borderColor = '#5084ff';
-    btn.onclick = publishMeetingToInblog;
-  }
   const scr = document.getElementById('screen-meeting-detail');
   scr.style.transform = 'translateY(0)';
   scr.style.pointerEvents = 'all';
@@ -11261,6 +11243,90 @@ function closeMeetingDetail() {
   scr.style.transform = 'translateY(100%)';
   scr.style.pointerEvents = 'none';
   _currentMeetingId = null;
+}
+
+// ── 회의록 URL 공유 ───────────────────────────────────────────────────────
+async function shareMeetingUrl() {
+  if (!_currentMeetingId) return;
+  const proj = getProject();
+  const m = (proj?.meetings||[]).find(x=>x.id===_currentMeetingId);
+  if (!m) return;
+  const btn = event?.currentTarget;
+  if (btn) { btn.disabled = true; }
+  showToastMessage('🔗 URL 생성 중...');
+  try {
+    const ok = await _initFirebase();
+    if (!ok || !_db) throw new Error('Firebase 연결 실패');
+    if (!firebase.auth().currentUser) {
+      try { await firebase.auth().signInAnonymously(); } catch(e) {}
+    }
+    const d = new Date(m.createdAt||0);
+    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const shareData = {
+      title: m.title || '(제목 없음)',
+      content: m.content || '',
+      images: (m.images||[]).filter(img => !img.startsWith('data:')), // base64 제외
+      createdAt: m.createdAt || 0,
+      createdByName: m.createdByName || m.createdBy || '',
+      projectName: proj.name || '',
+      dateStr,
+      sharedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    const docRef = await _db.collection('vb_meeting_shares').add(shareData);
+    const url = `${window.location.origin}${window.location.pathname}?meeting=${docRef.id}`;
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      showToastMessage('✅ URL이 클립보드에 복사됐습니다');
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      showToastMessage('✅ URL이 클립보드에 복사됐습니다');
+    }
+  } catch(e) {
+    showToastMessage('⚠️ URL 생성 실패: ' + e.message);
+  }
+  if (btn) { btn.disabled = false; }
+}
+
+// ── 회의록 공유 URL 진입 핸들러 (?meeting=SHARE_ID) ─────────────────────────
+async function _checkMeetingShareUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const shareId = params.get('meeting');
+  if (!shareId) return;
+  window.history.replaceState({}, '', window.location.pathname);
+  const screen = document.getElementById('screen-meeting-share-view');
+  const content = document.getElementById('meeting-share-view-content');
+  if (!screen || !content) return;
+  screen.style.display = 'block';
+  content.innerHTML = `<div style="text-align:center;padding:80px 20px;">
+    <div class="join-spinner" style="margin:0 auto 16px;width:32px;height:32px;border-width:3px;"></div>
+    <p style="color:#aaa;font-size:14px;">회의록 불러오는 중...</p>
+  </div>`;
+  try {
+    const ok = await _initFirebase();
+    if (!ok || !_db) throw new Error('Firebase 연결 실패');
+    const doc = await _db.collection('vb_meeting_shares').doc(shareId).get();
+    if (!doc.exists) {
+      content.innerHTML = '<div style="text-align:center;padding:80px;color:#aaa;font-size:14px;">회의록을 찾을 수 없거나 만료되었습니다.</div>';
+      return;
+    }
+    const d = doc.data();
+    const { decoded: rawContent, type: contentType } = _normalizeMeetingContent(d.content||'');
+    const contentHtml = contentType === 'html'
+      ? rawContent
+      : esc(rawContent).replace(/\n/g,'<br>');
+    const imgsHtml = (d.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:10px;display:block;" onclick="window.open(this.src)">`).join('');
+    content.innerHTML = `
+      <div style="font-size:13px;color:#aaa;margin-bottom:4px;">${esc(d.projectName||'')}</div>
+      <h1 style="font-size:22px;font-weight:800;color:#111;margin:0 0 10px;">${esc(d.title||'')}</h1>
+      <div style="font-size:13px;color:#bbb;margin-bottom:24px;">${esc(d.dateStr||'')} · ${esc(d.createdByName||'')}</div>
+      ${imgsHtml ? `<div style="margin-bottom:20px;">${imgsHtml}</div>` : ''}
+      <div style="font-size:16px;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
+    `;
+  } catch(e) {
+    content.innerHTML = `<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">오류: ${esc(e.message)}</div>`;
+  }
 }
 
 // ── SEO 에이전트: Claude로 블로그 글 생성 → 미리보기 → 발행 ────────────────
@@ -12300,6 +12366,18 @@ async function fpShareLink() {
 </script>
 
 <!-- ===== 공사계획 공유 뷰어 화면 ===== -->
+<!-- ===== 회의록 공유 뷰어 ===== -->
+<div id="screen-meeting-share-view" style="display:none;position:fixed;inset:0;background:#fff;z-index:99998;overflow-y:auto;">
+  <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #eef0f5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1;padding-top:max(env(safe-area-inset-top,0px),12px);">
+    <a href="https://vibespacekorea.com" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#111;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span style="font-size:15px;font-weight:700;">바이브스페이스</span>
+    </a>
+    <span style="font-size:13px;color:#bbb;font-weight:500;">회의록</span>
+  </div>
+  <div id="meeting-share-view-content" style="max-width:680px;margin:0 auto;padding:24px 20px 60px;"></div>
+</div>
+
 <div id="screen-export-view" style="display:none;position:fixed;inset:0;background:#f0f2f7;z-index:99998;overflow-y:auto;">
   <!-- 뷰어 헤더 -->
   <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #eef0f5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1;padding-top:max(env(safe-area-inset-top,0px),12px);">
