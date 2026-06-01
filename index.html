@@ -3176,21 +3176,28 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
     <div id="form-view-panel" class="info-view-body" style="display:none;">
-      <div class="info-view-card" id="iv-floorplan-card" style="display:none;">
-        <div class="info-view-floorplan-wrap">
-          <div class="fp-edit-row">
-            <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
-            <button class="fp-edit-btn" onclick="openFpEditor()">
-              <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
-              도면 편집
-            </button>
-          </div>
-          <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
-        </div>
-      </div>
+      <!-- 프로젝트명 최상단 -->
       <div class="info-view-hero">
         <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
         <div class="info-view-project-name" id="iv-project-name">-</div>
+      </div>
+      <!-- 도면 카드 (항상 표시) -->
+      <div class="info-view-card" id="iv-floorplan-card">
+        <div class="info-view-floorplan-wrap">
+          <div class="fp-edit-row">
+            <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button id="iv-fp-add-btn" onclick="_ivAddFloorplan()" style="display:none;width:28px;height:28px;border:none;background:#f5f7fb;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="도면 추가">
+                <svg width="16" height="16" fill="none" stroke="#555" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
+                <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+                도면 편집
+              </button>
+            </div>
+          </div>
+          <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
+        </div>
       </div>
       <div class="info-view-card">
         <div class="info-view-row">
@@ -8411,23 +8418,41 @@ function _loadInfoView() {
   const memoCard = document.getElementById('iv-memo-card');
   if (memoCard) memoCard.style.display = f.memo ? 'block' : 'none';
   // 도면 (다중 이미지)
-  const fpCard   = document.getElementById('iv-floorplan-card');
-  const fpScroll = document.getElementById('iv-floorplan-scroll');
+  const fpCard    = document.getElementById('iv-floorplan-card');
+  const fpScroll  = document.getElementById('iv-floorplan-scroll');
+  const fpAddBtn  = document.getElementById('iv-fp-add-btn');
+  const fpEditBtn = document.getElementById('iv-fp-edit-btn');
   if (fpCard && fpScroll) {
     const images = _getFpImages(proj);
     const editedSrc = proj.floorplanEditedImage;
-    // 편집 이미지가 있으면 슬롯 0 자리에 표시
     const displayImages = images.map((src, i) => (i === 0 && editedSrc) ? editedSrc : src);
     const validImgs = displayImages.filter(Boolean);
     if (validImgs.length) {
+      // 이미지 있음: 이미지 표시 + 오른쪽 + 버튼 + 편집 버튼
       fpScroll.innerHTML = validImgs.map((src, i) =>
         `<img src="${src}" alt="도면 ${i+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">`
       ).join('');
-      fpCard.style.display = 'block';
+      if (fpAddBtn)  { fpAddBtn.style.display  = 'flex'; }
+      if (fpEditBtn) { fpEditBtn.style.display = ''; }
     } else {
-      fpCard.style.display = 'none';
+      // 이미지 없음: 이미지 추가 버튼
+      fpScroll.innerHTML = `<button onclick="_ivAddFloorplan()" style="width:100%;padding:20px 0;background:#f7f8fc;border:1.5px dashed #d0d6e8;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;">
+        <svg width="24" height="24" fill="none" stroke="#aab" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span style="font-size:13px;color:#aaa;font-weight:500;">도면 이미지 추가</span>
+      </button>`;
+      if (fpAddBtn)  { fpAddBtn.style.display  = 'none'; }
+      if (fpEditBtn) { fpEditBtn.style.display = 'none'; }
     }
   }
+}
+
+function _ivAddFloorplan() {
+  // 뷰 → 편집 모드로 전환 후 도면 섹션으로 스크롤
+  switchToFormEdit();
+  setTimeout(() => {
+    const el = document.getElementById('floorplan-group');
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 200);
 }
 
 function saveFormAndBack() {
