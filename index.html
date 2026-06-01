@@ -10884,7 +10884,8 @@ function deleteMeeting() {
   if (!proj) return;
   const delId = _currentMeetingId;
   proj.meetings = (proj.meetings||[]).filter(m => m.id !== delId);
-  _MIdb.del(delId); // IDB 이미지도 삭제
+  _MIdb.del(delId); // IDB 이미지 삭제
+  try { localStorage.removeItem(`vb_mi_${delId}`); } catch(_) {} // localStorage 백업 삭제
   save();
   if (proj.cloudId) _syncMeetingsToCloud(proj);
   closeMeetingDetail();
@@ -11074,15 +11075,16 @@ async function saveMeeting() {
     }));
   }
 
-  // base64 이미지 로컬 저장 (IDB 우선, 실패 시 localStorage 폴백)
-  async function _saveMeetingImgLocal(meetId, imgs) {
+  // base64 이미지 로컬 저장 — IDB + localStorage vb_mi_* 동시 저장 (둘 다 보장)
+  // ★ _MIdb.put은 내부에서 에러를 삼키므로 catch 불가 → 항상 동시 저장
+  function _saveMeetingImgLocal(meetId, imgs) {
     const b64 = imgs.filter(img => img && img.startsWith('data:'));
     if (!b64.length) return;
+    _MIdb.put(meetId, b64); // IDB (비동기, fire-and-forget)
     try {
-      await _MIdb.put(meetId, b64);
+      localStorage.setItem(`vb_mi_${meetId}`, JSON.stringify(b64)); // 동기 보장
     } catch(e) {
-      // IDB 실패 시 localStorage vb_mi_* 에 폴백
-      try { localStorage.setItem(`vb_mi_${meetId}`, JSON.stringify(b64)); } catch(_) {}
+      console.warn('[meetImg] localStorage vb_mi 저장 실패:', e.message);
     }
   }
 
@@ -11097,7 +11099,7 @@ async function saveMeeting() {
         mentions: mentionEmails,
         updatedAt: Date.now(),
       };
-      await _saveMeetingImgLocal(_editingMeetingId, imgSnapshot);
+      _saveMeetingImgLocal(_editingMeetingId, imgSnapshot);
     }
     _editingMeetingId = null;
     save();
@@ -11118,7 +11120,7 @@ async function saveMeeting() {
       createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
     };
     proj.meetings.push(meeting);
-    await _saveMeetingImgLocal(meeting.id, imgSnapshot);
+    _saveMeetingImgLocal(meeting.id, imgSnapshot);
     save();
     closeMeetingAdd();
     renderMeetingTab();
