@@ -3186,15 +3186,10 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="info-view-floorplan-wrap">
           <div class="fp-edit-row">
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <button id="iv-fp-add-btn" onclick="_ivAddFloorplan()" style="display:none;width:28px;height:28px;border:none;background:#f5f7fb;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="도면 추가">
-                <svg width="16" height="16" fill="none" stroke="#555" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
-                <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
-                도면 편집
-              </button>
-            </div>
+            <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
+              <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+              도면 편집
+            </button>
           </div>
           <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
         </div>
@@ -8427,22 +8422,26 @@ function _loadInfoView() {
     const editedSrc = proj.floorplanEditedImage;
     const displayImages = images.map((src, i) => (i === 0 && editedSrc) ? editedSrc : src);
     const validImgs = displayImages.filter(Boolean);
+    // 점선 + 버튼 (이미지 바로 옆 or 단독)
+    const addBtn = `<button onclick="_ivAddFloorplan()" style="flex-shrink:0;width:100px;height:180px;background:#f7f8fc;border:1.5px dashed #d0d6e8;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+      <svg width="22" height="22" fill="none" stroke="#bbc" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span style="font-size:12px;color:#bbb;font-weight:500;">추가</span>
+    </button>`;
     if (validImgs.length) {
-      // 이미지 있음: 이미지 표시 + 오른쪽 + 버튼 + 편집 버튼
+      // 이미지 있음: 이미지들 + 점선 + 버튼 인라인
       fpScroll.innerHTML = validImgs.map((src, i) =>
         `<img src="${src}" alt="도면 ${i+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">`
-      ).join('');
-      if (fpAddBtn)  { fpAddBtn.style.display  = 'flex'; }
+      ).join('') + (validImgs.length < 3 ? addBtn : '');
       if (fpEditBtn) { fpEditBtn.style.display = ''; }
     } else {
-      // 이미지 없음: 이미지 추가 버튼
-      fpScroll.innerHTML = `<button onclick="_ivAddFloorplan()" style="width:100%;padding:20px 0;background:#f7f8fc;border:1.5px dashed #d0d6e8;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;">
-        <svg width="24" height="24" fill="none" stroke="#aab" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span style="font-size:13px;color:#aaa;font-weight:500;">도면 이미지 추가</span>
+      // 이미지 없음: 점선 + 버튼만 (전체 너비)
+      fpScroll.innerHTML = `<button onclick="_ivAddFloorplan()" style="width:100%;min-height:140px;background:#f7f8fc;border:1.5px dashed #d0d6e8;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+        <svg width="24" height="24" fill="none" stroke="#bbc" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span style="font-size:13px;color:#bbb;font-weight:500;">도면 이미지 추가</span>
       </button>`;
-      if (fpAddBtn)  { fpAddBtn.style.display  = 'none'; }
       if (fpEditBtn) { fpEditBtn.style.display = 'none'; }
     }
+    if (fpAddBtn) fpAddBtn.style.display = 'none'; // 헤더 + 버튼 미사용
   }
 }
 
