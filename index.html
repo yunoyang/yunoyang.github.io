@@ -10791,7 +10791,7 @@ function renderMeetingTab() {
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
-        <div style="font-size:13px;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(m.content||'')}</div>
+        <div style="font-size:13px;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc((m.content||'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'').trim())}</div>
         ${mentionHtml}
         <div style="margin-top:6px;font-size:12px;color:#bbb;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
       </div>
@@ -11180,7 +11180,8 @@ function openMeetingDetail(id) {
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   // HTML 또는 plain text 모두 지원
   const rawContent = m.content || '';
-  const isHtml = /^[\s]*</.test(rawContent);
+  // contenteditable 저장값(div/br 포함) or 구 플레인텍스트 모두 지원
+  const isHtml = /<(div|br|p|ul|ol|li|span|hr|b|i|u|strong|em)\b/i.test(rawContent);
   const contentHtml = isHtml
     ? rawContent
     : esc(rawContent).replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
