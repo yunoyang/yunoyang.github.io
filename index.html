@@ -11005,26 +11005,12 @@ async function _meetingImagePreview(input) {
     });
     const compressed = await _compressMeetingImg(raw);
     if (!compressed) continue;
-    let finalSrc = compressed;
-    // 로그인 + Firebase Storage 사용 가능 시 → Storage 업로드 (다기기 공유)
-    if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
-      try {
-        const proj = getProject();
-        const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
-        const path = `meetingImages/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
-        const ref = _fbStorage.ref(path);
-        await ref.put(_dataUrlToBlob(compressed), { contentType:'image/jpeg' });
-        finalSrc = await ref.getDownloadURL();
-      } catch(err) {
-        console.warn('[meetingImg] Storage 실패, base64 사용:', err.message);
-        finalSrc = compressed;
-      }
-    }
-    _meetingImages.push(finalSrc);
+    // ★ 항상 base64로 즉시 미리보기 — Firebase 업로드는 저장(saveMeeting) 시점에 처리
+    _meetingImages.push(compressed);
     const idx = _meetingImages.length - 1;
     const div = document.createElement('div');
     div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
-    div.innerHTML = `<img src="${finalSrc}" style="width:100%;height:100%;object-fit:cover;">
+    div.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;">
       <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
     preview.appendChild(div);
   }
@@ -11056,7 +11042,26 @@ async function saveMeeting() {
   }
   if (!proj.meetings) proj.meetings = [];
 
-  const imgSnapshot = [..._meetingImages]; // 저장 시점 이미지 스냅샷
+  // base64 → Firebase Storage URL 변환 (로그인 시, 5초 타임아웃)
+  let imgSnapshot = [..._meetingImages];
+  if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+    const proj0 = getProject();
+    const projId = (proj0?.cloudId || proj0?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
+    imgSnapshot = await Promise.all(imgSnapshot.map(async img => {
+      if (!img.startsWith('data:')) return img;
+      try {
+        const path = `meetingImages/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
+        const ref = _fbStorage.ref(path);
+        const uploadPromise = ref.put(_dataUrlToBlob(img), { contentType:'image/jpeg' })
+          .then(() => ref.getDownloadURL());
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+        return await Promise.race([uploadPromise, timeoutPromise]);
+      } catch(e) {
+        console.warn('[meetingImg] 업로드 실패, base64 유지:', e.message);
+        return img; // 실패 시 base64 유지
+      }
+    }));
+  }
 
   if (_editingMeetingId) {
     // ── 수정 모드 ──────────────────────────────
