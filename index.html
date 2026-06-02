@@ -2687,8 +2687,11 @@ button, input, textarea, select { font-family:var(--font); }
 /* 하단 버튼 그룹 */
 .landing-bottom {
   padding:0 24px calc(env(safe-area-inset-bottom,0px) + 28px);
-  display:flex; flex-direction:column; gap:10px;
+  display:flex; flex-direction:column; gap:10px; align-items:center;
   width:100%; box-sizing:border-box; flex-shrink:0;
+}
+.landing-bottom > button {
+  max-width:390px; width:100%;
 }
 /* 프로젝트 바로가기 카드 */
 .landing-proj-card {
@@ -3040,7 +3043,7 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- 로그인: 프로젝트 카드 + 새 공사 -->
     <button class="landing-proj-card" id="landing-proj-card-btn" onclick="loadExistingProjects()" style="display:none;">
       <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
-      <svg width="16" height="16" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="16" height="16" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
     <button class="landing-btn-new" id="landing-btn-new" onclick="startNewProject()" style="display:none;">
       <span>새 공사</span>
