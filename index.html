@@ -3052,7 +3052,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="summary-wrap">
     <div class="summary-unified">
       <div class="summary-toggle-row" onclick="toggleSummary()">
-        <span>공사정보</span>
+        <span>공사정보</span><span id="sum-dday" style="font-size:13px;font-weight:700;color:#5084ff;margin-left:8px;"></span>
         <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
       </div>
       <div class="summary-card" id="summary-card">
@@ -3078,7 +3078,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('calendar',this)"><span class="tab-label">일정</span></button>
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
-        <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">회의</span></button>
+        <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">기록</span></button>
       </div>
     </div>
 
@@ -3449,7 +3449,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- floating-add-style 제거: 스타일 상세 뷰어 헤더 + 버튼으로 대체 -->
 <div class="floating-group" id="floating-add-meeting" style="display:none;">
   <button class="floating-btn" onclick="openAddMeeting()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 회의록 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 기록 추가
   </button>
 </div>
 <div class="floating-group" id="floating-add-content" style="display:none;">
@@ -3485,7 +3485,7 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="back-btn" onclick="closeMeetingWrite()">
       <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
     </button>
-    <span id="meeting-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">회의록 작성</span>
+    <span id="meeting-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">기록 작성</span>
     <button id="btn-meeting-save" onclick="saveMeeting()" style="padding:8px 18px;background:#222;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
   </div>
 
@@ -5133,6 +5133,21 @@ function updateSummary() {
     if (p.company) companies.add(p.company);
   });
   document.getElementById('sum-cost').textContent = totalCost > 0 ? '약 ' + formatNum(totalCost) + '원' : '0원';
+  // D-day 계산 (공사 시작일 기준)
+  const ddEl = document.getElementById('sum-dday');
+  if (ddEl) {
+    const startDate = proj.form?.startDate;
+    if (startDate) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const start = new Date(startDate + 'T00:00:00');
+      const diff = Math.round((start - today) / (1000*60*60*24));
+      if (diff > 0) ddEl.textContent = `D-${diff}일`;
+      else if (diff === 0) ddEl.textContent = 'D-Day';
+      else ddEl.textContent = `D+${Math.abs(diff)}일`;
+    } else {
+      ddEl.textContent = '';
+    }
+  }
   if (proj.form.startDate && proj.form.endDate) {
     const s = new Date(proj.form.startDate), e = new Date(proj.form.endDate);
     const months = Math.max(1, Math.round((e-s)/(1000*60*60*24*30)));
@@ -10811,7 +10826,7 @@ function renderMeetingTab() {
   if (!list) return;
   const meetings = (proj?.meetings || []).slice().sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
   if (!meetings.length) {
-    list.innerHTML = `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 회의록이 없습니다</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 기록이 없습니다</div>`;
     return;
   }
   list.innerHTML = meetings.map(m => {
@@ -10834,7 +10849,7 @@ function renderMeetingTab() {
 
 // ── 회의록 에디터 화면 열기/닫기 ────────────────────────────────────────────
 function _openMeetingWrite(isEdit) {
-  document.getElementById('meeting-write-header').textContent = isEdit ? '회의록 수정' : '회의록 작성';
+  document.getElementById('meeting-write-header').textContent = isEdit ? '기록 수정' : '기록 작성';
   document.getElementById('btn-meeting-save').textContent = isEdit ? '수정' : '저장';
   const scr = document.getElementById('screen-meeting-write');
   scr.style.transform = 'translateY(0)';
@@ -10903,7 +10918,7 @@ function openEditMeeting() {
 
 function deleteMeeting() {
   if (!_currentMeetingId) return;
-  if (!confirm('이 회의록을 삭제하시겠습니까?')) return;
+  if (!confirm('이 기록을 삭제하시겠습니까?')) return;
   const proj = getProject();
   if (!proj) return;
   const delId = _currentMeetingId;
@@ -10914,7 +10929,7 @@ function deleteMeeting() {
   if (proj.cloudId) _syncMeetingsToCloud(proj);
   closeMeetingDetail();
   renderMeetingTab();
-  showToastMessage('🗑️ 회의록이 삭제됐습니다');
+  showToastMessage('🗑️ 기록이 삭제됐습니다');
 }
 
 // ── 에디터 툴바 포맷 ────────────────────────────────────────────────────────
@@ -11130,7 +11145,7 @@ async function saveMeeting() {
     closeMeetingAdd();
     renderMeetingTab();
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
-    showToastMessage('✅ 회의록이 수정됐습니다');
+    showToastMessage('✅ 기록이 수정됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
   } else {
     // ── 신규 생성 ──────────────────────────────
@@ -11148,7 +11163,7 @@ async function saveMeeting() {
     save();
     closeMeetingAdd();
     renderMeetingTab();
-    showToastMessage('✅ 회의록이 저장됐습니다');
+    showToastMessage('✅ 기록이 저장됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
     if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
   }
@@ -11324,14 +11339,14 @@ async function _checkMeetingShareUrl() {
   screen.style.display = 'block';
   content.innerHTML = `<div style="text-align:center;padding:80px 20px;">
     <div class="join-spinner" style="margin:0 auto 16px;width:32px;height:32px;border-width:3px;"></div>
-    <p style="color:#aaa;font-size:14px;">회의록 불러오는 중...</p>
+    <p style="color:#aaa;font-size:14px;">기록 불러오는 중...</p>
   </div>`;
   try {
     const ok = await _initFirebase();
     if (!ok || !_db) throw new Error('Firebase 연결 실패');
     const doc = await _db.collection('vb_meeting_shares').doc(shareId).get();
     if (!doc.exists) {
-      content.innerHTML = '<div style="text-align:center;padding:80px;color:#aaa;font-size:14px;">회의록을 찾을 수 없거나 만료되었습니다.</div>';
+      content.innerHTML = '<div style="text-align:center;padding:80px;color:#aaa;font-size:14px;">기록을 찾을 수 없거나 만료되었습니다.</div>';
       return;
     }
     const d = doc.data();
@@ -12396,7 +12411,7 @@ async function fpShareLink() {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span style="font-size:15px;font-weight:700;">바이브스페이스</span>
     </a>
-    <span style="font-size:13px;color:#bbb;font-weight:500;">회의록</span>
+    <span style="font-size:13px;color:#bbb;font-weight:500;">기록</span>
   </div>
   <div id="meeting-share-view-content" style="max-width:680px;margin:0 auto;padding:24px 20px 60px;"></div>
 </div>
