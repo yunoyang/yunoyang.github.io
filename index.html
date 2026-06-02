@@ -9406,7 +9406,7 @@ function _genToken(len = 28) {
 }
 
 // ===== CLOUD MERGE HELPER =====
-// 클라우드 프로젝트를 로컬 프로젝트와 병합 — myRole과 styleImages 보존
+// 클라우드 프로젝트를 로컬 프로젝트와 병합
 function _mergeLocalPreserve(cp, localProjs) {
   const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
   if (!local) return cp;
@@ -9417,7 +9417,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   const cloudHasImages = cp.styleImages && Object.values(cp.styleImages).some(a => a?.length > 0);
   const localHasImages = local.styleImages && Object.values(local.styleImages).some(a => a?.length > 0);
   if (!cloudHasImages && localHasImages) merged.styleImages = local.styleImages;
-  // contentLinks: id 기준 합집합 병합 — 클라우드·로컬 양쪽 항목 모두 보존
+  // contentLinks: id 기준 합집합 병합
   const cpLinks = cp.contentLinks || [];
   const localLinks = local.contentLinks || [];
   if (localLinks.length) {
@@ -9427,10 +9427,19 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
-  // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
+  // 도면 보존
   if (local.floorplanImage) merged.floorplanImage = local.floorplanImage;
-  // 편집 도면(floorplanEditedImage) 보존 — 로컬이 있으면 우선 (에디터 결과물)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
+  // ★ meetings: id 기준 합집합 — 로컬 우선 (아직 sync 안 된 기록 보존)
+  const cpMeetings = cp.meetings || [];
+  const localMeetings = local.meetings || [];
+  if (localMeetings.length || cpMeetings.length) {
+    const map = new Map();
+    cpMeetings.forEach(m => map.set(m.id, m));       // 클라우드 기준
+    localMeetings.forEach(m => map.set(m.id, m));    // 로컬로 덮어쓰기 (최신)
+    merged.meetings = Array.from(map.values())
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }
   return merged;
 }
 
@@ -9707,25 +9716,30 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
-    // 회의록 이미지 보존 (IDB에 저장, Firestore에 없음)
+    // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
+    const localMeetings = proj.meetings || [];
     const localMeetingImgMap = {};
-    (proj.meetings || []).forEach(m => {
+    localMeetings.forEach(m => {
       if (Array.isArray(m.images) && m.images.length) localMeetingImgMap[m.id] = m.images;
     });
-    const allMeetingIds = (proj.meetings||[]).map(m=>m.id);
     // N 뱃지: merge 전에 새 항목 감지
     _markNewFromCollab(cloudId, proj, remote);
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
-    // 도면(floorplanImage) 보존 — 로컬이 있으면 항상 로컬 우선 (사용자 직접 업로드가 최신)
+    // 도면 보존
     if (localFloorplan) proj.floorplanImage = localFloorplan;
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
-    // 회의록 이미지 복원 (memory 우선, 없으면 IDB에서 async 로드)
-    (proj.meetings || []).forEach(m => {
+    // ★ meetings: 로컬+클라우드 합집합 — 로컬 우선 (sync 안 된 기록 보존)
+    const remoteMeetings = remote.meetings || [];
+    const meetMap = new Map();
+    remoteMeetings.forEach(m => meetMap.set(m.id, m));
+    localMeetings.forEach(m => meetMap.set(m.id, m)); // 로컬로 덮어쓰기
+    proj.meetings = Array.from(meetMap.values())
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // 기록 이미지 복원 (메모리 → IDB)
+    proj.meetings.forEach(m => {
       if (localMeetingImgMap[m.id]) m.images = localMeetingImgMap[m.id];
     });
-    // 새로 추가된 meeting은 IDB에서 async 복원
-    const newIds = (proj.meetings||[]).map(m=>m.id).filter(id=>!allMeetingIds.includes(id));
-    if (newIds.length) _MIdb.loadAll().then(()=>renderMeetingTab());
+    _MIdb.loadAll().then(() => renderMeetingTab());
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
