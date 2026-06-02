@@ -7760,6 +7760,7 @@ function _prUpdatePlaceholder() {
 
 async function _prImgPreview(input) {
   const preview = document.getElementById('proc-record-img-preview');
+  let added = 0;
   for (const file of Array.from(input.files)) {
     const raw = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
     const compressed = await _compressMeetingImg(raw, 900, 0.75) || raw;
@@ -7775,12 +7776,14 @@ async function _prImgPreview(input) {
       } catch(e) { console.warn('[prImg]', e.message); }
     }
     _prImages.push(finalSrc);
+    added++;
     const idx = _prImages.length - 1;
     const div = document.createElement('div');
     div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
     div.innerHTML = `<img src="${finalSrc}" style="width:100%;height:100%;object-fit:cover;"><button onclick="_prRemoveImg(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
     preview.appendChild(div);
   }
+  if (added > 0) showToastMessage(`✅ 사진 ${added > 1 ? added + '장' : ''}추가됐습니다`);
 }
 
 function _prRemoveImg(idx, el) { _prImages.splice(idx, 1); el.remove(); }
@@ -10692,6 +10695,7 @@ function _fpSlotUpload(e, idx) {
       // vb_fpi_* 직접 저장 (동기 보장) + save()
       try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
       save();
+      showToastMessage('✅ 도면 이미지가 저장됐습니다');
     }
     _renderFpSlots();
     if (e.target) e.target.value = '';
@@ -11391,15 +11395,15 @@ function _compressMeetingImg(dataUrl, maxW = 900, quality = 0.75) {
 async function _meetingImagePreview(input) {
   const files = Array.from(input.files);
   const preview = document.getElementById('meeting-images-preview');
+  let added = 0;
   for (const file of files) {
-    // FileReader → dataUrl
     const raw = await new Promise(res => {
       const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file);
     });
     const compressed = await _compressMeetingImg(raw);
     if (!compressed) continue;
-    // ★ 항상 base64로 즉시 미리보기 — Firebase 업로드는 저장(saveMeeting) 시점에 처리
     _meetingImages.push(compressed);
+    added++;
     const idx = _meetingImages.length - 1;
     const div = document.createElement('div');
     div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
@@ -11407,6 +11411,7 @@ async function _meetingImagePreview(input) {
       <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
     preview.appendChild(div);
   }
+  if (added > 0) showToastMessage(`✅ 사진 ${added > 1 ? added + '장' : ''}추가됐습니다`);
 }
 
 function _removeMeetingImage(idx, el) {
