@@ -5060,9 +5060,15 @@ function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
   closeAllMenus();
-  // 플로팅 버튼: 메인 화면에서만 표시
+  // 플로팅 버튼: 메인 화면에서만 표시 (다른 화면에서는 전체 숨김)
   const fab = document.getElementById('floating-add-process');
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
+  if (screen !== 'main') {
+    ['floating-add-meeting','floating-add-content'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
   if (screen === 'main') renderAll();
   if (screen === 'form') {
     if (formMode === 'new') {
