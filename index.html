@@ -3633,6 +3633,20 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- ===== GitHub 토큰 입력 Bottom Sheet ===== -->
+<div class="overlay" id="dlg-gh-token" onclick="if(event.target===this)this.style.display='none'" style="display:none;z-index:9500;">
+  <div class="bottom-sheet" style="padding:24px 20px 32px;">
+    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:6px;">GitHub 토큰 입력</div>
+    <div style="font-size:13px;color:#888;margin-bottom:18px;line-height:1.6;">
+      <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:#5084ff;">github.com/settings/tokens</a> → Generate new token<br>
+      Repository: <strong>yunoyang.github.io</strong> · Permissions: <strong>Contents → Read & Write</strong><br>
+      <span style="color:#aaa;">입력 후 이 기기에만 저장됩니다 (1회 입력)</span>
+    </div>
+    <input id="gh-token-input" type="password" placeholder="github_pat_..." style="width:100%;padding:12px 14px;border:1.5px solid #e8eaf0;border-radius:12px;font-size:14px;color:#111;background:#fafafa;box-sizing:border-box;outline:none;margin-bottom:14px;" onfocus="this.style.borderColor='#5084ff'" onblur="this.style.borderColor='#e8eaf0'">
+    <button onclick="_saveGhToken()" style="width:100%;padding:14px;background:#222;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">저장하고 발행</button>
+  </div>
+</div>
+
 <!-- ===== 블로그 SEO 미리보기 스크린 ===== -->
 <div id="screen-blog-preview" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:9000;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header">
@@ -3653,6 +3667,25 @@ button, input, textarea, select { font-family:var(--font); }
       <div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px;letter-spacing:.3px;">메타 설명 <span style="color:#aaa;font-weight:400;">(구글 검색 결과 요약 · 120자 이내)</span></div>
       <textarea id="blog-preview-meta-desc" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid #e8eaf0;border-radius:12px;font-size:13px;color:#333;background:#fff;box-sizing:border-box;outline:none;resize:none;line-height:1.6;font-family:var(--font);" onfocus="this.style.borderColor='#5084ff'" onblur="this.style.borderColor='#e8eaf0'" oninput="_updateMetaDescCounter(this)"></textarea>
       <div id="meta-desc-counter" style="font-size:11px;color:#aaa;text-align:right;margin-top:2px;">0 / 120</div>
+    </div>
+    <!-- 공개 발행 토글 -->
+    <div style="background:#fff;border-radius:14px;border:1.5px solid #e8eaf0;padding:14px 16px;margin-bottom:12px;" id="public-publish-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#111;">공개 발행</div>
+          <div style="font-size:12px;color:#888;margin-top:2px;">구글 검색에 노출되는 독립 URL 생성</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
+          <input type="checkbox" id="toggle-public-publish" onchange="_onPublicToggle(this)" style="opacity:0;width:0;height:0;">
+          <span id="toggle-public-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:26px;transition:.2s;"></span>
+          <span id="toggle-public-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
+        </label>
+      </div>
+      <div id="public-url-preview" style="display:none;background:#f4f7ff;border-radius:8px;padding:8px 12px;font-size:12px;color:#5084ff;font-family:monospace;word-break:break-all;"></div>
+      <div id="public-publish-info" style="display:none;font-size:11px;color:#aaa;margin-top:6px;line-height:1.6;">
+        기록 본문 + 공정 미리보기 + 스타일 썸네일이 포함된 페이지가 생성됩니다.<br>
+        발행 후 약 1~2분 뒤 URL이 활성화됩니다.
+      </div>
     </div>
     <!-- 감지된 SEO 키워드 뱃지 -->
     <div id="blog-seo-keywords" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;min-height:0;"></div>
@@ -11261,7 +11294,9 @@ function renderMeetingTab() {
     const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
     const imgThumb = m.images?.length ? `<div style="width:67px;height:67px;border-radius:10px;background:url('${m.images[0]}') center/cover;flex-shrink:0;"></div>` : '';
     const mentionHtml = m.mentions?.length ? `<div style="margin-top:6px;font-size:12px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
-    const publishedBadge = m.inblogPostId ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#5084ff;background:#f0f5ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>발행됨</span>` : '';
+    const publishedBadge = m.publicUrl
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#fff;background:#5084ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>공개</span>`
+      : m.inblogPostId ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#5084ff;background:#f0f5ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>발행됨</span>` : '';
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:20px 24px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
@@ -11672,6 +11707,7 @@ const INBLOG_API_KEY = '33f3a8e6ed9eb76f1504b662438cb072682ec383a0d9442eaefad375
 const INBLOG_API_BASE = 'https://inblog.ai/api/v1';
 // Anthropic API 키 관리 (localStorage 저장, 코드에 직접 포함 금지)
 let _pendingPublishAfterKey = false;
+let _pendingPublicAfterGhToken = false;
 
 function _getAnthropicKey() {
   return (localStorage.getItem('vs_anthropic_key') || '').trim();
@@ -11689,6 +11725,21 @@ function _saveAnthropicKey() {
   if (_pendingPublishAfterKey) {
     _pendingPublishAfterKey = false;
     publishMeetingToInblog();
+  }
+}
+
+function _saveGhToken() {
+  const input = document.getElementById('gh-token-input');
+  const key = (input?.value || '').trim();
+  if (!key.startsWith('github_pat_') && !key.startsWith('ghp_')) {
+    showToastMessage('⚠️ 올바른 토큰 형식이 아닙니다 (github_pat_ 또는 ghp_ 로 시작)');
+    return;
+  }
+  _setGhToken(key);
+  document.getElementById('dlg-gh-token').style.display = 'none';
+  if (_pendingPublicAfterGhToken) {
+    _pendingPublicAfterGhToken = false;
+    confirmPublishToInblog();
   }
 }
 const SEO_KEYWORDS = ['반셀프 인테리어','턴키 인테리어','분당 구축 인테리어','분당 국평 인테리어','성남 인테리어','판교 인테리어','분당 인테리어','인테리어 공정 관리','시공 회의'];
@@ -11726,9 +11777,20 @@ function openMeetingDetail(id) {
     ? rawContent
     : esc(rawContent).replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
   const imgsHtml = (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
+  const publicUrlBanner = m.publicUrl ? `
+    <div style="background:#f0f5ff;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:700;color:#5084ff;margin-bottom:2px;">구글 검색 공개 발행됨</div>
+        <div style="font-size:12px;color:#5084ff;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.publicUrl)}</div>
+      </div>
+      <button onclick="navigator.clipboard?.writeText('${esc(m.publicUrl)}');showToastMessage('URL 복사됨')" style="padding:5px 10px;background:#5084ff;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">복사</button>
+      <button onclick="window.open('${esc(m.publicUrl)}','_blank')" style="padding:5px 10px;background:#fff;color:#5084ff;border:1px solid #c7d9ff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">열기</button>
+    </div>` : '';
   document.getElementById('meeting-detail-body').innerHTML = `
     <h1 style="font-size:24px;font-weight:800;color:#111;line-height:1.35;margin:0 0 14px;word-break:keep-all;">${esc(m.title||'(제목 없음)')}</h1>
     <div style="font-size:13px;color:#aaa;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f0f2f5;">${esc(m.createdByName||m.createdBy||'')} · ${dateStr}</div>
+    ${publicUrlBanner}
     ${imgsHtml ? `<div style="margin-bottom:16px;">${imgsHtml}</div>` : ''}
     <div class="meeting-content-view" style="font-size:15px;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
   `;
@@ -12032,6 +12094,212 @@ ${rawText}
   return parsed;
 }
 
+// ── 공개 발행 토글 ──────────────────────────────────────────────────────────
+function _onPublicToggle(cb) {
+  const on = cb.checked;
+  document.getElementById('toggle-public-slider').style.background = on ? '#5084ff' : '#e0e0e0';
+  document.getElementById('toggle-public-knob').style.left = on ? '21px' : '3px';
+  document.getElementById('public-url-preview').style.display = on ? 'block' : 'none';
+  document.getElementById('public-publish-info').style.display = on ? 'block' : 'none';
+  if (on && _blogPreviewData) {
+    const id = _blogPreviewData.meetingId || 'preview';
+    document.getElementById('public-url-preview').textContent =
+      `vibespacekorea.com/records/${id}/`;
+  }
+}
+
+// ── GitHub 토큰 (localStorage, 앱 내 1회 입력) ──────────────────────────────
+function _getGhToken() { try { return localStorage.getItem('vb_gh_token') || ''; } catch(_) { return ''; } }
+function _setGhToken(t) { try { localStorage.setItem('vb_gh_token', t); } catch(_) {} }
+
+// ── GitHub Contents API로 records/[id]/index.html 생성 ──────────────────────
+const _GH_REPO = 'yunoyang/yunoyang.github.io';
+
+async function _publishRecordToGitHub(recordId, htmlContent, commitMsg) {
+  const token = _getGhToken();
+  if (!token) throw new Error('GitHub 토큰이 설정되지 않았습니다.');
+  const path = `records/${recordId}/index.html`;
+  const apiUrl = `https://api.github.com/repos/${_GH_REPO}/contents/${path}`;
+
+  let sha;
+  try {
+    const check = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+    if (check.ok) { const d = await check.json(); sha = d.sha; }
+  } catch(_) {}
+
+  const body = { message: commitMsg, content: btoa(unescape(encodeURIComponent(htmlContent))) };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.message || `GitHub API 오류 ${res.status}`);
+  }
+  return `https://vibespacekorea.com/records/${recordId}/`;
+}
+
+// ── 기록 랜딩 페이지 HTML 생성 ───────────────────────────────────────────────
+function _buildRecordLandingHtml({ meeting, proj, seoTitle, metaDesc, bodyHtml }) {
+  const d = new Date(meeting.createdAt || 0);
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const pageUrl = `https://vibespacekorea.com/records/${meeting.id}/`;
+  const author  = meeting.createdByName || meeting.createdBy || 'Vibespace 사용자';
+  const firstImg = (meeting.images||[]).find(s => s && !s.startsWith('data:')) || 'https://vibespacekorea.com/og-image.png';
+
+  const processes = (proj.processes || []).filter(p => p.name);
+  const procHtml = processes.length ? `
+    <div class="vb-section">
+      <div class="vb-section-hd">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        공정표
+        <span class="vb-lock">🔒 앱에서 보기</span>
+      </div>
+      <div class="vb-proc-list">
+        ${processes.slice(0,8).map(p=>`
+          <div class="vb-proc-item">
+            <span class="vb-proc-name">${_htmlEsc(p.name)}</span>
+            ${p.scheduleStart?`<span class="vb-proc-date">${p.scheduleStart}${p.scheduleEnd?' ~ '+p.scheduleEnd:''}</span>`:''}
+          </div>`).join('')}
+        ${processes.length>8?`<div style="text-align:center;font-size:12px;color:#aaa;padding:6px 0;">+${processes.length-8}개 더</div>`:''}
+      </div>
+      <div class="vb-blur-ov">앱에서 전체 공정 확인하기</div>
+    </div>` : '';
+
+  const styleImgs = Object.values(proj.styleImages||{}).flat()
+    .filter(s=>s&&s.url&&!s.url.startsWith('data:')).slice(0,4);
+  const styleHtml = styleImgs.length ? `
+    <div class="vb-section">
+      <div class="vb-section-hd">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        스타일 무드보드
+        <span class="vb-lock">앱에서 더보기</span>
+      </div>
+      <div class="vb-style-grid">
+        ${styleImgs.map((s,i)=>`<img src="${_htmlEsc(s.url)}" alt="인테리어 스타일 ${i+1}" class="${i===0?'vb-style-main':'vb-style-sub'}" loading="lazy">`).join('')}
+      </div>
+    </div>` : '';
+
+  const allStarts = (proj.processes||[]).filter(p=>p.scheduleStart).map(p=>p.scheduleStart).sort();
+  const allEnds   = (proj.processes||[]).filter(p=>p.scheduleEnd).map(p=>p.scheduleEnd).sort();
+  const projForm  = proj.form || {};
+  const projInfoHtml = `
+    <div class="vb-meta-row">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      ${[projForm.type,projForm.size,projForm.method].flat().filter(Boolean).join(' · ')||'반셀프 인테리어'}
+    </div>
+    ${allStarts.length?`<div class="vb-meta-row">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      공사 기간 ${allStarts[0]} ~ ${allEnds[allEnds.length-1]||'진행중'}
+    </div>`:''}`;
+
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${_htmlEsc(seoTitle)}</title>
+<meta name="description" content="${_htmlEsc(metaDesc)}">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<link rel="canonical" href="${pageUrl}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Vibespace">
+<meta property="og:title" content="${_htmlEsc(seoTitle)}">
+<meta property="og:description" content="${_htmlEsc(metaDesc)}">
+<meta property="og:url" content="${pageUrl}">
+<meta property="og:image" content="${_htmlEsc(firstImg)}">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${_htmlEsc(seoTitle)}">
+<meta name="twitter:description" content="${_htmlEsc(metaDesc)}">
+<meta name="twitter:image" content="${_htmlEsc(firstImg)}">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":${JSON.stringify(seoTitle)},"description":${JSON.stringify(metaDesc)},"datePublished":"${new Date(meeting.createdAt||Date.now()).toISOString()}","author":{"@type":"Person","name":${JSON.stringify(author)}},"publisher":{"@type":"Organization","name":"Vibespace","url":"https://vibespacekorea.com"},"url":${JSON.stringify(pageUrl)},"image":${JSON.stringify(firstImg)},"keywords":"반셀프 인테리어, 인테리어 공정, 시공 기록, 리모델링"}<\/script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard Variable",Pretendard,sans-serif;background:#f7f8fa;color:#222;line-height:1.7}
+a{color:inherit;text-decoration:none}
+.vb-nav{background:#fff;border-bottom:1px solid #eef0f5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.vb-nav-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:#111}
+.vb-cta-nav{padding:7px 16px;background:#5084ff;color:#fff;border-radius:20px;font-size:13px;font-weight:700}
+.vb-wrap{max-width:720px;margin:0 auto;padding:24px 20px 80px}
+.vb-crumb{font-size:12px;color:#aaa;margin-bottom:16px}
+.vb-crumb a{color:#5084ff}
+.vb-proj-card{background:#fff;border-radius:16px;padding:18px 20px;margin-bottom:14px;border:1px solid #eef0f5}
+.vb-proj-name{font-size:16px;font-weight:800;color:#111;margin-bottom:8px}
+.vb-meta-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#777;margin-bottom:4px}
+.vb-article{background:#fff;border-radius:16px;padding:28px 24px;margin-bottom:14px;border:1px solid #eef0f5}
+.vb-article h1{font-size:22px;font-weight:800;color:#111;line-height:1.35;margin-bottom:10px;word-break:keep-all}
+.vb-article-meta{font-size:13px;color:#aaa;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #f5f5f5;display:flex;gap:12px;flex-wrap:wrap}
+.vb-body{font-size:16px;line-height:1.9;color:#333;word-break:break-word}
+.vb-body h2{font-size:20px;font-weight:800;margin:24px 0 8px;color:#111}
+.vb-body h3{font-size:17px;font-weight:700;margin:18px 0 6px;color:#222}
+.vb-body p{margin-bottom:12px}
+.vb-body ul,.vb-body ol{padding-left:20px;margin-bottom:12px}
+.vb-body li{margin-bottom:4px}
+.vb-body img{max-width:100%;border-radius:12px;margin:8px 0;display:block}
+.vb-body blockquote{border-left:3px solid #5084ff;padding:10px 16px;background:#f4f7ff;border-radius:0 8px 8px 0;margin:12px 0;color:#444}
+.vb-body pre{background:#f5f5f5;border-radius:8px;padding:12px 16px;font-size:13px;overflow-x:auto;margin:10px 0}
+.vb-body a{color:#5084ff;text-decoration:underline}
+.vb-section{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;border:1px solid #eef0f5;position:relative;overflow:hidden}
+.vb-section-hd{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#111;margin-bottom:14px}
+.vb-lock{margin-left:auto;font-size:11px;color:#5084ff;background:#f0f5ff;padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.vb-proc-list{display:flex;flex-direction:column;gap:8px;filter:blur(3px);pointer-events:none;user-select:none}
+.vb-proc-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f7f8fa;border-radius:10px}
+.vb-proc-name{font-size:14px;font-weight:600;color:#333}
+.vb-proc-date{font-size:11px;color:#aaa}
+.vb-blur-ov{position:absolute;inset:52px 0 0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#5084ff;background:rgba(255,255,255,.6);backdrop-filter:blur(2px)}
+.vb-style-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vb-style-main{grid-column:span 2;aspect-ratio:16/9;object-fit:cover;border-radius:10px;width:100%}
+.vb-style-sub{aspect-ratio:1;object-fit:cover;border-radius:10px;width:100%}
+.vb-cta{background:linear-gradient(135deg,#5084ff 0%,#7c5cfc 100%);border-radius:20px;padding:28px 24px;text-align:center;color:#fff;margin-bottom:16px}
+.vb-cta h2{font-size:20px;font-weight:800;margin-bottom:8px}
+.vb-cta p{font-size:14px;opacity:.9;margin-bottom:20px;line-height:1.6}
+.vb-cta-btn{display:inline-block;background:#fff;color:#5084ff;padding:13px 32px;border-radius:24px;font-size:15px;font-weight:800}
+@media(max-width:480px){.vb-article{padding:20px 16px}.vb-article h1{font-size:19px}.vb-cta{padding:22px 16px}}
+</style>
+</head>
+<body>
+<nav class="vb-nav">
+  <a href="https://vibespacekorea.com" class="vb-nav-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    바이브스페이스
+  </a>
+  <a href="https://vibespacekorea.com" class="vb-cta-nav">무료로 시작</a>
+</nav>
+<div class="vb-wrap">
+  <div class="vb-crumb"><a href="https://vibespacekorea.com">홈</a> › <a href="https://vibespacekorea.com/records/">기록</a> › ${_htmlEsc(meeting.title||'기록')}</div>
+  <div class="vb-proj-card">
+    <div class="vb-proj-name">${_htmlEsc(proj.name||'반셀프 인테리어 프로젝트')}</div>
+    ${projInfoHtml}
+  </div>
+  <article class="vb-article" itemscope itemtype="https://schema.org/BlogPosting">
+    <h1 itemprop="headline">${_htmlEsc(seoTitle)}</h1>
+    <div class="vb-article-meta">
+      <span>${_htmlEsc(author)}</span>
+      <span>${dateStr}</span>
+    </div>
+    <div class="vb-body" itemprop="articleBody">${bodyHtml}</div>
+  </article>
+  ${procHtml}
+  ${styleHtml}
+  <div class="vb-cta">
+    <h2>이 프로젝트 전체 보기</h2>
+    <p>공정표 · 업체 정보 · 일정 캘린더 · 스타일 무드보드<br>모두 Vibespace에서 무료로 확인하세요</p>
+    <a href="https://vibespacekorea.com" class="vb-cta-btn">Vibespace 무료로 시작하기 →</a>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function _htmlEsc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function _updateMetaDescCounter(el) {
   const counter = document.getElementById('meta-desc-counter');
   if (!counter) return;
@@ -12073,71 +12341,113 @@ function toggleBlogEditMode() {
 
 async function confirmPublishToInblog() {
   if (!_blogPreviewData) return;
+
+  const isPublic = document.getElementById('toggle-public-publish')?.checked || false;
+
+  // 공개 발행인데 GitHub 토큰 없으면 토큰 입력 먼저
+  if (isPublic && !_getGhToken()) {
+    _pendingPublicAfterGhToken = true;
+    document.getElementById('gh-token-input').value = '';
+    document.getElementById('dlg-gh-token').style.display = 'flex';
+    return;
+  }
+
   const btn = document.getElementById('btn-confirm-publish');
   btn.textContent = '발행 중...';
   btn.disabled = true;
 
-  const title = document.getElementById('blog-preview-title-input').value.trim() || '(제목 없음)';
+  const title    = document.getElementById('blog-preview-title-input').value.trim() || '(제목 없음)';
   const metaDesc = (document.getElementById('blog-preview-meta-desc')?.value || '').trim();
-  const html = document.getElementById('blog-preview-html-input').value;
+  const bodyHtml = document.getElementById('blog-preview-html-input').value;
   const baseSlug = (_blogPreviewData.slug || 'meeting-post').replace(/[^a-z0-9-]/gi,'-').toLowerCase();
 
   try {
+    let publicUrl = null;
+
+    // ── 공개 발행: GitHub Pages 랜딩 페이지 생성 ──────────────────────────
+    if (isPublic) {
+      const proj    = getProject();
+      const meeting = (proj?.meetings||[]).find(x=>x.id===_blogPreviewData.meetingId);
+      if (!meeting) throw new Error('기록 데이터를 찾을 수 없습니다.');
+
+      btn.textContent = '페이지 생성 중...';
+      const landingHtml = _buildRecordLandingHtml({ meeting, proj, seoTitle: title, metaDesc, bodyHtml });
+      publicUrl = await _publishRecordToGitHub(
+        meeting.id,
+        landingHtml,
+        `feat: 기록 공개 발행 — ${title}`
+      );
+
+      // Firestore에 공개 URL 저장
+      const idx = proj.meetings.findIndex(x=>x.id===meeting.id);
+      if (idx !== -1) {
+        proj.meetings[idx].publicUrl       = publicUrl;
+        proj.meetings[idx].publicTitle     = title;
+        proj.meetings[idx].publicMetaDesc  = metaDesc;
+        proj.meetings[idx].publicPublishedAt = new Date().toISOString();
+        saveState();
+        _syncMeetingsToCloud(proj.id, proj.meetings);
+      }
+    }
+
+    // ── inblog 발행 (공개/비공개 모두) ────────────────────────────────────
+    btn.textContent = '발행 중...';
     const payload = {
       data: {
         type: 'posts',
         attributes: {
           title,
           slug: baseSlug + '-' + Date.now().toString(36),
-          body: html,
+          body: bodyHtml,
           ...(metaDesc ? { excerpt: metaDesc, meta_description: metaDesc } : {}),
           published: true
         }
       }
     };
-
-    const res = await fetch(`${INBLOG_API_BASE}/posts`, {
+    const res  = await fetch(`${INBLOG_API_BASE}/posts`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${INBLOG_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': `Bearer ${INBLOG_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const json = await res.json();
 
     if (res.ok && json.data?.id) {
-      const postId = json.data.id;
+      const postId   = json.data.id;
       const postSlug = json.data.attributes?.slug || payload.data.attributes.slug;
 
-      // 미팅 데이터에 발행 정보 저장
-      const proj = getProject();
-      const idx = proj.meetings.findIndex(x=>x.id===_blogPreviewData.meetingId);
-      if (idx !== -1) {
-        proj.meetings[idx].inblogPostId = postId;
-        proj.meetings[idx].inblogSlug = postSlug;
-        proj.meetings[idx].inblogPublishedAt = new Date().toISOString();
+      const proj2 = getProject();
+      const idx2  = proj2.meetings.findIndex(x=>x.id===_blogPreviewData.meetingId);
+      if (idx2 !== -1) {
+        proj2.meetings[idx2].inblogPostId       = postId;
+        proj2.meetings[idx2].inblogSlug         = postSlug;
+        proj2.meetings[idx2].inblogPublishedAt  = new Date().toISOString();
         saveState();
-        _syncMeetingsToCloud(proj.id, proj.meetings);
+        _syncMeetingsToCloud(proj2.id, proj2.meetings);
       }
 
-      // 미팅 상세의 발행 버튼 상태 업데이트
       const publishBtn = document.getElementById('btn-publish-blog');
       if (publishBtn) {
         publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
         publishBtn.style.background = '#f0f5ff';
         publishBtn.style.borderColor = '#c7d9ff';
         publishBtn.disabled = false;
-        publishBtn.onclick = () => window.open(`https://vibespace.inblog.ai/${postSlug}`, '_blank');
+        publishBtn.onclick = () => window.open(publicUrl || `https://vibespace.inblog.ai/${postSlug}`, '_blank');
       }
-
-      closeInblogPreview();
-      showToastMessage('블로그에 발행되었습니다! 🎉');
-
-    } else {
-      throw new Error(json.errors?.[0]?.detail || `오류 ${res.status}`);
     }
+
+    closeInblogPreview();
+
+    if (publicUrl) {
+      // 공개 발행 완료: URL 복사 토스트
+      if (navigator.clipboard) navigator.clipboard.writeText(publicUrl).catch(()=>{});
+      showToastMessage(`🎉 공개 발행 완료! URL이 복사됐습니다.\n약 1~2분 후 활성화됩니다.`);
+      // 기록 상세에 공개 URL 배지 노출
+      renderMeetingTab();
+      if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
+    } else {
+      showToastMessage('블로그에 발행되었습니다! 🎉');
+    }
+
   } catch(e) {
     btn.textContent = '발행하기';
     btn.disabled = false;
