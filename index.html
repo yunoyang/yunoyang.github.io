@@ -7766,17 +7766,21 @@ function _renderProcChecklist(procId) {
   if (!el) return;
   const proj = getProject();
   const proc = proj?.processes.find(p => p.id === procId);
-  if (!proc) return;
+  if (!proc) {
+    el.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:14px;">공정 정보를 찾을 수 없습니다.<br><small style="color:#ccc;">procId: ' + procId + '</small></div>';
+    return;
+  }
 
   // 최초 진입 시 기본 체크리스트 자동 세팅
   if (!proc.checklist) {
-    const def = _getDefaultChecklist(proc.type || proc.name);
+    const lookupKey = proc.type || proc.name || '';
+    const def = _getDefaultChecklist(lookupKey);
     if (def) {
       proc.checklist = def.map(sec => ({
         section: sec.section,
         items: sec.items.map(it => ({ ...it, id: 'chk_' + Math.random().toString(36).slice(2,8) }))
       }));
-      saveState();
+      save();
     } else {
       proc.checklist = [];
     }
@@ -7834,7 +7838,7 @@ function _toggleCheckItem(procId, si, ii) {
   const proc = proj?.processes.find(p => p.id === procId);
   if (!proc?.checklist) return;
   proc.checklist[si].items[ii].checked = !proc.checklist[si].items[ii].checked;
-  saveState();
+  save();
   _renderProcChecklist(procId);
 }
 
@@ -7849,7 +7853,7 @@ function _addCheckItem(procId, si) {
     text: text.trim(),
     checked: false
   });
-  saveState();
+  save();
   _renderProcChecklist(procId);
 }
 
@@ -7861,7 +7865,7 @@ function _addCheckSection(procId) {
   if (!proc) return;
   if (!proc.checklist) proc.checklist = [];
   proc.checklist.push({ section: name.trim(), items: [] });
-  saveState();
+  save();
   _renderProcChecklist(procId);
 }
 
@@ -12533,7 +12537,7 @@ async function confirmPublishToInblog() {
         proj.meetings[idx].publicTitle     = title;
         proj.meetings[idx].publicMetaDesc  = metaDesc;
         proj.meetings[idx].publicPublishedAt = new Date().toISOString();
-        saveState();
+        save();
         _syncMeetingsToCloud(proj.id, proj.meetings);
       }
     }
@@ -12569,7 +12573,7 @@ async function confirmPublishToInblog() {
         proj2.meetings[idx2].inblogPostId       = postId;
         proj2.meetings[idx2].inblogSlug         = postSlug;
         proj2.meetings[idx2].inblogPublishedAt  = new Date().toISOString();
-        saveState();
+        save();
         _syncMeetingsToCloud(proj2.id, proj2.meetings);
       }
 
