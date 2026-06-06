@@ -3759,11 +3759,13 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:52px;">
-    <button id="ptab-btn-info" onclick="switchProcDetailTab('info',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:15px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 상세 내역</button>
-    <button id="ptab-btn-tip" onclick="switchProcDetailTab('tip',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:15px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 기록</button>
+    <button id="ptab-btn-info"  onclick="switchProcDetailTab('info',this)"  style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:14px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 상세</button>
+    <button id="ptab-btn-check" onclick="switchProcDetailTab('check',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">체크리스트</button>
+    <button id="ptab-btn-tip"   onclick="switchProcDetailTab('tip',this)"   style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 기록</button>
   </div>
-  <div id="ptab-info" class="screen-scroll" style="flex:1;background:#fff;"></div>
-  <div id="ptab-tip" class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;position:relative;"></div>
+  <div id="ptab-info"  class="screen-scroll" style="flex:1;background:#fff;"></div>
+  <div id="ptab-check" class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;"></div>
+  <div id="ptab-tip"   class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;position:relative;"></div>
 </div>
 <!-- ===== 공정 기록 작성/수정 전체화면 에디터 ===== -->
 <div id="screen-proc-record-write" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8800;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
@@ -6561,6 +6563,42 @@ function svTouchEnd(e) {
 }
 
 // ===== PROCESS TIPS =====
+const DEFAULT_PROC_CHECKLISTS = {
+  '철거': [
+    {
+      section: '1. 구조 변경과 내력벽 확인',
+      items: [
+        { id: 'chk_d_01', text: '내력벽 철거 절대 금지 — 평면도 상에서 내력벽·비내력벽 구분 확인', checked: false },
+        { id: 'chk_d_02', text: '불법 건축물 주의 — 베란다 확장 등 구조 변경 시 관리사무소 해체 신고 행정 절차 완료', checked: false },
+      ]
+    },
+    {
+      section: '2. 배관 및 설비 안전사고 예방',
+      items: [
+        { id: 'chk_d_03', text: '수도관·난방관 보호 — 욕실·주방 철거 시 배관 손상 없이 작업 완료', checked: false },
+        { id: 'chk_d_04', text: '전기 전원 차단 확인 후 작업 시작', checked: false },
+        { id: 'chk_d_05', text: '가스관 안전 마감 처리 완료', checked: false },
+      ]
+    },
+    {
+      section: '3. 소음·분진 및 이웃 민원 관리',
+      items: [
+        { id: 'chk_d_06', text: '작업 시간 준수 — 오전 9시 ~ 오후 5시 이내 작업', checked: false },
+        { id: 'chk_d_07', text: '주민 동의서 징수 완료 (공동주택 과반수 동의)', checked: false },
+        { id: 'chk_d_08', text: '관리사무소 공사 신고 완료', checked: false },
+      ]
+    },
+    {
+      section: '4. 폐기물 처리 및 사전 하자 점검',
+      items: [
+        { id: 'chk_d_09', text: '철거 전 벽면·바닥·배관 위치 현장 사진 촬영 완료', checked: false },
+        { id: 'chk_d_10', text: '폐기물 종류별 분리 처리 (콘크리트·타일·혼합 폐기물 구분)', checked: false },
+        { id: 'chk_d_11', text: '철거 견적서에 폐기물 처리 비용 포함 여부 계약서 확인', checked: false },
+      ]
+    },
+  ]
+};
+
 const PROCESS_TIPS = {
   '실측': [
     '📐 실측은 모든 공사의 출발점 — 오차 1cm가 예산 수백만 원 차이를 낳습니다',
@@ -7627,20 +7665,20 @@ function _closeProcDetailScreen() {
   scr.style.pointerEvents = 'none';
 }
 function switchProcDetailTab(tab, btn) {
-  document.getElementById('ptab-info').style.display = tab === 'info' ? '' : 'none';
-  document.getElementById('ptab-tip').style.display  = tab === 'tip'  ? '' : 'none';
-  ['ptab-btn-info','ptab-btn-tip'].forEach(id => {
+  document.getElementById('ptab-info').style.display  = tab === 'info'  ? '' : 'none';
+  document.getElementById('ptab-check').style.display = tab === 'check' ? '' : 'none';
+  document.getElementById('ptab-tip').style.display   = tab === 'tip'   ? '' : 'none';
+  ['ptab-btn-info','ptab-btn-check','ptab-btn-tip'].forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
     b.style.borderBottomColor = 'transparent';
     b.style.color = '#818590'; b.style.fontWeight = '500';
   });
-  const activeId = tab === 'info' ? 'ptab-btn-info' : 'ptab-btn-tip';
+  const activeId = tab === 'info' ? 'ptab-btn-info' : tab === 'check' ? 'ptab-btn-check' : 'ptab-btn-tip';
   const a = document.getElementById(activeId);
   if (a) { a.style.borderBottomColor = 'var(--primary)'; a.style.color = '#222'; a.style.fontWeight = '600'; }
-  if (tab === 'tip' && _currentProcDetailId) {
-    _renderProcRecords(_currentProcDetailId);
-  }
+  if (tab === 'tip'   && _currentProcDetailId) _renderProcRecords(_currentProcDetailId);
+  if (tab === 'check' && _currentProcDetailId) _renderProcChecklist(_currentProcDetailId);
 }
 function _renderProcDetailContent(procId) {
   const proj = getProject();
@@ -7716,6 +7754,116 @@ function _deleteProcFromDetail() {
 // ───────────────────────────────────────────────────────────────────────────
 let _prImages = [];
 let _prEditingId = null; // 수정 중인 record id
+
+function _getDefaultChecklist(procType) {
+  if (DEFAULT_PROC_CHECKLISTS[procType]) return DEFAULT_PROC_CHECKLISTS[procType];
+  const key = Object.keys(DEFAULT_PROC_CHECKLISTS).find(k => procType && procType.includes(k));
+  return key ? DEFAULT_PROC_CHECKLISTS[key] : null;
+}
+
+function _renderProcChecklist(procId) {
+  const el = document.getElementById('ptab-check');
+  if (!el) return;
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc) return;
+
+  // 최초 진입 시 기본 체크리스트 자동 세팅
+  if (!proc.checklist) {
+    const def = _getDefaultChecklist(proc.type || proc.name);
+    if (def) {
+      proc.checklist = def.map(sec => ({
+        section: sec.section,
+        items: sec.items.map(it => ({ ...it, id: 'chk_' + Math.random().toString(36).slice(2,8) }))
+      }));
+      saveState();
+    } else {
+      proc.checklist = [];
+    }
+  }
+
+  const checklist = proc.checklist;
+  const total   = checklist.reduce((s, sec) => s + sec.items.length, 0);
+  const done    = checklist.reduce((s, sec) => s + sec.items.filter(it => it.checked).length, 0);
+  const pct     = total ? Math.round(done / total * 100) : 0;
+
+  const canEdit = !proc?.myRole || proc?.myRole === 'owner' ||
+    (getProject()?.owner?.email === state.user?.email);
+
+  el.innerHTML = `
+    <div style="padding:16px 16px 100px;">
+      <!-- 진행률 -->
+      <div style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px;border:1px solid #eef0f5;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-size:14px;font-weight:700;color:#111;">전체 진행률</span>
+          <span style="font-size:14px;font-weight:800;color:#5084ff;">${done} / ${total} <span style="font-size:12px;font-weight:500;color:#aaa;">(${pct}%)</span></span>
+        </div>
+        <div style="height:6px;background:#f0f2f5;border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:#5084ff;border-radius:3px;transition:width .3s;"></div>
+        </div>
+      </div>
+
+      <!-- 섹션별 체크리스트 -->
+      ${checklist.map((sec, si) => `
+        <div style="background:#fff;border-radius:16px;margin-bottom:10px;border:1px solid #eef0f5;overflow:hidden;">
+          <div style="padding:14px 16px 10px;font-size:13px;font-weight:700;color:#5084ff;border-bottom:1px solid #f5f7fa;">${esc(sec.section)}</div>
+          ${sec.items.map((it, ii) => `
+            <label style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid #f7f8fa;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleCheckItem('${procId}',${si},${ii})">
+              <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;">
+                ${it.checked ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+              </div>
+              <span style="font-size:14px;color:${it.checked?'#aaa':'#222'};line-height:1.55;text-decoration:${it.checked?'line-through':'none'};flex:1;">${esc(it.text)}</span>
+            </label>
+          `).join('')}
+          ${canEdit ? `
+          <div style="padding:10px 14px;">
+            <button onclick="_addCheckItem('${procId}',${si})" style="width:100%;padding:9px;background:#f7f8fa;border:1.5px dashed #d0d5e0;border-radius:10px;font-size:13px;color:#aaa;cursor:pointer;font-family:var(--font);">+ 항목 추가</button>
+          </div>` : ''}
+        </div>
+      `).join('')}
+
+      <!-- 섹션 추가 -->
+      ${canEdit ? `
+      <button onclick="_addCheckSection('${procId}')" style="width:100%;padding:13px;background:#fff;border:1.5px dashed #d0d5e0;border-radius:14px;font-size:14px;color:#888;cursor:pointer;font-family:var(--font);margin-top:4px;">+ 섹션 추가</button>
+      ` : ''}
+    </div>`;
+}
+
+function _toggleCheckItem(procId, si, ii) {
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc?.checklist) return;
+  proc.checklist[si].items[ii].checked = !proc.checklist[si].items[ii].checked;
+  saveState();
+  _renderProcChecklist(procId);
+}
+
+function _addCheckItem(procId, si) {
+  const text = prompt('체크리스트 항목을 입력하세요:');
+  if (!text?.trim()) return;
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc?.checklist) return;
+  proc.checklist[si].items.push({
+    id: 'chk_' + Math.random().toString(36).slice(2,8),
+    text: text.trim(),
+    checked: false
+  });
+  saveState();
+  _renderProcChecklist(procId);
+}
+
+function _addCheckSection(procId) {
+  const name = prompt('섹션 이름을 입력하세요:');
+  if (!name?.trim()) return;
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc) return;
+  if (!proc.checklist) proc.checklist = [];
+  proc.checklist.push({ section: name.trim(), items: [] });
+  saveState();
+  _renderProcChecklist(procId);
+}
 
 function _renderProcRecords(procId) {
   const el = document.getElementById('ptab-tip');
