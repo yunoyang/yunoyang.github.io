@@ -3535,18 +3535,32 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="meeting-mention-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 20px;min-height:0;"></div>
 
     <!-- 에디터 툴바 -->
-    <div id="editor-toolbar" style="display:flex;align-items:center;gap:2px;padding:6px 12px;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
-      <button onclick="_mwFmt('bold')" title="굵게" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-weight:900;color:#333;font-family:serif;">B</button>
-      <button onclick="_mwFmt('italic')" title="기울임" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
-      <button onclick="_mwFmt('underline')" title="밑줄" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
-      <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;"></div>
-      <button onclick="_mwFmt('insertUnorderedList')" title="목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#333;">•≡</button>
-      <button onclick="_mwFmt('insertOrderedList')" title="번호 목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;color:#333;">1≡</button>
-      <button onclick="_mwInsertHr()" title="구분선" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#aaa;">—</button>
-      <div style="flex:1;"></div>
-      <button onclick="_mwAtBtn()" title="@멘션" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;font-weight:700;color:#5084ff;">@</button>
-      <label title="이미지 추가" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <div id="editor-toolbar" style="display:flex;align-items:center;gap:2px;padding:6px 10px;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+      <!-- 헤딩 -->
+      <button onclick="_mwInsertHeading(2)" title="제목 (H2)" style="height:32px;padding:0 8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:800;color:#333;font-family:serif;white-space:nowrap;">H2</button>
+      <button onclick="_mwInsertHeading(3)" title="소제목 (H3)" style="height:32px;padding:0 8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:11px;font-weight:700;color:#666;font-family:serif;white-space:nowrap;">H3</button>
+      <div style="width:1px;height:18px;background:#e0e0e0;margin:0 3px;flex-shrink:0;"></div>
+      <!-- 텍스트 서식 -->
+      <button onclick="_mwFmt('bold')" title="굵게" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-weight:900;color:#333;font-family:serif;">B</button>
+      <button onclick="_mwFmt('italic')" title="기울임" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
+      <button onclick="_mwFmt('underline')" title="밑줄" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
+      <div style="width:1px;height:18px;background:#e0e0e0;margin:0 3px;flex-shrink:0;"></div>
+      <!-- 리스트 -->
+      <button onclick="_mwFmt('insertUnorderedList')" title="목록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;">•≡</button>
+      <button onclick="_mwFmt('insertOrderedList')" title="번호 목록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#333;">1≡</button>
+      <div style="width:1px;height:18px;background:#e0e0e0;margin:0 3px;flex-shrink:0;"></div>
+      <!-- 블록 요소 -->
+      <button onclick="_mwInsertBlockquote()" title="인용구" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:16px;color:#888;">"</button>
+      <button onclick="_mwInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
+      <button onclick="_mwInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
+      <button onclick="_mwInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </button>
+      <div style="flex:1;min-width:4px;"></div>
+      <!-- 우측 고정 -->
+      <button onclick="_mwAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
+      <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <input type="file" accept="image/*" multiple id="meeting-image-input" style="display:none;" onchange="_meetingImagePreview(this)">
       </label>
     </div>
@@ -3630,15 +3644,21 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;">
     <!-- 제목 -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px;letter-spacing:.3px;">SEO 제목</div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px;letter-spacing:.3px;">SEO 제목 <span style="color:#aaa;font-weight:400;">(구글 검색 결과 제목)</span></div>
       <input id="blog-preview-title-input" type="text" style="width:100%;padding:11px 14px;border:1.5px solid #e8eaf0;border-radius:12px;font-size:15px;font-weight:700;color:#111;background:#fff;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#5084ff'" onblur="this.style.borderColor='#e8eaf0'">
+    </div>
+    <!-- 메타 설명 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;color:#888;font-weight:600;margin-bottom:6px;letter-spacing:.3px;">메타 설명 <span style="color:#aaa;font-weight:400;">(구글 검색 결과 요약 · 120자 이내)</span></div>
+      <textarea id="blog-preview-meta-desc" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid #e8eaf0;border-radius:12px;font-size:13px;color:#333;background:#fff;box-sizing:border-box;outline:none;resize:none;line-height:1.6;font-family:var(--font);" onfocus="this.style.borderColor='#5084ff'" onblur="this.style.borderColor='#e8eaf0'" oninput="_updateMetaDescCounter(this)"></textarea>
+      <div id="meta-desc-counter" style="font-size:11px;color:#aaa;text-align:right;margin-top:2px;">0 / 120</div>
     </div>
     <!-- 감지된 SEO 키워드 뱃지 -->
     <div id="blog-seo-keywords" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;min-height:0;"></div>
     <!-- 내용 미리보기 / HTML 편집 토글 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;">내용</div>
+      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;">본문 미리보기</div>
       <button onclick="toggleBlogEditMode()" id="btn-toggle-edit" style="font-size:12px;color:#5084ff;background:none;border:none;cursor:pointer;padding:0;font-weight:600;">HTML 편집</button>
     </div>
     <div id="blog-preview-rendered" style="background:#fff;border-radius:12px;border:1px solid #e8eaf0;padding:18px;font-size:14px;line-height:1.9;color:#333;"></div>
@@ -11348,6 +11368,40 @@ function _mwInsertHr() {
   document.getElementById('meeting-editor').focus();
   document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid #e8eaf0;margin:14px 0;">');
 }
+function _mwInsertHeading(level) {
+  document.getElementById('meeting-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '제목';
+  const sizes = { 2: '20px', 3: '17px' };
+  const weights = { 2: '800', 3: '700' };
+  const margins = { 2: '20px 0 6px', 3: '16px 0 4px' };
+  document.execCommand('insertHTML', false,
+    `<h${level} style="font-size:${sizes[level]};font-weight:${weights[level]};color:#111;margin:${margins[level]};line-height:1.4;">${selectedText}</h${level}><p><br></p>`);
+}
+function _mwInsertBlockquote() {
+  document.getElementById('meeting-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '인용할 내용을 입력하세요';
+  document.execCommand('insertHTML', false,
+    `<blockquote style="border-left:3px solid #5084ff;margin:12px 0;padding:10px 16px;background:#f4f7ff;color:#444;font-size:15px;border-radius:0 8px 8px 0;">${selectedText}</blockquote><p><br></p>`);
+}
+function _mwInsertCodeBlock() {
+  document.getElementById('meeting-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '코드를 입력하세요';
+  document.execCommand('insertHTML', false,
+    `<pre style="background:#f5f5f5;border-radius:8px;padding:12px 16px;font-size:13px;font-family:monospace;color:#333;overflow-x:auto;margin:10px 0;white-space:pre-wrap;">${selectedText}</pre><p><br></p>`);
+}
+function _mwInsertLink() {
+  document.getElementById('meeting-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '';
+  const url = prompt('링크 URL을 입력하세요:', 'https://');
+  if (!url || url === 'https://') return;
+  const label = selectedText || url;
+  document.execCommand('insertHTML', false,
+    `<a href="${url}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;">${label}</a>`);
+}
 function _mwAtBtn() {
   const ed = document.getElementById('meeting-editor');
   ed.focus();
@@ -11741,7 +11795,7 @@ async function _checkMeetingShareUrl() {
   const params = new URLSearchParams(window.location.search);
   const shareId = params.get('meeting');
   if (!shareId) return;
-  window.history.replaceState({}, '', window.location.pathname);
+  // URL은 유지 (SEO용 — history.replaceState 제거)
   const screen = document.getElementById('screen-meeting-share-view');
   const content = document.getElementById('meeting-share-view-content');
   if (!screen || !content) return;
@@ -11759,10 +11813,54 @@ async function _checkMeetingShareUrl() {
       return;
     }
     const d = doc.data();
+
+    // ── SEO: 동적 meta 태그 업데이트 ──────────────────────────────────────
+    const pageTitle = `${d.title||'인테리어 기록'} — ${d.projectName||'Vibespace'}`;
+    const plainText = (d.content||'').replace(/<[^>]*>/g,'').slice(0,160);
+    const pageDesc = plainText || `${d.dateStr||''} · ${d.createdByName||''} 작성`;
+    const firstImg = (d.images||[]).find(s => !s.startsWith('data:')) || 'https://vibespacekorea.com/og-image.png';
+    const pageUrl = `https://vibespacekorea.com/?meeting=${shareId}`;
+
+    document.title = pageTitle;
+    _setMeta('name','description', pageDesc);
+    _setMeta('property','og:title', pageTitle);
+    _setMeta('property','og:description', pageDesc);
+    _setMeta('property','og:url', pageUrl);
+    _setMeta('property','og:image', firstImg);
+    _setMeta('property','og:type', 'article');
+    _setMeta('name','twitter:title', pageTitle);
+    _setMeta('name','twitter:description', pageDesc);
+    _setMeta('name','twitter:image', firstImg);
+
+    // canonical 업데이트
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.href = pageUrl;
+
+    // ── JSON-LD 구조화 데이터 삽입 ────────────────────────────────────────
+    const existingLd = document.getElementById('ld-meeting-share');
+    if (existingLd) existingLd.remove();
+    const ldScript = document.createElement('script');
+    ldScript.id = 'ld-meeting-share';
+    ldScript.type = 'application/ld+json';
+    ldScript.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      'headline': d.title || '인테리어 기록',
+      'description': pageDesc,
+      'datePublished': d.createdAt ? new Date(d.createdAt).toISOString() : undefined,
+      'author': { '@type': 'Person', 'name': d.createdByName || d.createdBy || 'Vibespace 사용자' },
+      'publisher': { '@type': 'Organization', 'name': 'Vibespace', 'url': 'https://vibespacekorea.com' },
+      'url': pageUrl,
+      'image': firstImg,
+      'keywords': '반셀프 인테리어, 인테리어 공정, 시공 기록, 리모델링'
+    });
+    document.head.appendChild(ldScript);
+
+    // ── 콘텐츠 렌더링 ────────────────────────────────────────────────────
     const { decoded: rawContent, type: contentType } = _normalizeMeetingContent(d.content||'');
     const contentHtml = contentType === 'html'
       ? rawContent
-      : esc(rawContent).replace(/\n/g,'<br>');
+      : esc(rawContent).replace(/@([\w가-힣]+)/g,'<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
     const imgsHtml = (d.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:10px;display:block;" onclick="window.open(this.src)">`).join('');
     content.innerHTML = `
       <div style="font-size:13px;color:#aaa;margin-bottom:4px;">${esc(d.projectName||'')}</div>
@@ -11774,6 +11872,12 @@ async function _checkMeetingShareUrl() {
   } catch(e) {
     content.innerHTML = `<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">오류: ${esc(e.message)}</div>`;
   }
+}
+
+function _setMeta(attr, key, value) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`);
+  if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
+  el.setAttribute('content', value);
 }
 
 // ── SEO 에이전트: Claude로 블로그 글 생성 → 미리보기 → 발행 ────────────────
@@ -11802,6 +11906,8 @@ async function publishMeetingToInblog() {
 
     // 미리보기 화면 채우기
     document.getElementById('blog-preview-title-input').value = generated.title;
+    const metaEl = document.getElementById('blog-preview-meta-desc');
+    if (metaEl) { metaEl.value = generated.metaDescription || ''; _updateMetaDescCounter(metaEl); }
     document.getElementById('blog-preview-html-input').value = generated.html;
     document.getElementById('blog-preview-rendered').innerHTML = generated.html;
     _blogEditMode = false;
@@ -11810,7 +11916,8 @@ async function publishMeetingToInblog() {
     document.getElementById('btn-toggle-edit').textContent = 'HTML 편집';
 
     // 감지된 SEO 키워드 뱃지
-    const found = SEO_KEYWORDS.filter(kw => generated.html.includes(kw) || generated.title.includes(kw));
+    const allText = generated.html + generated.title + (generated.metaDescription||'');
+    const found = SEO_KEYWORDS.filter(kw => allText.includes(kw));
     document.getElementById('blog-seo-keywords').innerHTML = found.length
       ? found.map(kw=>`<span style="font-size:11px;background:#e8f0fe;color:#5084ff;padding:3px 9px;border-radius:10px;font-weight:600;">#${kw}</span>`).join('')
       : '<span style="font-size:12px;color:#aaa;">키워드 미감지 — HTML 편집에서 직접 추가 가능</span>';
@@ -11837,35 +11944,40 @@ async function _generateSEOPost(meeting, proj) {
   const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
   const imgsHtml = (meeting.images||[]).map(src=>`<p><img src="${src}" style="max-width:100%;border-radius:12px;" /></p>`).join('');
 
-  const systemPrompt = `당신은 인테리어 전문 블로그 에디터입니다. 회의 내용을 SEO 최적화된 블로그 포스팅으로 변환합니다.
+  const systemPrompt = `당신은 인테리어 전문 블로그 에디터입니다. 시공 기록을 SEO 최적화된 블로그 포스팅으로 변환합니다.
 반드시 JSON 형식으로만 응답하세요. 코드블록(\`\`\`) 없이 순수 JSON만 반환.`;
 
-  const userPrompt = `아래 인테리어 공정 회의 내용을 SEO 최적화된 블로그 글로 작성해주세요.
+  const rawText = (meeting.content||'').replace(/<[^>]*>/g,'');
 
-[회의 정보]
+  const userPrompt = `아래 인테리어 시공 기록을 SEO 최적화된 블로그 글로 작성해주세요.
+
+[기록 정보]
 프로젝트명: ${proj.name||''}
-회의 제목: ${meeting.title||''}
+제목: ${meeting.title||''}
 날짜: ${dateStr}
 작성자: ${meeting.createdByName||meeting.createdBy||''}
-참석자: ${(meeting.mentions||[]).map(e=>e.split('@')[0]).join(', ')||'없음'}
-회의 내용:
-${meeting.content||''}
+내용:
+${rawText}
 
 [작성 규칙]
-1. 제목: 아래 SEO 키워드 1~2개를 자연스럽게 포함 (클릭 유도형)
-2. 본문 구성: 도입부(공감/문제 제기) → 본론(회의 핵심 내용 정보화) → 마무리(CTA)
-3. 분량: 1000~1500자
-4. 주요 키워드를 본문에 자연스럽게 4~6회 분산 삽입 (키워드 스터핑 금지)
-5. 마지막 단락: "Vibespace는 반셀프·턴키 인테리어 현장의 공정을 체계적으로 관리하는 플랫폼입니다. 분당 구축·국평 인테리어 프로젝트에 활용해보세요."
-6. HTML 태그만 사용: h2, h3, p, ul, li, strong, em (script/style 금지)
-7. slug: 영문 소문자+하이픈 (예: bundang-remodel-2024)
+1. 제목: SEO 키워드 1~2개를 자연스럽게 포함한 클릭 유도형 (30자 이내)
+2. metaDescription: 검색 결과에 표시될 요약 (80~120자, 핵심 키워드 포함)
+3. 본문 구성: h2 도입(공감/문제 제기) → h2 본론1 → h3 세부 → h2 본론2 → h2 마무리(CTA)
+4. 분량: 1200~1800자
+5. 키워드를 본문에 자연스럽게 5~7회 분산 삽입 (키워드 스터핑 금지)
+6. h2/h3 헤딩에 키워드 배치 (구글 크롤러 가중치 높음)
+7. 첫 단락 100자 안에 핵심 키워드 1개 이상 배치
+8. 마지막 h2: "Vibespace로 공정 관리 시작하기"
+   마지막 p: "Vibespace는 반셀프·턴키 인테리어 현장의 공정을 체계적으로 관리하는 무료 플랫폼입니다. 지금 바로 시작해보세요."
+9. HTML 태그만: h2, h3, p, ul, li, strong, em, blockquote (script/style 금지)
+10. slug: 영문 소문자+하이픈, 날짜 포함 (예: bundang-remodel-tile-2026-05)
 
-[SEO 핵심 키워드] (자연스럽게 삽입)
+[SEO 핵심 키워드 (자연스럽게 삽입)]
 반셀프 인테리어, 턴키 인테리어, 분당 구축 인테리어, 분당 국평 인테리어,
-성남 인테리어, 판교 인테리어, 분당 인테리어, 인테리어 공정 관리
+성남 인테리어, 판교 인테리어, 분당 인테리어, 인테리어 공정 관리, 시공 기록
 
 [응답 형식 - 순수 JSON만]
-{"title":"SEO 최적화 제목","slug":"english-slug","html":"<h2>...</h2><p>...</p>..."}`;
+{"title":"SEO 최적화 제목","slug":"english-slug","metaDescription":"검색 결과 요약","html":"<h2>...</h2><p>...</p>..."}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -11876,8 +11988,8 @@ ${meeting.content||''}
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 2500,
+      model: 'claude-sonnet-4-5',
+      max_tokens: 3500,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]
     })
@@ -11900,6 +12012,14 @@ ${meeting.content||''}
   if (imgsHtml) parsed.html += imgsHtml;
 
   return parsed;
+}
+
+function _updateMetaDescCounter(el) {
+  const counter = document.getElementById('meta-desc-counter');
+  if (!counter) return;
+  const len = (el.value||'').length;
+  counter.textContent = `${len} / 120`;
+  counter.style.color = len > 120 ? '#e53935' : len > 100 ? '#f59e0b' : '#aaa';
 }
 
 function closeInblogPreview() {
@@ -11940,11 +12060,8 @@ async function confirmPublishToInblog() {
   btn.disabled = true;
 
   const title = document.getElementById('blog-preview-title-input').value.trim() || '(제목 없음)';
-  // HTML 편집 모드면 textarea, 아니면 rendered 기준
-  const html = _blogEditMode
-    ? document.getElementById('blog-preview-html-input').value
-    : document.getElementById('blog-preview-html-input').value; // textarea가 항상 소스
-
+  const metaDesc = (document.getElementById('blog-preview-meta-desc')?.value || '').trim();
+  const html = document.getElementById('blog-preview-html-input').value;
   const baseSlug = (_blogPreviewData.slug || 'meeting-post').replace(/[^a-z0-9-]/gi,'-').toLowerCase();
 
   try {
@@ -11955,6 +12072,7 @@ async function confirmPublishToInblog() {
           title,
           slug: baseSlug + '-' + Date.now().toString(36),
           body: html,
+          ...(metaDesc ? { excerpt: metaDesc, meta_description: metaDesc } : {}),
           published: true
         }
       }
