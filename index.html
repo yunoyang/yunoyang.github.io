@@ -11706,36 +11706,46 @@ function renderFurnitureTab() {
     grouped[cat].push(it);
   });
 
+  const isPC = window.innerWidth >= 660;
+
+  const cardHtml = (it) => {
+    const imgBlock = it.imageUrl
+      ? `<img src="${it.imageUrl}" alt="${esc(it.name)}" style="display:block;object-fit:cover;${isPC ? 'width:160px;height:100%;min-height:120px;' : 'width:100%;aspect-ratio:1/1;'}">`
+      : `<div style="background:#f2f3f5;display:flex;align-items:center;justify-content:center;${isPC ? 'width:160px;height:100%;min-height:120px;' : 'width:100%;aspect-ratio:1/1;'}"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    const checkOverlay = it.purchased
+      ? `<div style="position:absolute;inset:0;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>`
+      : '';
+    const bodyPad = isPC ? 'padding:16px 18px;' : 'padding:10px 12px 12px;';
+    return `
+      <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #eef0f5;position:relative;display:flex;flex-direction:${isPC ? 'row' : 'column'};${isPC ? 'align-items:stretch;' : ''}">
+        <div onclick="_toggleFurniturePurchased('${it.id}')" style="cursor:pointer;position:relative;flex-shrink:0;">
+          ${imgBlock}${checkOverlay}
+        </div>
+        <div style="flex:1;min-width:0;${bodyPad}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:11px;font-weight:500;color:#aaa;margin-bottom:3px;letter-spacing:.02em;">${esc(it.category||'기타')}</div>
+              <div style="font-size:16px;font-weight:700;line-height:1.3;${it.purchased ? 'text-decoration:line-through;color:#aaa;' : 'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
+              ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
+              ${it.price ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
+              ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
+            </div>
+            <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>`;
+  };
+
+  const gridStyle = isPC
+    ? 'display:grid;grid-template-columns:1fr;gap:10px;'
+    : 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;';
+
   const catHtml = FURNITURE_CATEGORIES.filter(c => grouped[c].length > 0).map(cat => `
     <div style="margin-bottom:10px;">
-      <div class="fi-grid">
-        ${grouped[cat].map(it => `
-          <div class="fi-card">
-            <!-- 이미지 영역 -->
-            <div class="fi-card-img-wrap" onclick="_toggleFurniturePurchased('${it.id}')" style="cursor:pointer;position:relative;flex-shrink:0;">
-              ${it.imageUrl
-                ? `<img class="fi-card-img" src="${it.imageUrl}" alt="${esc(it.name)}">`
-                : `<div class="fi-card-img-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
-              }
-              ${it.purchased ? `<div class="fi-card-check-overlay"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
-            </div>
-            <!-- 텍스트 영역 -->
-            <div class="fi-card-body">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
-                <div style="min-width:0;flex:1;">
-                  <div style="font-size:11px;font-weight:500;color:#aaa;margin-bottom:3px;letter-spacing:.02em;">${esc(it.category||'기타')}</div>
-                  <div style="font-size:16px;font-weight:700;line-height:1.3;${it.purchased?'text-decoration:line-through;color:#aaa;':'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
-                  ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
-                  ${it.price ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
-                  ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
-                </div>
-                <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
+      <div style="${gridStyle}">
+        ${grouped[cat].map(it => cardHtml(it)).join('')}
       </div>
     </div>
   `).join('');
@@ -14265,5 +14275,11 @@ async function fpShareLink() {
   </div>
 </div>
 
+<script>
+  window.addEventListener('resize', () => {
+    const tabEl = document.getElementById('tab-furniture');
+    if (tabEl && tabEl.style.display !== 'none') renderFurnitureTab();
+  });
+</script>
 </body>
 </html>
