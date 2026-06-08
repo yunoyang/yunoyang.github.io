@@ -5514,7 +5514,7 @@ function switchMainTab(tab, btn) {
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); }
   if (tab === 'meeting') { renderMeetingTab(); }
-  if (tab === 'furniture') { renderFurnitureTab(); }
+  if (tab === 'furniture') { requestAnimationFrame(renderFurnitureTab); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -11706,7 +11706,8 @@ function renderFurnitureTab() {
     grouped[cat].push(it);
   });
 
-  const isPC = window.innerWidth >= 660;
+  const containerW = (el.offsetWidth > 0 ? el.offsetWidth : window.innerWidth);
+  const isPC = containerW >= 500;
 
   const cardHtml = (it) => {
     const imgBlock = it.imageUrl
