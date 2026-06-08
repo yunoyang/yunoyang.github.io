@@ -3263,6 +3263,16 @@ button, input, textarea, select { font-family:var(--font); }
           <span class="info-view-value" id="iv-address">-</span>
         </div>
       </div>
+      <!-- 비용 내역 카드 -->
+      <div class="info-view-card" id="iv-cost-card" style="display:none;">
+        <div style="font-size:13px;font-weight:700;color:#5084ff;margin-bottom:10px;">총 예상 비용</div>
+        <div id="iv-cost-rows"></div>
+        <div style="height:1px;background:#f0f2f5;margin:10px 0;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:14px;font-weight:700;color:#111;">합계</span>
+          <span style="font-size:15px;font-weight:800;color:#5084ff;" id="iv-cost-total">-</span>
+        </div>
+      </div>
       <div class="info-view-card" id="iv-memo-card">
         <div class="info-view-memo-wrap">
           <div class="info-view-memo-label">메모</div>
@@ -5348,7 +5358,8 @@ function updateSummary() {
     p.details.forEach(d => { totalCost += d.cost || 0; });
     if (p.company) companies.add(p.company);
   });
-  document.getElementById('sum-cost').textContent = totalCost > 0 ? '약 ' + formatNum(totalCost) + '원' : '0원';
+  const furnitureCost = (proj.furnitureItems || []).reduce((s, it) => s + (it.price || 0), 0);
+  document.getElementById('sum-cost').textContent = (totalCost + furnitureCost) > 0 ? '약 ' + formatNum(totalCost + furnitureCost) + '원' : '0원';
   // D-day 계산 (공사 시작일 기준)
   const ddEl = document.getElementById('sum-dday');
   if (ddEl) {
@@ -9110,6 +9121,47 @@ function _loadInfoView() {
       if (fpEditBtn) { fpEditBtn.style.display = 'none'; }
     }
     if (fpAddBtn) fpAddBtn.style.display = 'none'; // 헤더 + 버튼 미사용
+  }
+
+  // 비용 내역 카드
+  const costCard = document.getElementById('iv-cost-card');
+  const costRows = document.getElementById('iv-cost-rows');
+  const costTotal = document.getElementById('iv-cost-total');
+  if (costCard && costRows && costTotal) {
+    // 공정별 비용
+    const procCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d) => a+(d.cost||0), 0), 0);
+    // 공정 세부 항목
+    const procDetails = proj.processes
+      .filter(p => (p.details||[]).some(d => d.cost > 0))
+      .map(p => {
+        const c = (p.details||[]).reduce((a,d) => a+(d.cost||0), 0);
+        return { label: p.name || '공정', cost: c };
+      });
+    // 가구&가전 비용
+    const furnitureItems = proj.furnitureItems || [];
+    const furnitureCost = furnitureItems.reduce((s,it) => s+(it.price||0), 0);
+    const total = procCost + furnitureCost;
+
+    if (total > 0) {
+      let html = '';
+      procDetails.forEach(d => {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+          <span style="font-size:13px;color:#555;">${esc(d.label)}</span>
+          <span style="font-size:13px;font-weight:600;color:#222;">${d.cost.toLocaleString()}원</span>
+        </div>`;
+      });
+      if (furnitureCost > 0) {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+          <span style="font-size:13px;color:#555;">가구&amp;가전</span>
+          <span style="font-size:13px;font-weight:600;color:#222;">${furnitureCost.toLocaleString()}원</span>
+        </div>`;
+      }
+      costRows.innerHTML = html;
+      costTotal.textContent = total.toLocaleString() + '원';
+      costCard.style.display = 'block';
+    } else {
+      costCard.style.display = 'none';
+    }
   }
 }
 
