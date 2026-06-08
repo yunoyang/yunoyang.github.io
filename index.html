@@ -4924,6 +4924,51 @@ async function _notifyNewUserIfNeeded() {
   } catch(e) { console.warn('User notify failed:', e); }
 }
 
+async function _migrateFloorplansToCloud() {
+  // 로컬 localStorage data URL 이미지 → Firebase Storage URL로 마이그레이션
+  if (!_fbStorage || !state.loggedIn) return;
+  const uid = firebase.auth().currentUser?.uid;
+  if (!uid) return;
+  let didUpdate = false;
+  for (const proj of (state.projects || [])) {
+    // localStorage에서 도면 이미지 복원 (저장 시 __vb_fpi__ 플레이스홀더로 치환된 경우)
+    let imgs = proj.floorplanImages;
+    if (imgs === '__vb_fpi__' || !imgs) {
+      try {
+        const raw = localStorage.getItem(`vb_fpi_${proj.id}`);
+        imgs = raw ? JSON.parse(raw) : null;
+      } catch(e) { imgs = null; }
+    }
+    if (!imgs || !Array.isArray(imgs)) continue;
+    let changed = false;
+    for (let i = 0; i < imgs.length; i++) {
+      const src = imgs[i];
+      if (!src || !src.startsWith('data:')) continue; // 이미 URL이거나 없으면 skip
+      try {
+        const path = `floorplans/${uid}/${proj.id}/fp_${i}_${Date.now()}.jpg`;
+        const ref = _fbStorage.ref(path);
+        await ref.put(_dataUrlToBlob(src), { contentType: 'image/jpeg' });
+        const url = await ref.getDownloadURL();
+        imgs[i] = url;
+        if (i === 0) proj.floorplanImage = url;
+        changed = true;
+      } catch(e) { console.warn('fp migrate failed idx', i, e); }
+    }
+    if (changed) {
+      proj.floorplanImages = imgs;
+      try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(imgs)); } catch(_) {}
+      didUpdate = true;
+    }
+  }
+  if (didUpdate) {
+    save();
+    // 공사 상세 뷰 열려있으면 갱신
+    const vp = document.getElementById('form-view-panel');
+    if (vp && vp.style.display !== 'none') _loadInfoView();
+    console.log('[fp] migration done');
+  }
+}
+
 async function _autoUploadOnLogin() {
   const ok = await _initFirebase();
   if (!ok) return;
@@ -4969,6 +5014,8 @@ async function _autoUploadOnLogin() {
           updateCollabIndicator(p.collaborators||[], p.owner);
         }
       }
+      // 도면 이미지 클라우드 마이그레이션 (data URL → Firebase Storage)
+      _migrateFloorplansToCloud();
     }
     return;
   }
@@ -10125,8 +10172,13 @@ function _mergeLocalPreserve(cp, localProjs) {
   // 도면 보존
   if (local.floorplanImage) merged.floorplanImage = local.floorplanImage;
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
-  // ★ floorplanImages 배열 보존 — Firestore 1MB 제한으로 base64 업로드 실패 시 로컬 우선
-  if (Array.isArray(local.floorplanImages) && local.floorplanImages.some(Boolean)) {
+  // ★ floorplanImages 배열 보존 — 로컬 우선, 없으면 클라우드 값 사용
+  const localHasImgs = Array.isArray(local.floorplanImages) && local.floorplanImages.some(v => v && !v.startsWith('data:') === false || v?.startsWith('http'));
+  const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(v => v && v.startsWith('http'));
+  if (cloudHasImgs) {
+    // 클라우드에 Storage URL 있으면 우선 사용 (기기 간 공유)
+    merged.floorplanImages = cp.floorplanImages;
+  } else if (Array.isArray(local.floorplanImages) && local.floorplanImages.some(Boolean)) {
     merged.floorplanImages = local.floorplanImages;
   }
   // ★ meetings: id 기준 합집합 — 로컬 우선 (아직 sync 안 된 기록 보존)
