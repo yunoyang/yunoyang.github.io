@@ -1853,6 +1853,56 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .btn-primary:active { opacity:.88; }
 
+/* ===== 가구&가전 반응형 카드 ===== */
+.fi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.fi-card { background:#fff; border-radius:16px; overflow:hidden; border:1px solid #eef0f5; position:relative; }
+.fi-card-img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+.fi-card-img-placeholder { width:100%; aspect-ratio:1/1; background:#f2f3f5; display:flex; align-items:center; justify-content:center; }
+.fi-card-body { padding:10px 12px 12px; }
+.fi-card-check-overlay { position:absolute; inset:0; background:rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center; pointer-events:none; }
+
+@media (min-width: 640px) {
+  .fi-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .fi-card {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 16px;
+  }
+  .fi-card-img-wrap {
+    flex-shrink: 0;
+    width: 160px;
+    position: relative;
+  }
+  .fi-card-img {
+    width: 160px;
+    height: 100%;
+    min-height: 120px;
+    aspect-ratio: unset;
+    object-fit: cover;
+  }
+  .fi-card-img-placeholder {
+    width: 160px;
+    height: 100%;
+    min-height: 120px;
+    aspect-ratio: unset;
+  }
+  .fi-card-body {
+    flex: 1;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
 /* ===== INFO VIEW (공사 정보 보기 모드) ===== */
 .form-edit-icon-btn {
   margin-left:auto; background:none; border:none; cursor:pointer;
@@ -11680,26 +11730,27 @@ function renderFurnitureTab() {
         <span style="font-size:13px;font-weight:700;color:#111;">${esc(cat)}</span>
         <span style="font-size:12px;color:#aaa;">${grouped[cat].filter(i=>i.purchased).length}/${grouped[cat].length} 구매완료</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+      <div class="fi-grid">
         ${grouped[cat].map(it => `
-          <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #eef0f5;position:relative;">
-            <!-- 이미지 -->
-            <div onclick="_toggleFurniturePurchased('${it.id}')" style="cursor:pointer;position:relative;">
+          <div class="fi-card">
+            <!-- 이미지 영역 -->
+            <div class="fi-card-img-wrap" onclick="_toggleFurniturePurchased('${it.id}')" style="cursor:pointer;position:relative;flex-shrink:0;">
               ${it.imageUrl
-                ? `<img src="${it.imageUrl}" alt="${esc(it.name)}" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;">`
-                : `<div style="width:100%;aspect-ratio:1/1;background:#f2f3f5;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
+                ? `<img class="fi-card-img" src="${it.imageUrl}" alt="${esc(it.name)}">`
+                : `<div class="fi-card-img-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
               }
-              ${it.purchased ? `<div style="position:absolute;inset:0;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
+              ${it.purchased ? `<div class="fi-card-check-overlay"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
             </div>
-            <!-- 텍스트 -->
-            <div style="padding:10px 12px 12px;">
+            <!-- 텍스트 영역 -->
+            <div class="fi-card-body">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
                 <div style="min-width:0;flex:1;">
-                  <div style="font-size:14px;font-weight:700;color:#111;line-height:1.35;${it.purchased?'text-decoration:line-through;color:#aaa;':''}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
-                  ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:2px;">${esc(it.brand)}</div>` : ''}
-                  ${it.price ? `<div style="font-size:13px;font-weight:700;color:#111;margin-top:4px;">${Number(it.price).toLocaleString()}원</div>` : ''}
+                  <div style="font-size:14px;font-weight:700;line-height:1.35;${it.purchased?'text-decoration:line-through;color:#aaa;':'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
+                  ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
+                  ${it.price ? `<div style="font-size:14px;font-weight:700;color:#111;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
+                  ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
                 </div>
-                <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:-2px;margin-right:-4px;padding:0;">
+                <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
                 </button>
               </div>
