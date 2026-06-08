@@ -11726,7 +11726,10 @@ function renderFurnitureTab() {
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
             <div style="min-width:0;flex:1;">
               <div style="font-size:11px;font-weight:500;color:#aaa;margin-bottom:3px;letter-spacing:.02em;">${esc(it.category||'기타')}</div>
-              <div style="font-size:16px;font-weight:700;line-height:1.3;${it.purchased ? 'text-decoration:line-through;color:#aaa;' : 'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
+              <div style="display:flex;align-items:center;gap:4px;${it.url ? 'cursor:pointer;' : ''}" ${it.url ? `onclick="event.stopPropagation();window.open('${it.url}','_blank')"` : ''}>
+                <span style="font-size:16px;font-weight:700;line-height:1.3;${it.purchased ? 'text-decoration:line-through;color:#aaa;' : 'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</span>
+                ${it.url ? `<svg style="flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${it.purchased ? '#aaa' : '#111'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>` : ''}
+              </div>
               ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
               ${it.price ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
               ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
