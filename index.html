@@ -3114,6 +3114,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
         <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">기록</span></button>
+        <button class="tab-btn" id="tab-btn-furniture" onclick="switchMainTab('furniture',this)"><span class="tab-label">가구&가전</span></button>
       </div>
     </div>
 
@@ -3153,6 +3154,11 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- Meeting Tab -->
     <div id="tab-meeting" style="display:none; background:#fff; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
       <div id="meeting-list" style="padding:14px 16px 100px;"></div>
+    </div>
+
+    <!-- Furniture & Appliances Tab -->
+    <div id="tab-furniture" style="display:none; background:#f7f8fa; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+      <div id="furniture-list" style="padding:14px 16px 100px;"></div>
     </div>
 
 
@@ -3491,6 +3497,32 @@ button, input, textarea, select { font-family:var(--font); }
   <button class="floating-btn" onclick="openAddContent()">
     <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 컨텐츠 추가
   </button>
+</div>
+<div class="floating-group" id="floating-add-furniture" style="display:none;">
+  <button class="floating-btn" onclick="openAddFurnitureItem()">
+    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 제품 추가
+  </button>
+</div>
+
+<!-- Furniture Add Dialog -->
+<div class="overlay" id="dlg-furniture" onclick="if(event.target===this)_closeFurnitureDlg()" style="display:none;z-index:9300;align-items:flex-end;">
+  <div class="bottom-sheet" style="padding:0 0 env(safe-area-inset-bottom,0);">
+    <div style="width:36px;height:4px;background:#e5e5ec;border-radius:4px;margin:12px auto 0;"></div>
+    <div style="padding:14px 18px 6px;display:flex;align-items:center;justify-content:space-between;">
+      <span id="fi-title" style="font-size:17px;font-weight:700;color:#111;">제품 추가</span>
+      <button onclick="_closeFurnitureDlg()" style="background:none;border:none;padding:4px;cursor:pointer;"><svg class="icon" width="20" height="20"><use href="#icon-x"/></svg></button>
+    </div>
+    <div style="padding:6px 18px 18px;display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow-y:auto;">
+      <select id="fi-category" style="padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);background:#fff;color:#222;"></select>
+      <input id="fi-name" type="text" placeholder="제품명 *" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="fi-brand" type="text" placeholder="브랜드 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="fi-price" type="number" placeholder="가격 (원)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="fi-url" type="url" placeholder="구매 링크 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="fi-image" type="url" placeholder="이미지 URL (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="fi-note" type="text" placeholder="메모 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <button onclick="_saveFurnitureItem()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
+    </div>
+  </div>
 </div>
 
 <!-- Content Add Sheet -->
@@ -5193,7 +5225,7 @@ function goTo(screen) {
   const fab = document.getElementById('floating-add-process');
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
   if (screen !== 'main') {
-    ['floating-add-meeting','floating-add-content'].forEach(id => {
+    ['floating-add-meeting','floating-add-content','floating-add-furniture'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -5360,14 +5392,17 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting') ? 'none' : (!canEdit() ? 'none' : '');
+  document.getElementById('tab-furniture').style.display = tab === 'furniture' ? '' : 'none';
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture') ? 'none' : (!canEdit() ? 'none' : '');
   // floating-add-style 제거됨 (스타일 뷰어 헤더 + 버튼으로 대체)
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
+  document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); }
   if (tab === 'meeting') { renderMeetingTab(); }
+  if (tab === 'furniture') { renderFurnitureTab(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -11459,6 +11494,165 @@ function renderMeetingTab() {
       ${imgThumb}
     </div>`;
   }).join('');
+}
+
+// ===== 가구&가전 탭 =====
+const FURNITURE_CATEGORIES = ['소파', '침대/매트리스', '식탁/의자', '수납장/옷장', '조명', '냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐', '기타'];
+
+function _getFurnitureItems() {
+  const proj = getProject();
+  if (!proj) return [];
+  if (!proj.furnitureItems) proj.furnitureItems = [];
+  return proj.furnitureItems;
+}
+
+function renderFurnitureTab() {
+  const el = document.getElementById('furniture-list');
+  if (!el) return;
+  const items = _getFurnitureItems();
+  const totalBudget = items.reduce((s, it) => s + (it.price || 0), 0);
+  const purchased = items.filter(it => it.purchased);
+  const purchasedTotal = purchased.reduce((s, it) => s + (it.price || 0), 0);
+
+  const grouped = {};
+  FURNITURE_CATEGORIES.forEach(c => { grouped[c] = []; });
+  items.forEach(it => {
+    const cat = it.category || '기타';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(it);
+  });
+
+  const catHtml = FURNITURE_CATEGORIES.filter(c => grouped[c].length > 0).map(cat => `
+    <div style="background:#fff;border-radius:16px;margin-bottom:10px;border:1px solid #eef0f5;overflow:hidden;">
+      <div style="padding:13px 16px 10px;font-size:13px;font-weight:700;color:#5084ff;border-bottom:1px solid #f5f7fa;display:flex;align-items:center;justify-content:space-between;">
+        <span>${esc(cat)}</span>
+        <span style="font-size:12px;font-weight:500;color:#aaa;">${grouped[cat].filter(i=>i.purchased).length}/${grouped[cat].length} 구매완료</span>
+      </div>
+      ${grouped[cat].map(it => `
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #f7f8fa;" onclick="_toggleFurniturePurchased('${it.id}')">
+          <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.purchased?'#5084ff':'#d0d5e0'};background:${it.purchased?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;cursor:pointer;">
+            ${it.purchased ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+          </div>
+          ${it.imageUrl ? `<div style="width:44px;height:44px;border-radius:8px;background:url('${it.imageUrl}') center/cover;flex-shrink:0;"></div>` : ''}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;color:${it.purchased?'#aaa':'#111'};text-decoration:${it.purchased?'line-through':'none'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.name)}</div>
+            ${it.brand ? `<div style="font-size:12px;color:#aaa;margin-top:1px;">${esc(it.brand)}</div>` : ''}
+            ${it.price ? `<div style="font-size:13px;font-weight:700;color:#5084ff;margin-top:2px;">${Number(it.price).toLocaleString()}원</div>` : ''}
+            ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.note)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation();">
+            ${it.url ? `<a href="${it.url}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#f5f7fa;border:none;cursor:pointer;text-decoration:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>` : ''}
+            <button onclick="_editFurnitureItem('${it.id}')" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#f5f7fa;border:none;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button onclick="_deleteFurnitureItem('${it.id}')" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#fff0f0;border:none;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e55" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  el.innerHTML = `
+    <!-- 예산 요약 -->
+    <div style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px;border:1px solid #eef0f5;">
+      <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">예산 현황</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;color:#888;">총 예정 금액</span>
+        <span style="font-size:13px;font-weight:700;color:#222;">${totalBudget ? totalBudget.toLocaleString()+'원' : '—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:13px;color:#888;">구매 완료</span>
+        <span style="font-size:13px;font-weight:700;color:#5084ff;">${purchasedTotal ? purchasedTotal.toLocaleString()+'원' : '—'} <span style="font-size:12px;font-weight:400;color:#aaa;">(${purchased.length}/${items.length})</span></span>
+      </div>
+    </div>
+
+    ${items.length === 0 ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 제품이 없습니다</div>` : catHtml}
+  `;
+}
+
+function _toggleFurniturePurchased(id) {
+  const proj = getProject(); if (!proj) return;
+  const it = (proj.furnitureItems||[]).find(i => i.id === id);
+  if (!it) return;
+  it.purchased = !it.purchased;
+  save();
+  renderFurnitureTab();
+}
+
+function _deleteFurnitureItem(id) {
+  const proj = getProject(); if (!proj) return;
+  if (!confirm('삭제하시겠습니까?')) return;
+  proj.furnitureItems = (proj.furnitureItems||[]).filter(i => i.id !== id);
+  save();
+  renderFurnitureTab();
+}
+
+function _editFurnitureItem(id) {
+  const proj = getProject(); if (!proj) return;
+  const it = (proj.furnitureItems||[]).find(i => i.id === id);
+  if (!it) return;
+  _openFurnitureDlg(it);
+}
+
+function openAddFurnitureItem() {
+  _openFurnitureDlg(null);
+}
+
+function _openFurnitureDlg(it) {
+  const isEdit = !!it;
+  const dlg = document.getElementById('dlg-furniture');
+  // 카테고리 옵션 동적 생성
+  const sel = dlg.querySelector('#fi-category');
+  sel.innerHTML = FURNITURE_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  dlg.querySelector('#fi-name').value = it?.name || '';
+  dlg.querySelector('#fi-brand').value = it?.brand || '';
+  dlg.querySelector('#fi-price').value = it?.price || '';
+  dlg.querySelector('#fi-url').value = it?.url || '';
+  dlg.querySelector('#fi-note').value = it?.note || '';
+  dlg.querySelector('#fi-image').value = it?.imageUrl || '';
+  dlg.querySelector('#fi-category').value = it?.category || FURNITURE_CATEGORIES[0];
+  dlg.querySelector('#fi-title').textContent = isEdit ? '제품 수정' : '제품 추가';
+  dlg.dataset.editId = it?.id || '';
+  dlg.style.display = 'flex';
+}
+
+function _closeFurnitureDlg() {
+  document.getElementById('dlg-furniture').style.display = 'none';
+}
+
+function _saveFurnitureItem() {
+  const dlg = document.getElementById('dlg-furniture');
+  const name = dlg.querySelector('#fi-name').value.trim();
+  if (!name) { alert('제품명을 입력해주세요.'); return; }
+  const proj = getProject(); if (!proj) return;
+  if (!proj.furnitureItems) proj.furnitureItems = [];
+  const editId = dlg.dataset.editId;
+  if (editId) {
+    const it = proj.furnitureItems.find(i => i.id === editId);
+    if (it) {
+      it.name = name;
+      it.brand = dlg.querySelector('#fi-brand').value.trim();
+      it.price = parseInt(dlg.querySelector('#fi-price').value.replace(/,/g,'')) || 0;
+      it.url = dlg.querySelector('#fi-url').value.trim();
+      it.note = dlg.querySelector('#fi-note').value.trim();
+      it.imageUrl = dlg.querySelector('#fi-image').value.trim();
+      it.category = dlg.querySelector('#fi-category').value;
+    }
+  } else {
+    proj.furnitureItems.push({
+      id: 'fi_' + Date.now(),
+      name,
+      brand: dlg.querySelector('#fi-brand').value.trim(),
+      price: parseInt(dlg.querySelector('#fi-price').value.replace(/,/g,'')) || 0,
+      url: dlg.querySelector('#fi-url').value.trim(),
+      note: dlg.querySelector('#fi-note').value.trim(),
+      imageUrl: dlg.querySelector('#fi-image').value.trim(),
+      category: dlg.querySelector('#fi-category').value,
+      purchased: false,
+      createdAt: Date.now(),
+    });
+  }
+  save();
+  _closeFurnitureDlg();
+  renderFurnitureTab();
 }
 
 // ── 회의록 에디터 화면 열기/닫기 ────────────────────────────────────────────
