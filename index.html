@@ -2742,7 +2742,7 @@ button, input, textarea, select { font-family:var(--font); }
   transition:transform .13s, background .15s; font-family:var(--font);
   box-sizing:border-box;
 }
-.landing-proj-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.06); }
+.landing-proj-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.06); border-color:transparent; }
 .landing-proj-card:active { transform:scale(.97); background:#f5f5f8; }
 .landing-proj-card-name {
   font-size:15px; font-weight:600; color:#111;
@@ -2764,7 +2764,7 @@ button, input, textarea, select { font-family:var(--font); }
   transition:transform .13s, background .15s; font-family:var(--font);
   box-sizing:border-box;
 }
-.landing-btn-new:hover { box-shadow:0 4px 20px rgba(0,0,0,.06); }
+.landing-btn-new:hover { box-shadow:0 4px 20px rgba(0,0,0,.06); border-color:transparent; }
 .landing-btn-new:active { transform:scale(.97); background:#f5f5f8; }
 .landing-btn {
   width:100%; padding:16px; background:#222; color:#fff; border:none;
@@ -3095,11 +3095,11 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
         <span class="landing-status-badge">진행중</span>
       </div>
-      <svg width="16" height="16" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="1" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
     <button class="landing-btn-new" id="landing-btn-new" onclick="startNewProject()" style="display:none;">
       <span>새 공사</span>
-      <svg width="16" height="16" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="1" viewBox="0 0 24 24" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <!-- 비로그인: 구글 로그인만 -->
     <button class="landing-btn-google" id="landing-btn-google" onclick="openDialog('dlg-login')">
