@@ -1303,7 +1303,7 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-fold-area {
   display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
-.work-card-cost-sm { font-size:15px; font-weight:700; color:var(--primary); }
+.work-card-cost-sm { font-size:16px; font-weight:400; color:#222; }
 .work-card.expanded .work-card-cost-sm { display:none; }
 .work-card-fold-btn {
   background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:#999;
@@ -1448,7 +1448,7 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
 .work-card-title { font-size:18px; font-weight:700; }
 .card-header-right { display:flex; align-items:center; gap:8px; }
-.work-card-cost { font-size:15px; font-weight:700; color:var(--primary); }
+.work-card-cost { font-size:16px; font-weight:400; color:#222; }
 .card-del-btn { background:none; border:none; cursor:pointer; color:#ccc; padding:2px; display:flex; border-radius:4px; }
 .card-del-btn:hover { color:var(--danger); background:#fff0f0; }
 .card-del-btn svg { width:16px; height:16px; }
@@ -1545,7 +1545,7 @@ button, input, textarea, select { font-family:var(--font); }
 .d-desc { font-size:15px; font-weight:700; color:var(--text-secondary); line-height:1.3; }
 .d-date { font-size:13px; color:#aaa; font-weight:400; }
 .d-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.d-cost { font-size:15px; font-weight:700; white-space:nowrap; color:#111; }
+.d-cost { font-size:16px; font-weight:400; color:#222; white-space:nowrap; }
 .d-chev { color:#555; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
 .proc-card-actions { display:flex; align-items:center; justify-content:center; padding:6px 0; }
@@ -1715,7 +1715,7 @@ button, input, textarea, select { font-family:var(--font); }
   background:#fff; gap:10px;
 }
 .day-detail-desc { font-size:15px; color:#333; flex:1; }
-.day-detail-cost { font-size:15px; font-weight:700; color:#111; white-space:nowrap; }
+.day-detail-cost { font-size:16px; font-weight:400; color:#222; white-space:nowrap; }
 .day-detail-date-badge {
   font-size:13px; font-weight:700; color:var(--primary);
   background:rgba(49,118,255,0.1); padding:2px 7px;
@@ -1935,8 +1935,8 @@ button, input, textarea, select { font-family:var(--font); }
 .info-view-floorplan-label { font-size:14px; font-weight:600; color:#999; margin-bottom:12px; }
 /* 비용 카드 */
 .iv-cost-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
-.iv-cost-row span:first-child { font-size:13px; color:#555; }
-.iv-cost-row span:last-child { font-size:13px; font-weight:600; color:#222; }
+.iv-cost-row span:first-child { font-size:14px; color:#888; }
+.iv-cost-row span:last-child { font-size:16px; font-weight:400; color:#222; }
 .fp-edit-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .fp-edit-btn {
   font-size:12px; font-weight:600; color:#fff; background:#222;
@@ -3306,7 +3306,7 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="info-view-card-inner" onclick="_toggleCostDetail()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;">
           <span style="font-size:14px;font-weight:600;color:#999;">총 예상 비용</span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:15px;font-weight:700;color:#111;" id="iv-cost-total">-</span>
+            <span style="font-size:16px;font-weight:400;color:#222;" id="iv-cost-total">-</span>
             <svg id="iv-cost-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
@@ -11707,11 +11707,7 @@ function renderFurnitureTab() {
   });
 
   const catHtml = FURNITURE_CATEGORIES.filter(c => grouped[c].length > 0).map(cat => `
-    <div style="margin-bottom:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:700;color:#111;">${esc(cat)}</span>
-        <span style="font-size:12px;color:#aaa;">${grouped[cat].filter(i=>i.purchased).length}/${grouped[cat].length} 구매완료</span>
-      </div>
+    <div style="margin-bottom:10px;">
       <div class="fi-grid">
         ${grouped[cat].map(it => `
           <div class="fi-card">
@@ -11730,7 +11726,7 @@ function renderFurnitureTab() {
                   <div style="font-size:11px;font-weight:500;color:#aaa;margin-bottom:3px;letter-spacing:.02em;">${esc(it.category||'기타')}</div>
                   <div style="font-size:16px;font-weight:700;line-height:1.3;${it.purchased?'text-decoration:line-through;color:#aaa;':'color:#111;'}overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(it.name)}</div>
                   ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
-                  ${it.price ? `<div style="font-size:15px;font-weight:700;color:#111;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
+                  ${it.price ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
                   ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
                 </div>
                 <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
@@ -11750,11 +11746,11 @@ function renderFurnitureTab() {
       <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">예산 현황</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
         <span style="font-size:13px;color:#888;">총 예정 금액</span>
-        <span style="font-size:13px;font-weight:700;color:#222;">${totalBudget ? totalBudget.toLocaleString()+'원' : '—'}</span>
+        <span style="font-size:16px;font-weight:400;color:#222;">${totalBudget ? totalBudget.toLocaleString()+'원' : '—'}</span>
       </div>
       <div style="display:flex;justify-content:space-between;">
         <span style="font-size:13px;color:#888;">구매 완료</span>
-        <span style="font-size:13px;font-weight:700;color:#5084ff;">${purchasedTotal ? purchasedTotal.toLocaleString()+'원' : '—'} <span style="font-size:12px;font-weight:400;color:#aaa;">(${purchased.length}/${items.length})</span></span>
+        <span style="font-size:16px;font-weight:400;color:#222;">${purchasedTotal ? purchasedTotal.toLocaleString()+'원' : '—'} <span style="font-size:12px;font-weight:400;color:#aaa;">(${purchased.length}/${items.length})</span></span>
       </div>
     </div>
 
