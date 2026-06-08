@@ -2736,7 +2736,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* 프로젝트 바로가기 카드 */
 .landing-proj-card {
-  width:100%; padding:16px;
+  width:100%; padding:20px;
   background:#fff; border:1.5px solid #d8dae3; border-radius:16px;
   cursor:pointer; display:flex; align-items:center; justify-content:space-between;
   transition:transform .13s, background .15s; font-family:var(--font);
@@ -2748,9 +2748,15 @@ button, input, textarea, select { font-family:var(--font); }
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .landing-proj-card-sub { display:none; }
+.landing-status-badge {
+  font-size:11px; font-weight:500; color:#22c55e;
+  background:#f0fdf4; border:1px solid #bbf7d0;
+  border-radius:20px; padding:2px 8px;
+  white-space:nowrap; flex-shrink:0; margin-left:8px;
+}
 /* 새 공사 아웃라인 버튼 */
 .landing-btn-new {
-  width:100%; padding:16px;
+  width:100%; padding:20px;
   background:#fff; color:#111; border:1.5px solid #d8dae3; border-radius:16px;
   font-size:15px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; justify-content:space-between;
@@ -3083,8 +3089,11 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="landing-bottom">
     <!-- 로그인: 프로젝트 카드 + 새 공사 -->
     <button class="landing-proj-card" id="landing-proj-card-btn" onclick="loadExistingProjects()" style="display:none;">
-      <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
-      <svg width="16" height="16" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      <div style="display:flex;align-items:center;min-width:0;flex:1;">
+        <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
+        <span class="landing-status-badge">진행중</span>
+      </div>
+      <svg width="16" height="16" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
     <button class="landing-btn-new" id="landing-btn-new" onclick="startNewProject()" style="display:none;">
       <span>새 공사</span>
