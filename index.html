@@ -9183,12 +9183,16 @@ function _toggleCostDetail() {
 }
 
 function _ivAddFloorplan() {
-  // 뷰 → 편집 모드로 전환 후 도면 섹션으로 스크롤
-  switchToFormEdit();
-  setTimeout(() => {
-    const el = document.getElementById('floorplan-group');
-    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
-  }, 200);
+  // 빈 슬롯 찾아 파일 선택 트리거 (뷰 모드에서 직접 업로드)
+  const proj = getProject(); if (!proj) return;
+  const images = _getFpImages(proj);
+  const emptyIdx = images.findIndex(v => !v);
+  if (emptyIdx === -1) { showToastMessage('도면은 최대 3장까지 추가할 수 있습니다.'); return; }
+  // 임시 input 생성
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => _fpSlotUpload(e, emptyIdx);
+  inp.click();
 }
 
 function saveFormAndBack() {
@@ -11050,20 +11054,34 @@ function _fpSlotUpload(e, idx) {
   if (file.size > 10 * 1024 * 1024) { alert('10MB 이하 이미지만 업로드 가능합니다.'); return; }
   const reader = new FileReader();
   reader.onload = async ev => {
-    // 압축 (1400px, 82% quality) — 용량 절감
     const compressed = await _compressMeetingImg(ev.target.result, 1400, 0.82) || ev.target.result;
     const proj = getProject();
-    if (proj) {
-      if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
-      while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
-      proj.floorplanImages[idx] = compressed;
-      // 슬롯 0의 이미지를 floorplanImage에도 동기화 (fp-editor 호환)
-      if (idx === 0) proj.floorplanImage = compressed;
-      // vb_fpi_* 직접 저장 (동기 보장) + save()
-      try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
-      save();
-      showToastMessage('✅ 도면 이미지가 저장됐습니다');
+    if (!proj) return;
+    if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
+    while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
+
+    // Firebase Storage 업로드 시도
+    let finalSrc = compressed;
+    if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+      try {
+        showToastMessage('⏳ 도면 업로드 중…');
+        const uid = firebase.auth().currentUser?.uid || 'anon';
+        const path = `floorplans/${uid}/${proj.id}/fp_${idx}_${Date.now()}.jpg`;
+        const ref = _fbStorage.ref(path);
+        await ref.put(_dataUrlToBlob(compressed), { contentType: 'image/jpeg' });
+        finalSrc = await ref.getDownloadURL();
+      } catch(err) {
+        console.warn('fp storage upload failed, using local:', err);
+        // 실패 시 data URL 그대로 fallback
+        finalSrc = compressed;
+      }
     }
+
+    proj.floorplanImages[idx] = finalSrc;
+    if (idx === 0) proj.floorplanImage = finalSrc;
+    try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
+    save();
+    showToastMessage('✅ 도면 이미지가 저장됐습니다');
     _renderFpSlots();
     if (e.target) e.target.value = '';
   };
@@ -11118,6 +11136,9 @@ function _renderFpSlots() {
       slot.onclick = () => document.getElementById('fp-input-' + i)?.click();
     }
   }
+  // 뷰 모드(공사 상세)도 갱신
+  const vp = document.getElementById('form-view-panel');
+  if (vp && vp.style.display !== 'none') _loadInfoView();
 }
 function _showFloorplanPreview(src) {
   // 하위 호환용 — 슬롯 0에 반영
