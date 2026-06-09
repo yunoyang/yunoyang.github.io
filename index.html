@@ -11761,13 +11761,7 @@ function renderFurnitureTab() {
     ? 'display:grid;grid-template-columns:1fr;gap:10px;'
     : 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;';
 
-  const catHtml = FURNITURE_CATEGORIES.filter(c => grouped[c].length > 0).map(cat => `
-    <div style="margin-bottom:10px;">
-      <div style="${gridStyle}">
-        ${grouped[cat].map(it => cardHtml(it)).join('')}
-      </div>
-    </div>
-  `).join('');
+  const catHtml = `<div style="${gridStyle}">${items.map(it => cardHtml(it)).join('')}</div>`;
 
   el.innerHTML = `
     <!-- 예산 요약 -->
