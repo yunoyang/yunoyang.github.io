@@ -11737,11 +11737,10 @@ function renderFurnitureTab() {
         <div style="flex:1;min-width:0;padding:14px 16px;">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:11px;font-weight:500;color:#aaa;margin-bottom:3px;letter-spacing:.02em;">${esc(it.category||'기타')}</div>
+              <div style="font-size:14px;color:#555;margin-bottom:4px;">${esc(it.category||'기타')}${it.brand ? ` · ${esc(it.brand)}` : ''}</div>
               <div style="${it.url ? 'cursor:pointer;' : ''}" ${it.url ? `onclick="event.stopPropagation();window.open('${it.url}','_blank')"` : ''}>
                 <span style="font-size:15px;font-weight:700;line-height:1.3;${it.purchased ? 'text-decoration:line-through;color:#aaa;' : 'color:#111;'}">${esc(it.name)}${it.url ? `<svg style="display:inline-block;vertical-align:middle;margin-left:2px;flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${it.purchased ? '#aaa' : '#111'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</span>
               </div>
-              ${it.brand ? `<div style="font-size:12px;color:#999;margin-top:3px;">${esc(it.brand)}</div>` : ''}
               ${it.price ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${Number(it.price).toLocaleString()}원</div>` : ''}
               ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
             </div>
