@@ -2922,7 +2922,10 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== PC 레이아웃: 640px 센터 컨테이너 (Threads.com 기준 ~620px) ===== */
 @media (min-width: 660px) {
   html, body { height: 100%; background: #fff; }
-  body.consulting-bg { background: #f9f9f9; }
+  body.consulting-bg { background: #f5f5f5; }
+  body.consulting-bg .app { max-width: 100% !important; }
+  body.consulting-bg #screen-consulting .form-screen-inner > div:last-child { max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  body.consulting-bg #screen-consulting .form-header { max-width: 1100px; margin: 0 auto; }
   .app {
     max-width: 640px;
     margin: 0 auto;
