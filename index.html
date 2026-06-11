@@ -13361,18 +13361,72 @@ let fpWirePreview = null;
 // ──────────────────────────────────────────
 // Open / Close
 // ──────────────────────────────────────────
-function openPhotoModalFp(src) {
-  let modal = document.getElementById('fp-photo-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'fp-photo-modal';
-    modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;';
-    modal.onclick = () => modal.remove();
-    modal.innerHTML = '<img style="max-width:100vw;max-height:100vh;object-fit:contain;" /><button onclick="event.stopPropagation();this.parentNode.remove()" style="position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>';
-    document.body.appendChild(modal);
+function openPhotoModalFp(clickedSrc) {
+  // 현재 프로젝트의 유효 이미지 목록 수집
+  const proj = getProject();
+  const images = _getFpImages(proj);
+  const editedSrc = proj?.floorplanEditedImage;
+  const displayImages = images.map((s, i) => (i === 0 && editedSrc) ? editedSrc : s).filter(Boolean);
+  if (!displayImages.length) displayImages.push(clickedSrc);
+  let cur = Math.max(0, displayImages.indexOf(clickedSrc));
+
+  // 기존 모달 제거
+  const old = document.getElementById('fp-photo-modal');
+  if (old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'fp-photo-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;';
+  modal.innerHTML = `
+    <button id="fpm-close" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div id="fpm-wrap" style="position:relative;width:100%;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+      <img id="fpm-img" style="max-width:96vw;max-height:90vh;object-fit:contain;user-select:none;-webkit-user-drag:none;transition:opacity .15s;" />
+    </div>
+    <div id="fpm-dots" style="display:flex;gap:7px;padding:14px 0 20px;"></div>
+    <button id="fpm-prev" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+    <button id="fpm-next" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+  `;
+  document.body.appendChild(modal);
+
+  const img = modal.querySelector('#fpm-img');
+  const dots = modal.querySelector('#fpm-dots');
+  const prev = modal.querySelector('#fpm-prev');
+  const next = modal.querySelector('#fpm-next');
+
+  function render() {
+    img.style.opacity = '0';
+    setTimeout(() => { img.src = displayImages[cur]; img.style.opacity = '1'; }, 80);
+    dots.innerHTML = displayImages.map((_, i) =>
+      `<div style="width:7px;height:7px;border-radius:50%;background:${i===cur?'#fff':'rgba(255,255,255,.35)'};transition:background .2s;"></div>`
+    ).join('');
+    prev.style.display = displayImages.length > 1 ? 'flex' : 'none';
+    next.style.display = displayImages.length > 1 ? 'flex' : 'none';
+    dots.style.display = displayImages.length > 1 ? 'flex' : 'none';
   }
-  modal.querySelector('img').src = src;
-  modal.style.display = 'flex';
+
+  prev.onclick = e => { e.stopPropagation(); cur = (cur - 1 + displayImages.length) % displayImages.length; render(); };
+  next.onclick = e => { e.stopPropagation(); cur = (cur + 1) % displayImages.length; render(); };
+  modal.querySelector('#fpm-close').onclick = () => modal.remove();
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+  // 터치 스와이프
+  let tx0 = 0;
+  modal.addEventListener('touchstart', e => { tx0 = e.touches[0].clientX; }, { passive: true });
+  modal.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx0;
+    if (Math.abs(dx) > 40) { cur = dx < 0 ? (cur+1)%displayImages.length : (cur-1+displayImages.length)%displayImages.length; render(); }
+  }, { passive: true });
+
+  // 키보드
+  function onKey(e) {
+    if (e.key === 'ArrowRight') { cur = (cur+1)%displayImages.length; render(); }
+    if (e.key === 'ArrowLeft') { cur = (cur-1+displayImages.length)%displayImages.length; render(); }
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', onKey); }
+  }
+  document.addEventListener('keydown', onKey);
+  modal.addEventListener('remove', () => document.removeEventListener('keydown', onKey));
+
+  render();
 }
 
 function openFpEditor() {
