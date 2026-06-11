@@ -10315,6 +10315,10 @@ async function _initFirebase() {
     try { _fbStorage = firebase.storage(); } catch(e) {}
     firebase.auth(); // Auth 초기화
   }
+  // Storage가 아직 null이면 재시도 (초기화 타이밍 문제 대응)
+  if (!_fbStorage) {
+    try { _fbStorage = firebase.storage(); } catch(e) {}
+  }
   return true;
 }
 
