@@ -11716,29 +11716,25 @@ async function _syncFromCloudOnStartup() {
 
     cloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
 
-    const hasRealData = cloudProjs.some(p => (p.processes?.length||0) > 0);
-    const filteredProjs = hasRealData
-      ? cloudProjs.filter(p => (p.processes?.length||0) > 0)
-      : cloudProjs;
+    const prevProjs2 = state.projects || [];
+    const currentProj = getProject();
 
-    const cloudTotal = filteredProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
-    const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
+    // cloudId 기반 매칭: 클라우드에 있는 프로젝트는 항상 병합 (count 비교 없음)
+    const cloudIdSet = new Set(cloudProjs.map(p => p.cloudId));
+    // 로컬 전용 프로젝트 (cloudId 없거나 클라우드에 없는 것) 보존
+    const localOnlyProjs = prevProjs2.filter(p => !p.cloudId || !cloudIdSet.has(p.cloudId));
+    // 기본 샘플 프로젝트는 클라우드 데이터 있으면 제거
+    const newLocalProjs = localOnlyProjs.filter(p => p.name !== '정자동 아파트 플랜');
+    const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
 
-    // 로컬에 실제 데이터가 있으면 클라우드가 명확히 더 많을 때만 교체 (데이터 보호)
-    if (cloudTotal > 0 && cloudTotal >= localTotal) {
-      const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
-      const currentProj = getProject();
-      const isNewLocal = currentProj && !currentProj.cloudId && currentProj.name !== '정자동 아파트 플랜';
-      // myRole + styleImages를 기존 로컬에서 복원 (parseDoc에서 누락됨)
-      const prevProjs2 = state.projects || [];
-      const mergedProjs2 = filteredProjs.map(cp => _mergeLocalPreserve(cp, prevProjs2));
-      state.projects = [...mergedProjs2, ...newLocalProjs];
-      state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
-      save();
-      renderAll();
-      // base64로 남은 도면 이미지 → Firebase Storage 마이그레이션
-      _migrateFloorplansToCloud();
-    }
+    // 클라우드 프로젝트를 로컬 보존 데이터와 병합 (항상 실행)
+    const mergedProjs2 = cloudProjs.map(cp => _mergeLocalPreserve(cp, prevProjs2));
+    state.projects = [...mergedProjs2, ...newLocalProjs];
+    state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
+    save();
+    renderAll();
+    // base64로 남은 도면 이미지 → Firebase Storage 마이그레이션
+    _migrateFloorplansToCloud();
 
     for (const p of state.projects) {
       if (p.isCloud && p.cloudId) {
