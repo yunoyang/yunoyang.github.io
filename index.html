@@ -11358,31 +11358,29 @@ function _fpSlotUpload(e, idx) {
       await _initFirebase();
     }
     if (state.loggedIn && _fbStorage) {
+      let uploadMsg = '';
       try {
-        showToastMessage('⏳ 도면 업로드 중…');
         const uid = firebase.auth().currentUser?.uid;
-        if (!uid) throw new Error('Firebase Auth 미인증');
+        if (!uid) throw new Error('uid없음(auth미연결)');
         const path = `floorplans/${uid}/${proj.id}/fp_${idx}_${Date.now()}.jpg`;
         const ref = _fbStorage.ref(path);
         await ref.put(_dataUrlToBlob(compressed), { contentType: 'image/jpeg' });
         finalSrc = await ref.getDownloadURL();
-        // 클라우드 URL 확인 토스트
-        showToastMessage('☁️ 클라우드 저장 완료 (기기 간 공유 가능)');
+        uploadMsg = '☁️ 클라우드 저장 완료';
       } catch(err) {
         console.warn('fp storage upload failed:', err.message);
-        showToastMessage('⚠️ 클라우드 업로드 실패 — 이 기기에만 저장됨 (' + err.message + ')');
+        uploadMsg = '⚠️ 업로드실패:' + err.message;
         finalSrc = compressed;
       }
-    } else if (!state.loggedIn) {
-      showToastMessage('⚠️ 로그인 후 업로드 시 기기 간 공유됩니다');
+      showToastMessage(uploadMsg);
+    } else {
+      showToastMessage('⚠️ 진단: loggedIn=' + state.loggedIn + ' storage=' + !!_fbStorage);
     }
 
     proj.floorplanImages[idx] = finalSrc;
     if (idx === 0) proj.floorplanImage = finalSrc;
     try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
     save();
-    if (finalSrc.startsWith('data:')) showToastMessage('📱 도면 저장됨 (이 기기 전용)');
-    else showToastMessage('✅ 도면 저장됨');
     _renderFpSlots();
     if (e.target) e.target.value = '';
   };
