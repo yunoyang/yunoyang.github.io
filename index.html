@@ -4638,6 +4638,7 @@ function canEdit() {
 
 let saveTimer = null;
 let _lastSaveTime = 0;
+const _sessionId = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 // ── IndexedDB: 회의록 이미지 전용 저장소 (localStorage 5MB 한도 우회) ────────
 const _MIdb = (() => {
   const DB = 'vb_meeting_imgs', STORE = 'imgs', VER = 1;
@@ -10542,6 +10543,7 @@ function _syncProjToCloud(proj) {
       ownerEmail: state.user.email,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user.email,
+      'meta.updatedBySessionId': _sessionId,
     };
     return _db.collection('vb_projects').doc(proj.cloudId).update(payload);
   }).catch(e => console.error('sync err', e));
@@ -10595,6 +10597,7 @@ async function _syncStyleImagesToCloud(proj) {
       'projectData.styleImages': merged,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
     });
     // 로컬도 병합된 값으로 갱신
     proj.styleImages = merged;
@@ -10629,6 +10632,7 @@ async function _syncContentLinksToCloud(proj) {
       'projectData.contentLinks': mergedFinal,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
     });
     // 5) 로컬도 병합 결과로 갱신
     proj.contentLinks = mergedFinal;
@@ -10690,7 +10694,7 @@ function _startCollabListener(cloudId) {
     const data = snap.data();
     const meta = data.meta || {};
     // Skip our own save echoes
-    if (meta.updatedBy === state.user.email && (Date.now() - _lastSaveTime) < 4000) return;
+    if (meta.updatedBySessionId && meta.updatedBySessionId === _sessionId) return;
     const proj = state.projects.find(p => p.cloudId === cloudId);
     if (!proj) return;
     const remote = data.projectData;
