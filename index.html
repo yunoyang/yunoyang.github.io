@@ -11347,7 +11347,10 @@ function _fpSlotUpload(e, idx) {
 
     // Firebase Storage 업로드 시도
     let finalSrc = compressed;
-    if (state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
+    if (state.loggedIn) {
+      await _initFirebase();
+    }
+    if (state.loggedIn && _fbStorage) {
       try {
         showToastMessage('⏳ 도면 업로드 중…');
         const uid = firebase.auth().currentUser?.uid || 'anon';
@@ -11357,7 +11360,6 @@ function _fpSlotUpload(e, idx) {
         finalSrc = await ref.getDownloadURL();
       } catch(err) {
         console.warn('fp storage upload failed, using local:', err);
-        // 실패 시 data URL 그대로 fallback
         finalSrc = compressed;
       }
     }
