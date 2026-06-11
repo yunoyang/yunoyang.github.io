@@ -344,6 +344,9 @@ button, input, textarea, select { font-family:var(--font); }
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .tab-section::-webkit-scrollbar { display: none; }
 .tab-toggle {
@@ -3115,6 +3118,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- ===== MAIN ===== -->
 <div class="screen" id="screen-main">
+  <div class="screen-scroll" id="main-scroll">
   <div class="header">
     <button class="header-home-btn" onclick="goTo('landing')" title="홈으로">
       <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="3"/></svg>
@@ -3136,7 +3140,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="collab-bar-text" id="collab-bar-text"></div>
   </div>
 
-  <!-- Summary (스크롤 영역 밖 — 항상 최상단 고정) -->
+  <!-- Summary -->
   <div class="summary-wrap">
     <div class="summary-unified">
       <div class="summary-toggle-row" onclick="toggleSummary()">
@@ -3162,7 +3166,6 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
 
-  <div class="screen-scroll" id="main-scroll">
 
     <!-- Tabs -->
     <div class="tab-section">
@@ -3177,7 +3180,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan" style="background:#fff; flex:1; display:flex; flex-direction:column;">
+    <div id="tab-plan" style="background:#fff; display:flex; flex-direction:column;">
       <!-- 공정 단계 필터 (세그먼트 컨트롤) -->
       <div class="plan-phase-bar" id="plan-phase-bar">
         <div class="phase-segment">
@@ -3187,7 +3190,7 @@ button, input, textarea, select { font-family:var(--font); }
           <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)"><span class="phase-label">공사후</span></button>
         </div>
       </div>
-      <div class="cards-area" id="work-cards" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+      <div class="cards-area" id="work-cards"></div>
     </div>
 
     <!-- Calendar Tab -->
@@ -3203,19 +3206,19 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Content Tab -->
-    <div id="tab-content" style="display:none; background:#fff; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+    <div id="tab-content" style="display:none; background:#fff;">
       <div class="content-tab-inner">
         <div id="content-list"></div>
       </div>
     </div>
 
     <!-- Meeting Tab -->
-    <div id="tab-meeting" style="display:none; background:#fff; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+    <div id="tab-meeting" style="display:none; background:#fff;">
       <div id="meeting-list" style="padding:14px 16px 100px;"></div>
     </div>
 
     <!-- Furniture & Appliances Tab -->
-    <div id="tab-furniture" style="display:none; background:#fff; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+    <div id="tab-furniture" style="display:none; background:#fff;">
       <div id="furniture-list" style="padding:14px 16px 100px;"></div>
     </div>
 
