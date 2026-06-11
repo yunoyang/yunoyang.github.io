@@ -4736,24 +4736,9 @@ function _stripMeetingImages(projects) {
 }
 
 function _saveFpImagesToLS(projects) {
-  // 도면 관련 base64 이미지를 모두 별도 키로 분리 → 메인 JSON 용량 절감
+  // floorplanImages/floorplanImage는 소형 압축본으로 메인 JSON에 포함 (Firestore 직접 저장 방식)
+  // floorplanEditedImage만 별도 키로 분리 (용량이 클 수 있음)
   (projects || []).forEach(p => {
-    // ① floorplanImages 배열 → vb_fpi_*
-    const imgs = p.floorplanImages;
-    if (Array.isArray(imgs)) {
-      const hasB64 = imgs.some(img => img && img.startsWith('data:'));
-      if (hasB64) {
-        try {
-          localStorage.setItem(`vb_fpi_${p.id}`, JSON.stringify(imgs));
-          p.floorplanImages = '__vb_fpi__';
-        } catch(e) { console.warn('[vb_fpi]', e.message); }
-      }
-    }
-    // ② floorplanImage 단일 필드 → vb_fpi_*[0] 와 동일하므로 플레이스홀더 처리
-    if (p.floorplanImage && p.floorplanImage.startsWith('data:')) {
-      p.floorplanImage = '__vb_fl__';
-    }
-    // ③ floorplanEditedImage → vb_fp_* (QuotaExceeded 대기 말고 항상 분리)
     if (p.floorplanEditedImage && p.floorplanEditedImage.startsWith('data:')) {
       try {
         localStorage.setItem(`vb_fp_${p.id}`, p.floorplanEditedImage);
@@ -10418,17 +10403,15 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
-  // 도면 보존
-  if (local.floorplanImage) merged.floorplanImage = local.floorplanImage;
+  // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
-  // ★ floorplanImages 배열 보존 — 로컬 우선, 없으면 클라우드 값 사용
-  const localHasImgs = Array.isArray(local.floorplanImages) && local.floorplanImages.some(v => v && !v.startsWith('data:') === false || v?.startsWith('http'));
-  const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(v => v && v.startsWith('http'));
+  const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(Boolean);
   if (cloudHasImgs) {
-    // 클라우드에 Storage URL 있으면 우선 사용 (기기 간 공유)
     merged.floorplanImages = cp.floorplanImages;
+    merged.floorplanImage = cp.floorplanImages.find(Boolean) || null;
   } else if (Array.isArray(local.floorplanImages) && local.floorplanImages.some(Boolean)) {
     merged.floorplanImages = local.floorplanImages;
+    merged.floorplanImage = local.floorplanImages.find(Boolean) || null;
   }
   // ★ meetings: id 기준 합집합 — 로컬 우선 (아직 sync 안 된 기록 보존)
   const cpMeetings = cp.meetings || [];
@@ -10551,12 +10534,9 @@ function _syncProjToCloud(proj) {
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
     });
-    // 도면 base64 제거 (floorplanImages, floorplanImage, floorplanEditedImage)
-    if (Array.isArray(projData.floorplanImages)) {
-      projData.floorplanImages = projData.floorplanImages.map(img => (img && img.startsWith('data:')) ? null : img);
-    }
-    if (projData.floorplanImage && projData.floorplanImage.startsWith('data:')) delete projData.floorplanImage;
+    // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
+    // floorplanImages/floorplanImage는 소형 압축 base64로 Firestore에 직접 저장 (기기 간 공유)
     const payload = {
       projectData: projData,
       ownerEmail: state.user.email,
@@ -10720,6 +10700,7 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localFloorplanImages = Array.isArray(proj.floorplanImages) && proj.floorplanImages.some(Boolean) ? proj.floorplanImages : null;
+    const cloudHasFloorplanImgs = Array.isArray(remote.floorplanImages) && remote.floorplanImages.some(Boolean);
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -10733,7 +10714,7 @@ function _startCollabListener(cloudId) {
     // 도면 보존
     if (localFloorplan) proj.floorplanImage = localFloorplan;
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
-    if (localFloorplanImages) proj.floorplanImages = localFloorplanImages;
+    if (!cloudHasFloorplanImgs && localFloorplanImages) proj.floorplanImages = localFloorplanImages;
     // ★ meetings: 로컬+클라우드 합집합 — 로컬 우선 (sync 안 된 기록 보존)
     const remoteMeetings = remote.meetings || [];
     const meetMap = new Map();
@@ -11355,29 +11336,14 @@ function _fpSlotUpload(e, idx) {
   if (file.size > 10 * 1024 * 1024) { alert('10MB 이하 이미지만 업로드 가능합니다.'); return; }
   const reader = new FileReader();
   reader.onload = async ev => {
-    const compressed = await _compressMeetingImg(ev.target.result, 1400, 0.82) || ev.target.result;
+    // Firestore 직접 저장용 소형 압축 (1장 당 ~60KB 목표)
+    let finalSrc = await _compressMeetingImg(ev.target.result, 800, 0.72) || ev.target.result;
+    // 80KB 초과 시 추가 압축
+    if (finalSrc.length > 110000) finalSrc = await _compressMeetingImg(ev.target.result, 600, 0.65) || finalSrc;
     const proj = getProject();
     if (!proj) return;
     if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
     while (proj.floorplanImages.length < 3) proj.floorplanImages.push(null);
-
-    // Firebase Storage 업로드 시도
-    let finalSrc = compressed;
-    if (state.loggedIn) {
-      await _initFirebase();
-    }
-    if (state.loggedIn && _fbStorage) {
-      try {
-        const projId = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-        const path = `floorplans/${projId}/fp_${idx}_${Date.now()}.jpg`;
-        const ref = _fbStorage.ref(path);
-        await ref.put(_dataUrlToBlob(compressed), { contentType: 'image/jpeg' });
-        finalSrc = await ref.getDownloadURL();
-      } catch(err) {
-        console.warn('fp storage upload failed:', err.message);
-        finalSrc = compressed;
-      }
-    }
 
     proj.floorplanImages[idx] = finalSrc;
     if (idx === 0) proj.floorplanImage = finalSrc;
