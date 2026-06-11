@@ -11736,6 +11736,8 @@ async function _syncFromCloudOnStartup() {
       state.currentProjectId = isNewLocal ? currentProj.id : (state.projects[0]?.id || null);
       save();
       renderAll();
+      // base64로 남은 도면 이미지 → Firebase Storage 마이그레이션
+      _migrateFloorplansToCloud();
     }
 
     for (const p of state.projects) {
