@@ -3474,66 +3474,80 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- ===== CONSULTING PAGE ===== -->
 <div class="screen" id="screen-consulting">
-  <div class="form-screen-inner">
-    <div class="form-header">
+  <div class="form-screen-inner" style="background:#f9f9f9;">
+    <div class="form-header" style="background:#f9f9f9;border-bottom:none;">
       <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>전문가 컨설팅</h2>
     </div>
-    <div style="flex:1;overflow-y:auto;padding:24px 20px 40px;">
-      <p style="font-size:15px;color:#555;line-height:1.6;margin:0 0 28px;">내 공사, 혼자 하기 막막하다면?<br>전문가와 함께 방향을 잡아보세요.</p>
+    <div style="flex:1;overflow-y:auto;padding:8px 20px 48px;">
+
+      <!-- 헤더 -->
+      <div style="padding:4px 0 28px;">
+        <div style="font-size:22px;font-weight:700;color:#111;line-height:1.3;margin-bottom:8px;">내 공사,<br>전문가와 함께하세요.</div>
+        <div style="font-size:14px;color:#888;line-height:1.6;">혼자 결정하기 막막한 순간,<br>경험 있는 파트너가 함께합니다.</div>
+      </div>
 
       <!-- BASIC -->
-      <div style="background:#fff;border:1.5px solid #e8eaf0;border-radius:20px;padding:24px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#5084ff;letter-spacing:.06em;text-transform:uppercase;">BASIC</span>
+      <div style="background:#fff;border:1px solid #e8e8e8;border-radius:20px;overflow:hidden;margin-bottom:12px;">
+        <div style="padding:24px 24px 0;">
+          <div style="font-size:11px;font-weight:700;color:#999;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">BASIC</div>
+          <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px;">방향 잡기 컨설팅</div>
+          <div style="font-size:13px;color:#999;line-height:1.6;padding-bottom:20px;border-bottom:1px solid #f0f0f0;">"뭐부터 해야 할지 모르겠는" 사람을 위한 첫 단추</div>
         </div>
-        <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px;">방향 잡기 컨설팅</div>
-        <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;">"뭐부터 해야 할지 모르겠는" 사람을 위한 첫 단추</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">화상/전화 상담 60분</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">Vibespace에 입력된 도면·예산·레퍼런스 사전 검토</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">공정 우선순위 정리 (어디에 돈 써야 하는지)</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">셀프로 할 수 있는 것 vs 업체 맡겨야 할 것 구분</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">상담 후 요약 메모 제공</span></div>
+        <div style="padding:18px 24px 0;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">화상/전화 상담 60분</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">Vibespace 도면·예산·레퍼런스 사전 검토</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">공정 우선순위 정리</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">셀프 vs 업체 구분 가이드</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">상담 후 요약 메모 제공</span></div>
         </div>
-        <button onclick="_openConsultingContact('BASIC')" style="width:100%;margin-top:20px;height:48px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        <div style="padding:20px 24px 24px;">
+          <button onclick="_openConsultingContact('BASIC')" style="width:100%;height:48px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        </div>
       </div>
 
       <!-- STANDARD -->
-      <div style="background:#fff;border:1.5px solid #e8eaf0;border-radius:20px;padding:24px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#5084ff;letter-spacing:.06em;text-transform:uppercase;">STANDARD</span>
-          <span style="font-size:11px;font-weight:600;color:#f59e0b;background:#fffbeb;border:1px solid #fde68a;border-radius:20px;padding:2px 8px;">인기</span>
+      <div style="background:#fff;border:1px solid #e8e8e8;border-radius:20px;overflow:hidden;margin-bottom:12px;">
+        <div style="padding:24px 24px 0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:11px;font-weight:700;color:#999;letter-spacing:.1em;text-transform:uppercase;">STANDARD</span>
+            <span style="font-size:11px;font-weight:600;color:#111;background:#f0f0f0;border-radius:20px;padding:3px 10px;">추천</span>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px;">현장 방문 견적 컨설팅</div>
+          <div style="font-size:13px;color:#999;line-height:1.6;padding-bottom:20px;border-bottom:1px solid #f0f0f0;">"견적 받았는데 맞는 건지 모르겠는" 사람을 위한 검증</div>
         </div>
-        <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px;">현장 방문 견적 컨설팅</div>
-        <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;">"견적 받았는데 맞는 건지 모르겠는" 사람을 위한 검증</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">현장 방문 1회 (분당/판교 기준, 원거리 협의)</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">Vibespace 도면 기반 공정별 견적 리뷰</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">자재 선택 조언 (가성비 옵션 vs 업그레이드 옵션)</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">업체 견적서 2~3개 비교 분석</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#333;line-height:1.5;">방문 후 검토 리포트 (간단 문서)</span></div>
+        <div style="padding:18px 24px 0;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">현장 방문 1회 (분당/판교 기준, 원거리 협의)</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">Vibespace 도면 기반 공정별 견적 리뷰</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">자재 선택 조언 (가성비 vs 업그레이드)</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">업체 견적서 2~3개 비교 분석</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#333;line-height:1.5;">방문 후 검토 리포트</span></div>
         </div>
-        <button onclick="_openConsultingContact('STANDARD')" style="width:100%;margin-top:20px;height:48px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        <div style="padding:20px 24px 24px;">
+          <button onclick="_openConsultingContact('STANDARD')" style="width:100%;height:48px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        </div>
       </div>
 
       <!-- PRO -->
-      <div style="background:#111;border:1.5px solid #111;border-radius:20px;padding:24px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#a5b4fc;letter-spacing:.06em;text-transform:uppercase;">PRO</span>
+      <div style="background:#111;border:1px solid #111;border-radius:20px;overflow:hidden;margin-bottom:12px;">
+        <div style="padding:24px 24px 0;">
+          <div style="font-size:11px;font-weight:700;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">PRO</div>
+          <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;">반셀프 전 과정 파트너</div>
+          <div style="font-size:13px;color:#666;line-height:1.6;padding-bottom:20px;border-bottom:1px solid #222;">"처음부터 끝까지 같이 가줄 사람"이 필요한 사람</div>
         </div>
-        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;">반셀프 전 과정 파트너</div>
-        <div style="font-size:13px;color:#aaa;margin-bottom:20px;line-height:1.5;">"처음부터 끝까지 같이 가줄 사람"이 필요한 사람</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">현장 방문 2회 (착공 전 + 중간 점검)</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">공정별 체크리스트 + 일정 관리</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">자재 구매 동행 or 리스트업 (타일/조명/도배 등)</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">업체 계약서 검토</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">완공 후 하자 체크 동행</span></div>
-          <div style="display:flex;align-items:flex-start;gap:10px;"><span style="width:18px;height:18px;background:rgba(165,180,252,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:14px;color:#ddd;line-height:1.5;">카카오톡 질문 채널 30일 열어두기</span></div>
+        <div style="padding:18px 24px 0;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">현장 방문 2회 (착공 전 + 중간 점검)</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">공정별 체크리스트 + 일정 관리</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">자재 구매 동행 or 리스트업</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">업체 계약서 검토</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">완공 후 하자 체크 동행</span></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:14px;color:#ccc;line-height:1.5;">카카오톡 질문 채널 30일</span></div>
         </div>
-        <button onclick="_openConsultingContact('PRO')" style="width:100%;margin-top:20px;height:48px;background:#fff;color:#111;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        <div style="padding:20px 24px 24px;">
+          <button onclick="_openConsultingContact('PRO')" style="width:100%;height:48px;background:#fff;color:#111;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
