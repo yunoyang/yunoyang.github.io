@@ -11358,29 +11358,23 @@ function _fpSlotUpload(e, idx) {
       await _initFirebase();
     }
     if (state.loggedIn && _fbStorage) {
-      let uploadMsg = '';
       try {
-        const uid = firebase.auth().currentUser?.uid;
-        if (!uid) throw new Error('uid없음(auth미연결)');
-        const path = `floorplans/${uid}/${proj.id}/fp_${idx}_${Date.now()}.jpg`;
+        const projId = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const path = `floorplans/${projId}/fp_${idx}_${Date.now()}.jpg`;
         const ref = _fbStorage.ref(path);
         await ref.put(_dataUrlToBlob(compressed), { contentType: 'image/jpeg' });
         finalSrc = await ref.getDownloadURL();
-        uploadMsg = '☁️ 클라우드 저장 완료';
       } catch(err) {
         console.warn('fp storage upload failed:', err.message);
-        uploadMsg = '⚠️ 업로드실패:' + err.message;
         finalSrc = compressed;
       }
-      showToastMessage(uploadMsg);
-    } else {
-      showToastMessage('⚠️ 진단: loggedIn=' + state.loggedIn + ' storage=' + !!_fbStorage);
     }
 
     proj.floorplanImages[idx] = finalSrc;
     if (idx === 0) proj.floorplanImage = finalSrc;
     try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
     save();
+    showToastMessage('✅ 도면 이미지가 저장됐습니다');
     _renderFpSlots();
     if (e.target) e.target.value = '';
   };
