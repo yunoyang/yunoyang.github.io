@@ -10196,6 +10196,9 @@ function renderAll() {
     if (styleTabEl && styleTabEl.style.display !== 'none') renderStyleTab();
     const contentTabEl = document.getElementById('tab-content');
     if (contentTabEl && contentTabEl.style.display !== 'none') renderContentTab();
+    // 공사정보 뷰 패널 열려있으면 도면 등 최신 상태로 갱신
+    const vp = document.getElementById('form-view-panel');
+    if (vp && vp.style.display !== 'none') _loadInfoView();
   }
   updateLoginUI();
 }
