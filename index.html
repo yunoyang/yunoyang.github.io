@@ -3966,7 +3966,7 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f2f5;flex-shrink:0;height:52px;">
-    <button id="ptab-btn-info"  onclick="switchProcDetailTab('info',this)"  style="flex:1;background:none;border:none;border-bottom:2.5px solid var(--primary);font-size:14px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 상세</button>
+    <button id="ptab-btn-info"  onclick="switchProcDetailTab('info',this)"  style="flex:1;background:none;border:none;border-bottom:2.5px solid #222;font-size:14px;font-weight:600;color:#222;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 상세</button>
     <button id="ptab-btn-check" onclick="switchProcDetailTab('check',this)" style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">체크리스트</button>
     <button id="ptab-btn-tip"   onclick="switchProcDetailTab('tip',this)"   style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 기록</button>
   </div>
@@ -7938,7 +7938,7 @@ function switchProcDetailTab(tab, btn) {
   });
   const activeId = tab === 'info' ? 'ptab-btn-info' : tab === 'check' ? 'ptab-btn-check' : 'ptab-btn-tip';
   const a = document.getElementById(activeId);
-  if (a) { a.style.borderBottomColor = 'var(--primary)'; a.style.color = '#222'; a.style.fontWeight = '600'; }
+  if (a) { a.style.borderBottomColor = '#222'; a.style.color = '#222'; a.style.fontWeight = '600'; }
   if (tab === 'tip'   && _currentProcDetailId) _renderProcRecords(_currentProcDetailId);
   if (tab === 'check' && _currentProcDetailId) _renderProcChecklist(_currentProcDetailId);
 }
@@ -8072,7 +8072,7 @@ function _renderProcChecklist(procId) {
       <!-- 섹션별 체크리스트 -->
       ${checklist.map((sec, si) => `
         <div style="background:#fff;border-radius:16px;margin-bottom:10px;border:1px solid #eef0f5;overflow:hidden;">
-          <div style="padding:14px 16px 10px;font-size:13px;font-weight:700;color:#5084ff;border-bottom:1px solid #f5f7fa;">${esc(sec.section)}</div>
+          <div style="padding:14px 16px 10px;font-size:13px;font-weight:700;color:#111;border-bottom:1px solid #f5f7fa;">${esc(sec.section)}</div>
           ${sec.items.map((it, ii) => `
             <label style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid #f7f8fa;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleCheckItem('${procId}',${si},${ii})">
               <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;">
