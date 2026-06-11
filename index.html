@@ -13353,6 +13353,10 @@ let fpTextColor = '#111111';
 let fpIsDrawing = false;
 let fpDrawStart = null;
 let fpDrawObj = null;
+// 전기 배선 tool state
+let fpWirePoints = [];
+let fpWireLines = [];
+let fpWirePreview = null;
 
 // ──────────────────────────────────────────
 // Open / Close
@@ -13525,7 +13529,12 @@ function fpInitCanvas(bgUrl) {
   fpCanvas.on('mouse:down', fpOnMouseDown);
   fpCanvas.on('mouse:move', fpOnMouseMove);
   fpCanvas.on('mouse:up', fpOnMouseUp);
+  fpCanvas.on('mouse:dblclick', () => { if (fpActiveTool === 'wire') fpFinishWire(); });
   fpCanvas.on('path:created', () => { fpSaveHistory(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && fpActiveTool === 'wire') fpCancelWire();
+    if (e.key === 'Enter' && fpActiveTool === 'wire') fpFinishWire();
+  });
 }
 
 function fpSetPenColor(color, el) {
@@ -13553,8 +13562,10 @@ function fpSetTool(tool) {
   const shapeBar = document.getElementById('fp-shape-bar');
   const penBar = document.getElementById('fp-pen-bar');
   textBar.style.display = tool === 'text' ? 'flex' : 'none';
-  shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow') ? 'flex' : 'none';
+  shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow' || tool === 'wire' || tool === 'outlet') ? 'flex' : 'none';
   if (penBar) penBar.style.display = tool === 'pen' ? 'flex' : 'none';
+  // 배선 도구 전환 시 진행 중인 배선 취소
+  if (tool !== 'wire') fpCancelWire();
 
   if (!fpCanvas) return;
   if (tool === 'pen') {
@@ -13576,11 +13587,58 @@ function fpSetTool(tool) {
 // ──────────────────────────────────────────
 function fpOnMouseDown(opt) {
   if (fpActiveTool === 'select') return;
-  // 기존 객체 클릭 시 그리기 시작 안 함
-  if (opt.target) return;
+  if (opt.target && fpActiveTool !== 'outlet' && fpActiveTool !== 'wire') return;
+
+  const p = fpCanvas.getPointer(opt.e);
+
+  // 콘센트 스탬프
+  if (fpActiveTool === 'outlet') {
+    const r = 14;
+    const color = fpShapeColor;
+    const c = new fabric.Circle({ radius: r, left: -r, top: -r, fill: 'transparent', stroke: color, strokeWidth: 2 });
+    const l1 = new fabric.Line([-5, -r*0.6, -5, r*0.3], { stroke: color, strokeWidth: 2, strokeLinecap: 'round' });
+    const l2 = new fabric.Line([ 5, -r*0.6,  5, r*0.3], { stroke: color, strokeWidth: 2, strokeLinecap: 'round' });
+    const grp = new fabric.Group([c, l1, l2], {
+      left: p.x, top: p.y, originX: 'center', originY: 'center',
+      selectable: true, hasControls: true, hasBorders: true,
+    });
+    fpCanvas.add(grp);
+    fpCanvas.renderAll();
+    fpSaveHistory();
+    return;
+  }
+
+  // 전기 배선 (다중 꺾기선)
+  if (fpActiveTool === 'wire') {
+    // 더블클릭은 dblclick 이벤트에서 처리
+    if (opt.e.detail >= 2) return;
+    const color = fpShapeColor;
+    const sw = Math.max(fpStrokeW, 1.5);
+    if (fpWirePoints.length === 0) {
+      // 시작점
+      fpWirePoints = [{ x: p.x, y: p.y }];
+      fpWirePreview = new fabric.Line([p.x, p.y, p.x, p.y], {
+        stroke: color, strokeWidth: sw, strokeDashArray: [6, 4],
+        selectable: false, evented: false, opacity: 0.6,
+      });
+      fpCanvas.add(fpWirePreview);
+    } else {
+      // 꺾기점 추가
+      const prev = fpWirePoints[fpWirePoints.length - 1];
+      const seg = new fabric.Line([prev.x, prev.y, p.x, p.y], {
+        stroke: color, strokeWidth: sw,
+        strokeLinecap: 'round', selectable: false, evented: false,
+      });
+      fpWireLines.push(seg);
+      fpCanvas.add(seg);
+      fpWirePoints.push({ x: p.x, y: p.y });
+      if (fpWirePreview) { fpWirePreview.set({ x1: p.x, y1: p.y, x2: p.x, y2: p.y }); }
+    }
+    fpCanvas.renderAll();
+    return;
+  }
 
   if (fpActiveTool === 'text') {
-    const p = fpCanvas.getPointer(opt.e);
     const txt = new fabric.IText('텍스트', {
       left: p.x, top: p.y,
       fontSize: fpTextSize, fill: fpTextColor,
@@ -13616,6 +13674,12 @@ function fpOnMouseDown(opt) {
 }
 
 function fpOnMouseMove(opt) {
+  // 배선 미리보기
+  if (fpActiveTool === 'wire' && fpWirePreview && fpWirePoints.length > 0) {
+    const p = fpCanvas.getPointer(opt.e);
+    fpWirePreview.set({ x2: p.x, y2: p.y });
+    fpCanvas.renderAll();
+  }
   if (!fpIsDrawing || !fpDrawObj) return;
   const p = fpCanvas.getPointer(opt.e);
   const dx = p.x - fpDrawStart.x;
@@ -13667,6 +13731,40 @@ function fpOnMouseUp(opt) {
     fpCanvas.renderAll();
   }
   fpSaveHistory();
+}
+
+// ──────────────────────────────────────────
+// Wire tool helpers
+// ──────────────────────────────────────────
+function fpFinishWire() {
+  if (fpWirePoints.length < 2) { fpCancelWire(); return; }
+  // 미리보기 제거
+  if (fpWirePreview) { fpCanvas.remove(fpWirePreview); fpWirePreview = null; }
+  // 개별 선분들을 그룹으로 묶어 선택 가능하게
+  fpWireLines.forEach(l => { fpCanvas.remove(l); });
+  const color = fpWireLines[0]?.stroke || fpShapeColor;
+  const sw = fpWireLines[0]?.strokeWidth || 1.5;
+  const pts = fpWirePoints;
+  const lines = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    lines.push(new fabric.Line([pts[i].x, pts[i].y, pts[i+1].x, pts[i+1].y], {
+      stroke: color, strokeWidth: sw, strokeLinecap: 'round',
+    }));
+  }
+  const grp = new fabric.Group(lines, { selectable: true, hasControls: true, hasBorders: true, evented: true });
+  fpCanvas.add(grp);
+  grp.setCoords();
+  fpCanvas.setActiveObject(grp);
+  fpCanvas.renderAll();
+  fpSaveHistory();
+  fpWirePoints = []; fpWireLines = [];
+  fpSetTool('select');
+}
+function fpCancelWire() {
+  if (fpWirePreview) { fpCanvas.remove(fpWirePreview); fpWirePreview = null; }
+  fpWireLines.forEach(l => fpCanvas.remove(l));
+  fpWirePoints = []; fpWireLines = [];
+  fpCanvas.renderAll();
 }
 
 // ──────────────────────────────────────────
@@ -14229,6 +14327,12 @@ async function fpShareLink() {
       </button>
       <button class="fp-hbtn" id="fp-tool-pen" onclick="fpSetTool('pen')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>펜
+      </button>
+      <button class="fp-hbtn" id="fp-tool-wire" onclick="fpSetTool('wire')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 12 7 12 9 5 13 19 15 12 22 12"/></svg>배선
+      </button>
+      <button class="fp-hbtn" id="fp-tool-outlet" onclick="fpSetTool('outlet')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>콘센트
       </button>
     </div>
     <div class="fp-sep"></div>
