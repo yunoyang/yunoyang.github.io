@@ -3354,26 +3354,26 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="form-group" id="floorplan-group">
         <span class="form-label">도면 이미지 <span style="font-weight:400;color:#aaa;font-size:13px;">(최대 3장, 선택)</span></span>
         <div class="floorplan-multi-scroll" id="floorplan-multi-scroll">
-          <div class="floorplan-slot" id="fp-slot-0" onclick="_fpSlotClick(0)">
-            <input type="file" id="fp-input-0" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,0)">
-            <div class="floorplan-slot-placeholder">
+          <div class="floorplan-slot" id="fp-slot-0" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-0" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,0)">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span>도면 추가</span>
-            </div>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
           </div>
-          <div class="floorplan-slot" id="fp-slot-1" onclick="_fpSlotClick(1)">
-            <input type="file" id="fp-input-1" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,1)">
-            <div class="floorplan-slot-placeholder">
+          <div class="floorplan-slot" id="fp-slot-1" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-1" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,1)">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span>도면 추가</span>
-            </div>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
           </div>
-          <div class="floorplan-slot" id="fp-slot-2" onclick="_fpSlotClick(2)">
-            <input type="file" id="fp-input-2" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,2)">
-            <div class="floorplan-slot-placeholder">
+          <div class="floorplan-slot" id="fp-slot-2" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-2" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,2)">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span>도면 추가</span>
-            </div>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
           </div>
         </div>
       </div>
@@ -11394,14 +11394,15 @@ function _renderFpSlots() {
       slot.style.border = 'none';
     } else {
       slot.innerHTML = `
-        <input type="file" id="fp-input-${i}" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,${i})">
-        <div class="floorplan-slot-placeholder">
+        <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+          <input type="file" id="fp-input-${i}" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,${i})">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span>도면 추가</span>
-        </div>
+          <span style="font-size:12px;color:#aaa;">도면 추가</span>
+        </label>
       `;
       slot.style.border = '1.5px dashed #c8cdd8';
-      slot.onclick = () => document.getElementById('fp-input-' + i)?.click();
+      slot.style.position = 'relative';
+      slot.onclick = null;
     }
   }
   // 뷰 모드(공사 상세)도 갱신
