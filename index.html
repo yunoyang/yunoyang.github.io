@@ -4904,7 +4904,7 @@ function requireLogin(action) {
 // ===== INSTAGRAM IAB DETECTION & REDIRECT =====
 function _isInAppBrowser() {
   const ua = navigator.userAgent || '';
-  return /Instagram|FBAN|FBAV/i.test(ua);
+  return /Instagram|FBAN|FBAV|KAKAOTALK|kakaotalk|NAVER|naver|Line\/|Daum|daum|NaverMailApp|NaverSearch/i.test(ua);
 }
 
 function _openInBrowser() {
@@ -10272,21 +10272,30 @@ function _loadFirebaseSDK() {
   if (_fbLoaded) return Promise.resolve(true);
   if (_fbLoadPromise) return _fbLoadPromise;
   _fbLoadPromise = new Promise(resolve => {
-    const urls = [
+    // 핵심 SDK(app/auth/firestore)는 실패 시 전체 중단, storage는 optional
+    const coreUrls = [
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
       'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
-      'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js',
     ];
+    const storageUrl = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js';
     let i = 0;
-    const next = () => {
-      if (i >= urls.length) { _fbLoaded = true; resolve(true); return; }
+    const loadCore = () => {
+      if (i >= coreUrls.length) {
+        // 핵심 로드 완료 → Storage는 optional (실패해도 진행)
+        const s = document.createElement('script');
+        s.src = storageUrl;
+        s.onload = () => { _fbLoaded = true; resolve(true); };
+        s.onerror = () => { _fbLoaded = true; resolve(true); }; // Storage 없어도 진행
+        document.head.appendChild(s);
+        return;
+      }
       const s = document.createElement('script');
-      s.src = urls[i++]; s.onload = next;
+      s.src = coreUrls[i++]; s.onload = loadCore;
       s.onerror = () => { _fbLoadPromise = null; resolve(false); };
       document.head.appendChild(s);
     };
-    next();
+    loadCore();
   });
   return _fbLoadPromise;
 }
