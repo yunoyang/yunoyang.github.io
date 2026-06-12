@@ -11218,6 +11218,7 @@ async function changeCollaboratorRole(email, newRole) {
     try {
       await _db.collection('vb_projects').doc(proj.cloudId).update({
         'meta.collaborators': proj.collaborators,
+        'meta.updatedBySessionId': _sessionId,
       });
     } catch(e) { console.error('changeCollaboratorRole:', e); }
   }
@@ -11236,6 +11237,7 @@ async function removeCollaborator(email) {
     try {
       await _db.collection('vb_projects').doc(proj.cloudId).update({
         'meta.collaborators': proj.collaborators,
+        'meta.updatedBySessionId': _sessionId,
       });
     } catch(e){}
   }
