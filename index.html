@@ -13897,7 +13897,8 @@ function fpPlaceComment(x, y) {
         left: 8 + bubbleW / 2, top: 36, originX: 'center', originY: 'center' });
     const grp = new fabric.Group([circle, label, bubble, bubbleText], {
       left: x, top: y, originX: 'center', originY: 'center',
-      selectable: true, hasControls: true, hasBorders: true, evented: true,
+      selectable: true, hasControls: false, hasBorders: false, evented: true,
+      lockScalingX: true, lockScalingY: true, lockScalingFlip: true,
       _fpComment: true, _fpCommentText: text, _fpCommentNum: num,
     });
     fpCanvas.add(grp);
