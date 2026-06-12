@@ -14242,6 +14242,22 @@ function fpSaveHistory() {
   if (fpHistory.length > 50) fpHistory.shift();
   fpHistoryIdx = fpHistory.length - 1;
 }
+let _fpZoom = 1;
+const _FP_ZOOM_STEP = 0.25;
+const _FP_ZOOM_MIN  = 0.25;
+const _FP_ZOOM_MAX  = 4;
+
+function _fpApplyZoom() {
+  if (!fpCanvas) return;
+  const c = fpCanvas.getCenter();
+  fpCanvas.zoomToPoint(new fabric.Point(c.left, c.top), _fpZoom);
+  const label = document.getElementById('fp-zoom-label');
+  if (label) label.textContent = Math.round(_fpZoom * 100) + '%';
+}
+function fpZoomIn()    { _fpZoom = Math.min(_fpZoom + _FP_ZOOM_STEP, _FP_ZOOM_MAX); _fpApplyZoom(); }
+function fpZoomOut()   { _fpZoom = Math.max(_fpZoom - _FP_ZOOM_STEP, _FP_ZOOM_MIN); _fpApplyZoom(); }
+function fpZoomReset() { _fpZoom = 1; if (fpCanvas) { fpCanvas.setViewportTransform([1,0,0,1,0,0]); } const l = document.getElementById('fp-zoom-label'); if (l) l.textContent = '100%'; }
+
 function fpUndo() {
   if (!fpCanvas || fpHistoryIdx <= 0) return;
   fpHistoryIdx--;
@@ -14795,6 +14811,28 @@ async function fpShareLink() {
     <!-- Canvas -->
     <div id="fp-canvas-wrap">
       <canvas id="fp-canvas"></canvas>
+      <!-- Zoom control -->
+      <div id="fp-zoom-ctrl" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+        display:flex;align-items:center;gap:0;z-index:10;
+        background:rgba(28,28,32,0.92);border:1px solid rgba(255,255,255,0.1);
+        border-radius:10px;overflow:hidden;backdrop-filter:blur(8px);">
+        <button onclick="fpZoomOut()" title="축소"
+          style="width:34px;height:32px;border:none;background:transparent;color:rgba(255,255,255,0.75);
+                 font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+                 transition:background .12s;line-height:1;"
+          onmouseenter="this.style.background='rgba(255,255,255,0.08)'"
+          onmouseleave="this.style.background='transparent'">−</button>
+        <span id="fp-zoom-label"
+          style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.75);padding:0 8px;
+                 min-width:44px;text-align:center;cursor:pointer;user-select:none;"
+          onclick="fpZoomReset()" title="100% 초기화">100%</span>
+        <button onclick="fpZoomIn()" title="확대"
+          style="width:34px;height:32px;border:none;background:transparent;color:rgba(255,255,255,0.75);
+                 font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+                 transition:background .12s;line-height:1;"
+          onmouseenter="this.style.background='rgba(255,255,255,0.08)'"
+          onmouseleave="this.style.background='transparent'">+</button>
+      </div>
     </div>
 
     <!-- Property panel -->
