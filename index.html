@@ -1951,46 +1951,69 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .fp-edit-btn:hover { background:#444; }
 
-/* ===== FLOOR PLAN EDITOR (Light Mode) ===== */
+/* ===== FLOOR PLAN EDITOR (Dark Mode) ===== */
 #fp-editor {
   position:fixed; inset:0; z-index:11000;
-  flex-direction:column; background:#f0f2f5;
-  font-family:var(--font); color:#111;
+  flex-direction:column; background:#161616;
+  font-family:var(--font); color:#e0e0e0;
 }
 #fp-header {
-  display:flex; align-items:center; gap:8px; padding:9px 14px;
-  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0; flex-wrap:wrap;
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  background:#1e1f23; border-bottom:1px solid rgba(255,255,255,0.06);
+  flex-shrink:0; position:relative; min-height:52px;
 }
 #fp-header-left { display:flex; align-items:center; gap:6px; }
-#fp-tools { display:flex; align-items:center; gap:4px; flex:1; flex-wrap:wrap; }
-#fp-header-right { display:flex; align-items:center; gap:6px; }
+#fp-tools {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:flex; align-items:center; gap:2px;
+  background:rgba(38,38,45,0.97); border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px; padding:4px 6px;
+}
+#fp-header-right { display:flex; align-items:center; gap:6px; margin-left:auto; }
 .fp-hbtn {
-  background:#f0f2f5; border:1px solid #e0e0e8; border-radius:7px; color:#444;
+  background:transparent; border:1px solid transparent; border-radius:8px; color:rgba(255,255,255,0.65);
   padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;
   display:flex; align-items:center; gap:5px; white-space:nowrap;
-  font-family:var(--font);
+  font-family:var(--font); transition:background .15s, color .15s;
 }
-.fp-hbtn:hover { background:#e8eaf0; color:#111; }
-.fp-hbtn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
-.fp-hbtn.danger { background:#fff0f0; color:#c0392b; border-color:#f5c6c6; }
-.fp-hbtn.danger:hover { background:#fde0e0; }
+.fp-hbtn:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.fp-hbtn.active { background:rgba(82,82,217,0.35); color:#a8a8ff; border-color:rgba(82,82,217,0.5); }
+.fp-hbtn.danger { color:#ff7575; }
+.fp-hbtn.danger:hover { background:rgba(255,80,80,0.15); color:#ff9090; border-color:transparent; }
 .fp-hbtn svg { flex-shrink:0; }
-.fp-sep { width:1px; height:22px; background:#e5e5ec; margin:0 4px; }
+.fp-sep { width:1px; height:20px; background:rgba(255,255,255,0.1); margin:0 3px; }
+
+/* Tool buttons in center toolbar — icon-only with tooltip */
+#fp-tools .fp-hbtn {
+  font-size:0; padding:8px; border-radius:8px; position:relative;
+}
+#fp-tools .fp-hbtn svg { width:16px; height:16px; }
+#fp-tools .fp-hbtn::after {
+  content:attr(title); font-size:11px; font-weight:600; font-family:var(--font);
+  position:absolute; bottom:-34px; left:50%; transform:translateX(-50%);
+  background:rgba(20,20,24,0.95); color:#e0e0e0; padding:4px 8px; border-radius:6px;
+  white-space:nowrap; pointer-events:none; z-index:999;
+  opacity:0; transition:opacity .15s; border:1px solid rgba(255,255,255,0.1);
+}
+#fp-tools .fp-hbtn:hover::after { opacity:1; }
+#fp-tools .fp-sep { margin:0 2px; }
+
 #fp-body { display:flex; flex:1; overflow:hidden; }
 
 /* Palette */
 #fp-palette {
-  width:160px; flex-shrink:0; background:#fff; border-right:1px solid #e5e5ec;
+  width:160px; flex-shrink:0; background:#1e1f23; border-right:1px solid rgba(255,255,255,0.06);
   display:flex; flex-direction:column; overflow:hidden;
 }
-.fp-pal-tabs { display:flex; border-bottom:1px solid #e5e5ec; }
+.fp-pal-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,0.06); }
 .fp-pal-tab {
   flex:1; padding:10px 4px; text-align:center; font-size:12px; font-weight:700;
-  color:#aaa; background:none; border:none; cursor:pointer; font-family:var(--font);
+  color:rgba(255,255,255,0.38); background:none; border:none; cursor:pointer; font-family:var(--font);
+  transition:color .15s;
 }
-.fp-pal-tab.active { color:#5252D9; border-bottom:2.5px solid #5252D9; }
+.fp-pal-tab.active { color:#a8a8ff; border-bottom:2.5px solid #5252D9; }
 #fp-symbols-grid {
-  flex:1; min-height:0;          /* flex item가 content 높이 밖으로 안 나가도록 */
+  flex:1; min-height:0;
   overflow-y:auto; overflow-x:hidden;
   padding:10px 8px 20px;
   display:grid; grid-template-columns:1fr 1fr; gap:8px;
@@ -1998,64 +2021,64 @@ button, input, textarea, select { font-family:var(--font); }
   align-content:start;
 }
 .fp-sym-item {
-  background:#f5f5fa; border-radius:10px; padding:10px 4px 7px;
+  background:rgba(255,255,255,0.04); border-radius:10px; padding:10px 4px 7px;
   display:flex; flex-direction:column; align-items:center; gap:5px;
   cursor:pointer; border:1.5px solid transparent;
   transition:border-color .15s, background .15s;
 }
-.fp-sym-item:hover { background:#eeecff; border-color:#5252D9; }
-.fp-sym-item svg, .fp-sym-item img { width:40px; height:40px; }
-.fp-sym-item span { font-size:10px; color:#666; text-align:center; line-height:1.3; font-weight:600; }
+.fp-sym-item:hover { background:rgba(82,82,217,0.18); border-color:rgba(82,82,217,0.6); }
+.fp-sym-item svg, .fp-sym-item img { width:40px; height:40px; filter:invert(1) brightness(0.8); }
+.fp-sym-item span { font-size:10px; color:rgba(255,255,255,0.45); text-align:center; line-height:1.3; font-weight:600; }
 
 /* Canvas area */
 #fp-canvas-wrap {
   flex:1; display:flex; align-items:center; justify-content:center;
-  overflow:hidden; padding:16px; background:#e8eaf0; position:relative;
+  overflow:hidden; padding:16px; background:#161616; position:relative;
 }
-#fp-canvas-wrap canvas { box-shadow:0 2px 20px rgba(0,0,0,0.15); border-radius:2px; }
+#fp-canvas-wrap canvas { box-shadow:0 4px 40px rgba(0,0,0,0.6); border-radius:2px; }
 
 /* Property panel */
 #fp-props {
-  width:200px; flex-shrink:0; background:#fff; border-left:1px solid #e5e5ec;
+  width:200px; flex-shrink:0; background:#1e1f23; border-left:1px solid rgba(255,255,255,0.06);
   padding:14px 12px; display:flex; flex-direction:column; gap:12px;
   overflow-y:auto; min-height:0;
 }
 .fp-prop-group { display:flex; flex-direction:column; gap:7px; }
-.fp-prop-label { font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:.05em; }
+.fp-prop-label { font-size:11px; font-weight:700; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:.06em; }
 .fp-prop-colors { display:flex; gap:5px; flex-wrap:wrap; }
 .fp-color-dot {
   width:22px; height:22px; border-radius:50%; cursor:pointer; border:2.5px solid transparent;
   transition:border-color .15s; flex-shrink:0;
 }
-.fp-color-dot.active { border-color:#5252D9; box-shadow:0 0 0 1px #5252D9; }
+.fp-color-dot.active { border-color:#7070ff; box-shadow:0 0 0 1px #5252D9; }
 .fp-prop-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .fp-prop-val {
-  background:#f5f5fa; border:1px solid #e0e0e8; border-radius:6px; color:#111;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#e0e0e0;
   padding:4px 8px; font-size:12px; width:62px; text-align:right; font-family:var(--font);
 }
-.fp-prop-val:focus { outline:none; border-color:#5252D9; }
-.fp-prop-mini { font-size:11px; color:#aaa; }
-.fp-props-empty { font-size:12px; color:#bbb; text-align:center; padding-top:40px; line-height:1.7; }
+.fp-prop-val:focus { outline:none; border-color:#5252D9; background:rgba(255,255,255,0.09); }
+.fp-prop-mini { font-size:11px; color:rgba(255,255,255,0.38); }
+.fp-props-empty { font-size:12px; color:rgba(255,255,255,0.22); text-align:center; padding-top:40px; line-height:1.7; }
 .fp-rotate-btns { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
 .fp-rot-btn {
   display:flex; align-items:center; justify-content:center; gap:3px;
-  padding:4px 2px; background:#f5f5fa; border:1px solid #e0e0e8; border-radius:6px;
-  font-size:10px; font-weight:700; color:#555; cursor:pointer; font-family:var(--font);
-  white-space:nowrap;
+  padding:4px 2px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px;
+  font-size:10px; font-weight:700; color:rgba(255,255,255,0.55); cursor:pointer; font-family:var(--font);
+  white-space:nowrap; transition:background .15s, color .15s;
 }
-.fp-rot-btn:hover { background:#eeecff; color:#5252D9; border-color:#5252D9; }
+.fp-rot-btn:hover { background:rgba(82,82,217,0.25); color:#a8a8ff; border-color:rgba(82,82,217,0.5); }
 .fp-step-btn {
-  width:24px; height:24px; background:#f0f2f5; border:1px solid #e0e0e8; border-radius:5px;
-  font-size:14px; font-weight:700; color:#555; cursor:pointer; line-height:1;
+  width:24px; height:24px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:5px;
+  font-size:14px; font-weight:700; color:rgba(255,255,255,0.6); cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  font-family:var(--font); padding:0;
+  font-family:var(--font); padding:0; transition:background .15s, color .15s;
 }
-.fp-step-btn:hover { background:#eeecff; color:#5252D9; border-color:#5252D9; }
+.fp-step-btn:hover { background:rgba(82,82,217,0.25); color:#a8a8ff; border-color:rgba(82,82,217,0.5); }
 
 /* Footer */
 #fp-footer {
   display:flex; align-items:center; justify-content:center; gap:10px;
-  padding:10px 16px; background:#fff; border-top:1px solid #e5e5ec; flex-shrink:0;
+  padding:10px 16px; background:#1e1f23; border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0;
 }
 .fp-fbtn {
   padding:9px 22px; border-radius:10px; font-size:14px; font-weight:700;
@@ -2063,37 +2086,41 @@ button, input, textarea, select { font-family:var(--font); }
   display:flex; align-items:center; gap:7px;
 }
 .fp-fbtn-save { background:#5252D9; color:#fff; }
-.fp-fbtn-save:hover { background:#4343c8; }
-.fp-fbtn-dl { background:#f0f2f5; color:#444; border:1px solid #e0e0e8; }
-.fp-fbtn-dl:hover { background:#e8eaf0; color:#111; }
-.fp-fbtn-share { background:#f0f2f5; color:#444; border:1px solid #e0e0e8; }
-.fp-fbtn-share:hover { background:#e8eaf0; color:#111; }
+.fp-fbtn-save:hover { background:#6060e8; }
+.fp-fbtn-dl { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.1); }
+.fp-fbtn-dl:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.fp-fbtn-share { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.1); }
+.fp-fbtn-share:hover { background:rgba(255,255,255,0.12); color:#fff; }
 
 /* Sub-bars */
 #fp-text-bar {
   display:none; align-items:center; gap:8px; padding:6px 14px;
-  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0;
+  background:#252529; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;
 }
+#fp-text-bar span { color:rgba(255,255,255,0.45) !important; }
 .fp-text-size-btn {
-  padding:4px 10px; background:#f0f2f5; border:1px solid #e0e0e8; border-radius:6px;
-  color:#555; font-size:12px; cursor:pointer; font-family:var(--font);
+  padding:4px 10px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); border-radius:6px;
+  color:rgba(255,255,255,0.65); font-size:12px; cursor:pointer; font-family:var(--font);
 }
 .fp-text-size-btn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
 #fp-shape-bar {
   display:none; align-items:center; gap:8px; padding:6px 14px;
-  background:#fff; border-bottom:1px solid #e5e5ec; flex-shrink:0; flex-wrap:wrap;
+  background:#252529; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; flex-wrap:wrap;
 }
+#fp-shape-bar span { color:rgba(255,255,255,0.45) !important; }
+#fp-pen-bar { background:#252529 !important; border-bottom:1px solid rgba(255,255,255,0.06) !important; }
+#fp-pen-bar span { color:rgba(255,255,255,0.45) !important; }
 .fp-stroke-btn {
-  width:28px; height:28px; border-radius:6px; background:#f0f2f5; border:1px solid #e0e0e8;
-  cursor:pointer; display:flex; align-items:center; justify-content:center; color:#555;
+  width:28px; height:28px; border-radius:6px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.65);
 }
 .fp-stroke-btn:hover, .fp-stroke-btn.active { background:#5252D9; color:#fff; border-color:#5252D9; }
 
 /* Mobile warning */
 #fp-mobile-warn {
   display:none; position:absolute; inset:0; z-index:1;
-  background:#f5f5f8; align-items:center; justify-content:center;
-  flex-direction:column; gap:16px; padding:32px; text-align:center;
+  background:#161616; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px; padding:32px; text-align:center; color:#e0e0e0;
 }
 
 /* ===== DIALOGS (bottom sheet) ===== */
@@ -14467,35 +14494,38 @@ async function fpShareLink() {
     </div>
     <div class="fp-sep"></div>
     <div id="fp-tools">
-      <button class="fp-hbtn active" id="fp-tool-select" onclick="fpSetTool('select')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 6z"/></svg>선택
+      <button class="fp-hbtn active" id="fp-tool-select" title="선택" onclick="fpSetTool('select')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 6z"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-text" onclick="fpSetTool('text')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>텍스트
+      <div class="fp-sep"></div>
+      <button class="fp-hbtn" id="fp-tool-text" title="텍스트" onclick="fpSetTool('text')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-rect" onclick="fpSetTool('rect')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>사각형
+      <button class="fp-hbtn" id="fp-tool-rect" title="사각형" onclick="fpSetTool('rect')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-circle" onclick="fpSetTool('circle')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>원
+      <button class="fp-hbtn" id="fp-tool-circle" title="원" onclick="fpSetTool('circle')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-line" onclick="fpSetTool('line')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>선
+      <button class="fp-hbtn" id="fp-tool-line" title="선" onclick="fpSetTool('line')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-arrow" onclick="fpSetTool('arrow')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>화살표
+      <button class="fp-hbtn" id="fp-tool-arrow" title="화살표" onclick="fpSetTool('arrow')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-pen" onclick="fpSetTool('pen')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>펜
+      <button class="fp-hbtn" id="fp-tool-pen" title="펜" onclick="fpSetTool('pen')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-wire" onclick="fpSetTool('wire')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 12 7 12 9 5 13 19 15 12 22 12"/></svg>배선
+      <div class="fp-sep"></div>
+      <button class="fp-hbtn" id="fp-tool-wire" title="배선" onclick="fpSetTool('wire')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 12 7 12 9 5 13 19 15 12 22 12"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-outlet" onclick="fpSetTool('outlet')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>콘센트
+      <button class="fp-hbtn" id="fp-tool-outlet" title="콘센트" onclick="fpSetTool('outlet')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>
       </button>
-      <button class="fp-hbtn" id="fp-tool-comment" onclick="fpSetTool('comment')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>코멘트
+      <div class="fp-sep"></div>
+      <button class="fp-hbtn" id="fp-tool-comment" title="코멘트" onclick="fpSetTool('comment')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </button>
     </div>
     <div class="fp-sep"></div>
