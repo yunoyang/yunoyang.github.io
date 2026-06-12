@@ -3294,7 +3294,7 @@ button, input, textarea, select { font-family:var(--font); }
                 3D 도면 보기
               </a>
               <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
-                <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 도면 편집
               </button>
             </div>
@@ -13550,7 +13550,10 @@ function fpInitCanvas(bgUrl) {
     selection: true,
   });
 
-  // data URL은 crossOrigin 불필요 (일부 브라우저에서 오히려 오류 발생)
+  // 저장된 레이어 JSON이 있으면 복원, 없으면 배경 이미지만 세팅
+  const proj = getProject();
+  const savedJSON = proj ? (() => { try { return JSON.parse(localStorage.getItem(`vb_fpcj_${proj.id}`) || 'null'); } catch(_) { return null; } })() : null;
+
   const bgOpts = bgUrl.startsWith('data:') ? {} : { crossOrigin: 'anonymous' };
   fabric.Image.fromURL(bgUrl, (img) => {
     fpBgImg = img;
@@ -13559,8 +13562,17 @@ function fpInitCanvas(bgUrl) {
     const scale = Math.min(scaleX, scaleY);
     img.set({ scaleX: scale, scaleY: scale, originX:'left', originY:'top',
                left: (W - img.width * scale) / 2, top: (H - img.height * scale) / 2 });
-    fpCanvas.setBackgroundImage(img, fpCanvas.renderAll.bind(fpCanvas));
-    fpSaveHistory();
+    fpCanvas.setBackgroundImage(img, () => {
+      if (savedJSON && savedJSON.objects && savedJSON.objects.length) {
+        fpCanvas.loadFromJSON({ objects: savedJSON.objects }, () => {
+          fpCanvas.renderAll();
+          fpSaveHistory();
+        });
+      } else {
+        fpCanvas.renderAll();
+        fpSaveHistory();
+      }
+    });
   }, bgOpts);
 
   fpCanvas.on('selection:created', fpOnSelect);
@@ -13615,7 +13627,7 @@ function fpSetTool(tool) {
   const shapeBar = document.getElementById('fp-shape-bar');
   const penBar = document.getElementById('fp-pen-bar');
   textBar.style.display = tool === 'text' ? 'flex' : 'none';
-  shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow' || tool === 'wire' || tool === 'outlet') ? 'flex' : 'none';
+  shapeBar.style.display = (tool === 'rect' || tool === 'circle' || tool === 'line' || tool === 'arrow' || tool === 'wire' || tool === 'outlet' || tool === 'comment') ? 'flex' : 'none';
   if (penBar) penBar.style.display = tool === 'pen' ? 'flex' : 'none';
   // 배선 도구 전환 시 진행 중인 배선 취소
   if (tool !== 'wire') fpCancelWire();
@@ -13643,6 +13655,12 @@ function fpOnMouseDown(opt) {
   if (opt.target && fpActiveTool !== 'outlet' && fpActiveTool !== 'wire') return;
 
   const p = fpCanvas.getPointer(opt.e);
+
+  // 코멘트 핀
+  if (fpActiveTool === 'comment') {
+    fpPlaceComment(p.x, p.y);
+    return;
+  }
 
   // 콘센트 스탬프
   if (fpActiveTool === 'outlet') {
@@ -13817,6 +13835,88 @@ function fpCancelWire() {
   fpWireLines.forEach(l => fpCanvas.remove(l));
   fpWirePoints = []; fpWireLines = [];
   fpCanvas.renderAll();
+}
+
+// ──────────────────────────────────────────
+// Comment tool
+// ──────────────────────────────────────────
+let _fpCommentCount = 0;
+
+function fpPlaceComment(x, y) {
+  // 인라인 팝업으로 텍스트 입력
+  const existing = document.getElementById('fp-comment-popup');
+  if (existing) existing.remove();
+
+  const canvasWrap = document.getElementById('fp-canvas-wrap');
+  const rect = canvasWrap.getBoundingClientRect();
+  const canvasEl = document.getElementById('fp-canvas');
+  const canvasRect = canvasEl.getBoundingClientRect();
+
+  const popup = document.createElement('div');
+  popup.id = 'fp-comment-popup';
+  popup.style.cssText = `position:fixed;left:${canvasRect.left + x + 12}px;top:${canvasRect.top + y - 8}px;
+    background:#fff;border:1.5px solid #e0e0e8;border-radius:12px;padding:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:20000;width:240px;font-family:var(--font);`;
+  popup.innerHTML = `
+    <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px;">코멘트 추가</div>
+    <textarea id="fp-comment-input" placeholder="코멘트를 입력하세요..." rows="3"
+      style="width:100%;border:1px solid #e0e0e8;border-radius:8px;padding:8px;font-size:13px;
+             font-family:var(--font);resize:none;outline:none;box-sizing:border-box;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+      <button onclick="document.getElementById('fp-comment-popup').remove()"
+        style="padding:6px 12px;border:1px solid #e0e0e8;border-radius:7px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--font);">취소</button>
+      <button id="fp-comment-confirm"
+        style="padding:6px 14px;border:none;border-radius:7px;background:#5252D9;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">저장</button>
+    </div>`;
+  document.body.appendChild(popup);
+
+  const input = popup.querySelector('#fp-comment-input');
+  input.focus();
+
+  popup.querySelector('#fp-comment-confirm').onclick = () => {
+    const text = input.value.trim();
+    if (!text) { popup.remove(); return; }
+    _fpCommentCount++;
+    const num = _fpCommentCount;
+    const color = '#5252D9';
+
+    // 핀: 번호 원
+    const circle = new fabric.Circle({ radius: 13, fill: color, stroke: '#fff', strokeWidth: 1.5,
+      left: -13, top: -13, originX: 'left', originY: 'top' });
+    const label = new fabric.Text(String(num), { fontSize: 12, fontWeight: '700', fill: '#fff',
+      fontFamily: 'var(--font)', originX: 'center', originY: 'center', left: 0, top: 0 });
+    // 말풍선 배경 (핀 아래)
+    const bubbleW = Math.min(Math.max(text.length * 7 + 24, 80), 200);
+    const bubble = new fabric.Rect({ width: bubbleW, height: 36, rx: 8, ry: 8,
+      fill: '#fff', stroke: color, strokeWidth: 1.5,
+      left: 8, top: 18, originX: 'left', originY: 'top', opacity: 0.97 });
+    const bubbleText = new fabric.Text(text.length > 22 ? text.slice(0, 22) + '…' : text,
+      { fontSize: 11, fill: '#222', fontFamily: 'var(--font)',
+        left: 8 + bubbleW / 2, top: 36, originX: 'center', originY: 'center' });
+    const grp = new fabric.Group([circle, label, bubble, bubbleText], {
+      left: x, top: y, originX: 'center', originY: 'center',
+      selectable: true, hasControls: true, hasBorders: true, evented: true,
+      _fpComment: true, _fpCommentText: text, _fpCommentNum: num,
+    });
+    fpCanvas.add(grp);
+    fpCanvas.setActiveObject(grp);
+    fpCanvas.renderAll();
+    fpSaveHistory();
+    popup.remove();
+    fpSetTool('select');
+  };
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); popup.querySelector('#fp-comment-confirm').click(); }
+    if (e.key === 'Escape') popup.remove();
+  });
+
+  // 팝업 외부 클릭 시 닫기
+  setTimeout(() => {
+    document.addEventListener('mousedown', function outside(e) {
+      if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', outside); }
+    });
+  }, 100);
 }
 
 // ──────────────────────────────────────────
@@ -14068,8 +14168,13 @@ async function fpSave() {
   try {
     const dataURL = _fpGetDataURL();
 
+    // 레이어(오브젝트) JSON 별도 저장 — 언제든 재편집 가능
+    try {
+      const canvasJSON = JSON.stringify(fpCanvas.toJSON(['selectable','evented','hasControls','hasBorders','_fpComment']));
+      localStorage.setItem(`vb_fpcj_${proj.id}`, canvasJSON);
+    } catch(e) { console.warn('canvas JSON 저장 실패:', e.message); }
+
     const uid = state.user?.uid;
-    // Firebase Storage는 실제 로그인 UID가 있을 때만 시도
     if (_fbStorage && uid) {
       try {
         const blob = _dataUrlToBlob(dataURL);
@@ -14385,6 +14490,9 @@ async function fpShareLink() {
       </button>
       <button class="fp-hbtn" id="fp-tool-outlet" onclick="fpSetTool('outlet')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>콘센트
+      </button>
+      <button class="fp-hbtn" id="fp-tool-comment" onclick="fpSetTool('comment')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>코멘트
       </button>
     </div>
     <div class="fp-sep"></div>
