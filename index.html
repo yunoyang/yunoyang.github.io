@@ -2032,10 +2032,9 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* Canvas area */
 #fp-canvas-wrap {
-  flex:1; display:flex; align-items:center; justify-content:center;
-  overflow:hidden; padding:16px; background:#161616; position:relative;
+  flex:1; overflow:hidden; background:#161616; position:relative;
 }
-#fp-canvas-wrap canvas { box-shadow:0 4px 40px rgba(0,0,0,0.6); border-radius:2px; }
+#fp-canvas-wrap canvas { display:block; }
 
 /* Property panel */
 #fp-props {
@@ -13626,15 +13625,14 @@ function fpDuplicateSelected() {
 // ──────────────────────────────────────────
 function fpInitCanvas(bgUrl) {
   const wrap = document.getElementById('fp-canvas-wrap');
-  const W = Math.max(wrap.clientWidth - 40, 300);
-  const H = Math.max(wrap.clientHeight - 40, 300);
+  const W = wrap.clientWidth  || 800;
+  const H = wrap.clientHeight || 600;
 
-  const canvasEl = document.getElementById('fp-canvas');
   if (fpCanvas) fpCanvas.dispose();
 
   fpCanvas = new fabric.Canvas('fp-canvas', {
     width: W, height: H,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1a1a1a',
     preserveObjectStacking: true,
     selection: true,
   });
@@ -13652,7 +13650,7 @@ function fpInitCanvas(bgUrl) {
     img.set({ scaleX: scale, scaleY: scale, originX:'left', originY:'top',
                left: (W - img.width * scale) / 2, top: (H - img.height * scale) / 2 });
     const applyBgAndRender = () => {
-      fpCanvas.backgroundColor = '#ffffff';
+      fpCanvas.backgroundColor = '#1a1a1a';
       fpCanvas.setBackgroundImage(img, () => {
         fpCanvas.renderAll();
         fpSaveHistory();
