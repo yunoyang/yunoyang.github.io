@@ -10729,6 +10729,15 @@ function _markNewFromCollab(cloudId, proj, remote) {
   _saveBadges(cloudId, badges);
 }
 
+function _fixEncodedName(name) {
+  if (!name || typeof name !== 'string') return name;
+  try {
+    const fixed = decodeURIComponent(escape(name));
+    if (fixed !== name) return fixed;
+  } catch(e) {}
+  return name;
+}
+
 function _startCollabListener(cloudId) {
   if (_collabUnsub) { _collabUnsub(); _collabUnsub = null; }
   if (!_db) return;
@@ -10757,7 +10766,9 @@ function _startCollabListener(cloudId) {
     });
     // N 뱃지: merge 전에 새 항목 감지
     _markNewFromCollab(cloudId, proj, remote);
-    Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: meta.collaborators || [] });
+    const fixedCollabs = (meta.collaborators || []).map(c => ({ ...c, name: _fixEncodedName(c.name) }));
+    const fixedOwner = meta.owner ? { ...meta.owner, name: _fixEncodedName(meta.owner.name) } : proj.owner;
+    Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: fixedCollabs, owner: fixedOwner });
     // 도면 보존
     if (localFloorplan) proj.floorplanImage = localFloorplan;
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
