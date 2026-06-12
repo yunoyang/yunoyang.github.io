@@ -5085,7 +5085,8 @@ function retryGoogleSignIn() {
 }
 function handleGoogleResponse(response) {
   try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const _b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const payload = JSON.parse(decodeURIComponent(escape(atob(_b64))));
     state.loggedIn = true;
     state.user = { name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
     // GA4 user_id 설정 (이메일 해시 기반)
