@@ -2269,56 +2269,75 @@ button, input, textarea, select { font-family:var(--font); }
 .collab-bar-text { font-size:13px; color:rgba(255,255,255,0.85); font-weight:500; white-space:nowrap; }
 
 /* invite row */
-.collab-member-list { display:flex; flex-direction:column; gap:6px; margin:12px 0 4px; }
+.collab-member-list { display:flex; flex-direction:column; gap:4px; margin:0; }
 .collab-member-row {
-  display:flex; align-items:center; gap:10px; padding:9px 12px;
-  background:#f8f9fc; border-radius:10px; border:1px solid #eef0f6;
+  display:flex; align-items:center; gap:10px; padding:9px 4px;
+  border-bottom:1px solid #f0f2f5;
 }
+.collab-member-row:last-child { border-bottom:none; }
 .cm-avatar {
   width:32px; height:32px; border-radius:50%; background:var(--primary);
   color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center;
   justify-content:center; flex-shrink:0;
 }
+.cm-avatar.pending {
+  background:transparent; border:2px dashed #ccc; color:#ccc;
+}
 .cm-info { flex:1; min-width:0; }
 .cm-name { font-size:13.5px; font-weight:600; color:#222; }
+.cm-name.pending { color:#aaa; font-weight:500; }
 .cm-email { font-size:11.5px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cm-email.pending { color:#bbb; }
 .cm-role {
-  font-size:13px; font-weight:600; padding:3px 8px; border-radius:20px;
-  background:#e8f0ff; color:var(--primary); flex-shrink:0;
+  font-size:12.5px; font-weight:500; color:#888; flex-shrink:0; white-space:nowrap;
 }
-.cm-role.owner { background:#fef9c3; color:#b45309; }
-.cm-role.viewer { background:#f0fdf4; color:#059669; }
-.cm-remove { padding:4px; background:none; border:none; cursor:pointer; color:#bbb; flex-shrink:0; border-radius:50%; transition:background .15s,color .15s; }
+.cm-role.owner { color:#555; font-weight:600; }
+.cm-remove { padding:4px; background:none; border:none; cursor:pointer; color:#ccc; flex-shrink:0; border-radius:50%; transition:background .15s,color .15s; }
 .cm-remove:hover { background:#fee2e2; color:#e05050; }
 
-/* invite form */
-.invite-form { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
-.invite-row { display:flex; gap:8px; align-items:center; }
-.invite-row input {
-  flex:1; padding:10px 13px; height:48px; box-sizing:border-box; border:1.5px solid #dde3ef; border-radius:9px;
-  font-size:14px; font-family:var(--font); outline:none; color:#222;
+/* invite form — unified field */
+.invite-form { display:flex; flex-direction:column; gap:0; }
+.invite-unified-wrap { display:flex; gap:8px; align-items:stretch; margin-bottom:12px; }
+.invite-field-box {
+  flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  border:1.5px solid #dde3ef; border-radius:10px; padding:8px 10px; min-height:46px;
+  background:#fff; cursor:text; transition:border-color .15s;
 }
-.invite-row input:focus { border-color:var(--primary); }
-.invite-role-select {
-  padding:10px 12px; border:1.5px solid #dde3ef; border-radius:9px;
-  font-size:13px; font-family:var(--font); background:#fff; outline:none; color:#222; cursor:pointer;
+.invite-field-box:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px rgba(49,118,255,0.08); }
+.invite-chip {
+  display:flex; align-items:center; gap:4px;
+  background:#e8f0ff; color:#3176ff; border-radius:6px;
+  padding:3px 8px 3px 10px; font-size:13px; font-weight:500; white-space:nowrap;
 }
-.invite-role-select:focus { border-color:var(--primary); }
-.invite-gen-btn {
-  padding:10px 18px; background:#d1d9ef; color:#a0aec0; border:none;
-  border-radius:9px; font-size:14px; font-weight:600; cursor:not-allowed; font-family:var(--font);
-  white-space:nowrap; display:flex; align-items:center; gap:6px;
-  transition:background .2s, color .2s;
+.invite-chip-x {
+  cursor:pointer; opacity:.6; line-height:1; font-size:14px; display:flex; align-items:center;
+  transition:opacity .1s;
 }
-.invite-gen-btn.active {
-  background:#333333; color:#fff; cursor:pointer;
+.invite-chip-x:hover { opacity:1; }
+.invite-field-input {
+  flex:1; min-width:100px; border:none; outline:none;
+  font-size:14px; font-family:var(--font); color:#222; background:transparent;
 }
-.invite-gen-btn:disabled { background:#b0c4f0; color:#fff; cursor:not-allowed; }
+.invite-field-input::placeholder { color:#aaa; }
+.invite-field-sep { width:1px; height:20px; background:#e0e0e8; flex-shrink:0; }
+.invite-field-role {
+  border:none; outline:none; background:transparent; font-size:13px; color:#555;
+  font-family:var(--font); cursor:pointer; flex-shrink:0; padding:0 2px;
+  -webkit-appearance:auto;
+}
+.invite-btn {
+  padding:0 20px; background:#e2e8f0; color:#a0aec0; border:none; min-height:46px;
+  border-radius:10px; font-size:14px; font-weight:600; cursor:not-allowed;
+  font-family:var(--font); white-space:nowrap; transition:background .18s, color .18s;
+  flex-shrink:0;
+}
+.invite-btn.active { background:#3176ff; color:#fff; cursor:pointer; }
+.invite-btn.active:hover { background:#1d5fe8; }
 
 /* generated link box */
 .invite-link-box {
   display:none; flex-direction:column; gap:8px; padding:12px 14px;
-  background:#f0f4ff; border:1px solid #c7d7ff; border-radius:10px; margin-top:4px;
+  background:#f0f4ff; border:1px solid #c7d7ff; border-radius:10px; margin-bottom:12px;
 }
 .invite-link-box.show { display:flex; }
 .invite-link-url {
@@ -2334,13 +2353,10 @@ button, input, textarea, select { font-family:var(--font); }
 .ilb-mail { background:#f0f2f5; color:#444; }
 .ilb-kakao { background:#fee500; color:#3c1e1e; }
 
-/* pending invites */
-.pending-invite-row {
-  display:flex; align-items:center; gap:10px; padding:8px 12px;
-  background:#fffbeb; border:1px solid #fde68a; border-radius:9px;
-}
-.pi-email { flex:1; font-size:13px; color:#555; }
-.pi-expire { font-size:13px; color:#b45309; }
+/* pending invites — legacy, now merged into member list */
+.pending-invite-row { display:none; }
+.pi-email { display:none; }
+.pi-expire { display:none; }
 .pi-remove { display:flex;align-items:center;justify-content:center; width:22px;height:22px; background:none; border:none; border-radius:50%; color:#aaa; cursor:pointer; flex-shrink:0; transition:background .15s,color .15s; }
 .pi-remove:hover { background:#fee2e2; color:#e05050; }
 
@@ -10894,80 +10910,78 @@ async function renderCollabTab() {
   const collaborators = proj.collaborators || [];
   const invites = proj.invites || [];
 
+  const avatarColors = ['#8b5cf6','#10b981','#f59e0b','#ec4899','#3b82f6','#ef4444'];
   body.innerHTML = `
     ${isOwner ? `
       <div class="invite-form">
-        <div class="invite-row">
-          <input type="email" id="invite-email-input" placeholder="초대할 이메일 주소" oninput="checkInviteEmailInput(this)" />
-          <select class="invite-role-select" id="invite-role-select">
-            <option value="editor">편집자</option>
-            <option value="viewer">뷰어</option>
-          </select>
+        <div class="invite-unified-wrap">
+          <div class="invite-field-box" onclick="document.getElementById('invite-email-input').focus()">
+            <input type="email" id="invite-email-input" class="invite-field-input"
+              placeholder="이메일 주소, 이름 또는 그룹 추가"
+              oninput="checkInviteEmailInput(this)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();if(document.getElementById('invite-btn').classList.contains('active'))generateInviteLink();}" />
+            <div class="invite-field-sep"></div>
+            <select class="invite-field-role" id="invite-role-select">
+              <option value="editor">편집 가능</option>
+              <option value="viewer">보기만</option>
+            </select>
+          </div>
+          <button class="invite-btn" id="invite-btn" onclick="generateInviteLink()" disabled>초대</button>
         </div>
-        <button class="invite-gen-btn" id="invite-gen-btn" onclick="generateInviteLink()" disabled>
-          <svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기
-        </button>
         <div class="invite-link-box" id="invite-link-box">
           <div style="font-size:13px;font-weight:700;color:#16a34a;display:flex;align-items:center;gap:6px;">
             <svg class="icon" width="15" height="15" style="color:#16a34a"><use href="#icon-check-circle"/></svg>
-            초대 이메일을 전송했습니다 <span style="font-weight:400;color:#888;font-size:13px;">(7일 유효)</span>
+            초대 이메일 전송 완료 <span style="font-weight:400;color:#888;font-size:13px;">(7일 유효)</span>
           </div>
-          <div style="font-size:13px;color:#888;margin-top:-2px;" id="invite-sent-to"></div>
+          <div style="font-size:13px;color:#888;" id="invite-sent-to"></div>
           <div class="invite-link-actions" style="margin-top:4px;">
             <button class="invite-link-btn ilb-copy" onclick="copyInviteLink()">
               <svg class="icon" width="12" height="12"><use href="#icon-copy"/></svg> 링크 복사
             </button>
-            <button class="invite-link-btn ilb-kakao" onclick="shareInviteKakao()">
-              💬 카카오톡
-            </button>
+            <button class="invite-link-btn ilb-kakao" onclick="shareInviteKakao()">💬 카카오톡</button>
             <button class="invite-link-btn ilb-mail" onclick="sendInviteByMail()">
               <svg class="icon" width="12" height="12"><use href="#icon-mail"/></svg> 다시 보내기
             </button>
           </div>
-          <button onclick="resetInviteForm()" style="margin-top:8px;width:100%;padding:7px;background:none;border:1.5px dashed #c7d7f9;border-radius:8px;color:#3176ff;font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <button onclick="resetInviteForm()" style="margin-top:8px;width:100%;padding:7px;background:none;border:1.5px dashed #c7d7f9;border-radius:8px;color:#3176ff;font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:var(--font);">
             <svg class="icon" width="13" height="13"><use href="#icon-plus"/></svg> 다른 사람 초대하기
           </button>
         </div>
-      </div>` : `<div style="font-size:13px;color:#888;text-align:center;padding:12px;">편집 초대 권한은 프로젝트 오너만 가능합니다.</div>`}
-
-    ${invites.length ? `
-      <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">초대 현황</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        ${invites.map(inv => {
-          const expired = new Date(inv.expiresAt) < new Date();
-          return `
-          <div class="pending-invite-row" style="${expired ? 'opacity:0.55;' : ''}">
-            <svg class="icon" width="14" height="14" style="color:${expired?'#aaa':'#b45309'}"><use href="#icon-clock"/></svg>
-            <div class="pi-email">${esc(inv.email||'초대 링크')} · ${inv.role==='viewer'?'뷰어':'편집자'}${expired?' · <span style="color:#e05050;font-size:13px;">만료</span>':''}</div>
-            <div class="pi-expire">${expired ? '만료됨' : '~'+inv.expiresAt.slice(0,10)}</div>
-            <button class="pi-remove" onclick="cancelInvite('${inv.token}')" title="초대 삭제">
-              <svg class="icon" width="14" height="14"><use href="#icon-x"/></svg>
-            </button>
-          </div>`;
-        }).join('')}
       </div>` : ''}
 
-    <div style="font-size:13px;font-weight:700;color:#888;margin:16px 0 6px;">현재 멤버</div>
+    <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">접근 권한</div>
     <div class="collab-member-list" id="collab-member-list">
       <div class="collab-member-row">
         <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
         <div class="cm-info">
-          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:13px;color:#aaa;">(나)</span></div>
+          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:12px;color:#aaa;font-weight:400;">(나)</span></div>
           <div class="cm-email">${esc(state.user.email)}</div>
         </div>
         <span class="cm-role owner">오너</span>
       </div>
       ${collaborators.map((m,i) => `
         <div class="collab-member-row">
-          <div class="cm-avatar" style="background:${['#8b5cf6','#10b981','#f59e0b','#ec4899'][i%4]};">
+          <div class="cm-avatar" style="background:${avatarColors[i%avatarColors.length]};">
             ${(m.name||m.email||'?').charAt(0).toUpperCase()}
           </div>
           <div class="cm-info">
             <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
             <div class="cm-email">${esc(m.email)}</div>
           </div>
-          <span class="cm-role ${m.role==='viewer'?'viewer':''}">${m.role==='viewer'?'뷰어':'편집자'}</span>
+          <span class="cm-role">${m.role==='viewer'?'보기만':'편집 가능'}</span>
           ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
+        </div>`).join('')}
+      ${invites.filter(inv => new Date(inv.expiresAt) >= new Date()).map(inv => `
+        <div class="collab-member-row">
+          <div class="cm-avatar pending">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <div class="cm-info">
+            <div class="cm-name pending">${esc(inv.email||'초대 링크')}</div>
+            <div class="cm-email pending">초대 전송됨 · ~${inv.expiresAt.slice(0,10)}</div>
+          </div>
+          <span class="cm-role" style="color:#ccc;">${inv.role==='viewer'?'보기만':'편집 가능'}</span>
+          ${isOwner ? `<button class="cm-remove" onclick="cancelInvite('${inv.token}')" title="초대 취소"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
         </div>`).join('')}
     </div>
   `;
@@ -11022,12 +11036,13 @@ async function generateInviteLink() {
     emailEl?.focus();
     alert('올바른 이메일 주소를 입력해주세요.'); return;
   }
-  const btn = document.getElementById('invite-gen-btn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 초대장 만드는 중...'; }
+  const btn = document.getElementById('invite-btn') || document.getElementById('invite-gen-btn');
+  const btnOrig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;"></span>'; }
 
   const ok = await _initFirebase();
   if (!ok) {
-    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = btnOrig || '초대'; }
     alert('Firebase 연결에 실패했습니다. 잠시 후 다시 시도해주세요.'); return;
   }
 
@@ -11050,7 +11065,7 @@ async function generateInviteLink() {
     if (!proj.owner) proj.owner = { email: state.user.email, name: state.user.name };
     const cloudId = await _pushProjToCloud(proj);
     if (!cloudId) {
-      if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+      if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = btnOrig || '초대'; }
       alert('클라우드 저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.'); return;
     }
     proj.cloudId = cloudId; proj.isCloud = true;
@@ -11081,11 +11096,11 @@ async function generateInviteLink() {
     _currentInviteEmail = email;
     // EmailJS로 직접 발송 (실패 시 mailto fallback 내장)
     sendInviteByMail();
-    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = btnOrig || '초대'; }
     if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); }
     updateCollabIndicator(proj.collaborators||[], proj.owner);
   } catch(e) {
-    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기'; }
+    if (btn) { btn.disabled = false; btn.classList.add('active'); btn.innerHTML = btnOrig || '초대'; }
     alert('초대 링크 생성 실패: ' + e.message);
   }
 }
@@ -11137,7 +11152,7 @@ function shareInviteKakao() {
 }
 
 function checkInviteEmailInput(input) {
-  const btn = document.getElementById('invite-gen-btn');
+  const btn = document.getElementById('invite-btn') || document.getElementById('invite-gen-btn');
   if (!btn) return;
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());
   btn.disabled = !valid;
@@ -11149,12 +11164,8 @@ function resetInviteForm() {
   if (linkBox) linkBox.classList.remove('show');
   const emailEl = document.getElementById('invite-email-input');
   if (emailEl) { emailEl.value = ''; emailEl.classList.remove('error'); emailEl.focus(); }
-  const btn = document.getElementById('invite-gen-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.classList.remove('active');
-    btn.innerHTML = '<svg class="icon" width="15" height="15"><use href="#icon-mail"/></svg> 이메일로 초대 보내기';
-  }
+  const btn = document.getElementById('invite-btn') || document.getElementById('invite-gen-btn');
+  if (btn) { btn.disabled = true; btn.classList.remove('active'); }
   _currentInviteLink = ''; _currentInviteEmail = '';
 }
 
