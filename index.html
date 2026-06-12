@@ -3288,10 +3288,16 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="info-view-floorplan-wrap">
           <div class="fp-edit-row">
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
-            <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
-              <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
-              도면 편집
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <a id="iv-fp-link-btn" href="#" target="_blank" rel="noopener" style="display:none;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#5084ff;background:#eef2ff;border-radius:8px;padding:5px 10px;text-decoration:none;flex-shrink:0;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                3D 도면 보기
+              </a>
+              <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;" onclick="openFpEditor()">
+                <svg width="13" height="13" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+                도면 편집
+              </button>
+            </div>
           </div>
           <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
         </div>
@@ -3376,6 +3382,10 @@ button, input, textarea, select { font-family:var(--font); }
             </label>
           </div>
         </div>
+      </div>
+      <div class="form-group">
+        <span class="form-label">3D 도면 링크 <span style="font-weight:400;color:#aaa;font-size:13px;">(선택)</span></span>
+        <input class="addr-input" id="f-floorplan-link" placeholder="https://planner.archisketch.com/..." oninput="saveFormData()" style="font-size:13px;">
       </div>
       <div class="form-group">
         <span class="form-label">프로젝트명</span>
@@ -9287,6 +9297,8 @@ function loadFormData() {
   document.getElementById('f-memo').value = f.memo || '';
   document.getElementById('f-address').value = f.address || '';
   document.getElementById('f-address-detail').value = f.addressDetail || '';
+  const fpLinkEl = document.getElementById('f-floorplan-link');
+  if (fpLinkEl) fpLinkEl.value = proj.floorplanLink || '';
   // 도면 슬롯 렌더링 (하위 호환: floorplanImages 없으면 floorplanImage로 초기화)
   _renderFpSlots();
 }
@@ -9315,6 +9327,8 @@ function saveFormData() {
   f.memo = document.getElementById('f-memo').value;
   f.address = document.getElementById('f-address').value;
   f.addressDetail = document.getElementById('f-address-detail').value;
+  const fpLink = document.getElementById('f-floorplan-link')?.value.trim();
+  proj.floorplanLink = fpLink || '';
   save();
 }
 // ===== INFO VIEW / EDIT TOGGLE =====
@@ -9399,6 +9413,16 @@ function _loadInfoView() {
       if (fpEditBtn) { fpEditBtn.style.display = 'none'; }
     }
     if (fpAddBtn) fpAddBtn.style.display = 'none'; // 헤더 + 버튼 미사용
+    // 3D 도면 링크 버튼
+    const fpLinkBtn = document.getElementById('iv-fp-link-btn');
+    if (fpLinkBtn) {
+      if (proj.floorplanLink) {
+        fpLinkBtn.href = proj.floorplanLink;
+        fpLinkBtn.style.display = 'flex';
+      } else {
+        fpLinkBtn.style.display = 'none';
+      }
+    }
   }
 
   // 비용 내역 카드
