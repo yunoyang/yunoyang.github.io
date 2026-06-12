@@ -13563,6 +13563,7 @@ function fpInitCanvas(bgUrl) {
     img.set({ scaleX: scale, scaleY: scale, originX:'left', originY:'top',
                left: (W - img.width * scale) / 2, top: (H - img.height * scale) / 2 });
     const applyBgAndRender = () => {
+      fpCanvas.backgroundColor = '#ffffff';
       fpCanvas.setBackgroundImage(img, () => {
         fpCanvas.renderAll();
         fpSaveHistory();
