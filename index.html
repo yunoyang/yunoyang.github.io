@@ -13871,50 +13871,153 @@ function fpCancelWire() {
 // ──────────────────────────────────────────
 let _fpCommentCount = 0;
 
+function fpGetMentionableUsers() {
+  const proj = getProject();
+  if (!proj) return [];
+  const me = state.user?.email;
+  const users = [];
+  if (proj.owner?.email && proj.owner.email !== me)
+    users.push({ name: proj.owner.name || proj.owner.email.split('@')[0], email: proj.owner.email });
+  (proj.collaborators || []).forEach(c => {
+    if (c.email && c.email !== me)
+      users.push({ name: c.name || c.email.split('@')[0], email: c.email });
+  });
+  return users;
+}
+
+async function fpSendCommentMentionNotifications(commentText, proj) {
+  const pattern = /@(\S+)/g;
+  const mentionedNames = [];
+  let m;
+  while ((m = pattern.exec(commentText)) !== null) mentionedNames.push(m[1].toLowerCase());
+  if (!mentionedNames.length) return;
+  const users = fpGetMentionableUsers();
+  const targets = users.filter(u =>
+    mentionedNames.some(n => u.name.toLowerCase().startsWith(n) || u.email.toLowerCase().startsWith(n))
+  );
+  if (!targets.length) return;
+  const sender = state.user?.name || state.user?.email?.split('@')[0] || '';
+  const projName = proj?.name || '시공 프로젝트';
+  const snippet = commentText.slice(0, 120);
+  for (const u of targets) {
+    try {
+      await emailjs.send('service_elvk718', 'template_11ldrbw', {
+        to_email: u.email, to_name: u.name, from_name: sender,
+        project_name: projName, invite_link: location.href,
+        role: `[도면 코멘트] ${sender}님이 멘션했습니다:\n"${snippet}"`,
+      });
+    } catch(e) { console.error('[fpMentionNotify]', e); }
+  }
+}
+
+function fpCommentHandleAt(input) {
+  const val = input.value;
+  const cursor = input.selectionStart;
+  const dd = document.getElementById('fp-mention-dropdown');
+  if (!dd) return;
+  const textBefore = val.slice(0, cursor);
+  const atIdx = textBefore.lastIndexOf('@');
+  if (atIdx === -1 || (atIdx > 0 && !/[\s\n]/.test(val[atIdx - 1]))) {
+    dd.style.display = 'none'; return;
+  }
+  const query = textBefore.slice(atIdx + 1).toLowerCase();
+  const users = input._mentionUsers || [];
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query)
+  );
+  if (!filtered.length) { dd.style.display = 'none'; return; }
+  input._mentionStart = atIdx;
+  input._selectedMentionIdx = -1;
+  dd.innerHTML = filtered.map(u => `
+    <div class="fp-mention-item" data-email="${u.email}" data-name="${u.name}"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background .1s;"
+      onmouseenter="this.style.background='rgba(82,82,217,0.22)'"
+      onmouseleave="this.style.background=''"
+      onclick="fpCommentSelectMention(this)">
+      <div style="width:28px;height:28px;border-radius:50%;background:#5252D9;flex-shrink:0;
+                  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">
+        ${(u.name||u.email||'?').charAt(0).toUpperCase()}
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#e0e0e0;line-height:1.3;">${esc(u.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.42);">${esc(u.email)}</div>
+      </div>
+    </div>
+  `).join('');
+  dd.style.display = 'block';
+}
+
+function fpCommentSelectMention(el) {
+  const popup = document.getElementById('fp-comment-popup');
+  const input = popup?.querySelector('#fp-comment-input');
+  const dd = document.getElementById('fp-mention-dropdown');
+  if (!input || input._mentionStart === -1) return;
+  const name = el.dataset.name;
+  const val = input.value;
+  const cursor = input.selectionStart;
+  const before = val.slice(0, input._mentionStart);
+  const after = val.slice(cursor);
+  input.value = before + '@' + name + ' ' + after;
+  const pos = before.length + name.length + 2;
+  input.setSelectionRange(pos, pos);
+  input.focus();
+  dd.style.display = 'none';
+  input._mentionStart = -1;
+}
+
 function fpPlaceComment(x, y) {
-  // 인라인 팝업으로 텍스트 입력
   const existing = document.getElementById('fp-comment-popup');
   if (existing) existing.remove();
 
-  const canvasWrap = document.getElementById('fp-canvas-wrap');
-  const rect = canvasWrap.getBoundingClientRect();
   const canvasEl = document.getElementById('fp-canvas');
   const canvasRect = canvasEl.getBoundingClientRect();
+  const users = fpGetMentionableUsers();
 
   const popup = document.createElement('div');
   popup.id = 'fp-comment-popup';
   popup.style.cssText = `position:fixed;left:${canvasRect.left + x + 12}px;top:${canvasRect.top + y - 8}px;
-    background:#fff;border:1.5px solid #e0e0e8;border-radius:12px;padding:12px;
-    box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:20000;width:240px;font-family:var(--font);`;
+    background:#1e1f23;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:20000;width:260px;font-family:var(--font);`;
   popup.innerHTML = `
-    <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px;">코멘트 추가</div>
-    <textarea id="fp-comment-input" placeholder="코멘트를 입력하세요..." rows="3"
-      style="width:100%;border:1px solid #e0e0e8;border-radius:8px;padding:8px;font-size:13px;
-             font-family:var(--font);resize:none;outline:none;box-sizing:border-box;"></textarea>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.38);text-transform:uppercase;
+                letter-spacing:.06em;margin-bottom:8px;">코멘트 추가</div>
+    <div style="position:relative;">
+      <textarea id="fp-comment-input" placeholder="${users.length ? '@멘션 또는 코멘트 입력…' : '코멘트를 입력하세요…'}" rows="3"
+        style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+               border-radius:8px;padding:8px;font-size:13px;font-family:var(--font);
+               resize:none;outline:none;box-sizing:border-box;color:#e0e0e0;caret-color:#a8a8ff;"
+        oninput="fpCommentHandleAt(this)"></textarea>
+      <div id="fp-mention-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:2px;
+        background:#252529;border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+        box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:21000;overflow:hidden;max-height:200px;overflow-y:auto;"></div>
+    </div>
     <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
       <button onclick="document.getElementById('fp-comment-popup').remove()"
-        style="padding:6px 12px;border:1px solid #e0e0e8;border-radius:7px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--font);">취소</button>
+        style="padding:6px 12px;border:1px solid rgba(255,255,255,0.12);border-radius:7px;background:transparent;
+               color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;font-family:var(--font);">취소</button>
       <button id="fp-comment-confirm"
-        style="padding:6px 14px;border:none;border-radius:7px;background:#5252D9;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">저장</button>
+        style="padding:6px 14px;border:none;border-radius:7px;background:#5252D9;color:#fff;
+               font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">저장</button>
     </div>`;
   document.body.appendChild(popup);
 
   const input = popup.querySelector('#fp-comment-input');
+  input._mentionStart = -1;
+  input._mentionUsers = users;
+  input._selectedMentionIdx = -1;
   input.focus();
 
-  popup.querySelector('#fp-comment-confirm').onclick = () => {
+  popup.querySelector('#fp-comment-confirm').onclick = async () => {
     const text = input.value.trim();
     if (!text) { popup.remove(); return; }
     _fpCommentCount++;
     const num = _fpCommentCount;
     const color = '#5252D9';
 
-    // 핀: 번호 원
     const circle = new fabric.Circle({ radius: 13, fill: color, stroke: '#fff', strokeWidth: 1.5,
       left: -13, top: -13, originX: 'left', originY: 'top' });
     const label = new fabric.Text(String(num), { fontSize: 12, fontWeight: '700', fill: '#fff',
       fontFamily: 'var(--font)', originX: 'center', originY: 'center', left: 0, top: 0 });
-    // 말풍선 배경 (핀 아래)
     const bubbleW = Math.min(Math.max(text.length * 7 + 24, 80), 200);
     const bubble = new fabric.Rect({ width: bubbleW, height: 36, rx: 8, ry: 8,
       fill: '#fff', stroke: color, strokeWidth: 1.5,
@@ -13934,14 +14037,39 @@ function fpPlaceComment(x, y) {
     fpSaveHistory();
     popup.remove();
     fpSetTool('select');
+
+    // 멘션된 사람에게 이메일 알림
+    const proj = getProject();
+    fpSendCommentMentionNotifications(text, proj);
   };
 
   input.addEventListener('keydown', e => {
+    const dd = document.getElementById('fp-mention-dropdown');
+    if (dd && dd.style.display !== 'none') {
+      const items = dd.querySelectorAll('.fp-mention-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        input._selectedMentionIdx = Math.min((input._selectedMentionIdx ?? -1) + 1, items.length - 1);
+        items.forEach((item, i) => item.style.background = i === input._selectedMentionIdx ? 'rgba(82,82,217,0.3)' : '');
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        input._selectedMentionIdx = Math.max((input._selectedMentionIdx ?? 0) - 1, 0);
+        items.forEach((item, i) => item.style.background = i === input._selectedMentionIdx ? 'rgba(82,82,217,0.3)' : '');
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === 'Tab') && input._selectedMentionIdx >= 0 && items[input._selectedMentionIdx]) {
+        e.preventDefault();
+        items[input._selectedMentionIdx].click();
+        return;
+      }
+      if (e.key === 'Escape') { dd.style.display = 'none'; return; }
+    }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); popup.querySelector('#fp-comment-confirm').click(); }
     if (e.key === 'Escape') popup.remove();
   });
 
-  // 팝업 외부 클릭 시 닫기
   setTimeout(() => {
     document.addEventListener('mousedown', function outside(e) {
       if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', outside); }
