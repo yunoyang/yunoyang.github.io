@@ -10915,7 +10915,7 @@ async function renderCollabTab() {
     ${isOwner ? `
       <div class="invite-form">
         <div class="invite-unified-wrap">
-          <div class="invite-field-box" onclick="document.getElementById('invite-email-input').focus()">
+          <div class="invite-field-box" onclick="if(event.target===this)document.getElementById('invite-email-input').focus()">
             <input type="email" id="invite-email-input" class="invite-field-input"
               placeholder="이메일 주소, 이름 또는 그룹 추가"
               oninput="checkInviteEmailInput(this)"
