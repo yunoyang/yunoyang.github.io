@@ -3810,7 +3810,11 @@ button, input, textarea, select { font-family:var(--font); }
         <input id="fi-price" type="number" placeholder="가격 (원, 개당)" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
       </div>
       <input id="fi-size" type="text" placeholder="사이즈 (예: W1200 × D600 × H800)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
-      <input id="fi-url" type="url" placeholder="구매 링크 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <input id="fi-url" type="url" placeholder="구매 링크 (선택)" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+        <button id="fi-fetch-btn" onclick="_fetchProductFromUrl()" style="flex-shrink:0;padding:0 14px;background:#f4f6fa;border:1.5px solid #e5e5ec;border-radius:12px;font-size:13px;font-weight:600;color:#444;cursor:pointer;font-family:var(--font);white-space:nowrap;">정보 가져오기</button>
+      </div>
+      <div id="fi-fetch-status" style="font-size:12px;color:#888;min-height:0;display:none;padding:0 2px;"></div>
       <input id="fi-image" type="url" placeholder="이미지 URL (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
       <input id="fi-note" type="text" placeholder="메모 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
     </div>
@@ -12248,6 +12252,115 @@ function _openFurnitureDlg(it) {
 
 function _closeFurnitureDlg() {
   document.getElementById('dlg-furniture').style.display = 'none';
+}
+
+async function _fetchProductFromUrl() {
+  const urlInput = document.getElementById('fi-url');
+  const statusEl = document.getElementById('fi-fetch-status');
+  const btn = document.getElementById('fi-fetch-btn');
+  const url = urlInput.value.trim();
+  if (!url) { alert('구매 링크를 먼저 입력해주세요.'); return; }
+
+  const setStatus = (msg, color) => {
+    statusEl.textContent = msg;
+    statusEl.style.color = color || '#888';
+    statusEl.style.display = msg ? 'block' : 'none';
+  };
+
+  btn.disabled = true;
+  btn.textContent = '가져오는 중...';
+  setStatus('링크에서 정보를 불러오는 중입니다…', '#888');
+
+  try {
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('프록시 응답 오류');
+    const data = await res.json();
+    const html = data.contents;
+    if (!html) throw new Error('내용 없음');
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const getMeta = (prop) => {
+      const el = doc.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`);
+      return el?.getAttribute('content')?.trim() || '';
+    };
+
+    // OG 태그
+    const ogTitle  = getMeta('og:title') || getMeta('twitter:title') || doc.title || '';
+    const ogImage  = getMeta('og:image') || getMeta('twitter:image') || '';
+    const ogPrice  = getMeta('product:price:amount') || getMeta('og:price:amount') || getMeta('price') || '';
+    const ogBrand  = getMeta('og:brand') || getMeta('product:brand') || getMeta('brand') || '';
+
+    // JSON-LD 파싱
+    let jldTitle = '', jldPrice = '', jldImage = '', jldBrand = '', jldDesc = '', jldSize = '';
+    doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+      try {
+        const j = JSON.parse(s.textContent);
+        const items = Array.isArray(j) ? j : [j];
+        items.forEach(item => {
+          const t = item['@type'];
+          if (t === 'Product' || t === 'ItemPage' || (typeof t === 'string' && t.toLowerCase().includes('product'))) {
+            jldTitle = jldTitle || item.name || '';
+            jldImage = jldImage || (Array.isArray(item.image) ? item.image[0] : item.image) || '';
+            jldBrand = jldBrand || item.brand?.name || item.brand || '';
+            jldDesc  = jldDesc  || item.description || '';
+            const offer = Array.isArray(item.offers) ? item.offers[0] : item.offers;
+            if (offer) jldPrice = jldPrice || String(offer.price || '');
+            // 사이즈: additionalProperty, depth/width/height
+            if (!jldSize) {
+              const props = item.additionalProperty || [];
+              const wProp = props.find(p => /width|가로|W/i.test(p.name));
+              const dProp = props.find(p => /depth|깊이|D/i.test(p.name));
+              const hProp = props.find(p => /height|높이|H/i.test(p.name));
+              if (wProp || dProp || hProp) {
+                jldSize = [wProp, dProp, hProp].filter(Boolean).map(p => `${p.name} ${p.value?.value || p.value || ''}`).join(' × ');
+              }
+            }
+          }
+        });
+      } catch(_) {}
+    });
+
+    // 가격 숫자 정리
+    const rawPrice = jldPrice || ogPrice || '';
+    const cleanPrice = rawPrice ? parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) || 0 : 0;
+
+    // 사이즈: HTML 텍스트에서 W×D×H 패턴 시도
+    let sizeFromHtml = '';
+    if (!jldSize) {
+      const bodyText = doc.body?.innerText || doc.body?.textContent || '';
+      const sizeMatch = bodyText.match(/W\s*[\d,]+\s*[×xX]\s*D\s*[\d,]+\s*[×xX]\s*H\s*[\d,]+/i)
+        || bodyText.match(/(\d+)\s*[×xX]\s*(\d+)\s*[×xX]\s*(\d+)\s*(mm|cm)/i);
+      if (sizeMatch) sizeFromHtml = sizeMatch[0].trim();
+    }
+
+    const finalTitle = jldTitle || ogTitle;
+    const finalImage = jldImage || ogImage;
+    const finalBrand = jldBrand || ogBrand;
+    const finalSize  = jldSize || sizeFromHtml;
+
+    // 비어 있는 필드만 채움 (기존 입력값 덮어쓰지 않음)
+    let filled = [];
+    const dlg = document.getElementById('dlg-furniture');
+    if (finalTitle && !dlg.querySelector('#fi-name').value) { dlg.querySelector('#fi-name').value = finalTitle; filled.push('제품명'); }
+    if (finalBrand && !dlg.querySelector('#fi-brand').value) { dlg.querySelector('#fi-brand').value = finalBrand; filled.push('브랜드'); }
+    if (cleanPrice && !dlg.querySelector('#fi-price').value) { dlg.querySelector('#fi-price').value = cleanPrice; filled.push('가격'); }
+    if (finalImage && !dlg.querySelector('#fi-image').value) { dlg.querySelector('#fi-image').value = finalImage; filled.push('이미지'); }
+    if (finalSize  && !dlg.querySelector('#fi-size').value)  { dlg.querySelector('#fi-size').value  = finalSize;  filled.push('사이즈'); }
+
+    if (filled.length > 0) {
+      setStatus('✓ ' + filled.join(', ') + ' 가져왔습니다', '#2e7d32');
+    } else {
+      setStatus('정보를 찾지 못했습니다. 직접 입력해주세요. (쿠팡·네이버 등 일부 사이트는 지원 안됨)', '#e07b00');
+    }
+  } catch (err) {
+    setStatus('불러오기 실패. 해당 사이트는 지원되지 않습니다. (직접 입력해주세요)', '#e33');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '정보 가져오기';
+  }
 }
 
 function _saveFurnitureItem() {
