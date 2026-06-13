@@ -3338,15 +3338,17 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="info-view-floorplan-wrap">
           <div class="fp-edit-row">
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
-            <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap;">
-              <button class="fp-edit-btn" id="iv-fp-edit-btn" style="display:none;background:none;color:#333;border:none;box-shadow:none;" onclick="openFpEditor()">
+            <div style="display:flex;gap:2px;align-items:center;">
+              <button class="fp-edit-btn" id="iv-fp-edit-btn" title="도면 편집" style="display:none;background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;" onclick="openFpEditor()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                도면 편집
               </button>
-              <span style="color:#ddd;font-size:12px;">|</span>
-              <button class="fp-edit-btn" id="iv-fp-add-btn" onclick="_ivAddFloorplan()" style="background:none;color:#333;border:none;box-shadow:none;">
+              <span id="iv-fp-sep1" style="color:#ddd;font-size:12px;display:none;">|</span>
+              <button class="fp-edit-btn" id="iv-fp-add-btn" title="도면 추가" onclick="_ivAddFloorplan()" style="background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                도면 추가
+              </button>
+              <span id="iv-fp-sep2" style="color:#ddd;font-size:12px;display:none;">|</span>
+              <button class="fp-edit-btn" id="iv-fp-comment-btn" title="코멘트" style="display:none;background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;" onclick="openFpEditorWithComment()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </button>
             </div>
           </div>
@@ -9433,24 +9435,31 @@ function _loadInfoView() {
   // 도면 (다중 이미지)
   const fpCard    = document.getElementById('iv-floorplan-card');
   const fpScroll  = document.getElementById('iv-floorplan-scroll');
-  const fpAddBtn  = document.getElementById('iv-fp-add-btn');
-  const fpEditBtn = document.getElementById('iv-fp-edit-btn');
+  const fpAddBtn     = document.getElementById('iv-fp-add-btn');
+  const fpEditBtn    = document.getElementById('iv-fp-edit-btn');
+  const fpCommentBtn = document.getElementById('iv-fp-comment-btn');
+  const fpSep1       = document.getElementById('iv-fp-sep1');
+  const fpSep2       = document.getElementById('iv-fp-sep2');
   if (fpCard && fpScroll) {
     const images = _getFpImages(proj);
     const editedSrc = proj.floorplanEditedImage;
     const displayImages = images.map((src, i) => (i === 0 && editedSrc) ? editedSrc : src);
     const validImgs = displayImages.filter(Boolean);
-    if (validImgs.length) {
+    const hasImgs = validImgs.length > 0;
+    const canAdd  = validImgs.length < 3;
+    if (hasImgs) {
       fpScroll.innerHTML = validImgs.map((src, i) =>
         `<img src="${src}" alt="도면 ${i+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">`
       ).join('');
-      if (fpEditBtn) fpEditBtn.style.display = '';
-      if (fpAddBtn) fpAddBtn.style.display = validImgs.length < 3 ? '' : 'none';
     } else {
       fpScroll.innerHTML = '';
-      if (fpEditBtn) fpEditBtn.style.display = 'none';
-      if (fpAddBtn) fpAddBtn.style.display = '';
     }
+    // 버튼 visibility: 도면편집 | 도면추가 | 코멘트
+    if (fpEditBtn)    fpEditBtn.style.display    = hasImgs ? '' : 'none';
+    if (fpSep1)       fpSep1.style.display        = (hasImgs && canAdd) ? '' : 'none';
+    if (fpAddBtn)     fpAddBtn.style.display      = canAdd ? '' : 'none';
+    if (fpSep2)       fpSep2.style.display        = hasImgs ? '' : 'none';
+    if (fpCommentBtn) fpCommentBtn.style.display  = hasImgs ? '' : 'none';
     // 3D 도면 링크 버튼
     const fpLinkBtn = document.getElementById('iv-fp-link-btn');
     if (fpLinkBtn) {
@@ -13539,6 +13548,10 @@ function openPhotoModalFp(clickedSrc) {
   render();
 }
 
+function openFpEditorWithComment() {
+  openFpEditor();
+  setTimeout(() => fpSetTool('comment'), 700);
+}
 function openFpEditor() {
   const proj = getProject();
   const images = _getFpImages(proj);
