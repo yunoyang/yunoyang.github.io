@@ -10599,6 +10599,8 @@ function _syncProjToCloud(proj) {
     });
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
+    // floorplanCanvasJSON: 500KB 초과 시 Firestore 저장 제외 (localStorage에만 유지)
+    if (projData.floorplanCanvasJSON && projData.floorplanCanvasJSON.length > 500000) delete projData.floorplanCanvasJSON;
     // floorplanImages/floorplanImage는 소형 압축 base64로 Firestore에 직접 저장 (기기 간 공유)
     const payload = {
       projectData: projData,
@@ -10778,6 +10780,7 @@ function _startCollabListener(cloudId) {
     const cloudHasFloorplanImgs = Array.isArray(remote.floorplanImages) && remote.floorplanImages.some(Boolean);
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
+    const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
     const localMeetingImgMap = {};
@@ -10789,10 +10792,17 @@ function _startCollabListener(cloudId) {
     const fixedCollabs = (meta.collaborators || []).map(c => ({ ...c, name: _fixEncodedName(c.name) }));
     const fixedOwner = meta.owner ? { ...meta.owner, name: _fixEncodedName(meta.owner.name) } : proj.owner;
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: fixedCollabs, owner: fixedOwner });
-    // 도면 보존
-    if (localFloorplan) proj.floorplanImage = localFloorplan;
+    // 도면 보존 — 슬롯별 로컬 우선 머지 (local 非null이면 유지, null이면 cloud 사용)
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
-    if (!cloudHasFloorplanImgs && localFloorplanImages) proj.floorplanImages = localFloorplanImages;
+    // floorplanCanvasJSON: 로컬 우선 (편집 레이어) — 없으면 cloud 백업 사용
+    if (localCanvasJSON) proj.floorplanCanvasJSON = localCanvasJSON;
+    if (localFloorplan || localFloorplanImages) {
+      // 슬롯별 머지: local 값이 있으면 유지, 없으면 cloud 값 사용
+      const cloudImgs = (remote.floorplanImages || [null, null, null]);
+      const mergedImgs = cloudImgs.map((ci, i) => (localFloorplanImages && localFloorplanImages[i]) || ci || null);
+      proj.floorplanImages = mergedImgs;
+      proj.floorplanImage = mergedImgs.find(Boolean) || localFloorplan || null;
+    }
     // ★ meetings: 로컬+클라우드 합집합 — 로컬 우선 (sync 안 된 기록 보존)
     const remoteMeetings = remote.meetings || [];
     const meetMap = new Map();
@@ -13666,7 +13676,15 @@ function fpInitCanvas(bgUrl) {
 
   // 저장된 레이어 JSON이 있으면 복원, 없으면 배경 이미지만 세팅
   const proj = getProject();
-  const savedJSON = proj ? (() => { try { return JSON.parse(localStorage.getItem(`vb_fpcj_${proj.id}`) || 'null'); } catch(_) { return null; } })() : null;
+  const savedJSON = proj ? (() => {
+    try {
+      const ls = localStorage.getItem(`vb_fpcj_${proj.id}`);
+      if (ls) return JSON.parse(ls);
+      // localStorage 없으면 Firestore 백업에서 복원
+      if (proj.floorplanCanvasJSON) return JSON.parse(proj.floorplanCanvasJSON);
+    } catch(_) {}
+    return null;
+  })() : null;
 
   const bgOpts = bgUrl.startsWith('data:') ? {} : { crossOrigin: 'anonymous' };
   fabric.Image.fromURL(bgUrl, (img) => {
@@ -14429,10 +14447,11 @@ async function fpSave() {
   try {
     const dataURL = _fpGetDataURL();
 
-    // 레이어(오브젝트) JSON 별도 저장 — 언제든 재편집 가능
+    // 레이어(오브젝트) JSON 저장 — localStorage + proj에 보존 (Firestore 백업)
     try {
       const canvasJSON = JSON.stringify(fpCanvas.toJSON(['selectable','evented','hasControls','hasBorders','_fpComment']));
       localStorage.setItem(`vb_fpcj_${proj.id}`, canvasJSON);
+      proj.floorplanCanvasJSON = canvasJSON; // Firestore 백업용
     } catch(e) { console.warn('canvas JSON 저장 실패:', e.message); }
 
     const uid = state.user?.uid;
