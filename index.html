@@ -3520,7 +3520,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-account">
   <div class="form-screen-inner" style="background:#f7f8fa;">
     <div class="form-header" style="background:#f7f8fa;border-bottom:none;">
-      <button class="back-btn" onclick="history.back()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <button class="back-btn" onclick="goTo(_prevScreen||'main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>계정 정보</h2>
     </div>
     <div class="form-body" style="padding:0 20px 40px;">
@@ -5555,7 +5555,10 @@ function formGoBack() {
     }
   }
 }
+let _prevScreen = 'main';
 function goTo(screen) {
+  const cur = document.querySelector('.screen.active');
+  if (cur && cur.id) _prevScreen = cur.id.replace('screen-', '');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
   document.body.classList.toggle('consulting-bg', screen === 'consulting');
