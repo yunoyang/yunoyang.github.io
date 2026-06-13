@@ -3287,6 +3287,16 @@ button, input, textarea, select { font-family:var(--font); }
 
   <!-- Dropdown Menu -->
   <div class="dropdown" id="main-menu" style="top:68px;right:20px;">
+    <!-- 계정 정보 (로그인 시) -->
+    <div id="menu-account-card" style="display:none;padding:14px 16px 12px;border-bottom:1px solid #f0f2f5;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div id="menu-acct-avatar" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;"></div>
+        <div style="min-width:0;">
+          <div id="menu-acct-name" style="font-size:14px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;"></div>
+          <div id="menu-acct-email" style="font-size:12px;color:#888;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;"></div>
+        </div>
+      </div>
+    </div>
     <button class="dropdown-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
@@ -4358,6 +4368,16 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="mobile-main-menu-sheet">
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
+    <!-- 계정 정보 (로그인 시) -->
+    <div id="mobile-menu-account-card" style="display:none;padding:14px 20px 14px;border-bottom:1px solid #f0f2f5;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="mobile-menu-acct-avatar" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;"></div>
+        <div style="min-width:0;">
+          <div id="mobile-menu-acct-name" style="font-size:15px;font-weight:700;color:#111;"></div>
+          <div id="mobile-menu-acct-email" style="font-size:12.5px;color:#888;margin-top:2px;word-break:break-all;"></div>
+        </div>
+      </div>
+    </div>
     <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
     </button>
@@ -5427,31 +5447,11 @@ function handleMenuLogin() {
   }
 }
 function updateLoginUI() {
-  // 드롭다운 메뉴 로그인/로그아웃 항목
-  const btn = document.getElementById('menu-login-btn');
-  if (btn) {
-    if (state.loggedIn) {
-      btn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃 (${state.user.name||'사용자'})`;
-      btn.classList.add('danger');
-    } else {
-      btn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
-      btn.classList.remove('danger');
-    }
-  }
-  // 모바일 바텀시트 로그인 버튼
-  const mobileLoginBtn = document.getElementById('mobile-menu-login-btn');
-  if (mobileLoginBtn) {
-    if (state.loggedIn) {
-      mobileLoginBtn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃 (${state.user.name||'사용자'})`;
-      mobileLoginBtn.classList.add('danger');
-    } else {
-      mobileLoginBtn.innerHTML = `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
-      mobileLoginBtn.classList.remove('danger');
-    }
-  }
   // 프로필 아바타 버튼
   _renderProfileAvatar();
   _updateAdminMenuVisibility();
+  // 계정 카드 (데스크탑 드롭다운 + 모바일 시트)
+  _updateMenuAccountCard();
   // 랜딩 버튼 상태 업데이트
   const googleBtn = document.getElementById('landing-btn-google');
   const newBtn    = document.getElementById('landing-btn-new');
@@ -11655,6 +11655,63 @@ function _updateAdminMenuVisibility() {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin ? '' : 'none';
   });
+}
+
+function _updateMenuAccountCard() {
+  const loggedIn = state.loggedIn;
+  const user = state.user || {};
+  const name = user.name || '사용자';
+  const email = user.email || '';
+  const picture = user.picture || '';
+  const initials = name.charAt(0).toUpperCase();
+
+  // 데스크탑
+  const card = document.getElementById('menu-account-card');
+  const av   = document.getElementById('menu-acct-avatar');
+  const nm   = document.getElementById('menu-acct-name');
+  const em   = document.getElementById('menu-acct-email');
+  if (card) card.style.display = loggedIn ? '' : 'none';
+  if (av) {
+    if (loggedIn && picture) {
+      av.innerHTML = `<img src="${picture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" referrerpolicy="no-referrer">`;
+    } else {
+      av.textContent = loggedIn ? initials : '';
+    }
+  }
+  if (nm) nm.textContent = loggedIn ? name : '';
+  if (em) em.textContent = loggedIn ? email : '';
+
+  // 모바일
+  const mCard = document.getElementById('mobile-menu-account-card');
+  const mAv   = document.getElementById('mobile-menu-acct-avatar');
+  const mNm   = document.getElementById('mobile-menu-acct-name');
+  const mEm   = document.getElementById('mobile-menu-acct-email');
+  if (mCard) mCard.style.display = loggedIn ? '' : 'none';
+  if (mAv) {
+    if (loggedIn && picture) {
+      mAv.innerHTML = `<img src="${picture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" referrerpolicy="no-referrer">`;
+    } else {
+      mAv.textContent = loggedIn ? initials : '';
+    }
+  }
+  if (mNm) mNm.textContent = loggedIn ? name : '';
+  if (mEm) mEm.textContent = loggedIn ? email : '';
+
+  // 로그인/로그아웃 버튼 텍스트 간소화
+  const loginBtn = document.getElementById('menu-login-btn');
+  if (loginBtn) {
+    loginBtn.innerHTML = loggedIn
+      ? `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃`
+      : `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
+    loginBtn.className = loggedIn ? 'dropdown-item danger' : 'dropdown-item';
+  }
+  const mLoginBtn = document.getElementById('mobile-menu-login-btn');
+  if (mLoginBtn) {
+    mLoginBtn.innerHTML = loggedIn
+      ? `<svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃`
+      : `<svg class="icon" width="18" height="18"><use href="#icon-user"/></svg> 로그인`;
+    mLoginBtn.className = loggedIn ? 'mobile-sheet-item danger' : 'mobile-sheet-item';
+  }
 }
 
 async function openAdminDialog() {
