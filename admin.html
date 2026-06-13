@@ -667,6 +667,11 @@ tr:hover td { background:#fafbfe; }
         <i data-lucide="image"></i>
         <span>스타일 이미지</span>
       </div>
+      <div class="nav-item" id="nav-feedback" onclick="showPage('feedback',this);loadFeedback()">
+        <i data-lucide="message-square"></i>
+        <span>피드백 &amp; 아이디어</span>
+        <span class="nav-badge" id="feedback-nav-badge" style="display:none;"></span>
+      </div>
 
       <div style="margin-top:24px; padding:12px 10px;">
         <a href="index.html" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8fa3c4;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">
@@ -1612,6 +1617,32 @@ service cloud.firestore {
         <!-- 이미지 그리드 -->
         <div id="style-images-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
         <div id="style-images-empty" style="display:none;text-align:center;padding:60px;color:#bbb;font-size:14px;">업로드된 이미지가 없습니다</div>
+      </div>
+
+      <!-- ===== 피드백 & 아이디어 페이지 ===== -->
+      <div class="page" id="page-feedback">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <h1 class="section-title">피드백 &amp; 아이디어</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">사용자가 제출한 피드백 및 아이디어 목록</p>
+          </div>
+          <div class="section-actions">
+            <span id="feedback-count-label" style="font-size:13px;color:var(--text-muted);margin-right:8px;"></span>
+            <button onclick="loadFeedback()" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">새로고침</button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="search-wrap">
+              <i data-lucide="search"></i>
+              <input type="text" placeholder="제목, 내용, 이메일 검색" id="feedback-search" oninput="filterFeedback()">
+            </div>
+          </div>
+          <div id="feedback-list-wrap" style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="empty-state"><i data-lucide="message-square"></i><p>피드백을 불러오는 중…</p></div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /content -->
@@ -3783,6 +3814,79 @@ async function saveTipData(proc) {
     await _adminDb.collection('vb_tips').doc(proc).set({ checklists, tips, feeds, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     showToast(`✅ "${proc}" 시공팁이 저장됐습니다.`);
   } catch(e) { console.error(e); showToast('❌ 저장 실패: ' + e.message); }
+}
+
+// ===== 피드백 & 아이디어 =====
+let _allFeedback = [];
+let _feedbackLoaded = false;
+
+async function loadFeedback() {
+  if (!db) return;
+  const wrap = document.getElementById('feedback-list-wrap');
+  wrap.innerHTML = '<div class="empty-state"><i data-lucide="loader" style="animation:spin .8s linear infinite;"></i><p>불러오는 중…</p></div>';
+  lucide.createIcons();
+  try {
+    const snap = await db.collection('vb_feedback').orderBy('createdAt', 'desc').limit(500).get();
+    _allFeedback = [];
+    snap.forEach(doc => _allFeedback.push({ id: doc.id, ...doc.data() }));
+    _feedbackLoaded = true;
+    const countEl = document.getElementById('feedback-count-label');
+    if (countEl) countEl.textContent = `총 ${_allFeedback.length}건`;
+    const badge = document.getElementById('feedback-nav-badge');
+    if (badge && _allFeedback.length) {
+      badge.textContent = _allFeedback.length;
+      badge.style.display = '';
+    }
+    _renderFeedback(_allFeedback);
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty-state"><i data-lucide="alert-circle"></i><p>오류: ${e.message}</p></div>`;
+    lucide.createIcons();
+  }
+}
+
+function filterFeedback() {
+  const q = (document.getElementById('feedback-search')?.value || '').toLowerCase();
+  const filtered = q ? _allFeedback.filter(f =>
+    (f.title||'').toLowerCase().includes(q) ||
+    (f.body||'').toLowerCase().includes(q) ||
+    (f.userEmail||'').toLowerCase().includes(q) ||
+    (f.userName||'').toLowerCase().includes(q)
+  ) : _allFeedback;
+  const countEl = document.getElementById('feedback-count-label');
+  if (countEl) countEl.textContent = q ? `${filtered.length} / ${_allFeedback.length}건` : `총 ${_allFeedback.length}건`;
+  _renderFeedback(filtered);
+}
+
+function _renderFeedback(items) {
+  const wrap = document.getElementById('feedback-list-wrap');
+  if (!wrap) return;
+  if (!items.length) {
+    wrap.innerHTML = '<div class="empty-state"><i data-lucide="message-square"></i><p>피드백이 없습니다</p></div>';
+    lucide.createIcons();
+    return;
+  }
+  wrap.innerHTML = items.map(f => {
+    const ts = f.createdAt?.toDate ? f.createdAt.toDate() : (f.createdAt ? new Date(f.createdAt) : null);
+    const dateStr = ts ? ts.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    const initials = (f.userName || f.userEmail || '?').charAt(0).toUpperCase();
+    return `<div style="background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:18px 20px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_esc(initials)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;">
+            <div style="font-size:15px;font-weight:700;color:#111;">${_esc(f.title||'(제목 없음)')}</div>
+            <div style="font-size:12px;color:#bbb;white-space:nowrap;flex-shrink:0;">${dateStr}</div>
+          </div>
+          <div style="font-size:13.5px;color:#444;white-space:pre-wrap;line-height:1.7;margin-bottom:10px;">${_esc(f.body||'')}</div>
+          <div style="font-size:12px;color:#9ca3af;">👤 ${_esc(f.userName||'')}  ${_esc(f.userEmail||'-')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ===== TOAST =====
