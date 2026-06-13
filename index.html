@@ -12153,9 +12153,9 @@ function renderFurnitureTab() {
             </button>
           </div>
           ${unitPrice ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${qty > 1 ? `${unitPrice.toLocaleString()}원 × ${qty}개 = ${totalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}원`}</div>` : ''}
-          <div style="margin-top:5px;">${statusBadge}</div>
           ${it.size ? `<div style="font-size:12px;color:#888;margin-top:5px;">${esc(it.size)}</div>` : ''}
           ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
+          <div style="margin-top:6px;">${statusBadge}</div>
         </div>
       </div>`;
   };
