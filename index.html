@@ -4122,20 +4122,30 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 스크롤 영역 -->
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;">
     <!-- 툴바 -->
-    <div style="display:flex;align-items:center;gap:2px;padding:6px 12px;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
-      <button onclick="_prFmt('bold')" title="굵게" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-weight:700;color:#333;font-family:serif;">B</button>
-      <button onclick="_prFmt('italic')" title="기울임" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
-      <button onclick="_prFmt('underline')" title="밑줄" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
-      <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;"></div>
-      <button onclick="_prFmt('insertUnorderedList')" title="목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#333;">•≡</button>
-      <button onclick="_prFmt('insertOrderedList')" title="번호 목록" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;color:#333;">1≡</button>
-      <button onclick="_prInsertHr()" title="구분선" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:16px;color:#aaa;">—</button>
-      <div style="flex:1;"></div>
-      <button onclick="_prAtBtn()" title="@멘션" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:13px;font-weight:700;color:#5084ff;">@</button>
-      <label title="이미지 추가" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <input type="file" accept="image/*" multiple id="proc-record-img-input" style="display:none;" onchange="_prImgPreview(this)">
-      </label>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:2px;padding:6px 12px;min-width:max-content;">
+        <button onclick="_prInsertHeading(2)" title="제목 (H2)" style="height:32px;padding:0 8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;color:#333;font-family:serif;white-space:nowrap;">H2</button>
+        <button onclick="_prInsertHeading(3)" title="소제목 (H3)" style="height:32px;padding:0 8px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:11px;font-weight:700;color:#666;font-family:serif;white-space:nowrap;">H3</button>
+        <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;flex-shrink:0;"></div>
+        <button onclick="_prFmt('bold')" title="굵게" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-weight:700;color:#333;font-family:serif;">B</button>
+        <button onclick="_prFmt('italic')" title="기울임" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
+        <button onclick="_prFmt('underline')" title="밑줄" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
+        <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;flex-shrink:0;"></div>
+        <button onclick="_prFmt('insertUnorderedList')" title="목록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;">•≡</button>
+        <button onclick="_prFmt('insertOrderedList')" title="번호 목록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#333;">1≡</button>
+        <div style="width:1px;height:20px;background:#e0e0e0;margin:0 4px;flex-shrink:0;"></div>
+        <button onclick="_prInsertBlockquote()" title="인용구" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:16px;color:#888;">"</button>
+        <button onclick="_prInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
+        <button onclick="_prInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
+        <button onclick="_prInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+        <button onclick="_prAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
+        <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <input type="file" accept="image/*" multiple id="proc-record-img-input" style="display:none;" onchange="_prImgPreview(this)">
+        </label>
+      </div>
     </div>
     <!-- contenteditable 에디터 -->
     <div style="position:relative;flex:1;min-height:300px;">
@@ -8350,6 +8360,40 @@ function _prFmt(cmd) {
 function _prInsertHr() {
   document.getElementById('proc-record-editor').focus();
   document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid #e8eaf0;margin:14px 0;">');
+}
+function _prInsertHeading(level) {
+  document.getElementById('proc-record-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '제목';
+  const sizes = { 2: '20px', 3: '17px' };
+  const weights = { 2: '800', 3: '700' };
+  const margins = { 2: '20px 0 6px', 3: '16px 0 4px' };
+  document.execCommand('insertHTML', false,
+    `<h${level} style="font-size:${sizes[level]};font-weight:${weights[level]};color:#111;margin:${margins[level]};line-height:1.4;">${selectedText}</h${level}><p><br></p>`);
+}
+function _prInsertBlockquote() {
+  document.getElementById('proc-record-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '인용할 내용을 입력하세요';
+  document.execCommand('insertHTML', false,
+    `<blockquote style="border-left:3px solid #5084ff;margin:12px 0;padding:10px 16px;background:#f4f7ff;color:#444;font-size:15px;border-radius:0 8px 8px 0;">${selectedText}</blockquote><p><br></p>`);
+}
+function _prInsertCodeBlock() {
+  document.getElementById('proc-record-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '코드를 입력하세요';
+  document.execCommand('insertHTML', false,
+    `<pre style="background:#f5f5f5;border-radius:8px;padding:12px 16px;font-size:13px;font-family:monospace;color:#333;overflow-x:auto;margin:10px 0;white-space:pre-wrap;">${selectedText}</pre><p><br></p>`);
+}
+function _prInsertLink() {
+  document.getElementById('proc-record-editor').focus();
+  const sel = window.getSelection();
+  const selectedText = sel && !sel.isCollapsed ? sel.toString() : '';
+  const url = prompt('링크 URL을 입력하세요:', 'https://');
+  if (!url || url === 'https://') return;
+  const label = selectedText || url;
+  document.execCommand('insertHTML', false,
+    `<a href="${url}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;">${label}</a>`);
 }
 function _prAtBtn() {
   document.getElementById('proc-record-editor').focus();
