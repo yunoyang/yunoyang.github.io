@@ -5584,7 +5584,7 @@ function goTo(screen) {
       if (el) el.style.display = 'none';
     });
   }
-  if (screen === 'main') renderAll();
+  if (screen === 'main') { renderAll(); _restoreTabFromHash(); }
   if (screen === 'form') {
     if (formMode === 'new') {
       // 신규 프로젝트 → 편집 모드 바로 진입
@@ -5748,9 +5748,22 @@ function formatNum(n) {
 }
 
 // ===== TABS =====
+const _MAIN_TABS = ['plan','calendar','style','content','furniture','meeting'];
+function _restoreTabFromHash() {
+  const m = window.location.hash.match(/[#&]tab=([\w]+)/);
+  const tab = m?.[1];
+  if (!tab || !_MAIN_TABS.includes(tab)) return;
+  let matchBtn = null;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if ((b.getAttribute('onclick') || '').includes(`'${tab}'`)) matchBtn = b;
+  });
+  switchMainTab(tab, matchBtn);
+}
+
 function switchMainTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  history.replaceState(null, '', '#tab=' + tab);
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
