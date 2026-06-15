@@ -1238,6 +1238,30 @@ button, input, textarea, select { font-family:var(--font); }
   font-size: 7px; font-weight: 800; flex-shrink: 0; line-height: 1;
   margin-left: 4px; vertical-align: middle;
 }
+/* ===== 기록 인라인 이미지 ===== */
+.mw-img-block {
+  display:block; margin:10px 0; position:relative; line-height:0;
+}
+.mw-img-block img {
+  border-radius:8px; max-width:100%; cursor:pointer; display:block;
+}
+.mw-img-block.mw-img-selected img {
+  outline:2px solid #5084ff; outline-offset:2px;
+}
+#mw-img-toolbar {
+  position:fixed; z-index:10000; background:#1a1a1a; border-radius:10px;
+  padding:5px 8px; display:none; align-items:center; gap:2px;
+  box-shadow:0 4px 20px rgba(0,0,0,.35);
+}
+.mw-size-btn {
+  background:none; border:none; color:rgba(255,255,255,.7);
+  font-size:12px; font-weight:700; padding:4px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+}
+.mw-size-btn:hover, .mw-size-btn.active { background:rgba(255,255,255,.18); color:#fff; }
+.mw-del-btn {
+  background:none; border:none; color:#ff6b6b;
+  font-size:14px; font-weight:700; padding:4px 8px; cursor:pointer; line-height:1;
+}
 .style-add-btn {
   display: flex; align-items: center; gap: 5px;
   font-size: 13px; font-weight: 600; color: #555;
@@ -3921,9 +3945,6 @@ button, input, textarea, select { font-family:var(--font); }
       <div id="meeting-mention-dropdown" style="display:none;position:absolute;left:20px;right:20px;top:56px;background:#fff;border:1px solid #e1e5ef;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.12);z-index:20;max-height:200px;overflow-y:auto;"></div>
     </div>
 
-    <!-- 이미지 미리보기 -->
-    <div id="meeting-images-preview" style="display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;"></div>
-
     <!-- 하단 여백 (키보드 대응) -->
     <div style="height:env(keyboard-inset-height,200px);min-height:100px;flex-shrink:0;"></div>
   </div>
@@ -4109,6 +4130,16 @@ button, input, textarea, select { font-family:var(--font); }
   <div id="ptab-check" class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;"></div>
   <div id="ptab-tip"   class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;position:relative;"></div>
 </div>
+<!-- ===== 기록 인라인 이미지 리사이즈 툴바 ===== -->
+<div id="mw-img-toolbar">
+  <button class="mw-size-btn" data-w="25%" onclick="_mwSetImgSize('25%')">S</button>
+  <button class="mw-size-btn" data-w="50%" onclick="_mwSetImgSize('50%')">M</button>
+  <button class="mw-size-btn" data-w="75%" onclick="_mwSetImgSize('75%')">L</button>
+  <button class="mw-size-btn" data-w="100%" onclick="_mwSetImgSize('100%')">Full</button>
+  <div style="width:1px;height:14px;background:rgba(255,255,255,.2);margin:0 2px;flex-shrink:0;"></div>
+  <button class="mw-del-btn" onclick="_mwImgDelete()" title="이미지 삭제">✕</button>
+</div>
+
 <!-- ===== 공정 기록 작성/수정 전체화면 에디터 ===== -->
 <div id="screen-proc-record-write" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8800;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <!-- 헤더 -->
@@ -12479,8 +12510,8 @@ function openAddMeeting() {
   _meetingImages = [];
   document.getElementById('meeting-title-input').value = '';
   document.getElementById('meeting-editor').innerHTML = '';
-  document.getElementById('meeting-images-preview').innerHTML = '';
   document.getElementById('meeting-mention-chips').innerHTML = '';
+  _mwHideImgToolbar();
   _mwUpdatePlaceholder();
   _openMeetingWrite(false);
 }
@@ -12504,16 +12535,19 @@ function openEditMeeting() {
     editor.innerHTML = esc(rawNorm).replace(/\n/g,'<br>');
   }
   _mwUpdatePlaceholder();
-  // 이미지 미리보기
-  const preview = document.getElementById('meeting-images-preview');
-  preview.innerHTML = '';
-  _meetingImages.forEach((src, idx) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
-    div.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;">
-      <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
-    preview.appendChild(div);
-  });
+  _mwHideImgToolbar();
+  // 구버전 호환: content에 없는 images[]는 에디터 하단에 인라인으로 추가
+  const editor2 = document.getElementById('meeting-editor');
+  if (m.images?.length) {
+    const existingSrcs = new Set([...editor2.querySelectorAll('img')].map(i => i.src));
+    const missing = m.images.filter(src => src && !existingSrcs.has(src));
+    if (missing.length) {
+      const extra = missing.map(src =>
+        `<div class="mw-img-block"><img src="${src}" class="mw-inline-img" style="width:100%;border-radius:8px;display:block;cursor:pointer;" onclick="_mwImgClick(event,this)"></div>`
+      ).join('');
+      editor2.innerHTML += extra;
+    }
+  }
   // 멘션 칩
   _mwRenderMentionChips();
   _openMeetingWrite(true);
@@ -12682,7 +12716,7 @@ function _compressMeetingImg(dataUrl, maxW = 900, quality = 0.75) {
 
 async function _meetingImagePreview(input) {
   const files = Array.from(input.files);
-  const preview = document.getElementById('meeting-images-preview');
+  const editor = document.getElementById('meeting-editor');
   let added = 0;
   for (const file of files) {
     const raw = await new Promise(res => {
@@ -12690,22 +12724,60 @@ async function _meetingImagePreview(input) {
     });
     const compressed = await _compressMeetingImg(raw);
     if (!compressed) continue;
-    _meetingImages.push(compressed);
     added++;
-    const idx = _meetingImages.length - 1;
-    const div = document.createElement('div');
-    div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
-    div.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;">
-      <button onclick="_removeMeetingImage(${idx},this.parentElement)" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
-    preview.appendChild(div);
+    // 커서 위치에 인라인으로 삽입
+    editor.focus();
+    const html = `<div class="mw-img-block"><img src="${compressed}" class="mw-inline-img" style="width:100%;border-radius:8px;display:block;cursor:pointer;" onclick="_mwImgClick(event,this)"></div><p><br></p>`;
+    document.execCommand('insertHTML', false, html);
   }
-  if (added > 0) showToastMessage(`✅ 사진 ${added > 1 ? added + '장' : ''}추가됐습니다`);
+  input.value = '';
+  if (added > 0) { _mwUpdatePlaceholder(); showToastMessage(`✅ 사진 ${added > 1 ? added+'장' : ''}삽입됐습니다`); }
 }
 
-function _removeMeetingImage(idx, el) {
-  _meetingImages.splice(idx, 1);
-  el.remove();
+// ── 인라인 이미지 리사이즈 ──────────────────────────────────────────────────
+let _mwSelectedImg = null;
+function _mwImgClick(e, img) {
+  e.stopPropagation();
+  // 선택 표시
+  document.querySelectorAll('.mw-img-block').forEach(b => b.classList.remove('mw-img-selected'));
+  img.closest('.mw-img-block')?.classList.add('mw-img-selected');
+  _mwSelectedImg = img;
+  const toolbar = document.getElementById('mw-img-toolbar');
+  if (!toolbar) return;
+  const rect = img.getBoundingClientRect();
+  toolbar.style.display = 'flex';
+  toolbar.style.left = Math.max(8, rect.left) + 'px';
+  toolbar.style.top = Math.max(8, rect.top - 48) + 'px';
+  const w = img.style.width || '100%';
+  toolbar.querySelectorAll('.mw-size-btn').forEach(b => b.classList.toggle('active', b.dataset.w === w));
 }
+
+function _mwSetImgSize(w) {
+  if (!_mwSelectedImg) return;
+  _mwSelectedImg.style.width = w;
+  _mwSelectedImg.style.maxWidth = '100%';
+  _mwSelectedImg.style.display = w === '100%' ? 'block' : 'inline-block';
+  document.getElementById('mw-img-toolbar')?.querySelectorAll('.mw-size-btn').forEach(b => b.classList.toggle('active', b.dataset.w === w));
+}
+
+function _mwImgDelete() {
+  if (!_mwSelectedImg) return;
+  (_mwSelectedImg.closest('.mw-img-block') || _mwSelectedImg).remove();
+  _mwHideImgToolbar();
+  _mwUpdatePlaceholder();
+}
+
+function _mwHideImgToolbar() {
+  const t = document.getElementById('mw-img-toolbar');
+  if (t) t.style.display = 'none';
+  document.querySelectorAll('.mw-img-block').forEach(b => b.classList.remove('mw-img-selected'));
+  _mwSelectedImg = null;
+}
+
+// 에디터 바깥 클릭 시 툴바 숨김
+document.addEventListener('click', e => {
+  if (!e.target.closest('.mw-img-block') && !e.target.closest('#mw-img-toolbar')) _mwHideImgToolbar();
+});
 
 // _meetingMentionCheck / _insertMention — 구 textarea 기반 함수 (deprecated, 사용 안 함)
 // 새로운 contenteditable 에디터는 _mwEditorInput / _mwInsertMention 사용
@@ -12728,29 +12800,33 @@ async function saveMeeting() {
   }
   if (!proj.meetings) proj.meetings = [];
 
-  // base64 → Firebase Storage URL 변환 (Firebase Auth 확인 + styleImages/ 경로 사용)
-  let imgSnapshot = [..._meetingImages];
+  // 인라인 이미지 추출 — 에디터 HTML에서 base64 img를 Firebase Storage로 업로드 후 URL 교체
+  const tmpDiv = document.createElement('div');
+  tmpDiv.innerHTML = content;
   const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
   if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
     const proj0 = getProject();
     const projId = (proj0?.cloudId || proj0?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
-    imgSnapshot = await Promise.all(imgSnapshot.map(async img => {
-      if (!img.startsWith('data:')) return img;
+    for (const imgEl of tmpDiv.querySelectorAll('img')) {
+      const src = imgEl.getAttribute('src') || '';
+      if (!src.startsWith('data:')) continue;
       try {
-        // styleImages/ 경로 사용 — 기존 Storage 규칙과 동일하게 적용됨
-        // _fetchStyleFromCloud는 prefixes(하위폴더)만 스캔하므로 루트 파일은 무시됨
         const path = `styleImages/${projId}/mtg_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
         const ref = _fbStorage.ref(path);
-        const uploadPromise = ref.put(_dataUrlToBlob(img), { contentType:'image/jpeg' })
-          .then(() => ref.getDownloadURL());
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
-        return await Promise.race([uploadPromise, timeout]);
+        const url = await Promise.race([
+          ref.put(_dataUrlToBlob(src), { contentType:'image/jpeg' }).then(() => ref.getDownloadURL()),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+        ]);
+        imgEl.setAttribute('src', url);
       } catch(e) {
-        console.warn('[meetingImg] Firebase 업로드 실패, 로컬 저장:', e.message);
-        return img;
+        console.warn('[meetingImg] 업로드 실패, 로컬 유지:', e.message);
       }
-    }));
+    }
   }
+  // 최종 HTML (base64 → URL 교체 반영)
+  const finalContent = tmpDiv.innerHTML;
+  // meeting.images = 본문 내 이미지 URL 목록 (썸네일/SEO용)
+  let imgSnapshot = [...tmpDiv.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(Boolean);
 
   // base64 이미지 로컬 저장 — IDB + localStorage vb_mi_* 동시 저장 (둘 다 보장)
   // ★ _MIdb.put은 내부에서 에러를 삼키므로 catch 불가 → 항상 동시 저장
@@ -12771,7 +12847,7 @@ async function saveMeeting() {
     if (idx !== -1) {
       proj.meetings[idx] = {
         ...proj.meetings[idx],
-        title, content,
+        title, content: finalContent,
         images: imgSnapshot,
         mentions: mentionEmails,
         updatedAt: Date.now(),
@@ -12789,7 +12865,7 @@ async function saveMeeting() {
     // ── 신규 생성 ──────────────────────────────
     const meeting = {
       id: 'meet_' + Date.now() + Math.random().toString(36).slice(2,6),
-      title, content,
+      title, content: finalContent,
       images: imgSnapshot,
       mentions: mentionEmails,
       createdAt: Date.now(),
