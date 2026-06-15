@@ -1245,6 +1245,12 @@ button, input, textarea, select { font-family:var(--font); }
 .mw-img-block img {
   border-radius:8px; max-width:100%; cursor:pointer; display:block;
 }
+/* 모바일: 이미지 가로 꽉참 */
+@media(max-width:767px) {
+  .meeting-content-view .mw-img-block { margin-left:-20px; margin-right:-20px; border-radius:0; }
+  .meeting-content-view .mw-img-block img { width:100% !important; max-width:100%; border-radius:0 !important; }
+}
+/* PC: 컨텐츠 영역 중앙 정렬 + 이미지 컨텐츠 폭 */
 @media(min-width:768px) {
   #meeting-detail-body > * { max-width:680px; margin-left:auto; margin-right:auto; }
   .meeting-content-view .mw-img-block { max-width:none; }
