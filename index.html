@@ -1245,6 +1245,11 @@ button, input, textarea, select { font-family:var(--font); }
 .mw-img-block img {
   border-radius:8px; max-width:100%; cursor:pointer; display:block;
 }
+@media(min-width:768px) {
+  #meeting-detail-body > * { max-width:680px; margin-left:auto; margin-right:auto; }
+  .meeting-content-view .mw-img-block { max-width:none; }
+  .meeting-content-view .mw-img-block img { width:100% !important; max-width:100%; }
+}
 .mw-img-block.mw-img-selected img {
   outline:2px solid #5084ff; outline-offset:2px;
 }
@@ -13076,7 +13081,7 @@ function openMeetingDetail(id) {
     <div style="font-size:13px;color:#aaa;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f0f2f5;">${esc(m.createdByName||m.createdBy||'')} · ${dateStr}</div>
     ${publicUrlBanner}
     ${imgsHtml ? `<div style="margin-bottom:16px;">${imgsHtml}</div>` : ''}
-    <div class="meeting-content-view" style="font-size:15px;font-weight:300;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
+    <div class="meeting-content-view" style="font-size:16px;font-weight:300;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
   `;
   const scr = document.getElementById('screen-meeting-detail');
   scr.style.transform = 'translateY(0)';
