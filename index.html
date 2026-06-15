@@ -12188,7 +12188,7 @@ function renderMeetingTab() {
   list.innerHTML = meetings.map(m => {
     const d = new Date(m.createdAt||0);
     const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-    const imgThumb = m.images?.length ? `<div style="width:100px;height:100px;border-radius:10px;background:url('${m.images[0]}') center/cover;flex-shrink:0;"></div>` : '';
+    const imgThumb = m.images?.length ? `<div style="width:120px;height:120px;border-radius:10px;background:url('${m.images[0]}') center/cover;flex-shrink:0;"></div>` : '';
     const mentionHtml = m.mentions?.length ? `<div style="margin-top:6px;font-size:12px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
     const publishedBadge = m.publicUrl
       ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#fff;background:#5084ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>공개</span>`
