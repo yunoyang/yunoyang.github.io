@@ -177,6 +177,12 @@ input, select, textarea { font-family:var(--font); }
 .kpi-card.green { --accent:#10b981; }
 .kpi-card.orange { --accent:#f59e0b; }
 .kpi-card.purple { --accent:#8b5cf6; }
+.kpi-card.red { --accent:#ef4444; }
+.kpi-card.teal { --accent:#14b8a6; }
+.kpi-card.indigo { --accent:#6366f1; }
+.kpi-card.red .kpi-icon { --icon-bg:rgba(239,68,68,0.1); --icon-color:#ef4444; }
+.kpi-card.teal .kpi-icon { --icon-bg:rgba(20,184,166,0.1); --icon-color:#14b8a6; }
+.kpi-card.indigo .kpi-icon { --icon-bg:rgba(99,102,241,0.1); --icon-color:#6366f1; }
 .kpi-header {
   display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
 }
@@ -1954,10 +1960,10 @@ function renderKPIs() {
 
   // Firestore 실제 데이터 우선 사용
   let totalUsers, newToday, totalProjects, activeCount, collabCount, invitesSent;
+  let totalContent = 0, totalFurniture = 0, totalMeetings = 0;
   if (_fbData.loaded) {
     const d = getFbDerived();
     totalUsers    = d.users.length;
-    // 오늘 신규 가입자: vb_users.firstLoginAt 기준
     newToday = _fbData.users.filter(u => {
       const t = u.firstLoginAt?.toDate?.()?.toISOString();
       return t && t.slice(0,10) === today;
@@ -1966,8 +1972,13 @@ function renderKPIs() {
     activeCount   = d.activeProjects.length;
     collabCount   = d.collabProjects.length;
     invitesSent   = d.invitesSent;
+    _fbData.projects.forEach(doc => {
+      const pd = doc.projectData || {};
+      totalContent   += (pd.contentLinks   || []).length;
+      totalFurniture += (pd.furnitureItems || []).length;
+      totalMeetings  += (pd.meetings       || []).length;
+    });
   } else {
-    // fallback: localStorage
     const appState = getAppState();
     totalUsers    = (store.users||[]).length;
     newToday      = (store.users||[]).filter(u=>u.joinedAt?.slice(0,10)===today).length;
@@ -2005,6 +2016,27 @@ function renderKPIs() {
       sub: _fbData.loaded ? `활성(일정있음) ${activeCount}건` : 'Firestore 로딩 중',
       badge:{type:'neutral', text:_fbData.loaded?'실시간':'로딩중'},
       icon:'layout-grid', color:'purple'
+    },
+    {
+      label: '컨텐츠 링크',
+      value: _fbData.loaded ? fmt(totalContent) : '…',
+      sub: `전체 프로젝트 합산`,
+      badge:{type:'neutral', text:_fbData.loaded?'실시간':'로딩중'},
+      icon:'link', color:'red'
+    },
+    {
+      label: '가구&가전',
+      value: _fbData.loaded ? fmt(totalFurniture) : '…',
+      sub: `등록된 제품 수`,
+      badge:{type:'neutral', text:_fbData.loaded?'실시간':'로딩중'},
+      icon:'sofa', color:'teal'
+    },
+    {
+      label: '기록',
+      value: _fbData.loaded ? fmt(totalMeetings) : '…',
+      sub: `작성된 회의·기록 수`,
+      badge:{type:'neutral', text:_fbData.loaded?'실시간':'로딩중'},
+      icon:'notebook-pen', color:'indigo'
     },
   ];
 
@@ -4005,11 +4037,13 @@ function openUserModal(email) {
   );
 
   // 통계
-  let totalStyle = 0, totalContent = 0;
+  let totalStyle = 0, totalContent = 0, totalFurniture = 0, totalMeetings = 0;
   userProjects.forEach(proj => {
     const pd = proj.projectData || {};
     Object.values(pd.styleImages || {}).forEach(arr => { totalStyle += arr.length; });
-    totalContent += (pd.contentLinks || []).length;
+    totalContent   += (pd.contentLinks   || []).length;
+    totalFurniture += (pd.furnitureItems || []).length;
+    totalMeetings  += (pd.meetings       || []).length;
   });
 
   // Header
@@ -4030,7 +4064,9 @@ function openUserModal(email) {
     <div class="udp-stat-row">
       <div class="udp-stat"><div class="val">${userProjects.length}</div><div class="lbl">프로젝트</div></div>
       <div class="udp-stat"><div class="val">${totalStyle}</div><div class="lbl">스타일 이미지</div></div>
-      <div class="udp-stat"><div class="val">${totalContent}</div><div class="lbl">컨텐츠 링크</div></div>
+      <div class="udp-stat"><div class="val">${totalContent}</div><div class="lbl">컨텐츠</div></div>
+      <div class="udp-stat"><div class="val">${totalFurniture}</div><div class="lbl">가구&가전</div></div>
+      <div class="udp-stat"><div class="val">${totalMeetings}</div><div class="lbl">기록</div></div>
     </div>
   `;
 
