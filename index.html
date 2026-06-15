@@ -12209,7 +12209,7 @@ function renderMeetingTab() {
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:20px 24px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
-        <div style="font-size:15px;font-weight:400;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">${(()=>{const {decoded,type}=_normalizeMeetingContent(m.content||'');return type==='html'?esc(decoded.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'').trim()):esc(decoded);})()}</div>
+        <div style="font-size:15px;font-weight:400;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${(()=>{const {decoded,type}=_normalizeMeetingContent(m.content||'');return type==='html'?esc(decoded.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'').trim()):esc(decoded);})()}</div>
         ${mentionHtml}
         <div style="margin-top:6px;font-size:12px;color:#bbb;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
       </div>
@@ -13058,7 +13058,9 @@ function openMeetingDetail(id) {
   const contentHtml = contentType === 'html'
     ? rawContent
     : esc(rawContent).replace(/@([\w가-힣]+)/g, '<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
-  const imgsHtml = (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
+  // contentHtml에 이미 인라인 이미지가 있으면 별도 이미지 렌더 생략 (중복 방지)
+  const _contentHasImg = /<img\b/i.test(contentHtml);
+  const imgsHtml = _contentHasImg ? '' : (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
   const publicUrlBanner = m.publicUrl ? `
     <div style="background:#f0f5ff;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
