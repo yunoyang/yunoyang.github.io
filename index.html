@@ -12839,7 +12839,12 @@ document.addEventListener('click', e => {
 // _meetingMentionCheck / _insertMention — 구 textarea 기반 함수 (deprecated, 사용 안 함)
 // 새로운 contenteditable 에디터는 _mwEditorInput / _mwInsertMention 사용
 
+let _saveMeetingInProgress = false;
 async function saveMeeting() {
+  if (_saveMeetingInProgress) return; // 중복 호출 방지
+  _saveMeetingInProgress = true;
+  const editingId = _editingMeetingId; // await 전에 캡처
+  try {
   const proj = getProject();
   if (!proj) return;
   const title = document.getElementById('meeting-title-input').value.trim();
@@ -12898,9 +12903,9 @@ async function saveMeeting() {
     }
   }
 
-  if (_editingMeetingId) {
+  if (editingId) {
     // ── 수정 모드 ──────────────────────────────
-    const idx = proj.meetings.findIndex(m => m.id === _editingMeetingId);
+    const idx = proj.meetings.findIndex(m => m.id === editingId);
     if (idx !== -1) {
       proj.meetings[idx] = {
         ...proj.meetings[idx],
@@ -12909,7 +12914,7 @@ async function saveMeeting() {
         mentions: mentionEmails,
         updatedAt: Date.now(),
       };
-      _saveMeetingImgLocal(_editingMeetingId, imgSnapshot);
+      _saveMeetingImgLocal(editingId, imgSnapshot);
     }
     _editingMeetingId = null;
     save();
@@ -12937,6 +12942,9 @@ async function saveMeeting() {
     showToastMessage('✅ 기록이 저장됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
     if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
+  }
+  } finally {
+    _saveMeetingInProgress = false;
   }
 }
 
