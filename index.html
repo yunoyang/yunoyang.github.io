@@ -1239,6 +1239,14 @@ button, input, textarea, select { font-family:var(--font); }
   margin-left: 4px; vertical-align: middle;
 }
 /* ===== 기록 인라인 이미지 ===== */
+/* meeting-content-view 내 굵기 명시 (부모 font-weight:300 → bolder 상대값 방지) */
+.meeting-content-view b,
+.meeting-content-view strong,
+.meeting-content-view [style*="font-weight: bold"],
+.meeting-content-view [style*="font-weight:bold"] { font-weight: 700 !important; }
+.meeting-content-view h1 { font-weight: 800 !important; }
+.meeting-content-view h2 { font-weight: 800 !important; }
+.meeting-content-view h3 { font-weight: 700 !important; }
 .mw-img-block {
   display:block; margin:10px 0; position:relative; line-height:0;
 }
