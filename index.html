@@ -13086,10 +13086,18 @@ async function shareMeetingUrl() {
     }
     const d = new Date(m.createdAt||0);
     const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    // images: m.images[] Firebase URL 우선, 없으면 content HTML에서 추출
+    const _shareImgs = (() => {
+      const fromArr = (m.images||[]).filter(img => img && !img.startsWith('data:'));
+      if (fromArr.length) return fromArr;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = m.content || '';
+      return [...tmp.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(s => s && !s.startsWith('data:'));
+    })();
     const shareData = {
       title: m.title || '(제목 없음)',
       content: m.content || '',
-      images: (m.images||[]).filter(img => !img.startsWith('data:')), // base64 제외
+      images: _shareImgs,
       createdAt: m.createdAt || 0,
       createdByName: m.createdByName || m.createdBy || '',
       projectName: proj.name || '',
@@ -13199,16 +13207,37 @@ async function _checkMeetingShareUrl() {
 
     // ── 콘텐츠 렌더링 ────────────────────────────────────────────────────
     const { decoded: rawContent, type: contentType } = _normalizeMeetingContent(d.content||'');
-    const contentHtml = contentType === 'html'
+    let contentHtml = contentType === 'html'
       ? rawContent
       : esc(rawContent).replace(/@([\w가-힣]+)/g,'<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
-    const imgsHtml = (d.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:10px;display:block;" onclick="window.open(this.src)">`).join('');
+
+    // content에 img가 없으면 d.images[] 를 인라인으로 추가 (구버전 호환)
+    const tmpCheck = document.createElement('div');
+    tmpCheck.innerHTML = contentHtml;
+    if (!tmpCheck.querySelector('img') && (d.images||[]).length) {
+      const extra = d.images.map(src =>
+        `<p><img src="${src}" style="width:100%;border-radius:12px;margin-bottom:10px;display:block;cursor:pointer;" onclick="window.open(this.src)"></p>`
+      ).join('');
+      contentHtml += extra;
+    }
+
+    // img 스타일 통일 (클릭 가능, 클릭 시 원본)
+    const finalDiv = document.createElement('div');
+    finalDiv.innerHTML = contentHtml;
+    finalDiv.querySelectorAll('img').forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '8px';
+      img.style.display = 'block';
+      img.style.margin = '6px auto';
+      img.style.cursor = 'pointer';
+      if (!img.getAttribute('onclick')) img.setAttribute('onclick', 'window.open(this.src)');
+    });
+
     content.innerHTML = `
       <div style="font-size:13px;color:#aaa;margin-bottom:4px;">${esc(d.projectName||'')}</div>
       <h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 10px;">${esc(d.title||'')}</h1>
       <div style="font-size:13px;color:#bbb;margin-bottom:24px;">${esc(d.dateStr||'')} · ${esc(d.createdByName||'')}</div>
-      ${imgsHtml ? `<div style="margin-bottom:20px;">${imgsHtml}</div>` : ''}
-      <div style="font-size:16px;color:#222;line-height:1.85;word-break:break-word;">${contentHtml}</div>
+      <div style="font-size:16px;color:#222;line-height:1.85;word-break:break-word;">${finalDiv.innerHTML}</div>
     `;
   } catch(e) {
     content.innerHTML = `<div style="text-align:center;padding:60px;color:#e03535;font-size:14px;">오류: ${esc(e.message)}</div>`;
