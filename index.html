@@ -3887,6 +3887,7 @@ button, input, textarea, select { font-family:var(--font); }
       <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <span id="meeting-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">기록 작성</span>
+    <button onclick="_mwOpenPreview()" style="padding:8px 14px;background:none;border:1.5px solid #e1e5ef;border-radius:20px;font-size:14px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);margin-right:6px;">미리보기</button>
     <button id="btn-meeting-save" onclick="saveMeeting()" style="padding:8px 18px;background:#222;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
   </div>
 
@@ -4130,6 +4131,21 @@ button, input, textarea, select { font-family:var(--font); }
   <div id="ptab-check" class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;"></div>
   <div id="ptab-tip"   class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;position:relative;"></div>
 </div>
+<!-- ===== 기록 포스팅 미리보기 ===== -->
+<div id="meeting-preview-overlay" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.55);" onclick="if(event.target===this)_mwClosePreview()">
+  <div style="position:absolute;inset:0;max-width:600px;margin:0 auto;background:#fff;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #f0f2f5;flex-shrink:0;">
+      <span style="font-size:15px;font-weight:700;color:#111;">미리보기</span>
+      <button onclick="_mwClosePreview()" style="background:none;border:none;padding:4px;cursor:pointer;font-size:22px;color:#888;line-height:1;">×</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 20px 48px;">
+      <div id="meeting-preview-title" style="font-size:24px;font-weight:800;color:#111;line-height:1.35;margin-bottom:18px;"></div>
+      <div id="meeting-preview-meta" style="font-size:13px;color:#aaa;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f0f2f5;"></div>
+      <div id="meeting-preview-body" style="font-size:16px;line-height:1.85;color:#222;word-break:break-word;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 기록 인라인 이미지 리사이즈 툴바 ===== -->
 <div id="mw-img-toolbar">
   <button class="mw-size-btn" data-w="25%" onclick="_mwSetImgSize('25%')">S</button>
@@ -12536,17 +12552,13 @@ function openEditMeeting() {
   }
   _mwUpdatePlaceholder();
   _mwHideImgToolbar();
-  // 구버전 호환: content에 없는 images[]는 에디터 하단에 인라인으로 추가
+  // 구버전 호환: 에디터에 이미지가 전혀 없을 때만 images[]를 인라인으로 추가 (중복 방지)
   const editor2 = document.getElementById('meeting-editor');
-  if (m.images?.length) {
-    const existingSrcs = new Set([...editor2.querySelectorAll('img')].map(i => i.src));
-    const missing = m.images.filter(src => src && !existingSrcs.has(src));
-    if (missing.length) {
-      const extra = missing.map(src =>
-        `<div class="mw-img-block"><img src="${src}" class="mw-inline-img" style="width:100%;border-radius:8px;display:block;cursor:pointer;" onclick="_mwImgClick(event,this)"></div>`
-      ).join('');
-      editor2.innerHTML += extra;
-    }
+  if (m.images?.length && !editor2.querySelector('img')) {
+    const extra = m.images.map(src =>
+      `<div class="mw-img-block"><img src="${src}" class="mw-inline-img" style="width:100%;border-radius:8px;display:block;cursor:pointer;" onclick="_mwImgClick(event,this)"></div>`
+    ).join('');
+    editor2.innerHTML += extra;
   }
   // 멘션 칩
   _mwRenderMentionChips();
@@ -12765,6 +12777,38 @@ function _mwImgDelete() {
   (_mwSelectedImg.closest('.mw-img-block') || _mwSelectedImg).remove();
   _mwHideImgToolbar();
   _mwUpdatePlaceholder();
+}
+
+function _mwOpenPreview() {
+  const title = document.getElementById('meeting-title-input').value.trim() || '(제목 없음)';
+  const body  = document.getElementById('meeting-editor').innerHTML;
+  const proj  = getProject();
+  const user  = state.user;
+  const now   = new Date();
+  const dateStr = `${now.getFullYear()}. ${now.getMonth()+1}. ${now.getDate()}.`;
+  const author  = user?.name || user?.email?.split('@')[0] || '';
+  const projName = proj?.name || '';
+
+  document.getElementById('meeting-preview-title').textContent = title;
+  document.getElementById('meeting-preview-meta').innerHTML =
+    `${projName ? `<span style="font-weight:600;color:#555;">${esc(projName)}</span> · ` : ''}${dateStr}${author ? ` · ${esc(author)}` : ''}`;
+
+  // 본문: img onclick 이벤트 제거 후 렌더
+  const tmpDiv = document.createElement('div');
+  tmpDiv.innerHTML = body;
+  tmpDiv.querySelectorAll('img').forEach(img => {
+    img.removeAttribute('onclick');
+    img.style.cssText = 'max-width:100%;border-radius:8px;display:block;margin:6px auto;';
+  });
+  tmpDiv.querySelectorAll('.mw-img-block').forEach(b => {
+    b.style.cssText = 'margin:12px 0;text-align:center;';
+  });
+  document.getElementById('meeting-preview-body').innerHTML = tmpDiv.innerHTML;
+  document.getElementById('meeting-preview-overlay').style.display = '';
+}
+
+function _mwClosePreview() {
+  document.getElementById('meeting-preview-overlay').style.display = 'none';
 }
 
 function _mwHideImgToolbar() {
