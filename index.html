@@ -6309,6 +6309,7 @@ async function handleStyleFileSelect(e) {
   const room = styleCurrentRoom;
   const total = files.length;
   let done = 0;
+  let storageFailed = false;
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -6348,10 +6349,11 @@ async function handleStyleFileSelect(e) {
         continue;
       } catch(err) {
         console.warn('Storage upload failed, fallback:', err.message);
+        storageFailed = true;
       }
     }
 
-    // base64 폴백 (localStorage 용량 고려해 1600px)
+    // base64 폴백 (localStorage 용량 고려해 1600px) — 이 경우 이 기기에만 저장되며 다른 기기에는 보이지 않음
     _styleUploadSetProgress(0, `처리 중${countLabel}`);
     const [dataUrl, thumbUrl] = await Promise.all([
       _compressImage(file, 1600, 0.88),
@@ -6365,6 +6367,7 @@ async function handleStyleFileSelect(e) {
 
   _styleUploadHideProgress();
   if (done > 0) showToastMessage(_ti('check') + (done > 1 ? `${done}장 업로드 완료` : '업로드 완료'));
+  if (storageFailed) showToastMessage('⚠️ 네트워크 문제로 일부 이미지가 이 기기에만 저장됐어요. 다시 시도해주세요');
 }
 
 
@@ -10775,7 +10778,14 @@ function _syncProjToCloud(proj) {
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
+      m.content = _stripBase64FromHtml(m.content);
     });
+    // styleImages: base64 폴백(Storage 업로드 실패) 항목 제거 → 1MB 제한 방지
+    if (projData.styleImages) {
+      Object.keys(projData.styleImages).forEach(room => {
+        projData.styleImages[room] = (projData.styleImages[room] || []).filter(it => it?.url && !it.url.startsWith('data:'));
+      });
+    }
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
     // floorplanCanvasJSON: 500KB 초과 시 Firestore 저장 제외 (localStorage에만 유지)
@@ -10789,7 +10799,10 @@ function _syncProjToCloud(proj) {
       'meta.updatedBySessionId': _sessionId,
     };
     return _db.collection('vb_projects').doc(proj.cloudId).update(payload);
-  }).catch(e => console.error('sync err', e));
+  }).catch(e => {
+    console.error('sync err', e);
+    showToastMessage('⚠️ 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
+  });
 }
 
 // 스타일 이미지만 Firestore에 업데이트 — read-merge-write로 타인 이미지 덮어쓰기 방지
@@ -10829,9 +10842,9 @@ async function _syncStyleImagesToCloud(proj) {
         }
         return it;
       });
-      // local에만 있는 이미지 추가
+      // local에만 있는 이미지 추가 (base64 폴백은 1MB 제한 방지 위해 제외 — Storage 업로드 재시도 필요)
       const cloudUrls = new Set(ci.map(x => x.url));
-      const localOnly = li.filter(x => !cloudUrls.has(x.url));
+      const localOnly = li.filter(x => !cloudUrls.has(x.url) && x.url && !x.url.startsWith('data:'));
       const m = [...result, ...localOnly];
       if (m.length) merged[r] = m;
     });
@@ -10849,6 +10862,7 @@ async function _syncStyleImagesToCloud(proj) {
     console.log('[styleSync] ✅ merged', Object.values(merged).reduce((s,a)=>s+a.length,0), 'images');
   } catch(e) {
     console.error('[styleSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 스타일 이미지 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   }
 }
 
@@ -12896,6 +12910,7 @@ async function saveMeeting() {
   const tmpDiv = document.createElement('div');
   tmpDiv.innerHTML = content;
   const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
+  let _mwUploadFailed = false;
   if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
     const proj0 = getProject();
     const projId = (proj0?.cloudId || proj0?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
@@ -12912,8 +12927,11 @@ async function saveMeeting() {
         imgEl.setAttribute('src', url);
       } catch(e) {
         console.warn('[meetingImg] 업로드 실패, 로컬 유지:', e.message);
+        _mwUploadFailed = true;
       }
     }
+  } else if (tmpDiv.querySelector('img[src^="data:"]')) {
+    _mwUploadFailed = true; // 로그인 안 됨 또는 Storage 미초기화 → 이미지가 이 기기에만 저장됨
   }
   // 최종 HTML (base64 → URL 교체 반영)
   const finalContent = tmpDiv.innerHTML;
@@ -12951,7 +12969,7 @@ async function saveMeeting() {
     closeMeetingAdd();
     renderMeetingTab();
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
-    showToastMessage('✅ 기록이 수정됐습니다');
+    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요 (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 수정됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
   } else {
     // ── 신규 생성 ──────────────────────────────
@@ -12969,13 +12987,27 @@ async function saveMeeting() {
     save();
     closeMeetingAdd();
     renderMeetingTab();
-    showToastMessage('✅ 기록이 저장됐습니다');
+    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요 (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 저장됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
     if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
   }
   } finally {
     _saveMeetingInProgress = false;
   }
+}
+
+// 본문 HTML 안의 base64 인라인 이미지를 제거 (Firebase 업로드 실패 시 로컬에만 남은 데이터)
+// → Firestore 1MB 문서 제한 초과로 전체 동기화가 통째로 실패하는 것을 방지
+function _stripBase64FromHtml(html) {
+  if (!html || html.indexOf('data:') === -1) return html;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  let removed = false;
+  tmp.querySelectorAll('img').forEach(img => {
+    const src = img.getAttribute('src') || '';
+    if (src.startsWith('data:')) { img.closest('.mw-img-block')?.remove() || img.remove(); removed = true; }
+  });
+  return removed ? tmp.innerHTML : html;
 }
 
 async function _syncMeetingsToCloud(proj) {
@@ -12985,6 +13017,7 @@ async function _syncMeetingsToCloud(proj) {
     // base64 이미지는 localStorage에만 저장 → Firestore 1MB 제한 방지
     const meetingsLite = (proj.meetings || []).map(m => ({
       ...m,
+      content: _stripBase64FromHtml(m.content),
       images: Array.isArray(m.images)
         ? m.images.filter(img => img && !img.startsWith('data:'))
         : [],
@@ -12994,7 +13027,10 @@ async function _syncMeetingsToCloud(proj) {
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
     });
-  } catch(e) { console.error('[meetingSync]', e); }
+  } catch(e) {
+    console.error('[meetingSync]', e);
+    showToastMessage('⚠️ 기록 동기화 실패 — 네트워크를 확인해주세요');
+  }
 }
 
 async function _sendMentionNotifications(meeting, emails, proj) {
