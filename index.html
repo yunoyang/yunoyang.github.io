@@ -6378,6 +6378,12 @@ function addStyleImage(room, item) {
   // 공동작업자는 save()에서 Firestore 못 씀 → projectData.styleImages 직접 업데이트
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
   if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
+  // N 뱃지: 업로드 즉시 표시 (협업 동기화 대기 없이 본인 화면에도 바로 반영)
+  if (proj.cloudId) {
+    const badges = _cleanBadges(_getBadges(proj.cloudId));
+    badges.rooms[room] = Date.now();
+    _saveBadges(proj.cloudId, badges);
+  }
   renderStyleTab();
   // 뷰어가 현재 같은 방으로 열려있으면 새 이미지로 이동하며 갱신
   const svScreen = document.getElementById('style-viewer-screen');
