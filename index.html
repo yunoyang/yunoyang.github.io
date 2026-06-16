@@ -3946,6 +3946,9 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="_mwInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </button>
+      <button onclick="_mwOpenLinkList()" title="링크 리스트 삽입 (업체명+URL 여러 줄)" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.5" fill="#555" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="#555" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="#555" stroke="none"/></svg>
+      </button>
       <div style="flex:1;min-width:4px;"></div>
       <!-- 우측 고정 -->
       <button onclick="_mwAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
@@ -4177,6 +4180,18 @@ button, input, textarea, select { font-family:var(--font); }
   <button class="mw-size-btn" data-w="100%" onclick="_mwSetImgSize('100%')">Full</button>
   <div style="width:1px;height:14px;background:rgba(255,255,255,.2);margin:0 2px;flex-shrink:0;"></div>
   <button class="mw-del-btn" onclick="_mwImgDelete()" title="이미지 삭제">✕</button>
+</div>
+
+<!-- ===== 기록 에디터: 링크 리스트 삽입 ===== -->
+<div id="mw-linklist-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9300;" onclick="if(event.target===this)_mwCloseLinkList()"></div>
+<div id="mw-linklist-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));z-index:9301;max-width:540px;margin:0 auto;max-height:80vh;overflow-y:auto;">
+  <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px;">링크 리스트 삽입</div>
+  <div style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.5;">한 줄에 "업체명, URL" 형식으로 입력하세요.<br>표를 복사해 그대로 붙여넣어도 자동으로 인식돼요.</div>
+  <textarea id="mw-linklist-input" placeholder="대신특수목재, http://wood21.co.kr&#10;인우드, http://inwoodplus.com" style="width:100%;height:160px;border:1.5px solid #e5e5ec;border-radius:12px;padding:12px 14px;font-size:14px;font-family:var(--font);resize:vertical;box-sizing:border-box;outline:none;"></textarea>
+  <div style="display:flex;gap:10px;margin-top:14px;">
+    <button onclick="_mwCloseLinkList()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:12px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);">취소</button>
+    <button onclick="_mwConfirmLinkList()" style="flex:2;height:48px;border:none;border-radius:12px;background:#222;font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--font);">삽입하기</button>
+  </div>
 </div>
 
 <!-- ===== 공정 기록 작성/수정 전체화면 에디터 ===== -->
@@ -12680,6 +12695,51 @@ function _mwInsertLink() {
   const label = selectedText || url;
   document.execCommand('insertHTML', false,
     `<a href="${url}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;">${label}</a>`);
+}
+// ── 링크 리스트 삽입 (업체명 + URL 여러 줄 → 클릭 가능한 목록) ──────────────
+let _mwLinkListSavedRange = null;
+function _mwOpenLinkList() {
+  const ed = document.getElementById('meeting-editor');
+  ed.focus();
+  const sel = window.getSelection();
+  _mwLinkListSavedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+  document.getElementById('mw-linklist-input').value = '';
+  document.getElementById('mw-linklist-overlay').style.display = '';
+  document.getElementById('mw-linklist-sheet').style.display = '';
+  setTimeout(() => document.getElementById('mw-linklist-input').focus(), 100);
+}
+function _mwCloseLinkList() {
+  document.getElementById('mw-linklist-overlay').style.display = 'none';
+  document.getElementById('mw-linklist-sheet').style.display = 'none';
+}
+// 한 줄에서 "이름"과 "URL"을 분리 — 탭(표 붙여넣기), 쉼표, 콜론, 공백 구분 모두 지원
+function _mwParseLinkListLine(line) {
+  const urlMatch = line.match(/(https?:\/\/[^\s,|]+)/);
+  if (!urlMatch) return null;
+  const url = urlMatch[1].replace(/[)\]>.,]+$/, '');
+  let name = line.slice(0, urlMatch.index).trim();
+  name = name.replace(/[\t,|:]+$/, '').trim();
+  if (!name) name = url;
+  return { name, url };
+}
+function _mwConfirmLinkList() {
+  const raw = document.getElementById('mw-linklist-input').value;
+  const items = raw.split('\n').map(_mwParseLinkListLine).filter(Boolean);
+  if (!items.length) { showToastMessage('⚠️ "업체명, URL" 형식의 줄이 없습니다'); return; }
+  const html = '<ul style="margin:10px 0;padding-left:22px;">' +
+    items.map(it => `<li style="margin:4px 0;"><a href="${esc(it.url)}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;font-weight:600;">${esc(it.name)}</a></li>`).join('') +
+    '</ul><p><br></p>';
+  _mwCloseLinkList();
+  const ed = document.getElementById('meeting-editor');
+  ed.focus();
+  const sel = window.getSelection();
+  if (_mwLinkListSavedRange) {
+    sel.removeAllRanges();
+    sel.addRange(_mwLinkListSavedRange);
+  }
+  document.execCommand('insertHTML', false, html);
+  _mwEditorInput();
+  showToastMessage(`✅ 링크 ${items.length}개 삽입됨`);
 }
 function _mwAtBtn() {
   const ed = document.getElementById('meeting-editor');
