@@ -7916,10 +7916,11 @@ let _pendingNewProcId = null;
 let _planPhase = 'planning'; // 기본: 플래닝
 
 function _getProcPhase(proc) {
+  if (proc.phase) return proc.phase; // 커스텀 공정: 추가 시점의 탭을 그대로 사용
   for (const cat of PROCESS_CATEGORIES) {
     if (cat.items.includes(proc.name)) return cat.id;
   }
-  return null;
+  return 'planning'; // 매칭 안 되는 구버전 데이터 — 첫 탭에서라도 보이게
 }
 
 function setPlanPhase(phase, btn) {
@@ -9128,7 +9129,7 @@ function confirmAddProcess() {
   const _newProcId = 'proc_'+Date.now();
   const _defaultDate = _addProcessDefaultDate || '';
   _addProcessDefaultDate = null;
-  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, scheduleStart:_defaultDate, scheduleEnd:_defaultDate, company:'', details:[] });
+  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, phase:_activeProcessTab, scheduleStart:_defaultDate, scheduleEnd:_defaultDate, company:'', details:[] });
   gtag('event', 'add_process', { process_type: name, is_custom: !!custom });
   trackEvent('process', 'add_process', name);
   _pendingNewProcId = _newProcId;
