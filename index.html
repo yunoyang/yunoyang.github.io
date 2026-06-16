@@ -3386,7 +3386,7 @@ button, input, textarea, select { font-family:var(--font); }
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
             <div style="display:flex;gap:2px;align-items:center;">
               <button class="fp-edit-btn" id="iv-fp-edit-btn" title="도면 편집" style="display:none;background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;" onclick="openFpEditor()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </button>
               <span id="iv-fp-sep1" style="color:#ddd;font-size:12px;display:none;">|</span>
               <button class="fp-edit-btn" id="iv-fp-add-btn" title="도면 추가" onclick="_ivAddFloorplan()" style="background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;">
@@ -3995,7 +3995,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="dialog" style="gap:0;padding:0;">
     <div style="width:36px;height:4px;border-radius:4px;background:#e0e0e0;margin:14px auto 8px;"></div>
     <button class="mobile-sheet-item" onclick="openEditMeeting();closeDialog('dlg-meeting-more');">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       수정
     </button>
     <button class="mobile-sheet-item" onclick="shareMeetingUrl();closeDialog('dlg-meeting-more');">
@@ -8435,7 +8435,7 @@ function _renderProcRecords(procId) {
         <span style="font-size:12px;color:#bbb;">${dateStr} · ${esc(r.createdByName||r.createdBy||'')}</span>
         <div style="display:flex;gap:4px;">
           <button onclick="openProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
           <button onclick="_deleteProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#e53935;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -12372,7 +12372,7 @@ function _openFurnitureMenu(id) {
       구매 링크 열기
     </button>` : ''}
     <button style="${btnStyle}" onclick="_closeFurnitureMenu();_editFurnitureItem('${id}')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
       수정
     </button>
     <button style="${btnStyle};color:#e33;" onclick="_closeFurnitureMenu();_deleteFurnitureItem('${id}')">
