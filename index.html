@@ -5922,7 +5922,7 @@ function renderContentTab() {
     return;
   }
   const _cproj = getProject();
-  const _cbadges = (_cproj?.cloudId && _cproj.isCloud) ? _getBadges(_cproj.cloudId) : {};
+  const _cbadges = _cproj ? _getBadges(_cproj.cloudId || _cproj.id) : {};
   list.innerHTML = links.map(item => {
     const isYt = item.type === 'youtube';
     const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : '';
@@ -6173,7 +6173,7 @@ function renderStyleTab() {
     _recoverStyleImagesFromStorage().then(ok => { if (ok) showToastMessage(_ti('check') + '스타일 이미지를 복구했습니다'); });
   }
   const proj = getProject();
-  const _badges = (proj?.cloudId && proj.isCloud) ? _getBadges(proj.cloudId) : {};
+  const _badges = proj ? _getBadges(proj.cloudId || proj.id) : {};
   const container = document.getElementById('style-rooms-container');
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
@@ -6378,11 +6378,12 @@ function addStyleImage(room, item) {
   // 공동작업자는 save()에서 Firestore 못 씀 → projectData.styleImages 직접 업데이트
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
   if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
-  // N 뱃지: 업로드 즉시 표시 (협업 동기화 대기 없이 본인 화면에도 바로 반영)
-  if (proj.cloudId) {
-    const badges = _cleanBadges(_getBadges(proj.cloudId));
+  // N 뱃지: 업로드 즉시 표시 (협업 동기화 대기 없이 본인 화면에도 바로 반영, 클라우드 미연동 프로젝트도 동작)
+  {
+    const badgeKey = proj.cloudId || proj.id;
+    const badges = _cleanBadges(_getBadges(badgeKey));
     badges.rooms[room] = Date.now();
-    _saveBadges(proj.cloudId, badges);
+    _saveBadges(badgeKey, badges);
   }
   renderStyleTab();
   // 뷰어가 현재 같은 방으로 열려있으면 새 이미지로 이동하며 갱신
@@ -6880,7 +6881,7 @@ function openPinsSheet(slideIdx) {
   const body = document.getElementById('sv-pins-body');
   if (!body) return;
   const _svproj = getProject();
-  const _svbadges = (_svproj?.cloudId && _svproj.isCloud) ? _getBadges(_svproj.cloudId) : {};
+  const _svbadges = _svproj ? _getBadges(_svproj.cloudId || _svproj.id) : {};
   if (!pins.length) {
     body.innerHTML = `<div class="sv-pin-hint">이미지 위를 길게 눌러<br>제품 링크를 추가하세요</div>`;
   } else {
