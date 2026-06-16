@@ -13183,9 +13183,11 @@ async function shareMeetingUrl() {
       tmp.innerHTML = m.content || '';
       return [...tmp.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(s => s && !s.startsWith('data:'));
     })();
+    // base64 인라인 이미지는 모바일에서 렌더 실패/메모리 문제를 일으킬 수 있어 공유본에서 제거
+    const _shareContent = _stripBase64FromHtml(m.content || '');
     const shareData = {
       title: m.title || '(제목 없음)',
-      content: m.content || '',
+      content: _shareContent,
       images: _shareImgs,
       createdAt: m.createdAt || 0,
       createdByName: m.createdByName || m.createdBy || '',
