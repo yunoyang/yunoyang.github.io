@@ -13302,6 +13302,9 @@ async function _checkMeetingShareUrl() {
       ? rawContent
       : esc(rawContent).replace(/@([\w가-힣]+)/g,'<span style="color:#5084ff;font-weight:600;">@$1</span>').replace(/\n/g,'<br>');
 
+    // 기존(이전 버전)에 저장된 base64 인라인 이미지는 모바일에서 렌더 실패를 유발할 수 있어 제거
+    contentHtml = _stripBase64FromHtml(contentHtml);
+
     // content에 img가 없으면 d.images[] 를 인라인으로 추가 (구버전 호환)
     const tmpCheck = document.createElement('div');
     tmpCheck.innerHTML = contentHtml;
