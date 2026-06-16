@@ -12759,14 +12759,21 @@ function _mwUpdatePlaceholder() {
 // ── @멘션 감지 (contenteditable) ────────────────────────────────────────────
 function _mwEditorInput() {
   _mwUpdatePlaceholder();
+  const dropdown = document.getElementById('meeting-mention-dropdown');
   const sel = window.getSelection();
   if (!sel.rangeCount) return;
   const range = sel.getRangeAt(0);
-  const node = range.startContainer;
-  if (node.nodeType !== Node.TEXT_NODE) { document.getElementById('meeting-mention-dropdown').style.display='none'; return; }
-  const textBefore = node.textContent.slice(0, range.startOffset);
+  let node = range.startContainer;
+  // 빈 에디터에서 첫 글자로 '@'를 칠 때는 startContainer가 텍스트 노드가 아닐 수 있음 → 자식 중 텍스트 노드 탐색
+  if (node.nodeType !== Node.TEXT_NODE) {
+    const kids = node.childNodes || [];
+    const lastText = [...kids].reverse().find(n => n.nodeType === Node.TEXT_NODE);
+    if (lastText) node = lastText;
+    else { dropdown.style.display='none'; return; }
+  }
+  const offset = (node === range.startContainer) ? range.startOffset : node.textContent.length;
+  const textBefore = node.textContent.slice(0, offset);
   const atIdx = textBefore.lastIndexOf('@');
-  const dropdown = document.getElementById('meeting-mention-dropdown');
   if (atIdx === -1 || textBefore.slice(atIdx).includes(' ')) { dropdown.style.display='none'; return; }
   const query = textBefore.slice(atIdx+1).toLowerCase();
   const proj = getProject();
@@ -12775,8 +12782,12 @@ function _mwEditorInput() {
     proj?.owner ? {email:proj.owner.email,name:proj.owner.name||proj.owner.email.split('@')[0]} : null
   ].filter(Boolean).filter(p=>p.email!==state.user?.email);
   const matches = query ? all.filter(p=>p.name.toLowerCase().includes(query)||p.email.toLowerCase().includes(query)) : all;
-  if (!matches.length) { dropdown.style.display='none'; return; }
   dropdown.style.display = 'block';
+  if (!all.length) {
+    dropdown.innerHTML = `<div style="padding:14px;font-size:13px;color:#aaa;text-align:center;">멘션할 협업자가 없어요<br>프로젝트에 멤버를 초대해보세요</div>`;
+    return;
+  }
+  if (!matches.length) { dropdown.style.display='none'; return; }
   // onmousedown + preventDefault: 클릭 시 에디터 포커스 유지 (getSelection 보존)
   dropdown.innerHTML = matches.map(p=>`<div onmousedown="event.preventDefault();_mwInsertMention('${p.email}','${esc(p.name)}')" ontouchstart="event.preventDefault();_mwInsertMention('${p.email}','${esc(p.name)}')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #f5f7fa;"><span style="font-weight:600;">${esc(p.name)}</span> <span style="color:#aaa;font-size:12px;">${p.email}</span></div>`).join('');
 }
