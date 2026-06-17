@@ -9631,8 +9631,9 @@ function _loadInfoView() {
   const fpSep2       = document.getElementById('iv-fp-sep2');
   if (fpCard && fpScroll) {
     const images = _getFpImages(proj);
-    const editedSrc = proj.floorplanEditedImage;
-    const displayImages = images.map((src, i) => (i === 0 && editedSrc) ? editedSrc : src);
+    const editedImgs = proj.floorplanEditedImages || [];
+    const editedSrc0 = proj.floorplanEditedImage;
+    const displayImages = images.map((src, i) => editedImgs[i] || (i === 0 ? editedSrc0 : null) || src);
     const validImgs = displayImages.filter(Boolean);
     const hasImgs = validImgs.length > 0;
     const canAdd  = validImgs.length < 3;
@@ -14052,6 +14053,7 @@ let fpHistory = [];
 let fpHistoryIdx = -1;
 let fpGrayscale = false;
 let fpBgImg = null;
+let _fpEditingIdx = 0; // 현재 편집 중인 도면 인덱스
 let fpShapeColor = '#111111';
 let fpStrokeW = 1;
 let fpFillEnabled = false;
@@ -14072,8 +14074,9 @@ function openPhotoModalFp(clickedSrc) {
   // 현재 프로젝트의 유효 이미지 목록 수집
   const proj = getProject();
   const images = _getFpImages(proj);
-  const editedSrc = proj?.floorplanEditedImage;
-  const displayImages = images.map((s, i) => (i === 0 && editedSrc) ? editedSrc : s).filter(Boolean);
+  const editedImgs = proj?.floorplanEditedImages || [];
+  const editedSrc0 = proj?.floorplanEditedImage;
+  const displayImages = images.map((s, i) => editedImgs[i] || (i === 0 ? editedSrc0 : null) || s).filter(Boolean);
   if (!displayImages.length) displayImages.push(clickedSrc);
   let cur = Math.max(0, displayImages.indexOf(clickedSrc));
 
@@ -14116,12 +14119,97 @@ function openPhotoModalFp(clickedSrc) {
   modal.querySelector('#fpm-close').onclick = () => modal.remove();
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
-  // 터치 스와이프
-  let tx0 = 0;
-  modal.addEventListener('touchstart', e => { tx0 = e.touches[0].clientX; }, { passive: true });
-  modal.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - tx0;
-    if (Math.abs(dx) > 40) { cur = dx < 0 ? (cur+1)%displayImages.length : (cur-1+displayImages.length)%displayImages.length; render(); }
+  // 핀치줌 / 더블탭 / 스와이프
+  let _zoom = 1, _tx = 0, _ty = 0;
+  let _dragX = 0, _dragY = 0, _dragging = false;
+  let _pinching = false, _pinchD0 = 0, _zoom0 = 1;
+  let _tapTime = 0, _tapX = 0, _tapY = 0;
+  let _swipeX0 = 0, _swipeY0 = 0;
+  const imgWrap = modal.querySelector('#fpm-wrap');
+
+  function _applyTransform(animated) {
+    img.style.transition = animated ? 'transform .25s ease' : 'none';
+    img.style.transform = `translate(${_tx}px,${_ty}px) scale(${_zoom})`;
+  }
+  function _resetZoom(animated) {
+    _zoom = 1; _tx = 0; _ty = 0; _applyTransform(animated);
+  }
+  function _clampPan() {
+    const rect = img.getBoundingClientRect();
+    const ww = window.innerWidth, wh = window.innerHeight;
+    const hw = rect.width / 2, hh = rect.height / 2;
+    const maxX = Math.max(0, (rect.width - ww) / 2);
+    const maxY = Math.max(0, (rect.height - wh) / 2);
+    _tx = Math.max(-maxX, Math.min(maxX, _tx));
+    _ty = Math.max(-maxY, Math.min(maxY, _ty));
+  }
+
+  function _dist(t) { const dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+
+  imgWrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      _pinching = true;
+      _pinchD0 = _dist(e.touches);
+      _zoom0 = _zoom;
+      e.preventDefault();
+    } else if (e.touches.length === 1) {
+      _pinching = false;
+      _swipeX0 = e.touches[0].clientX;
+      _swipeY0 = e.touches[0].clientY;
+      _dragging = true;
+      _dragX = e.touches[0].clientX - _tx;
+      _dragY = e.touches[0].clientY - _ty;
+      // 더블탭
+      const now = Date.now();
+      const dx = e.touches[0].clientX - _tapX;
+      const dy = e.touches[0].clientY - _tapY;
+      if (now - _tapTime < 300 && Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+        if (_zoom > 1.1) { _resetZoom(true); }
+        else {
+          _zoom = 2.5;
+          _tx = (window.innerWidth/2 - _tapX) * (_zoom - 1);
+          _ty = (window.innerHeight/2 - _tapY) * (_zoom - 1);
+          _clampPan();
+          _applyTransform(true);
+        }
+        _tapTime = 0; return;
+      }
+      _tapTime = now; _tapX = e.touches[0].clientX; _tapY = e.touches[0].clientY;
+    }
+  }, { passive: false });
+
+  imgWrap.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && _pinching) {
+      const d = _dist(e.touches);
+      _zoom = Math.max(1, Math.min(5, _zoom0 * d / _pinchD0));
+      _applyTransform(false);
+      e.preventDefault();
+    } else if (e.touches.length === 1 && _dragging && _zoom > 1.05) {
+      _tx = e.touches[0].clientX - _dragX;
+      _ty = e.touches[0].clientY - _dragY;
+      _clampPan();
+      _applyTransform(false);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  imgWrap.addEventListener('touchend', e => {
+    if (_pinching && e.touches.length < 2) {
+      _pinching = false;
+      if (_zoom < 1.1) _resetZoom(true);
+      else { _clampPan(); _applyTransform(true); }
+      return;
+    }
+    _dragging = false;
+    if (_zoom <= 1.05) {
+      const dx = (e.changedTouches[0]?.clientX ?? _swipeX0) - _swipeX0;
+      const dy = (e.changedTouches[0]?.clientY ?? _swipeY0) - _swipeY0;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        cur = dx < 0 ? (cur+1)%displayImages.length : (cur-1+displayImages.length)%displayImages.length;
+        _resetZoom(false);
+        render();
+      }
+    }
   }, { passive: true });
 
   // 키보드
@@ -14140,11 +14228,14 @@ function openFpEditorWithComment() {
   openFpEditor();
   setTimeout(() => fpSetTool('comment'), 700);
 }
-function openFpEditor() {
+function openFpEditor(startIdx) {
   const proj = getProject();
   const images = _getFpImages(proj);
-  const imgUrl = proj?.floorplanEditedImage || images.find(Boolean) || proj?.floorplanImage;
-  if (!imgUrl) { alert('도면 이미지를 먼저 업로드하세요.'); return; }
+  const validIdxs = images.map((s,i) => s ? i : -1).filter(i => i >= 0);
+  if (!validIdxs.length) { alert('도면 이미지를 먼저 업로드하세요.'); return; }
+
+  _fpEditingIdx = (startIdx !== undefined && validIdxs.includes(startIdx)) ? startIdx : validIdxs[0];
+
   const ed = document.getElementById('fp-editor');
   ed.style.display = 'flex';
 
@@ -14175,9 +14266,44 @@ function openFpEditor() {
     }
   }
 
+  // 다중 도면 네비게이션 버튼
+  _fpUpdateNavUI(validIdxs);
+
   fpShowCategory('가구', document.getElementById('fp-tab-furniture'));
-  setTimeout(() => fpInitCanvas(imgUrl), 80);
+  setTimeout(() => fpInitCanvas(_fpEditingIdx), 80);
   document.addEventListener('keydown', fpOnKeyDown);
+}
+
+function _fpUpdateNavUI(validIdxsParam) {
+  const proj = getProject();
+  const images = _getFpImages(proj);
+  const validIdxs = validIdxsParam || images.map((s,i) => s ? i : -1).filter(i => i >= 0);
+  const showNav = validIdxs.length > 1;
+  const navSep = document.getElementById('fp-nav-sep');
+  const navPrev = document.getElementById('fp-nav-prev');
+  const navNext = document.getElementById('fp-nav-next');
+  const navLabel = document.getElementById('fp-nav-label');
+  if (navSep) navSep.style.display = showNav ? '' : 'none';
+  if (navPrev) { navPrev.style.display = showNav ? '' : 'none'; navPrev.disabled = _fpEditingIdx <= validIdxs[0]; }
+  if (navNext) { navNext.style.display = showNav ? '' : 'none'; navNext.disabled = _fpEditingIdx >= validIdxs[validIdxs.length-1]; }
+  if (navLabel) { navLabel.style.display = showNav ? '' : 'none'; navLabel.textContent = `도면 ${validIdxs.indexOf(_fpEditingIdx)+1}/${validIdxs.length}`; }
+}
+
+async function fpSwitchImage(newIdx) {
+  const proj = getProject();
+  const images = _getFpImages(proj);
+  const validIdxs = images.map((s,i) => s ? i : -1).filter(i => i >= 0);
+  if (!validIdxs.includes(newIdx)) return;
+  // 현재 캔버스 JSON 저장
+  if (fpCanvas) {
+    try {
+      const canvasJSON = JSON.stringify(fpCanvas.toJSON(['selectable','evented','hasControls','hasBorders','_fpComment']));
+      localStorage.setItem(`vb_fpcj_${proj.id}_${_fpEditingIdx}`, canvasJSON);
+    } catch(e) {}
+  }
+  _fpEditingIdx = newIdx;
+  _fpUpdateNavUI(validIdxs);
+  fpInitCanvas(_fpEditingIdx);
 }
 
 function closeFpEditor() {
@@ -14261,7 +14387,7 @@ function fpDuplicateSelected() {
 // ──────────────────────────────────────────
 // Canvas init
 // ──────────────────────────────────────────
-function fpInitCanvas(bgUrl) {
+function fpInitCanvas(idxOrUrl) {
   const wrap = document.getElementById('fp-canvas-wrap');
   const W = wrap.clientWidth  || 800;
   const H = wrap.clientHeight || 600;
@@ -14275,14 +14401,31 @@ function fpInitCanvas(bgUrl) {
     selection: true,
   });
 
-  // 저장된 레이어 JSON이 있으면 복원, 없으면 배경 이미지만 세팅
+  // 인덱스 또는 직접 URL 지원
   const proj = getProject();
+  let bgUrl, editIdx;
+  if (typeof idxOrUrl === 'number') {
+    editIdx = idxOrUrl;
+    const images = _getFpImages(proj);
+    const editedImgs = proj?.floorplanEditedImages || [];
+    bgUrl = editedImgs[editIdx] || (editIdx === 0 && proj?.floorplanEditedImage) || images[editIdx] || images.find(Boolean);
+  } else {
+    bgUrl = idxOrUrl;
+    editIdx = _fpEditingIdx;
+  }
+  if (!bgUrl) return;
+
+  // 저장된 레이어 JSON이 있으면 복원, 없으면 배경 이미지만 세팅
   const savedJSON = proj ? (() => {
     try {
-      const ls = localStorage.getItem(`vb_fpcj_${proj.id}`);
-      if (ls) return JSON.parse(ls);
-      // localStorage 없으면 Firestore 백업에서 복원
-      if (proj.floorplanCanvasJSON) return JSON.parse(proj.floorplanCanvasJSON);
+      // 인덱스별 키 우선, 없으면 구버전 단일 키 (idx=0)
+      const perIdx = localStorage.getItem(`vb_fpcj_${proj.id}_${editIdx}`);
+      if (perIdx) return JSON.parse(perIdx);
+      if (editIdx === 0) {
+        const legacy = localStorage.getItem(`vb_fpcj_${proj.id}`);
+        if (legacy) return JSON.parse(legacy);
+        if (proj.floorplanCanvasJSON) return JSON.parse(proj.floorplanCanvasJSON);
+      }
     } catch(_) {}
     return null;
   })() : null;
@@ -15049,31 +15192,38 @@ async function fpSave() {
     const dataURL = _fpGetDataURL();
 
     // 레이어(오브젝트) JSON 저장 — localStorage + proj에 보존 (Firestore 백업)
+    const editIdx = _fpEditingIdx;
     try {
       const canvasJSON = JSON.stringify(fpCanvas.toJSON(['selectable','evented','hasControls','hasBorders','_fpComment']));
-      localStorage.setItem(`vb_fpcj_${proj.id}`, canvasJSON);
-      proj.floorplanCanvasJSON = canvasJSON; // Firestore 백업용
+      localStorage.setItem(`vb_fpcj_${proj.id}_${editIdx}`, canvasJSON);
+      // idx=0이면 구버전 키도 유지 (하위호환)
+      if (editIdx === 0) { localStorage.setItem(`vb_fpcj_${proj.id}`, canvasJSON); proj.floorplanCanvasJSON = canvasJSON; }
     } catch(e) { console.warn('canvas JSON 저장 실패:', e.message); }
 
     const uid = state.user?.uid;
+    const _setEditedImage = (url) => {
+      if (!proj.floorplanEditedImages) proj.floorplanEditedImages = [];
+      proj.floorplanEditedImages[editIdx] = url;
+      if (editIdx === 0) proj.floorplanEditedImage = url; // 구버전 하위호환
+    };
     if (_fbStorage && uid) {
       try {
         const blob = _dataUrlToBlob(dataURL);
-        const path = `floor-plans/${proj.id}/${uid}/${Date.now()}.png`;
+        const path = `floor-plans/${proj.id}/${uid}/${editIdx}_${Date.now()}.png`;
         const ref = _fbStorage.ref(path);
         await ref.put(blob, { contentType: 'image/png' });
         const downloadUrl = await ref.getDownloadURL();
-        proj.floorplanEditedImage = downloadUrl;
+        _setEditedImage(downloadUrl);
         save();
         _loadInfoView();
       } catch(storageErr) {
         console.warn('Storage 업로드 실패, 로컬 저장으로 전환:', storageErr.message);
-        proj.floorplanEditedImage = dataURL;
+        _setEditedImage(dataURL);
         save();
         _loadInfoView();
       }
     } else {
-      proj.floorplanEditedImage = dataURL;
+      _setEditedImage(dataURL);
       save();
       _loadInfoView();
     }
@@ -15345,6 +15495,14 @@ async function fpShareLink() {
       <button class="fp-hbtn danger" onclick="closeFpEditor()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         닫기
+      </button>
+      <div class="fp-sep" id="fp-nav-sep" style="display:none;"></div>
+      <button class="fp-hbtn" id="fp-nav-prev" style="display:none;" onclick="fpSwitchImage(_fpEditingIdx - 1)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span id="fp-nav-label" style="display:none;font-size:12px;color:rgba(255,255,255,0.6);font-weight:600;min-width:48px;text-align:center;"></span>
+      <button class="fp-hbtn" id="fp-nav-next" style="display:none;" onclick="fpSwitchImage(_fpEditingIdx + 1)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
     <div class="fp-sep"></div>
