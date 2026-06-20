@@ -1507,7 +1507,7 @@ button, input, textarea, select { font-family:var(--font); }
 .card-del-btn:hover { color:var(--danger); background:#fff0f0; }
 .card-del-btn svg { width:16px; height:16px; }
 .card-more-btn {
-  background:none; border:none; cursor:pointer; color:#555; padding:6px 9px;
+  background:none; border:none; cursor:pointer; color:#111; padding:6px 9px;
   display:flex; border-radius:8px; font-size:22px; font-weight:700; letter-spacing:1px;
   line-height:1; align-items:center; justify-content:center;
 }
@@ -1556,7 +1556,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .mobile-sheet-item:last-child { border-bottom:none; }
 .mobile-sheet-item:active { background:#f5f5f5; }
-.mobile-sheet-item svg, .mobile-sheet-item i { width:20px; height:20px; color:#555; flex-shrink:0; }
+.mobile-sheet-item svg, .mobile-sheet-item i { width:20px; height:20px; color:#111; flex-shrink:0; }
 .mobile-sheet-item.danger { color:#e03535; }
 .mobile-sheet-item.danger svg, .mobile-sheet-item.danger i { color:#e03535; }
 
@@ -1603,7 +1603,7 @@ button, input, textarea, select { font-family:var(--font); }
 .d-chev { color:#555; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
 .proc-card-actions { display:flex; align-items:center; justify-content:center; padding:6px 0; }
-.proc-delete-btn { display:flex; align-items:center; padding:8px 10px; color:#555; cursor:pointer; background:none; border:none; border-radius:8px; }
+.proc-delete-btn { display:flex; align-items:center; padding:8px 10px; color:#111; cursor:pointer; background:none; border:none; border-radius:8px; }
 .proc-delete-btn:active { color:#e03535; background:#fff0f0; }
 .proc-detail-link { display:flex; align-items:center; gap:4px; padding:8px 10px; font-size:14px; font-weight:600; color:#555555; cursor:pointer; background:none; border:none; font-family:var(--font); border-radius:8px; }
 /* 상세내역 다이얼로그 날짜 영역 */
@@ -2195,7 +2195,7 @@ button, input, textarea, select { font-family:var(--font); }
   font-size:14px; font-weight:600; cursor:pointer; font-family:var(--font);
 }
 .dialog-actions.split button { flex:1; height:48px; border-radius:12px; }
-.btn-cancel { background:#f0f2f5; color:#555; }
+.btn-cancel { background:#f0f2f5; color:#111; }
 .btn-confirm { background:#222; color:#fff; }
 
 /* ===== SHARE REDESIGN ===== */
@@ -3949,19 +3949,19 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="_mwInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
       <button onclick="_mwInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
       <button onclick="_mwInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </button>
       <button onclick="_mwOpenLinkList()" title="링크 리스트 삽입 (업체명+URL 여러 줄)" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.5" fill="#555" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="#555" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="#555" stroke="none"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="#111" stroke="none"/></svg>
       </button>
       <div style="flex:1;min-width:4px;"></div>
       <!-- 우측 고정 -->
       <button onclick="_mwAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
       <button onclick="_mwOpenProductList()" title="제품 리스트 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </button>
       <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <input type="file" accept="image/*" multiple id="meeting-image-input" style="display:none;" onchange="_meetingImagePreview(this)">
       </label>
     </div>
@@ -4016,7 +4016,7 @@ button, input, textarea, select { font-family:var(--font); }
       수정
     </button>
     <button class="mobile-sheet-item" onclick="shareMeetingUrl();closeDialog('dlg-meeting-more');">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2929 3.29289C11.6834 2.90237 12.3166 2.90237 12.7071 3.29289L16.7071 7.29289C17.0976 7.68342 17.0976 8.31658 16.7071 8.70711C16.3166 9.09763 15.6834 9.09763 15.2929 8.70711L12 5.41421L8.70711 8.70711C8.31658 9.09763 7.68342 9.09763 7.29289 8.70711C6.90237 8.31658 6.90237 7.68342 7.29289 7.29289L11.2929 3.29289Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3C12.5523 3 13 3.44772 13 4V15C13 15.5523 12.5523 16 12 16C11.4477 16 11 15.5523 11 15V4C11 3.44772 11.4477 3 12 3Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 12C4.55228 12 5 12.4477 5 13V18C5 19.1046 5.89543 20 7 20H17C18.1046 20 19 19.1046 19 18V13C19 12.4477 19.4477 12 20 12C20.5523 12 21 12.4477 21 13V18C21 20.2091 19.2091 22 17 22H7C4.79086 22 3 20.2091 3 18V13C3 12.4477 3.44772 12 4 12Z" fill="currentColor"/></svg>
       공유
     </button>
     <button class="mobile-sheet-item danger" onclick="deleteMeeting();closeDialog('dlg-meeting-more');" style="color:#e53935;">
@@ -4256,11 +4256,11 @@ button, input, textarea, select { font-family:var(--font); }
         <button onclick="_prInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
         <button onclick="_prInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
         <button onclick="_prInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </button>
         <button onclick="_prAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
         <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <input type="file" accept="image/*" multiple id="proc-record-img-input" style="display:none;" onchange="_prImgPreview(this)">
         </label>
       </div>
@@ -13831,11 +13831,11 @@ function _buildRecordLandingHtml({ meeting, proj, seoTitle, metaDesc, bodyHtml }
   const projForm  = proj.form || {};
   const projInfoHtml = `
     <div class="vb-meta-row">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       ${[projForm.type,projForm.size,projForm.method].flat().filter(Boolean).join(' · ')||'반셀프 인테리어'}
     </div>
     ${allStarts.length?`<div class="vb-meta-row">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       공사 기간 ${allStarts[0]} ~ ${allEnds[allEnds.length-1]||'진행중'}
     </div>`:''}`;
 
@@ -15993,7 +15993,7 @@ async function fpShareLink() {
       다운로드
     </button>
     <button class="fp-fbtn fp-fbtn-share" onclick="fpShareLink()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2929 3.29289C11.6834 2.90237 12.3166 2.90237 12.7071 3.29289L16.7071 7.29289C17.0976 7.68342 17.0976 8.31658 16.7071 8.70711C16.3166 9.09763 15.6834 9.09763 15.2929 8.70711L12 5.41421L8.70711 8.70711C8.31658 9.09763 7.68342 9.09763 7.29289 8.70711C6.90237 8.31658 6.90237 7.68342 7.29289 7.29289L11.2929 3.29289Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3C12.5523 3 13 3.44772 13 4V15C13 15.5523 12.5523 16 12 16C11.4477 16 11 15.5523 11 15V4C11 3.44772 11.4477 3 12 3Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 12C4.55228 12 5 12.4477 5 13V18C5 19.1046 5.89543 20 7 20H17C18.1046 20 19 19.1046 19 18V13C19 12.4477 19.4477 12 20 12C20.5523 12 21 12.4477 21 13V18C21 20.2091 19.2091 22 17 22H7C4.79086 22 3 20.2091 3 18V13C3 12.4477 3.44772 12 4 12Z" fill="currentColor"/></svg>
       공유 링크
     </button>
     <button class="fp-fbtn fp-fbtn-dl" onclick="fpSetTool('comment')">
