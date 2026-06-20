@@ -3965,7 +3965,10 @@ button, input, textarea, select { font-family:var(--font); }
         spellcheck="false"
         style="min-height:240px;padding:16px 20px 20px;font-size:16px;line-height:1.85;color:#222;font-family:var(--font);outline:none;word-break:break-word;"
         oninput="_mwEditorInput()"
-        onkeydown="_mwEditorKeydown(event)">
+        onkeydown="_mwEditorKeydown(event)"
+        onblur="_mwSaveRange()"
+        onmouseup="_mwSaveRange()"
+        onkeyup="_mwSaveRange()">
       </div>
       <div id="meeting-editor-ph" style="position:absolute;top:16px;left:20px;font-size:16px;color:#bbb;pointer-events:none;line-height:1.85;">내용을 입력하세요. @이름 으로 멘션</div>
       <!-- 멘션 드롭다운 -->
@@ -12862,6 +12865,28 @@ function _compressMeetingImg(dataUrl, maxW = 900, quality = 0.75) {
   });
 }
 
+let _mwSavedRange = null;
+function _mwSaveRange() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0);
+    const editor = document.getElementById('meeting-editor');
+    if (editor && editor.contains(range.commonAncestorContainer)) {
+      _mwSavedRange = range.cloneRange();
+    }
+  }
+}
+function _mwRestoreRange() {
+  const editor = document.getElementById('meeting-editor');
+  if (!editor) return;
+  editor.focus();
+  if (_mwSavedRange) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(_mwSavedRange);
+  }
+}
+
 async function _meetingImagePreview(input) {
   const files = Array.from(input.files);
   const editor = document.getElementById('meeting-editor');
@@ -12873,10 +12898,12 @@ async function _meetingImagePreview(input) {
     const compressed = await _compressMeetingImg(raw);
     if (!compressed) continue;
     added++;
-    // 커서 위치에 인라인으로 삽입
-    editor.focus();
+    // 저장된 커서 위치 복원 후 삽입
+    _mwRestoreRange();
     const html = `<div class="mw-img-block"><img src="${compressed}" class="mw-inline-img" style="width:100%;border-radius:8px;display:block;cursor:pointer;" onclick="_mwImgClick(event,this)"></div><p><br></p>`;
     document.execCommand('insertHTML', false, html);
+    // 삽입 후 현재 커서 위치 저장 (다음 이미지가 이어서 삽입되도록)
+    _mwSaveRange();
   }
   input.value = '';
   if (added > 0) { _mwUpdatePlaceholder(); showToastMessage(`✅ 사진 ${added > 1 ? added+'장' : ''}삽입됐습니다`); }
