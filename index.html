@@ -3187,8 +3187,8 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- ===== LANDING ===== -->
 <div class="screen landing-screen" id="screen-landing">
 
-  <!-- 배경 이미지 -->
-  <img class="landing-bg-img" src="landing-bg.jpg" alt="">
+  <!-- 배경 이미지 (랜덤) -->
+  <img class="landing-bg-img" id="landing-bg-img" src="landing-bg.jpg" alt="">
 
   <!-- 타이틀 + 서브카피 -->
   <div class="landing-mid">
@@ -12062,6 +12062,12 @@ async function _initMeetingImages() {
 _initMeetingImages();
 initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
+// 랜딩 배경 랜덤 적용
+(function() {
+  const bgs = ['landing-bg.jpg', 'landing-bg-2.jpg', 'landing-bg-3.jpg'];
+  const img = document.getElementById('landing-bg-img');
+  if (img) img.src = bgs[Math.floor(Math.random() * bgs.length)];
+})();
 goTo('landing');
 updateLoginUI();
 window.addEventListener('load', () => {
