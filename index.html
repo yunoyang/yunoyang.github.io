@@ -169,7 +169,7 @@
   --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 /* SVG Icon Sprite */
-svg.icon { display:inline-block; vertical-align:middle; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+svg.icon { display:inline-block; vertical-align:middle; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; overflow:hidden; }
 body { font-family:var(--font); background:var(--bg); }
@@ -1841,7 +1841,7 @@ button, input, textarea, select { font-family:var(--font); }
   display:flex; align-items:center; color:#222; border-radius:6px;
 }
 .back-btn:hover { background:#f0f0f0; }
-.back-btn svg { width:24px; height:24px; stroke-width:2.8; }
+.back-btn svg { width:24px; height:24px; stroke-width:1.5; }
 .form-header h2 { font-size:18px; font-weight:700; }
 .form-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:28px; }
 .form-group { display:flex; flex-direction:column; gap:10px; }
@@ -2343,7 +2343,7 @@ button, input, textarea, select { font-family:var(--font); }
   font-size:13px; font-weight:400; color:#333; border:none; background:transparent;
   cursor:pointer; font-family:var(--font); outline:none; flex-shrink:0;
   -webkit-appearance:none; appearance:none; padding:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 0 center; padding-right:16px;
 }
 .cm-role-select:focus { outline:none; }
@@ -3200,11 +3200,11 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
         <span class="landing-status-badge">진행중</span>
       </div>
-      <svg width="24" height="24" fill="none" stroke="#111" stroke-width="1" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="24" height="24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
     <button class="landing-btn-new" id="landing-btn-new" onclick="startNewProject()" style="display:none;">
       <span>새 공사</span>
-      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="1" viewBox="0 0 24 24" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="1.5" viewBox="0 0 24 24" style="flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <!-- 비로그인: 구글 로그인만 -->
     <button class="landing-btn-google" id="landing-btn-google" onclick="openDialog('dlg-login')">
@@ -3219,7 +3219,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="screen-scroll" id="main-scroll">
   <div class="header">
     <button class="header-home-btn" onclick="goTo('landing')" title="홈으로">
-      <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="3"/></svg>
+      <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="1.5"/></svg>
     </button>
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
@@ -3257,7 +3257,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="summary-more-btn" onclick="goTo('form')">
           <span style="display:inline-flex;align-items:center;gap:4px;">
             내 공사 정보 더보기
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
           </span>
         </button>
       </div>
@@ -3357,7 +3357,7 @@ button, input, textarea, select { font-family:var(--font); }
       <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
     </button>
     <button class="dropdown-item" id="menu-admin-btn" style="display:none;" onclick="openAdminDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
     </button>
     <div class="dropdown-sep"></div>
     <button class="dropdown-item" id="menu-login-btn" onclick="openAccountDialog();closeAllMenus();">
@@ -3373,7 +3373,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="form-title">공사 정보</h2>
       <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
-        <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+        <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
     </div>
 
@@ -3391,15 +3391,15 @@ button, input, textarea, select { font-family:var(--font); }
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
             <div style="display:flex;gap:2px;align-items:center;">
               <button class="fp-edit-btn" id="iv-fp-edit-btn" title="도면 편집" style="display:none;background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;" onclick="openFpEditor()">
-                <svg width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               </button>
               <span id="iv-fp-sep1" style="color:#ddd;font-size:12px;display:none;">|</span>
               <button class="fp-edit-btn" id="iv-fp-add-btn" title="도면 추가" onclick="_ivAddFloorplan()" style="background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
               <span id="iv-fp-sep2" style="color:#ddd;font-size:12px;display:none;">|</span>
               <button class="fp-edit-btn" id="iv-fp-comment-btn" title="코멘트" style="display:none;background:none;color:#333;border:none;box-shadow:none;padding:6px 8px;" onclick="openFpEditorWithComment()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </button>
             </div>
           </div>
@@ -3412,7 +3412,7 @@ button, input, textarea, select { font-family:var(--font); }
           <span style="font-size:14px;font-weight:600;color:#999;">총 예상 비용</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:16px;font-weight:400;color:#222;" id="iv-cost-total">-</span>
-            <svg id="iv-cost-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg id="iv-cost-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
         <div id="iv-cost-detail" style="display:none;overflow:hidden;">
@@ -3645,13 +3645,13 @@ button, input, textarea, select { font-family:var(--font); }
             <div style="font-size:13px;color:#999;line-height:1.6;padding-bottom:18px;">공사 시작 전, 공간의 방향과 계획을 잡아드립니다.</div>
           </div>
           <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;flex:1;">
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공정 플래닝 및 우선순위 정리</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>3D 도면 제작 (공간 시각화)</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>전기 공사 계획 조언</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>조명 배치 계획</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Vibespace 도면 기반 검토</div>
-            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>현장 방문 미포함</div>
-            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>업체 연결 미포함</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공정 플래닝 및 우선순위 정리</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>3D 도면 제작 (공간 시각화)</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>전기 공사 계획 조언</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>조명 배치 계획</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Vibespace 도면 기반 검토</div>
+            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>현장 방문 미포함</div>
+            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>업체 연결 미포함</div>
           </div>
           <div style="padding:0 20px 20px;">
             <button onclick="_openConsultingContact('PLANNING')" style="width:100%;height:44px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
@@ -3667,13 +3667,13 @@ button, input, textarea, select { font-family:var(--font); }
             <div style="font-size:13px;color:#999;line-height:1.6;padding-bottom:18px;">철거부터 설비까지, 구조 공사 전 과정을 함께합니다.</div>
           </div>
           <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;flex:1;">
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>철거 범위 및 계획 컨설팅</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>전기·설비 공사 컨설팅</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>현장 방문 점검 1회</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>업체 연결 및 견적 비교</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>자재 구매 가이드</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공정별 체크리스트 제공</div>
-            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>마감·스타일링 미포함</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>철거 범위 및 계획 컨설팅</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>전기·설비 공사 컨설팅</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>현장 방문 점검 1회</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>업체 연결 및 견적 비교</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>자재 구매 가이드</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공정별 체크리스트 제공</div>
+            <div class="cs-feat-off"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>마감·스타일링 미포함</div>
           </div>
           <div style="padding:0 20px 20px;">
             <button onclick="_openConsultingContact('STRUCTURE')" style="width:100%;height:44px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
@@ -3688,13 +3688,13 @@ button, input, textarea, select { font-family:var(--font); }
             <div style="font-size:13px;color:#999;line-height:1.6;padding-bottom:18px;">플래닝부터 완공까지, 전 과정을 전문가와 함께합니다.</div>
           </div>
           <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;flex:1;">
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Planning + Structure 전체 포함</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>현장 방문 2회 (착공 전·중간)</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>마감 자재 선택 동행</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>업체 계약서 검토</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>완공 후 하자 체크 동행</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30일 카카오톡 질문 채널</div>
-            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>스타일링 가이드 제공</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Planning + Structure 전체 포함</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>현장 방문 2회 (착공 전·중간)</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>마감 자재 선택 동행</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>업체 계약서 검토</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>완공 후 하자 체크 동행</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30일 카카오톡 질문 채널</div>
+            <div class="cs-feat"><svg class="cs-check" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>스타일링 가이드 제공</div>
           </div>
           <div style="padding:0 20px 20px;">
             <button onclick="_openConsultingContact('PRO')" style="width:100%;height:44px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">신청하기</button>
@@ -3789,8 +3789,8 @@ button, input, textarea, select { font-family:var(--font); }
             <circle cx="68" cy="24" r="5" fill="#d4a8c8"/>
             <path d="M30 42 Q40 20 55 38" stroke="#7db87d" stroke-width="1.5" fill="none"/>
             <path d="M90 42 Q80 20 65 38" stroke="#7db87d" stroke-width="1.5" fill="none"/>
-            <path d="M25 44 Q33 30 42 40" stroke="#8fc88f" stroke-width="1.2" fill="none"/>
-            <path d="M95 44 Q87 30 78 40" stroke="#8fc88f" stroke-width="1.2" fill="none"/>
+            <path d="M25 44 Q33 30 42 40" stroke="#8fc88f" stroke-width="1.5" fill="none"/>
+            <path d="M95 44 Q87 30 78 40" stroke="#8fc88f" stroke-width="1.5" fill="none"/>
             <ellipse cx="33" cy="38" rx="4" ry="2.5" fill="#a8d0a8" opacity=".6" transform="rotate(-30 33 38)"/>
             <ellipse cx="87" cy="38" rx="4" ry="2.5" fill="#a8d0a8" opacity=".6" transform="rotate(30 87 38)"/>
           </svg>
@@ -3817,27 +3817,27 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Floating: + 공정추가 (main screen only, fixed outside screen transform) -->
 <div class="floating-group" id="floating-add-process">
   <button class="floating-btn" onclick="openAddProcess()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 공정 단계 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-plus"/></svg> 공정 단계 추가
   </button>
 </div>
 <div class="floating-group" id="floating-add-style" style="display:none;">
   <button class="floating-btn" onclick="openStyleNewSpace()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 스타일 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-plus"/></svg> 스타일 추가
   </button>
 </div>
 <div class="floating-group" id="floating-add-meeting" style="display:none;">
   <button class="floating-btn" onclick="openAddMeeting()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 기록 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-plus"/></svg> 기록 추가
   </button>
 </div>
 <div class="floating-group" id="floating-add-content" style="display:none;">
   <button class="floating-btn" onclick="openAddContent()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 컨텐츠 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-plus"/></svg> 컨텐츠 추가
   </button>
 </div>
 <div class="floating-group" id="floating-add-furniture" style="display:none;">
   <button class="floating-btn" onclick="openAddFurnitureItem()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-plus"/></svg> 제품 추가
+    <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-plus"/></svg> 제품 추가
   </button>
 </div>
 
@@ -3912,7 +3912,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 헤더 -->
   <div class="form-header">
     <button class="back-btn" onclick="closeMeetingWrite()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <span id="meeting-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">기록 작성</span>
     <button onclick="_mwOpenPreview()" style="padding:8px 14px;background:none;border:1.5px solid #e1e5ef;border-radius:20px;font-size:14px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);margin-right:6px;">미리보기</button>
@@ -3949,19 +3949,19 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="_mwInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
       <button onclick="_mwInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
       <button onclick="_mwInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </button>
       <button onclick="_mwOpenLinkList()" title="링크 리스트 삽입 (업체명+URL 여러 줄)" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="#111" stroke="none"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="#111" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="#111" stroke="none"/></svg>
       </button>
       <div style="flex:1;min-width:4px;"></div>
       <!-- 우측 고정 -->
       <button onclick="_mwAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
       <button onclick="_mwOpenProductList()" title="제품 리스트 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </button>
       <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <input type="file" accept="image/*" multiple id="meeting-image-input" style="display:none;" onchange="_meetingImagePreview(this)">
       </label>
     </div>
@@ -3993,11 +3993,11 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 상단 헤더: 뒤로 + 인블로그 발행 + ··· -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 10px 0;flex-shrink:0;">
     <button class="back-btn" onclick="closeMeetingDetail()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <div style="display:flex;align-items:center;gap:6px;">
       <button id="btn-publish-blog" onclick="publishMeetingToInblog()" style="display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;background:#f0f5ff;color:#5084ff;border:1.5px solid #c7d9ff;font-size:13px;font-weight:700;cursor:pointer;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         인블로그 발행
       </button>
       <button class="card-more-btn" onclick="_openMeetingMoreMenu()" style="font-size:20px;letter-spacing:1px;">···</button>
@@ -4012,7 +4012,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="dialog" style="gap:0;padding:0;">
     <div style="width:36px;height:4px;border-radius:4px;background:#e0e0e0;margin:14px auto 8px;"></div>
     <button class="mobile-sheet-item" onclick="openEditMeeting();closeDialog('dlg-meeting-more');">
-      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       수정
     </button>
     <button class="mobile-sheet-item" onclick="shareMeetingUrl();closeDialog('dlg-meeting-more');">
@@ -4020,7 +4020,7 @@ button, input, textarea, select { font-family:var(--font); }
       공유
     </button>
     <button class="mobile-sheet-item danger" onclick="deleteMeeting();closeDialog('dlg-meeting-more');" style="color:#e53935;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       삭제
     </button>
     <div style="height:env(safe-area-inset-bottom,0px);"></div>
@@ -4074,7 +4074,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div id="screen-blog-preview" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:9000;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header">
     <button class="back-btn" onclick="closeInblogPreview()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <span style="flex:1;font-size:15px;font-weight:700;color:#111;">SEO 블로그 미리보기</span>
     <button id="btn-confirm-publish" onclick="confirmPublishToInblog()" style="padding:7px 16px;border-radius:20px;background:#5084ff;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">발행하기</button>
@@ -4128,7 +4128,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 헤더: Back + 제목 -->
   <div class="form-header">
     <button class="back-btn" onclick="_closeContractorDetail()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="cdetail-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></h2>
     <div style="width:30px;"></div>
@@ -4165,7 +4165,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 10px;border-bottom:1px solid #f0f2f5;">
       <span style="font-size:16px;font-weight:700;color:#222;">업체 정보</span>
       <button onclick="_closeContractorMoreSheet()" style="background:none;border:none;cursor:pointer;padding:4px;color:#999;">
-        <svg class="icon" width="18" height="18" style="stroke-width:2.5"><use href="#icon-x"/></svg>
+        <svg class="icon" width="18" height="18" style="stroke-width:1.5"><use href="#icon-x"/></svg>
       </button>
     </div>
     <div id="contractor-more-content" style="padding:8px 20px 8px;"></div>
@@ -4176,7 +4176,7 @@ button, input, textarea, select { font-family:var(--font); }
 <div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header" style="background:#fff;flex-shrink:0;">
     <button class="back-btn" onclick="_closeProcDetailScreen()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="proc-detail-screen-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;"></h2>
     <button class="card-more-btn" onclick="_openProcDetailDeleteMenu()">···</button>
@@ -4232,7 +4232,7 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 헤더 -->
   <div class="form-header">
     <button class="back-btn" onclick="closeProcRecord()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <span id="proc-record-write-header" style="flex:1;font-size:16px;font-weight:700;color:#111;">공정 기록 작성</span>
     <button onclick="saveProcRecord()" style="padding:8px 18px;background:#222;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
@@ -4256,11 +4256,11 @@ button, input, textarea, select { font-family:var(--font); }
         <button onclick="_prInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
         <button onclick="_prInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
         <button onclick="_prInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </button>
         <button onclick="_prAtBtn()" title="@멘션" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:13px;font-weight:700;color:#5084ff;flex-shrink:0;">@</button>
         <label title="이미지 추가" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <input type="file" accept="image/*" multiple id="proc-record-img-input" style="display:none;" onchange="_prImgPreview(this)">
         </label>
       </div>
@@ -4321,7 +4321,7 @@ button, input, textarea, select { font-family:var(--font); }
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <span style="font-size:17px;font-weight:700;color:#222;">공정 추가</span>
         <button onclick="closeDialog('dlg-add-process')" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;line-height:1;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <!-- 탭 -->
@@ -4351,7 +4351,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
       <span style="font-size:16px;font-weight:700;color:#222;" id="sdp-title">날짜 선택</span>
       <button onclick="_closeSingleDate()" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;">
-        <svg class="icon" width="16" height="16" style="stroke-width:2.5"><use href="#icon-x"/></svg>
+        <svg class="icon" width="16" height="16" style="stroke-width:1.5"><use href="#icon-x"/></svg>
       </button>
     </div>
     <div id="sdp-container"></div>
@@ -4523,10 +4523,10 @@ button, input, textarea, select { font-family:var(--font); }
       <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
     </button>
     <button class="mobile-sheet-item" id="mobile-menu-admin-btn" style="display:none;" onclick="openAdminDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
     </button>
     <button class="mobile-sheet-item" onclick="goTo('consulting');closeAllMenus();">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
     </button>
     <button class="mobile-sheet-item" id="mobile-menu-login-btn" onclick="openAccountDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 계정 정보
@@ -4582,7 +4582,7 @@ button, input, textarea, select { font-family:var(--font); }
         <!-- 카카오톡 -->
         <button class="share-social-btn" onclick="shareAction('kakao')">
           <div class="share-social-icon" style="background:#f5f5f5;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.54 1.524 4.782 3.857 6.175L4.5 20.5l4.857-2.268A11.5 11.5 0 0 0 12 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
             </svg>
           </div>
@@ -4591,7 +4591,7 @@ button, input, textarea, select { font-family:var(--font); }
         <!-- X (Twitter) -->
         <button class="share-social-btn" onclick="shareAction('twitter')">
           <div class="share-social-icon" style="background:#f5f5f5;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 4l16 16M4 20L20 4"/>
             </svg>
           </div>
@@ -4600,7 +4600,7 @@ button, input, textarea, select { font-family:var(--font); }
         <!-- Instagram -->
         <button class="share-social-btn" onclick="shareAction('instagram')">
           <div class="share-social-icon" style="background:#f5f5f5;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
               <circle cx="12" cy="12" r="5"/>
               <circle cx="17.5" cy="6.5" r="1" fill="#111" stroke="none"/>
@@ -4650,7 +4650,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;background:#fff;border-bottom:1px solid #eee;flex-shrink:0;">
       <div style="font-size:17px;font-weight:700;color:#111;">Admin — 피드백 &amp; 아이디어</div>
       <button onclick="closeDialog('dlg-admin')" style="background:none;border:none;cursor:pointer;padding:4px;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div style="padding:16px 20px 8px;display:flex;gap:8px;align-items:center;background:#fff;border-bottom:1px solid #eee;flex-shrink:0;">
@@ -4745,7 +4745,7 @@ button, input, textarea, select { font-family:var(--font); }
   <div class="day-popup-header">
     <span class="day-popup-title" id="day-popup-title">3월 19일</span>
     <button class="day-popup-close" onclick="closeDayPopup()">
-      <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-x"/></svg>
+      <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-x"/></svg>
     </button>
   </div>
   <div class="day-popup-body" id="day-popup-body"></div>
@@ -4771,16 +4771,16 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- IAB(인스타그램 인앱브라우저) 안내 — JS에서 표시 -->
     <div id="login-iab-notice" class="login-iab-notice" style="display:none;">
       <div class="login-iab-notice-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         인스타그램에서는 구글 로그인 불가
       </div>
       <div class="login-iab-notice-desc">인스타그램 앱 내 브라우저는 보안 정책상 구글 로그인을 지원하지 않아요.<br>아래 버튼으로 Safari 또는 Chrome에서 열어주세요.</div>
       <button class="iab-open-btn" onclick="_openInBrowser()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         외부 브라우저로 열기
       </button>
       <button class="iab-copy-btn" onclick="_copyIabUrl()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         링크 복사
       </button>
     </div>
@@ -5782,7 +5782,7 @@ function renderProjectDropdownList() {
     <div class="pd-item ${p.id===state.currentProjectId?'current':''}" onclick="selectProjectDD('${p.id}')">
       <span class="pd-name">${esc(p.name)}</span>
       ${state.projects.length > 1 ? `<span class="pd-del" onclick="event.stopPropagation();deleteProjectDD('${p.id}')">
-        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-x"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-x"/></svg>
       </span>` : ''}
     </div>`).join('');
 }
@@ -6486,7 +6486,7 @@ function _svTogglePinBubble(e, slideIdx, pinIdx) {
         <span class="sv-pin-bubble-name">${name}</span>
         ${price ? `<span class="sv-pin-bubble-price">${price}</span>` : ''}
       </div>
-      ${hasUrl ? `<svg class="sv-pin-bubble-chevron" width="14" height="14" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}
+      ${hasUrl ? `<svg class="sv-pin-bubble-chevron" width="14" height="14" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}
     </div>
     <div class="sv-pin-caret"></div>
   `;
@@ -6534,7 +6534,7 @@ function _svBuildReel() {
     ).join('');
     const pinCount = (item.productPins || []).length;
     const shopBtn = pinCount ? `<button class="sv-slide-shop-btn" onclick="event.stopPropagation();openPinsSheet(${si})" title="제품 보기">
-      <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
     </button>` : '';
     return `<div class="sv-slide" data-slide="${si}">
       <img src="${item.url}" alt="">
@@ -6593,7 +6593,7 @@ function _svBuildGallery() {
     return `<div class="sv-gallery-item" onclick="_svGalleryTap(${i})">
       <img src="${item.url}" alt="" loading="lazy">
       ${ini ? `<div class="sv-gallery-uploader">${ini}</div>` : ''}
-      ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
+      ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
     </div>`;
   };
   const left  = items.filter((_, i) => i % 2 === 0).map((item) => renderItem(item, items.indexOf(item))).join('');
@@ -6692,7 +6692,7 @@ function _formatMemoTime(ts) {
 function _svBuildMemosHtml(memos) {
   if (!memos?.length) return '';
   const myEmail = state.user?.email || '';
-  const _heartSvg = (on) => `<svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8983 7.38503C20.594 4.72027 17.2151 7.38502 16 8.60992C14.7848 7.38502 11.406 4.72027 8.10169 7.38503C4.79734 10.0498 4.07919 15.5791 8.70925 20.2464C13.3393 24.9137 16 25.7585 16 25.7585C16 25.7585 18.6607 24.9137 23.2907 20.2464C27.9208 15.5791 27.2026 10.0498 23.8983 7.38503Z" stroke="${on?'#ff3b4e':'#333'}" stroke-width="3" fill="${on?'#ff3b4e':'none'}"/></svg>`;
+  const _heartSvg = (on) => `<svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8983 7.38503C20.594 4.72027 17.2151 7.38502 16 8.60992C14.7848 7.38502 11.406 4.72027 8.10169 7.38503C4.79734 10.0498 4.07919 15.5791 8.70925 20.2464C13.3393 24.9137 16 25.7585 16 25.7585C16 25.7585 18.6607 24.9137 23.2907 20.2464C27.9208 15.5791 27.2026 10.0498 23.8983 7.38503Z" stroke="${on?'#ff3b4e':'#333'}" stroke-width="1.5" fill="${on?'#ff3b4e':'none'}"/></svg>`;
 
   const items = memos.map(m => {
     const ini = (m.author?.name || m.author?.email || '?').charAt(0).toUpperCase();
@@ -6941,7 +6941,7 @@ function openPinsSheet(slideIdx) {
       return `<div class="sv-prod-item" onclick="${pin.productUrl ? `window.open('${pin.productUrl.replace(/'/g,"\\'")}','_blank')` : ''}">
         <div style="width:22px;height:22px;border-radius:50%;background:#222;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${pi+1}</div>
         <div class="sv-prod-info">
-          ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
+          ${pin.category ? `<div class="sv-prod-cat" style="font-size:13px;font-weight:600;color:#222;display:flex;align-items:center;gap:4px;">${pin.category}${isPinNew ? '<span class="n-badge">N</span>' : ''}${pin.productUrl ? `<svg width="13" height="13" fill="none" stroke="#aaa" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>` : ''}
           ${pin.price ? `<div class="sv-prod-price">${pin.price}</div>` : ''}
         </div>
         <button class="sv-prod-del" onclick="event.stopPropagation();_deleteProdPin(${pi})">×</button>
@@ -7765,7 +7765,7 @@ function _renderContractorSelectList(procType) {
       <!-- 좌: 선택 영역 -->
       <div onclick="_toggleContractorCard(this.closest('[id]'),'${esc(cId)}')" style="flex:1;min-width:0;padding:14px 12px 14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;">
         <div class="ccard-check" style="width:22px;height:22px;flex-shrink:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:${c.description?3:0}px;">${esc(c.name)}</div>
@@ -7779,7 +7779,7 @@ function _renderContractorSelectList(procType) {
       <!-- 우: 더보기 버튼 -->
       <button onclick="event.stopPropagation();_openContractorDetail('${esc(cId)}')" style="background:none;border:none;border-left:1.5px solid #eef0f6;cursor:pointer;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:500;color:#888;flex-shrink:0;font-family:var(--font);">
         더보기
-        <svg class="icon" width="13" height="13" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
+        <svg class="icon" width="13" height="13" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg>
       </button>
     </div>`;
   }).join('');
@@ -7787,8 +7787,8 @@ function _renderContractorSelectList(procType) {
 
 function _toggleContractorCard(el, cId) {
   const isSelected = el.dataset.selected === '1';
-  const UNCHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
-  const CHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--primary)" stroke="none"/><polyline points="8 12 11 15 16 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const UNCHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>`;
+  const CHECKED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="var(--primary)" stroke="none"/><polyline points="8 12 11 15 16 9" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   // 모든 카드 초기화
   document.querySelectorAll('#comp-suggest-list > div').forEach(d => {
     d.dataset.selected = '0';
@@ -8009,7 +8009,7 @@ function renderWorkCards() {
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
           <button class="work-card-fold-btn" onclick="event.stopPropagation();toggleCardExpand('${p.id}')">
-            <svg class="icon work-card-fold-chev" width="20" height="20" style="stroke-width:2.5"><use href="#icon-chevron-down"/></svg>
+            <svg class="icon work-card-fold-chev" width="20" height="20" style="stroke-width:1.5"><use href="#icon-chevron-down"/></svg>
           </button>
         </div>
       </div>
@@ -8044,7 +8044,7 @@ function renderWorkCards() {
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
         <div style="height:1px;background:#E4E9F2;margin:8px -20px 0;"></div>
         <div class="proc-card-actions">
-          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg class="icon" width="15" height="15" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg></button>
+          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg class="icon" width="15" height="15" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg></button>
         </div>
       </div>
     </div>`;
@@ -8277,7 +8277,7 @@ function _renderProcDetailContent(procId) {
         <span class="f-label">담당 업체</span>
         <span class="f-value ${p.company||p.companyData?'filled':''}" onclick="openCompanySearch('${p.id}')" style="cursor:pointer;">
           ${p.companyData ? `<div class="f-company-selected"><span class="f-company-name">${esc(p.companyData.name)}</span></div>` : p.company ? esc(p.company) : '<span style="color:#bbb;">업체 입력</span>'}
-          ${(p.companyData||p.company) ? `<svg class="icon" width="16" height="16" style="color:#333;stroke-width:2.5"><use href="#icon-chevron-right"/></svg>` : `<svg class="icon" width="16" height="16" style="color:#bbb;stroke-width:2.5"><use href="#icon-plus"/></svg>`}
+          ${(p.companyData||p.company) ? `<svg class="icon" width="16" height="16" style="color:#333;stroke-width:1.5"><use href="#icon-chevron-right"/></svg>` : `<svg class="icon" width="16" height="16" style="color:#bbb;stroke-width:1.5"><use href="#icon-plus"/></svg>`}
         </span>
       </div>
     </div>
@@ -8286,7 +8286,7 @@ function _renderProcDetailContent(procId) {
       <div class="detail-header">
         <span class="d-label">상세내역</span>
         <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
-          <svg class="icon" width="17" height="17" style="stroke-width:2.5"><use href="#icon-plus"/></svg>
+          <svg class="icon" width="17" height="17" style="stroke-width:1.5"><use href="#icon-plus"/></svg>
         </button>
       </div>
       ${p.details.length ? '<div class="details-list">' : ''}
@@ -8299,7 +8299,7 @@ function _renderProcDetailContent(procId) {
           </div>
           <div class="d-right">
             <span class="d-cost">${(d.cost||0).toLocaleString()}원</span>
-            <svg class="icon d-chev" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
+            <svg class="icon d-chev" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg>
           </div>
         </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
       ${p.details.length ? '</div>' : ''}
@@ -8385,7 +8385,7 @@ function _renderProcChecklist(procId) {
           ${sec.items.map((it, ii) => `
             <label style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid #f7f8fa;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleCheckItem('${procId}',${si},${ii})">
               <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;">
-                ${it.checked ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                ${it.checked ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
               </div>
               <span style="font-size:14px;color:${it.checked?'#aaa':'#222'};line-height:1.55;text-decoration:${it.checked?'line-through':'none'};flex:1;">${esc(it.text)}</span>
             </label>
@@ -8448,7 +8448,7 @@ function _renderProcRecords(procId) {
   if (!proc) return;
   const records = (proc.records || []).slice().sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
   const addBtn = `<div style="padding:16px 16px 0;"><button onclick="openProcRecord()" style="width:100%;padding:14px;background:#fff;border:1.5px dashed #d0d6e8;border-radius:14px;cursor:pointer;font-size:14px;font-weight:600;color:#5084ff;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 기록 추가
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 기록 추가
   </button></div>`;
   if (!records.length) {
     el.innerHTML = `${addBtn}<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:#bbb;">아직 공정 기록이 없습니다</div>`;
@@ -8468,10 +8468,10 @@ function _renderProcRecords(procId) {
         <span style="font-size:12px;color:#bbb;">${dateStr} · ${esc(r.createdByName||r.createdBy||'')}</span>
         <div style="display:flex;gap:4px;">
           <button onclick="openProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;">
-            <svg width="14" height="14" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg width="14" height="14" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
           <button onclick="_deleteProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#e53935;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           </button>
         </div>
       </div>
@@ -8826,7 +8826,7 @@ function _buildClHtml(items, checks, procId, phase) {
   items.forEach(item => {
     const checked = !!checks[item.id];
     h += `<div class="tip-cl-item${checked?' checked':''}" onclick="toggleTipCheck('${procId}','${phase}','${item.id}')">
-      <div class="tip-cl-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="tip-cl-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
       <span class="tip-cl-text">${esc(item.text)}</span>
     </div>`;
   });
@@ -8912,9 +8912,9 @@ function _renderSdp() {
   }
   document.getElementById('sdp-container').innerHTML=`
     <div class="dp-header">
-      <button class="dp-nav-btn" onclick="_sdpNav(-1)"><svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg></button>
+      <button class="dp-nav-btn" onclick="_sdpNav(-1)"><svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg></button>
       <span class="dp-title">${_sdpYear}년 ${MONTHS[_sdpMonth]}</span>
-      <button class="dp-nav-btn" onclick="_sdpNav(1)"><svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg></button>
+      <button class="dp-nav-btn" onclick="_sdpNav(1)"><svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg></button>
     </div>
     <div class="dp-weekdays">${DOW.map((w,i)=>`<span class="${i===0?'dp-wks':i===6?'dp-wksa':''}">${w}</span>`).join('')}</div>
     <div class="dp-grid">${cells}</div>`;
@@ -9056,11 +9056,11 @@ function renderDatePicker() {
   document.getElementById('dp-container').innerHTML = `
     <div class="dp-header">
       <button class="dp-nav-btn" onclick="calPickerNav(-1)">
-        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
       </button>
       <span class="dp-title">${year}년 ${MONTHS[month]}</span>
       <button class="dp-nav-btn" onclick="calPickerNav(1)">
-        <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
+        <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg>
       </button>
     </div>
     <div class="dp-range-bar">
@@ -9336,7 +9336,7 @@ function openDayPopup(year, month, day) {
           </div>
           ${detailsHtml}
           <div style="padding:6px 16px 10px;text-align:right;border-top:1px solid #f0f2f5;margin-top:2px;">
-            <button onclick="closeDayPopup();openProcDetailScreen('${p.id}')" style="background:none;border:none;font-size:13px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:4px 0;display:inline-flex;align-items:center;gap:3px;">상세보기 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button onclick="closeDayPopup();openProcDetailScreen('${p.id}')" style="background:none;border:none;font-size:13px;font-weight:700;color:var(--primary);cursor:pointer;font-family:var(--font);padding:4px 0;display:inline-flex;align-items:center;gap:3px;">상세보기 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
         </div>`;
     }).join('');
@@ -9515,13 +9515,13 @@ function renderCalendar() {
         <td colspan="7" class="cal-nav-td">
           <div class="cal-nav-inner">
             <button class="cal-nav-btn" onclick="calMonthNav(-1)">
-              <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+              <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
             </button>
             <span style="display:flex;align-items:center;gap:8px;">
               <span class="cal-th-title">${MONTHS[month]}</span>${todayBtnHtml}
             </span>
             <button class="cal-nav-btn" onclick="calMonthNav(1)">
-              <svg class="icon" width="14" height="14" style="stroke-width:2.5"><use href="#icon-chevron-right"/></svg>
+              <svg class="icon" width="14" height="14" style="stroke-width:1.5"><use href="#icon-chevron-right"/></svg>
             </button>
           </div>
         </td>
@@ -11269,7 +11269,7 @@ async function renderCollabTab() {
       ${invites.filter(inv => new Date(inv.expiresAt) >= new Date()).map(inv => `
         <div class="collab-member-row">
           <div class="cm-avatar pending">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           </div>
           <div class="cm-info">
             <div class="cm-name pending">${esc(inv.email||'초대 링크')}</div>
@@ -11649,7 +11649,7 @@ function closeAllDialogs() {
 
 // 토스트 라인 아이콘 헬퍼
 function _ti(type) {
-  const a = 'width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px;flex-shrink:0;"';
+  const a = 'width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px;flex-shrink:0;"';
   const map = {
     check:   `<svg ${a}><polyline points="20 6 9 17 4 12"/></svg>`,
     cloud:   `<svg ${a}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
@@ -12298,8 +12298,8 @@ function renderMeetingTab() {
     const imgThumb = _thumbSrc ? `<div style="width:120px;height:120px;border-radius:10px;background:url('${_thumbSrc}') center/cover no-repeat;flex-shrink:0;"></div>` : '';
     const mentionHtml = m.mentions?.length ? `<div style="margin-top:6px;font-size:12px;color:#5084ff;">${m.mentions.map(e=>'@'+e.split('@')[0]).join(' ')}</div>` : '';
     const publishedBadge = m.publicUrl
-      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#fff;background:#5084ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>공개</span>`
-      : m.inblogPostId ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#5084ff;background:#f0f5ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>발행됨</span>` : '';
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#fff;background:#5084ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>공개</span>`
+      : m.inblogPostId ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#5084ff;background:#f0f5ff;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>발행됨</span>` : '';
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:20px 24px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
@@ -12360,7 +12360,7 @@ function renderFurnitureTab() {
             <div style="min-width:0;flex:1;">
               <div style="font-size:12px;color:#888;margin-bottom:4px;">${esc(it.category||'기타')}${it.brand ? ` · ${esc(it.brand)}` : ''}</div>
               <div style="${it.url ? 'cursor:pointer;' : ''}" ${it.url ? `onclick="event.stopPropagation();window.open('${it.url}','_blank')"` : ''}>
-                <span style="font-size:15px;font-weight:500;line-height:1.3;color:#111;">${esc(it.name)}${it.url ? `<svg style="display:inline-block;vertical-align:middle;margin-left:2px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</span>
+                <span style="font-size:15px;font-weight:500;line-height:1.3;color:#111;">${esc(it.name)}${it.url ? `<svg style="display:inline-block;vertical-align:middle;margin-left:2px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</span>
               </div>
             </div>
             <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
@@ -12402,15 +12402,15 @@ function _openFurnitureMenu(id) {
   const btnStyle = 'display:flex;align-items:center;gap:14px;width:100%;padding:15px 22px;background:none;border:none;font-size:15px;font-weight:500;color:#111;cursor:pointer;font-family:var(--font);text-align:left;';
   menuEl.innerHTML = `
     ${it.url ? `<button style="${btnStyle}" onclick="_closeFurnitureMenu();window.open('${it.url}','_blank')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       구매 링크 열기
     </button>` : ''}
     <button style="${btnStyle}" onclick="_closeFurnitureMenu();_editFurnitureItem('${id}')">
-      <svg width="18" height="18" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="#111" stroke-width="1.5" stroke-linecap="round"/></svg>
       수정
     </button>
     <button style="${btnStyle};color:#e33;" onclick="_closeFurnitureMenu();_deleteFurnitureItem('${id}')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e33" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e33" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       삭제
     </button>
   `;
@@ -12947,7 +12947,7 @@ function _mwToggleProduct(id) {
   if (check) {
     check.style.background = sel ? '#5084ff' : '';
     check.style.borderColor = sel ? '#5084ff' : '#ddd';
-    check.innerHTML = sel ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : '';
+    check.innerHTML = sel ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>` : '';
   }
   const confirmBtn = document.getElementById('btn-mw-product-confirm');
   const hasAny = _mwProductSelected.size > 0;
@@ -13365,7 +13365,7 @@ function openMeetingDetail(id) {
   const imgsHtml = _contentHasImg ? '' : (m.images||[]).map(src=>`<img src="${src}" style="width:100%;border-radius:12px;margin-bottom:8px;" onclick="window.open(this.src)">`).join('');
   const publicUrlBanner = m.publicUrl ? `
     <div style="background:#f0f5ff;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:700;color:#5084ff;margin-bottom:2px;">구글 검색 공개 발행됨</div>
         <div style="font-size:12px;color:#5084ff;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.publicUrl)}</div>
@@ -13389,7 +13389,7 @@ function openMeetingDetail(id) {
   if (publishBtn) {
     publishBtn.style.display = 'flex';
     if (m.inblogPostId) {
-      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
+      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
       publishBtn.style.background = '#f0fff4';
       publishBtn.style.color = '#22a05b';
       publishBtn.style.borderColor = '#b2dfca';
@@ -13399,7 +13399,7 @@ function openMeetingDetail(id) {
         else publishMeetingToInblog();
       };
     } else {
-      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 인블로그 발행`;
+      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 인블로그 발행`;
       publishBtn.style.background = '#f0f5ff';
       publishBtn.style.color = '#5084ff';
       publishBtn.style.borderColor = '#c7d9ff';
@@ -13476,7 +13476,7 @@ function _copyShareViewUrl(btn) {
   const url = window.location.href;
   navigator.clipboard?.writeText(url).then(() => {
     const orig = btn.innerHTML;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 복사됨`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg> 복사됨`;
     btn.style.color = '#5084ff';
     setTimeout(() => { btn.innerHTML = orig; btn.style.color = '#555'; }, 2000);
   }).catch(() => {
@@ -13484,7 +13484,7 @@ function _copyShareViewUrl(btn) {
     ta.value = url; ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     const orig = btn.innerHTML;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 복사됨`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg> 복사됨`;
     btn.style.color = '#5084ff';
     setTimeout(() => { btn.innerHTML = orig; btn.style.color = '#555'; }, 2000);
   });
@@ -13619,7 +13619,7 @@ async function publishMeetingToInblog() {
   }
 
   const btn = document.getElementById('btn-publish-blog');
-  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> AI 생성 중...`;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> AI 생성 중...`;
   btn.style.opacity = '0.7';
   btn.disabled = true;
 
@@ -13653,7 +13653,7 @@ async function publishMeetingToInblog() {
   } catch(e) {
     showToastMessage('AI 생성 실패: ' + e.message);
   } finally {
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 블로그 발행`;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 블로그 발행`;
     btn.style.opacity = '1';
     btn.disabled = false;
   }
@@ -13797,7 +13797,7 @@ function _buildRecordLandingHtml({ meeting, proj, seoTitle, metaDesc, bodyHtml }
   const procHtml = processes.length ? `
     <div class="vb-section">
       <div class="vb-section-hd">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         공정표
         <span class="vb-lock">🔒 앱에서 보기</span>
       </div>
@@ -13817,7 +13817,7 @@ function _buildRecordLandingHtml({ meeting, proj, seoTitle, metaDesc, bodyHtml }
   const styleHtml = styleImgs.length ? `
     <div class="vb-section">
       <div class="vb-section-hd">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5084ff" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         스타일 무드보드
         <span class="vb-lock">앱에서 더보기</span>
       </div>
@@ -13831,11 +13831,11 @@ function _buildRecordLandingHtml({ meeting, proj, seoTitle, metaDesc, bodyHtml }
   const projForm  = proj.form || {};
   const projInfoHtml = `
     <div class="vb-meta-row">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       ${[projForm.type,projForm.size,projForm.method].flat().filter(Boolean).join(' · ')||'반셀프 인테리어'}
     </div>
     ${allStarts.length?`<div class="vb-meta-row">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       공사 기간 ${allStarts[0]} ~ ${allEnds[allEnds.length-1]||'진행중'}
     </div>`:''}`;
 
@@ -13908,7 +13908,7 @@ a{color:inherit;text-decoration:none}
 <body>
 <nav class="vb-nav">
   <a href="https://vibespacekorea.com" class="vb-nav-logo">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     바이브스페이스
   </a>
   <a href="https://vibespacekorea.com" class="vb-cta-nav">무료로 시작</a>
@@ -14070,7 +14070,7 @@ async function confirmPublishToInblog() {
 
       const publishBtn = document.getElementById('btn-publish-blog');
       if (publishBtn) {
-        publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
+        publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
         publishBtn.style.background = '#f0f5ff';
         publishBtn.style.borderColor = '#c7d9ff';
         publishBtn.disabled = false;
@@ -14107,24 +14107,24 @@ async function confirmPublishToInblog() {
 const FP_SYMBOLS = {
   '가구': [
     { id:'sofa', name:'소파', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
-      <rect x="2" y="14" width="76" height="36" rx="4" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="14" width="76" height="36" rx="4" fill="#ddd" stroke="#555" stroke-width="1.5"/>
       <rect x="2" y="2" width="76" height="16" rx="4" fill="#bbb" stroke="#555" stroke-width="1.5"/>
       <rect x="2" y="14" width="11" height="36" rx="3" fill="#bbb" stroke="#555" stroke-width="1.5"/>
       <rect x="67" y="14" width="11" height="36" rx="3" fill="#bbb" stroke="#555" stroke-width="1.5"/>
     </svg>` },
     { id:'bed-single', name:'침대(싱글)', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 80">
-      <rect x="2" y="2" width="48" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="48" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
       <rect x="6" y="6" width="40" height="22" rx="20" fill="#ccc" stroke="#555" stroke-width="1.5"/>
       <line x1="2" y1="32" x2="50" y2="32" stroke="#555" stroke-width="1.5"/>
     </svg>` },
     { id:'bed-double', name:'침대(더블)', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
-      <rect x="2" y="2" width="76" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="76" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
       <rect x="6" y="6" width="32" height="22" rx="16" fill="#ccc" stroke="#555" stroke-width="1.5"/>
       <rect x="42" y="6" width="32" height="22" rx="16" fill="#ccc" stroke="#555" stroke-width="1.5"/>
       <line x1="2" y1="32" x2="78" y2="32" stroke="#555" stroke-width="1.5"/>
     </svg>` },
     { id:'dining-table', name:'식탁', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
-      <rect x="18" y="18" width="44" height="44" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="18" y="18" width="44" height="44" rx="3" fill="#ddd" stroke="#555" stroke-width="1.5"/>
       <rect x="24" y="4" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
       <rect x="44" y="4" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
       <rect x="24" y="64" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
@@ -14135,57 +14135,57 @@ const FP_SYMBOLS = {
       <rect x="64" y="44" width="12" height="12" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
     </svg>` },
     { id:'desk', name:'책상', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 60">
-      <rect x="2" y="2" width="76" height="38" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="38" rx="3" fill="#ddd" stroke="#555" stroke-width="1.5"/>
       <rect x="2" y="40" width="28" height="18" rx="2" fill="#ccc" stroke="#555" stroke-width="1.5"/>
-      <rect x="6" y="8" width="20" height="26" rx="2" fill="#e8e8e8" stroke="#777" stroke-width="1" stroke-dasharray="3,2"/>
+      <rect x="6" y="8" width="20" height="26" rx="2" fill="#e8e8e8" stroke="#777" stroke-width="1.5" stroke-dasharray="3,2"/>
     </svg>` },
     { id:'wardrobe', name:'옷장', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
-      <rect x="2" y="2" width="76" height="48" rx="3" fill="#ddd" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="48" rx="3" fill="#ddd" stroke="#555" stroke-width="1.5"/>
       <line x1="40" y1="2" x2="40" y2="50" stroke="#555" stroke-width="1.5"/>
       <circle cx="35" cy="26" r="2.5" fill="#888"/>
       <circle cx="45" cy="26" r="2.5" fill="#888"/>
     </svg>` },
     { id:'toilet', name:'변기', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 72">
-      <rect x="10" y="2" width="32" height="20" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
-      <ellipse cx="26" cy="50" rx="22" ry="20" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="10" y="2" width="32" height="20" rx="4" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
+      <ellipse cx="26" cy="50" rx="22" ry="20" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
       <ellipse cx="26" cy="50" rx="14" ry="12" fill="#fff" stroke="#888" stroke-width="1.5"/>
     </svg>` },
     { id:'bathtub', name:'욕조', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 52">
-      <rect x="2" y="2" width="76" height="48" rx="8" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="48" rx="8" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
       <ellipse cx="40" cy="26" rx="30" ry="18" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
-      <circle cx="66" cy="12" r="4" fill="#bbb" stroke="#888" stroke-width="1"/>
+      <circle cx="66" cy="12" r="4" fill="#bbb" stroke="#888" stroke-width="1.5"/>
     </svg>` },
     { id:'sink', name:'세면대', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 52">
-      <rect x="2" y="2" width="56" height="48" rx="6" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="56" height="48" rx="6" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
       <ellipse cx="30" cy="28" rx="20" ry="16" fill="#fff" stroke="#888" stroke-width="1.5"/>
-      <circle cx="30" cy="20" r="3" fill="#bbb" stroke="#777" stroke-width="1"/>
-      <line x1="30" y1="40" x2="30" y2="48" stroke="#888" stroke-width="2"/>
+      <circle cx="30" cy="20" r="3" fill="#bbb" stroke="#777" stroke-width="1.5"/>
+      <line x1="30" y1="40" x2="30" y2="48" stroke="#888" stroke-width="1.5"/>
     </svg>` },
     { id:'bookshelf', name:'책꽂이', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 36">
-      <rect x="2" y="2" width="76" height="32" rx="2" fill="#c8a87a" stroke="#8a6540" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="32" rx="2" fill="#c8a87a" stroke="#8a6540" stroke-width="1.5"/>
       <rect x="4" y="4" width="72" height="5" fill="#a08060"/>
-      <rect x="6" y="9" width="9" height="21" rx="1" fill="#e74c3c" stroke="#c0392b" stroke-width=".5"/>
-      <rect x="16" y="11" width="8" height="19" rx="1" fill="#3498db" stroke="#2980b9" stroke-width=".5"/>
-      <rect x="25" y="9" width="10" height="21" rx="1" fill="#2ecc71" stroke="#27ae60" stroke-width=".5"/>
-      <rect x="36" y="10" width="7" height="20" rx="1" fill="#f39c12" stroke="#d68910" stroke-width=".5"/>
-      <rect x="44" y="9" width="9" height="21" rx="1" fill="#9b59b6" stroke="#7d3c98" stroke-width=".5"/>
-      <rect x="54" y="11" width="8" height="19" rx="1" fill="#1abc9c" stroke="#17a589" stroke-width=".5"/>
-      <rect x="63" y="9" width="9" height="21" rx="1" fill="#e67e22" stroke="#ca6f1e" stroke-width=".5"/>
+      <rect x="6" y="9" width="9" height="21" rx="1" fill="#e74c3c" stroke="#c0392b" stroke-width="1.5"/>
+      <rect x="16" y="11" width="8" height="19" rx="1" fill="#3498db" stroke="#2980b9" stroke-width="1.5"/>
+      <rect x="25" y="9" width="10" height="21" rx="1" fill="#2ecc71" stroke="#27ae60" stroke-width="1.5"/>
+      <rect x="36" y="10" width="7" height="20" rx="1" fill="#f39c12" stroke="#d68910" stroke-width="1.5"/>
+      <rect x="44" y="9" width="9" height="21" rx="1" fill="#9b59b6" stroke="#7d3c98" stroke-width="1.5"/>
+      <rect x="54" y="11" width="8" height="19" rx="1" fill="#1abc9c" stroke="#17a589" stroke-width="1.5"/>
+      <rect x="63" y="9" width="9" height="21" rx="1" fill="#e67e22" stroke="#ca6f1e" stroke-width="1.5"/>
     </svg>` },
     { id:'washer', name:'세탁기', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
-      <rect x="2" y="2" width="56" height="56" rx="4" fill="#eeeeee" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="56" height="56" rx="4" fill="#eeeeee" stroke="#555" stroke-width="1.5"/>
       <circle cx="30" cy="30" r="20" fill="#ffffff" stroke="#666" stroke-width="1.5"/>
-      <circle cx="30" cy="30" r="13" fill="#ddeeff" stroke="#aaa" stroke-width="1"/>
-      <circle cx="30" cy="30" r="4" fill="#bbbbbb" stroke="#888" stroke-width="1"/>
+      <circle cx="30" cy="30" r="13" fill="#ddeeff" stroke="#aaa" stroke-width="1.5"/>
+      <circle cx="30" cy="30" r="4" fill="#bbbbbb" stroke="#888" stroke-width="1.5"/>
       <circle cx="30" cy="18" r="2" fill="#cccccc"/>
       <circle cx="30" cy="42" r="2" fill="#cccccc"/>
       <circle cx="18" cy="30" r="2" fill="#cccccc"/>
       <circle cx="42" cy="30" r="2" fill="#cccccc"/>
     </svg>` },
     { id:'refrigerator', name:'냉장고', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
-      <rect x="2" y="2" width="56" height="76" rx="4" fill="#eeeeee" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="56" height="76" rx="4" fill="#eeeeee" stroke="#555" stroke-width="1.5"/>
       <rect x="6" y="6" width="48" height="26" rx="2" fill="#d6e8f7" stroke="#888" stroke-width="1.5"/>
-      <line x1="2" y1="36" x2="58" y2="36" stroke="#555" stroke-width="2"/>
+      <line x1="2" y1="36" x2="58" y2="36" stroke="#555" stroke-width="1.5"/>
       <rect x="6" y="40" width="48" height="34" rx="2" fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
       <rect x="24" y="10" width="12" height="3" rx="1.5" fill="#999999"/>
       <rect x="24" y="47" width="12" height="3" rx="1.5" fill="#999999"/>
@@ -14193,7 +14193,7 @@ const FP_SYMBOLS = {
   ],
   '전기': [
     { id:'light-surface', name:'직부등', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="2"/>
+      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="1.5"/>
       <circle cx="26" cy="26" r="6" fill="#ffe082" stroke="#888" stroke-width="1.5"/>
       <line x1="26" y1="4" x2="26" y2="14" stroke="#aaa" stroke-width="1.5"/>
       <line x1="26" y1="38" x2="26" y2="48" stroke="#aaa" stroke-width="1.5"/>
@@ -14205,24 +14205,24 @@ const FP_SYMBOLS = {
       <line x1="16" y1="36" x2="9" y2="43" stroke="#aaa" stroke-width="1.5"/>
     </svg>` },
     { id:'light-recessed', name:'매립등', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="2"/>
+      <circle cx="26" cy="26" r="22" fill="#fff9c4" stroke="#999" stroke-width="1.5"/>
       <circle cx="26" cy="26" r="12" fill="#ffe082" stroke="#888" stroke-width="1.5"/>
       <circle cx="26" cy="26" r="4" fill="#ffca28"/>
     </svg>` },
     { id:'outlet', name:'콘센트', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-      <rect x="4" y="4" width="44" height="44" rx="8" fill="#eee" stroke="#666" stroke-width="2"/>
+      <rect x="4" y="4" width="44" height="44" rx="8" fill="#eee" stroke="#666" stroke-width="1.5"/>
       <circle cx="26" cy="26" r="14" fill="#fff" stroke="#888" stroke-width="1.5"/>
       <rect x="21" y="18" width="4" height="8" rx="2" fill="#666"/>
       <rect x="27" y="18" width="4" height="8" rx="2" fill="#666"/>
       <circle cx="26" cy="32" r="2.5" fill="#666"/>
     </svg>` },
     { id:'switch', name:'스위치', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 64">
-      <rect x="2" y="2" width="40" height="60" rx="6" fill="#eee" stroke="#666" stroke-width="2"/>
+      <rect x="2" y="2" width="40" height="60" rx="6" fill="#eee" stroke="#666" stroke-width="1.5"/>
       <rect x="10" y="12" width="24" height="20" rx="4" fill="#ddd" stroke="#888" stroke-width="1.5"/>
       <rect x="10" y="36" width="24" height="20" rx="4" fill="#fff" stroke="#888" stroke-width="1.5"/>
     </svg>` },
     { id:'tv', name:'TV', svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56">
-      <rect x="2" y="2" width="76" height="46" rx="4" fill="#333" stroke="#555" stroke-width="2"/>
+      <rect x="2" y="2" width="76" height="46" rx="4" fill="#333" stroke="#555" stroke-width="1.5"/>
       <rect x="8" y="8" width="64" height="34" rx="2" fill="#1a1a2e"/>
       <rect x="28" y="50" width="24" height="4" rx="2" fill="#555"/>
       <circle cx="72" cy="40" r="2" fill="#4CAF50"/>
@@ -15556,11 +15556,11 @@ async function fpShareLink() {
 <div id="screen-meeting-share-view" style="display:none;position:fixed;inset:0;background:#fff;z-index:99998;overflow-y:auto;">
   <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #eef0f5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1;padding-top:max(env(safe-area-inset-top,0px),12px);">
     <a href="https://vibespacekorea.com" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#111;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span style="font-size:15px;font-weight:700;">바이브스페이스</span>
     </a>
     <button onclick="_copyShareViewUrl(this)" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f4f6fb;border:none;border-radius:20px;font-size:13px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       링크 복사
     </button>
   </div>
@@ -15571,7 +15571,7 @@ async function fpShareLink() {
   <!-- 뷰어 헤더 -->
   <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #eef0f5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:1;padding-top:max(env(safe-area-inset-top,0px),12px);">
     <a href="https://vibespacekorea.com" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#111;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span style="font-size:15px;font-weight:700;">바이브스페이스</span>
     </a>
     <span style="font-size:13px;color:#bbb;font-weight:500;">공사계획서</span>
@@ -15585,7 +15585,7 @@ async function fpShareLink() {
 <div id="style-add-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1101;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:20px;" id="style-add-sheet-title">이미지 추가</div>
   <button class="style-sheet-btn" onclick="triggerStyleFileUpload()">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     사진 업로드
   </button>
   <input type="file" id="style-file-input" accept="image/*" multiple style="display:none;" onchange="handleStyleFileSelect(event)">
@@ -15608,17 +15608,17 @@ async function fpShareLink() {
   <!-- header -->
   <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;">
     <button class="back-btn" onclick="closeStyleViewer()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2.5"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="22" height="22" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
     <div style="display:flex;align-items:center;gap:2px;">
       <!-- 다운로드 -->
       <button class="sv-icon-btn" onclick="downloadStyleImage()" title="이미지 다운로드">
-        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
       <!-- 추가 -->
       <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
-        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <!-- 삭제 -->
       <button class="sv-icon-btn" onclick="deleteStyleImage()" title="이미지 삭제">
@@ -15633,10 +15633,10 @@ async function fpShareLink() {
       <div id="style-viewer-reel" class="sv-reel-wrap"></div>
       <div id="sv-dots" class="sv-dots"></div>
       <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
-        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
-        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
     <!-- gallery area (list / grid) — hidden in carousel mode -->
@@ -15663,7 +15663,7 @@ async function fpShareLink() {
   <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
   <div id="sv-memo-float" style="display:none;">
     <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
-      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
   </div>
 </div>
@@ -15751,72 +15751,72 @@ async function fpShareLink() {
   <div id="fp-header">
     <div id="fp-header-left">
       <button class="fp-hbtn danger" onclick="closeFpEditor()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         닫기
       </button>
       <div class="fp-sep" id="fp-nav-sep" style="display:none;"></div>
       <button class="fp-hbtn" id="fp-nav-prev" style="display:none;" onclick="fpSwitchImage(_fpEditingIdx - 1)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span id="fp-nav-label" style="display:none;font-size:12px;color:rgba(255,255,255,0.6);font-weight:600;min-width:48px;text-align:center;"></span>
       <button class="fp-hbtn" id="fp-nav-next" style="display:none;" onclick="fpSwitchImage(_fpEditingIdx + 1)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
     <div class="fp-sep"></div>
     <div id="fp-tools">
       <button class="fp-hbtn active" id="fp-tool-select" title="선택" onclick="fpSetTool('select')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 1-4 6z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3l14 9-7 1-4 6z"/></svg>
       </button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" id="fp-tool-text" title="텍스트" onclick="fpSetTool('text')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-rect" title="사각형" onclick="fpSetTool('rect')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-circle" title="원" onclick="fpSetTool('circle')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-line" title="선" onclick="fpSetTool('line')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-arrow" title="화살표" onclick="fpSetTool('arrow')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-pen" title="펜" onclick="fpSetTool('pen')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
       </button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" id="fp-tool-wire" title="배선" onclick="fpSetTool('wire')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2 12 7 12 9 5 13 19 15 12 22 12"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2 12 7 12 9 5 13 19 15 12 22 12"/></svg>
       </button>
       <button class="fp-hbtn" id="fp-tool-outlet" title="콘센트" onclick="fpSetTool('outlet')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><line x1="10" y1="9" x2="10" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/></svg>
       </button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" id="fp-tool-comment" title="코멘트" onclick="fpSetTool('comment')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </button>
     </div>
     <div class="fp-sep"></div>
     <div id="fp-header-right">
       <a id="fp-3d-link-btn" href="#" target="_blank" rel="noopener" style="display:none;align-items:center;gap:5px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;" class="fp-hbtn">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         3D 도면
       </a>
       <div class="fp-sep" id="fp-3d-sep" style="display:none;"></div>
       <button class="fp-hbtn" onclick="fpUndo()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>취소
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>취소
       </button>
       <button class="fp-hbtn" onclick="fpRedo()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-4.5"/></svg>다시
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-4.5"/></svg>다시
       </button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" id="fp-gray-btn" onclick="fpToggleGrayscale()">흑백</button>
       <div class="fp-sep"></div>
       <button class="fp-hbtn" onclick="fpCopyLink()" title="에디터 링크 복사">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         링크 복사
       </button>
     </div>
@@ -15944,16 +15944,16 @@ async function fpShareLink() {
           </div>
           <div class="fp-rotate-btns">
             <button class="fp-rot-btn" onclick="ppRotateBy(-90)" title="반시계 90°">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>90°
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>90°
             </button>
             <button class="fp-rot-btn" onclick="ppRotateBy(-45)" title="반시계 45°">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>45°
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>45°
             </button>
             <button class="fp-rot-btn" onclick="ppRotateBy(45)" title="시계 45°">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>45°
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>45°
             </button>
             <button class="fp-rot-btn" onclick="ppRotateBy(90)" title="시계 90°">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>90°
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>90°
             </button>
           </div>
         </div>
@@ -15985,11 +15985,11 @@ async function fpShareLink() {
   <!-- Footer -->
   <div id="fp-footer">
     <button class="fp-fbtn fp-fbtn-save" onclick="fpSave()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       저장
     </button>
     <button class="fp-fbtn fp-fbtn-dl" onclick="fpDownload()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       다운로드
     </button>
     <button class="fp-fbtn fp-fbtn-share" onclick="fpShareLink()">
@@ -15997,7 +15997,7 @@ async function fpShareLink() {
       공유 링크
     </button>
     <button class="fp-fbtn fp-fbtn-dl" onclick="fpSetTool('comment')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       코멘트
     </button>
   </div>
@@ -16008,7 +16008,7 @@ async function fpShareLink() {
   <!-- header -->
   <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;flex-shrink:0;">
     <button class="back-btn" onclick="closeContentViewer()">
-      <svg class="icon" width="24" height="24" style="stroke-width:2.8"><use href="#icon-chevron-left"/></svg>
+      <svg class="icon" width="24" height="24" style="stroke-width:1.5"><use href="#icon-chevron-left"/></svg>
     </button>
     <h2 id="cv-title" style="flex:1;font-size:16px;font-weight:700;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px;"></h2>
     <button class="sv-icon-btn" onclick="_deleteCvCurrent()" title="삭제">
@@ -16024,7 +16024,7 @@ async function fpShareLink() {
   <!-- floating pencil button -->
   <div id="cv-product-float">
     <button class="sv-memo-float-btn" onclick="openCvProductSheet()" title="제품 추가">
-      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="3" stroke-linecap="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
   </div>
 </div>
