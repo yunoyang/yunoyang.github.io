@@ -14373,6 +14373,14 @@ function fpOnKeyDown(e) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isInput) { e.preventDefault(); fpCopySelected(); }
   if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInput) { e.preventDefault(); fpPasteSelected(); }
   if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isInput) { e.preventDefault(); fpDuplicateSelected(); }
+  // 좌우 화살표: 선택 객체 없을 때 도면 전환
+  if (!isInput && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    const hasSelected = fpCanvas && fpCanvas.getActiveObject();
+    if (!hasSelected) {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); fpSwitchImage(_fpEditingIdx - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); fpSwitchImage(_fpEditingIdx + 1); }
+    }
+  }
 }
 
 function fpCopySelected() {
@@ -14423,12 +14431,27 @@ function fpInitCanvas(idxOrUrl) {
 
   if (fpCanvas) fpCanvas.dispose();
 
+  // 줌 상태 초기화
+  _fpZoom = 1;
+  _fpNaturalW = W;
+  _fpNaturalH = H;
+  const wrap2 = document.getElementById('fp-canvas-wrap');
+  if (wrap2) { wrap2.style.overflow = 'hidden'; wrap2.scrollLeft = 0; wrap2.scrollTop = 0; }
+  const lbl = document.getElementById('fp-zoom-label');
+  if (lbl) lbl.textContent = '100%';
+
   fpCanvas = new fabric.Canvas('fp-canvas', {
     width: W, height: H,
     backgroundColor: '#1a1a1a',
     preserveObjectStacking: true,
     selection: true,
   });
+
+  // 마우스휠 줌 연결
+  if (wrap2) {
+    wrap2.removeEventListener('wheel', _fpOnWheel);
+    wrap2.addEventListener('wheel', _fpOnWheel, { passive: false });
+  }
 
   // 인덱스 또는 직접 URL 지원
   const proj = getProject();
@@ -15068,20 +15091,69 @@ function fpSaveHistory() {
   fpHistoryIdx = fpHistory.length - 1;
 }
 let _fpZoom = 1;
+let _fpNaturalW = 0, _fpNaturalH = 0; // 캔버스 초기 크기 (zoom=1 기준)
 const _FP_ZOOM_STEP = 0.25;
 const _FP_ZOOM_MIN  = 0.25;
 const _FP_ZOOM_MAX  = 4;
 
-function _fpApplyZoom() {
+function _fpApplyZoom(scrollToCenter) {
   if (!fpCanvas) return;
-  const c = fpCanvas.getCenter();
-  fpCanvas.zoomToPoint(new fabric.Point(c.left, c.top), _fpZoom);
+  const wrap = document.getElementById('fp-canvas-wrap');
+  const newW = Math.round(_fpNaturalW * _fpZoom);
+  const newH = Math.round(_fpNaturalH * _fpZoom);
+  // 줌 변경 전 스크롤 중심 비율 보존
+  let cx = 0.5, cy = 0.5;
+  if (wrap && !scrollToCenter) {
+    cx = (wrap.scrollLeft + wrap.clientWidth / 2) / (fpCanvas.width || newW);
+    cy = (wrap.scrollTop  + wrap.clientHeight / 2) / (fpCanvas.height || newH);
+  }
+  fpCanvas.setDimensions({ width: newW, height: newH });
+  fpCanvas.setViewportTransform([_fpZoom, 0, 0, _fpZoom, 0, 0]);
+  // 스크롤 복원
+  if (wrap) {
+    wrap.style.overflow = _fpZoom > 1.01 ? 'auto' : 'hidden';
+    requestAnimationFrame(() => {
+      wrap.scrollLeft = cx * newW - wrap.clientWidth / 2;
+      wrap.scrollTop  = cy * newH - wrap.clientHeight / 2;
+    });
+  }
   const label = document.getElementById('fp-zoom-label');
   if (label) label.textContent = Math.round(_fpZoom * 100) + '%';
 }
 function fpZoomIn()    { _fpZoom = Math.min(_fpZoom + _FP_ZOOM_STEP, _FP_ZOOM_MAX); _fpApplyZoom(); }
 function fpZoomOut()   { _fpZoom = Math.max(_fpZoom - _FP_ZOOM_STEP, _FP_ZOOM_MIN); _fpApplyZoom(); }
-function fpZoomReset() { _fpZoom = 1; if (fpCanvas) { fpCanvas.setViewportTransform([1,0,0,1,0,0]); } const l = document.getElementById('fp-zoom-label'); if (l) l.textContent = '100%'; }
+function fpZoomReset() {
+  _fpZoom = 1; _fpApplyZoom(true);
+  const wrap = document.getElementById('fp-canvas-wrap');
+  if (wrap) { wrap.scrollLeft = 0; wrap.scrollTop = 0; }
+}
+
+// 마우스휠 줌 (커서 위치 기준)
+function _fpOnWheel(e) {
+  if (!fpCanvas) return;
+  if (!e.ctrlKey && !e.metaKey) return; // Ctrl+휠만 줌 (일반 스크롤은 패스)
+  e.preventDefault();
+  const wrap = document.getElementById('fp-canvas-wrap');
+  const rect = wrap.getBoundingClientRect();
+  // 커서의 wrap 내 비율
+  const mx = (e.clientX - rect.left + wrap.scrollLeft) / fpCanvas.width;
+  const my = (e.clientY - rect.top  + wrap.scrollTop)  / fpCanvas.height;
+  const delta = e.deltaY < 0 ? _FP_ZOOM_STEP : -_FP_ZOOM_STEP;
+  _fpZoom = Math.max(_FP_ZOOM_MIN, Math.min(_FP_ZOOM_MAX, _fpZoom + delta));
+  const newW = Math.round(_fpNaturalW * _fpZoom);
+  const newH = Math.round(_fpNaturalH * _fpZoom);
+  fpCanvas.setDimensions({ width: newW, height: newH });
+  fpCanvas.setViewportTransform([_fpZoom, 0, 0, _fpZoom, 0, 0]);
+  if (wrap) {
+    wrap.style.overflow = _fpZoom > 1.01 ? 'auto' : 'hidden';
+    requestAnimationFrame(() => {
+      wrap.scrollLeft = mx * newW - wrap.clientWidth / 2;
+      wrap.scrollTop  = my * newH - wrap.clientHeight / 2;
+    });
+  }
+  const label = document.getElementById('fp-zoom-label');
+  if (label) label.textContent = Math.round(_fpZoom * 100) + '%';
+}
 
 function fpUndo() {
   if (!fpCanvas || fpHistoryIdx <= 0) return;
@@ -15193,18 +15265,18 @@ function fpDeleteSelected() {
 // 저장용(save): JPEG 0.82 품질 — localStorage 용량 절약 (~10x 압축)
 // 다운로드용(download): PNG 2x — 고해상도
 function _fpGetDataURL({ forDownload = false } = {}) {
+  // 줌 상태에 관계없이 자연 크기(1x)로 내보내기
+  const inv = 1 / (_fpZoom || 1);
   if (forDownload) {
-    // 다운로드: PNG 2배율, 실패 시 1배율
-    for (const mul of [2, 1]) {
+    for (const mul of [2 * inv, inv]) {
       try { return fpCanvas.toDataURL({ format: 'png', multiplier: mul }); }
       catch(e) { console.warn(`PNG multiplier=${mul} failed:`, e.message); }
     }
     throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.');
   }
-  // 저장: JPEG (훨씬 작음) — 실패 시 PNG 1x 폴백
-  try { return fpCanvas.toDataURL({ format: 'jpeg', quality: 0.82, multiplier: 1 }); }
+  try { return fpCanvas.toDataURL({ format: 'jpeg', quality: 0.82, multiplier: inv }); }
   catch(e) { console.warn('JPEG export failed, PNG fallback:', e.message); }
-  try { return fpCanvas.toDataURL({ format: 'png', multiplier: 1 }); }
+  try { return fpCanvas.toDataURL({ format: 'png', multiplier: inv }); }
   catch(e) { throw new Error('캔버스 내보내기 실패.\n도면 이미지가 CORS를 지원하지 않을 수 있습니다.'); }
 }
 
