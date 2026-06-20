@@ -5204,17 +5204,22 @@ function triggerGoogleLogin() {
   }
 }
 async function _googleOAuthRedirect() {
-  // One Tap 차단 시(iOS Safari 등) → Firebase signInWithRedirect (동일 탭 유지, 복귀 후 getRedirectResult로 처리)
+  // One Tap 차단 시 → signInWithPopup (팝업 창, 메인 앱 페이지 유지)
   try {
     const ok = await _initFirebase();
     if (!ok) { showToastMessage('서비스 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
-    await firebase.auth().signInWithRedirect(provider);
+    const result = await firebase.auth().signInWithPopup(provider);
+    if (result && result.user) await _handleFirebaseUser(result.user);
   } catch(e) {
-    console.warn('signInWithRedirect failed:', e);
-    showToastMessage('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      showToastMessage('팝업이 차단되었습니다. 브라우저 팝업 차단을 해제하고 다시 시도해주세요.');
+    } else if (e.code !== 'auth/cancelled-popup-request') {
+      console.warn('signInWithPopup failed:', e);
+      showToastMessage('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   }
 }
 function _checkOAuthRedirect() {
