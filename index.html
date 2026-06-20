@@ -1240,6 +1240,11 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* ===== 기록 인라인 이미지 ===== */
 /* meeting-content-view 내 굵기 명시 (부모 font-weight:300 → bolder 상대값 방지) */
+.meeting-content-view { max-width:100%; overflow-x:hidden; word-break:break-word; overflow-wrap:anywhere; }
+.meeting-content-view pre, .meeting-content-view code { max-width:100%; overflow-x:auto; white-space:pre-wrap; word-break:break-all; }
+.meeting-content-view table { max-width:100%; table-layout:fixed; word-break:break-word; }
+.meeting-content-view img { max-width:100% !important; height:auto; }
+.meeting-content-view a { word-break:break-all; }
 .meeting-content-view b,
 .meeting-content-view strong,
 .meeting-content-view [style*="font-weight: bold"],
@@ -3999,7 +4004,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
   <!-- 스크롤 본문 (제목 포함) -->
-  <div id="meeting-detail-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 20px 40px;"></div>
+  <div id="meeting-detail-body" style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:20px 20px 40px;"></div>
 </div>
 
 <!-- 기록 더보기 바텀시트 -->
