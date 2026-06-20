@@ -2835,12 +2835,13 @@ button, input, textarea, select { font-family:var(--font); }
 /* 프로젝트 바로가기 카드 */
 .landing-proj-card {
   width:248px; padding:14px 16px 14px 20px;
-  background:rgba(255,255,255,0.6);
+  background:rgba(255,255,255,0.4);
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   border:none; border-radius:999px;
   cursor:pointer; display:flex; align-items:center; justify-content:space-between;
-  transition:transform .13s; font-family:var(--font); box-sizing:border-box;
+  transition:box-shadow .15s, transform .13s; font-family:var(--font); box-sizing:border-box;
 }
+.landing-proj-card:hover { box-shadow:0px 2px 12px 0px rgba(0,0,0,0.1); }
 .landing-proj-card:active { transform:scale(.97); }
 .landing-proj-card-name {
   font-size:18px; font-weight:500; color:#000;
@@ -2856,13 +2857,14 @@ button, input, textarea, select { font-family:var(--font); }
 /* 새 프로젝트 버튼 */
 .landing-btn-new {
   width:248px; padding:14px 16px 14px 20px;
-  background:rgba(255,255,255,0.6);
+  background:rgba(255,255,255,0.4);
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   color:#000; border:none; border-radius:999px;
   font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:space-between;
-  transition:transform .13s; font-family:var(--font); box-sizing:border-box;
+  transition:box-shadow .15s, transform .13s; font-family:var(--font); box-sizing:border-box;
 }
+.landing-btn-new:hover { box-shadow:0px 2px 12px 0px rgba(0,0,0,0.1); }
 .landing-btn-new:active { transform:scale(.97); }
 .landing-btn {
   width:248px; padding:14px 20px;
@@ -2886,13 +2888,14 @@ button, input, textarea, select { font-family:var(--font); }
 .landing-btn-secondary svg { width:17px; height:17px; color:#888; }
 .landing-btn-google {
   width:248px; padding:14px 20px;
-  background:rgba(255,255,255,0.6); color:#333;
+  background:rgba(255,255,255,0.4); color:#333;
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   border:none; border-radius:999px;
   font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  transition:transform .13s; font-family:var(--font);
+  transition:box-shadow .15s, transform .13s; font-family:var(--font);
 }
+.landing-btn-google:hover { box-shadow:0px 2px 12px 0px rgba(0,0,0,0.1); }
 .landing-btn-google:active { transform:scale(.97); }
 .landing-btn-google svg { width:17px; height:17px; }
 
