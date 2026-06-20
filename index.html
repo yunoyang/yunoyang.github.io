@@ -13374,7 +13374,7 @@ function openMeetingDetail(id) {
       <button onclick="window.open('${esc(m.publicUrl)}','_blank')" style="padding:5px 10px;background:#fff;color:#5084ff;border:1px solid #c7d9ff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">열기</button>
     </div>` : '';
   document.getElementById('meeting-detail-body').innerHTML = `
-    <h1 style="font-size:24px;font-weight:700;color:#111;line-height:1.35;margin:0 0 14px;word-break:keep-all;">${esc(m.title||'(제목 없음)')}</h1>
+    <h1 style="font-size:24px;font-weight:700;color:#111;line-height:1.35;margin-top:0;margin-bottom:14px;word-break:keep-all;">${esc(m.title||'(제목 없음)')}</h1>
     <div style="font-size:13px;color:#aaa;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f0f2f5;">${esc(m.createdByName||m.createdBy||'')} · ${dateStr}</div>
     ${publicUrlBanner}
     ${imgsHtml ? `<div style="margin-bottom:16px;">${imgsHtml}</div>` : ''}
