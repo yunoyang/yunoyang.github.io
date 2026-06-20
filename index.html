@@ -2804,53 +2804,48 @@ button, input, textarea, select { font-family:var(--font); }
 .landing-bg { display:none; }
 .landing-center { display:none; }
 .landing-logo-wrap {
-  display:block;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
 }
-.landing-logo {
-  font-family:'Space Mono', 'Courier New', monospace;
-  font-size:36px; font-weight:400; color:#2d2d2d;
-  letter-spacing:-0.02em; line-height:0.85;
-  max-width:150px;
+.landing-logo-img {
+  display:block; height:55px; width:auto; max-width:none;
 }
-.landing-logo span { color:#2d2d2d; }
+.landing-logo { display:none; }
 .landing-beta-badge { display:none; }
 .landing-main-copy {
-  font-size:16px; font-weight:400; color:#575757;
-  text-align:left; line-height:1.4; letter-spacing:-0.02em;
-  margin-top:16px; white-space:nowrap;
+  font-size:16px; font-weight:400; color:#1b1b1b;
+  text-align:center; line-height:1.4; letter-spacing:-0.02em;
+  white-space:nowrap;
 }
 .landing-divider { display:none; }
-/* 타이틀: 화면 상단 35% 지점에 배치 */
+/* 타이틀: 화면 상단 26% 지점 (217px / 844px) */
 .landing-mid {
-  position:relative; z-index:1;
-  flex:1; display:flex; flex-direction:column;
-  align-items:flex-start; justify-content:flex-start;
-  padding:35vh 20px 0;
+  position:absolute; top:26%; left:20px; right:20px; z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
 }
 /* 하단 버튼 그룹 */
 .landing-bottom {
-  padding:0 0 calc(env(safe-area-inset-bottom,0px) + 36px);
+  position:absolute; bottom:calc(env(safe-area-inset-bottom,0px) + 40px);
+  left:0; right:0; z-index:1;
   display:flex; flex-direction:column; gap:10px; align-items:center;
-  width:100%; box-sizing:border-box; flex-shrink:0;
-  position:relative; z-index:1;
+  box-sizing:border-box;
 }
 .landing-bottom > button {
-  max-width:none; width:210px;
+  max-width:none; width:248px;
 }
 /* 프로젝트 바로가기 카드 */
 .landing-proj-card {
-  width:210px; height:48px;
-  padding:0 16px 0 20px;
-  background:#fff; border:none; border-radius:999px;
+  width:248px; padding:14px 16px 14px 20px;
+  background:rgba(255,255,255,0.6);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:none; border-radius:999px;
   cursor:pointer; display:flex; align-items:center; justify-content:space-between;
-  transition:transform .13s, background .15s; font-family:var(--font);
-  box-sizing:border-box; box-shadow:0 2px 12px rgba(0,0,0,.08);
+  transition:transform .13s; font-family:var(--font); box-sizing:border-box;
 }
-.landing-proj-card:active { transform:scale(.97); background:#f5f5f8; }
+.landing-proj-card:active { transform:scale(.97); }
 .landing-proj-card-name {
-  font-size:16px; font-weight:500; color:#000;
+  font-size:18px; font-weight:500; color:#000;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  max-width:118px;
+  max-width:150px;
 }
 .landing-proj-card-sub { display:none; }
 .landing-status-badge {
@@ -2860,41 +2855,43 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* 새 프로젝트 버튼 */
 .landing-btn-new {
-  width:210px; height:48px;
-  padding:0 16px 0 20px;
-  background:#fff; color:#000; border:none; border-radius:999px;
-  font-size:16px; font-weight:500; cursor:pointer;
+  width:248px; padding:14px 16px 14px 20px;
+  background:rgba(255,255,255,0.6);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  color:#000; border:none; border-radius:999px;
+  font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:space-between;
-  transition:transform .13s, background .15s; font-family:var(--font);
-  box-sizing:border-box; box-shadow:0 2px 12px rgba(0,0,0,.08);
+  transition:transform .13s; font-family:var(--font); box-sizing:border-box;
 }
-.landing-btn-new:active { transform:scale(.97); background:#f5f5f8; }
+.landing-btn-new:active { transform:scale(.97); }
 .landing-btn {
-  width:210px; height:48px; padding:0 20px;
+  width:248px; padding:14px 20px;
   background:#222; color:#fff; border:none;
-  border-radius:999px; font-size:16px; font-weight:500; cursor:pointer;
+  border-radius:999px; font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
   transition:transform .13s, opacity .13s; font-family:var(--font);
 }
 .landing-btn svg { width:19px; height:19px; }
 .landing-btn:active { transform:scale(.97); opacity:.9; }
 .landing-btn-secondary {
-  width:210px; height:48px; padding:0 20px;
-  background:rgba(255,255,255,0.85); color:#444;
+  width:248px; padding:14px 20px;
+  background:rgba(255,255,255,0.6); color:#444;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   border:none; border-radius:999px;
-  font-size:16px; font-weight:500; cursor:pointer;
+  font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  transition:transform .13s, background .15s; font-family:var(--font);
+  transition:transform .13s; font-family:var(--font);
 }
 .landing-btn-secondary:active { transform:scale(.97); }
 .landing-btn-secondary svg { width:17px; height:17px; color:#888; }
 .landing-btn-google {
-  width:210px; height:48px; padding:0 20px;
-  background:#fff; color:#333; border:none; border-radius:999px;
-  font-size:16px; font-weight:500; cursor:pointer;
+  width:248px; padding:14px 20px;
+  background:rgba(255,255,255,0.6); color:#333;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:none; border-radius:999px;
+  font-size:18px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center; gap:9px;
   transition:transform .13s; font-family:var(--font);
-  box-shadow:0 2px 12px rgba(0,0,0,.08);
 }
 .landing-btn-google:active { transform:scale(.97); }
 .landing-btn-google svg { width:17px; height:17px; }
@@ -3188,10 +3185,10 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 배경 이미지 -->
   <img class="landing-bg-img" src="landing-bg.jpg" alt="">
 
-  <!-- 가운데: 로고 + 카피 -->
+  <!-- 타이틀 + 서브카피 -->
   <div class="landing-mid">
     <div class="landing-logo-wrap">
-      <div class="landing-logo" id="landing-text-logo">Vibe<br>Space</div>
+      <img class="landing-logo-img" src="landing-logo.png" alt="Vibe Space">
     </div>
     <div class="landing-main-copy">막막한 반셀프 인테리어 플래닝 툴</div>
   </div>
