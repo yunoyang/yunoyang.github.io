@@ -3262,7 +3262,13 @@ button, input, textarea, select { font-family:var(--font); }
           <span>공사정보</span>
           <span id="sum-dday" style="font-size:13px;font-weight:700;color:#5084ff;"></span>
         </div>
-        <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
+        <div style="display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation()">
+          <button onclick="goTo('form')" style="padding:6px 10px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;color:#555;">편집</button>
+          <span style="color:#ddd;font-size:14px;">|</span>
+          <button onclick="openExportDialog()" style="padding:6px 8px;background:none;border:none;cursor:pointer;display:flex;align-items:center;color:#555;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7C4.79086 3 3 4.79086 3 7V17C3 19.2091 4.79086 21 7 21H17C19.2091 21 21 19.2091 21 17V15"/><path d="M12.5 11.5L21 3"/><path d="M21 9V3H15"/></svg>
+          </button>
+        </div>
       </div>
       <div class="summary-card" id="summary-card">
         <div class="summary-list">
@@ -3359,9 +3365,6 @@ button, input, textarea, select { font-family:var(--font); }
         <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
       </span>
       <span id="collab-menu-badge" style="font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;"></span>
-    </button>
-    <button class="dropdown-item" onclick="openExportDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
     </button>
     <button class="dropdown-item" onclick="openNoticeDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
@@ -4532,9 +4535,6 @@ button, input, textarea, select { font-family:var(--font); }
         <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
       </span>
       <span id="collab-menu-badge-mobile" style="font-size:13px;font-weight:500;color:#333;"></span>
-    </button>
-    <button class="mobile-sheet-item" onclick="openExportDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-file-down"/></svg> 공사 계획서 다운로드
     </button>
     <button class="mobile-sheet-item" onclick="openNoticeDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
