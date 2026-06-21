@@ -12334,7 +12334,7 @@ function renderMeetingTab() {
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:20px 24px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
-        <div style="font-size:15px;font-weight:400;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${(()=>{const {decoded,type}=_normalizeMeetingContent(m.content||'');return type==='html'?esc(decoded.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'').trim()):esc(decoded);})()}</div>
+        <div style="font-size:15px;font-weight:400;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${(()=>{const {decoded,type}=_normalizeMeetingContent(m.content||'');const stripHtmlEntities=s=>s.replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");return type==='html'?esc(stripHtmlEntities(decoded.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'')).trim()):esc(decoded);})()}</div>
         ${mentionHtml}
         <div style="margin-top:6px;font-size:12px;color:#bbb;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
       </div>
