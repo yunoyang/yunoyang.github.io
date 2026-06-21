@@ -4011,13 +4011,7 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="back-btn" onclick="closeMeetingDetail()">
       <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
     </button>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <button id="btn-publish-blog" onclick="publishMeetingToInblog()" style="display:none;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;background:#f0f5ff;color:#5084ff;border:1.5px solid #c7d9ff;font-size:13px;font-weight:700;cursor:pointer;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        인블로그 발행
-      </button>
-      <button class="card-more-btn" onclick="_openMeetingMoreMenu()" style="font-size:20px;letter-spacing:1px;">···</button>
-    </div>
+    <button class="card-more-btn" onclick="_openMeetingMoreMenu()" style="font-size:20px;letter-spacing:1px;">···</button>
   </div>
   <!-- 스크롤 본문 (제목 포함) -->
   <div id="meeting-detail-body" style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:20px 20px 40px;"></div>
@@ -4030,6 +4024,10 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item" onclick="openEditMeeting();closeDialog('dlg-meeting-more');">
       <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       수정
+    </button>
+    <button id="btn-publish-blog" class="mobile-sheet-item" onclick="publishMeetingToInblog();closeDialog('dlg-meeting-more');" style="display:none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7C4.79086 3 3 4.79086 3 7V17C3 19.2091 4.79086 21 7 21H17C19.2091 21 21 19.2091 21 17V15"/><path d="M12.5 11.5L21 3"/><path d="M21 9V3H15"/></svg>
+      인블로그 발행
     </button>
     <button class="mobile-sheet-item" onclick="shareMeetingUrl();closeDialog('dlg-meeting-more');">
       <svg width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2929 3.29289C11.6834 2.90237 12.3166 2.90237 12.7071 3.29289L16.7071 7.29289C17.0976 7.68342 17.0976 8.31658 16.7071 8.70711C16.3166 9.09763 15.6834 9.09763 15.2929 8.70711L12 5.41421L8.70711 8.70711C8.31658 9.09763 7.68342 9.09763 7.29289 8.70711C6.90237 8.31658 6.90237 7.68342 7.29289 7.29289L11.2929 3.29289Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3C12.5523 3 13 3.44772 13 4V15C13 15.5523 12.5523 16 12 16C11.4477 16 11 15.5523 11 15V4C11 3.44772 11.4477 3 12 3Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 12C4.55228 12 5 12.4477 5 13V18C5 19.1046 5.89543 20 7 20H17C18.1046 20 19 19.1046 19 18V13C19 12.4477 19.4477 12 20 12C20.5523 12 21 12.4477 21 13V18C21 20.2091 19.2091 22 17 22H7C4.79086 22 3 20.2091 3 18V13C3 12.4477 3.44772 12 4 12Z" fill="currentColor"/></svg>
@@ -13440,26 +13438,21 @@ function openMeetingDetail(id) {
   scr.style.transform = 'translateY(0)';
   scr.style.pointerEvents = 'all';
 
-  // 인블로그 발행 버튼 상태 업데이트
+  // 인블로그 발행 버튼 상태 업데이트 (더보기 시트 내)
   const publishBtn = document.getElementById('btn-publish-blog');
   if (publishBtn) {
     publishBtn.style.display = 'flex';
     if (m.inblogPostId) {
-      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
-      publishBtn.style.background = '#f0fff4';
-      publishBtn.style.color = '#22a05b';
-      publishBtn.style.borderColor = '#b2dfca';
+      publishBtn.querySelector('span') && (publishBtn.querySelector('span').textContent = '발행됨 (열기)');
+      publishBtn.lastChild.textContent = ' 발행됨 (열기)';
       publishBtn.onclick = () => {
+        closeDialog('dlg-meeting-more');
         const url = m.publicUrl || (m.inblogSlug ? `https://vibespace.inblog.ai/${m.inblogSlug}` : null);
         if (url) window.open(url, '_blank');
         else publishMeetingToInblog();
       };
     } else {
-      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 인블로그 발행`;
-      publishBtn.style.background = '#f0f5ff';
-      publishBtn.style.color = '#5084ff';
-      publishBtn.style.borderColor = '#c7d9ff';
-      publishBtn.onclick = publishMeetingToInblog;
+      publishBtn.onclick = () => { publishMeetingToInblog(); closeDialog('dlg-meeting-more'); };
     }
   }
 }
