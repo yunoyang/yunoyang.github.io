@@ -10858,8 +10858,20 @@ function _syncProjToCloud(proj) {
       'meta.updatedBy': state.user.email,
       'meta.updatedBySessionId': _sessionId,
     };
-    return _db.collection('vb_projects').doc(proj.cloudId).update(payload);
+    return _db.collection('vb_projects').doc(proj.cloudId).update(payload)
+      .catch(e => {
+        if (e.code === 'not-found') {
+          // 문서 없음 → set(merge)로 폴백
+          return _db.collection('vb_projects').doc(proj.cloudId).set(payload, { merge: true });
+        }
+        throw e;
+      });
   }).catch(e => {
+    if (e.code === 'permission-denied' || e.code === 'unauthenticated') {
+      // 로그인 직후 auth 전파 지연 — 조용히 무시
+      console.warn('sync skipped (auth pending):', e.code);
+      return;
+    }
     console.error('sync err', e);
     showToastMessage('⚠️ 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   });
