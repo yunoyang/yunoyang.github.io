@@ -3262,13 +3262,7 @@ button, input, textarea, select { font-family:var(--font); }
           <span>공사정보</span>
           <span id="sum-dday" style="font-size:13px;font-weight:700;color:#5084ff;"></span>
         </div>
-        <div style="display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation()">
-          <button onclick="goTo('form')" style="padding:6px 10px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;color:#555;">편집</button>
-          <span style="color:#ddd;font-size:14px;">|</span>
-          <button onclick="openExportDialog()" style="padding:6px 8px;background:none;border:none;cursor:pointer;display:flex;align-items:center;color:#555;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7C4.79086 3 3 4.79086 3 7V17C3 19.2091 4.79086 21 7 21H17C19.2091 21 21 19.2091 21 17V15"/><path d="M12.5 11.5L21 3"/><path d="M21 9V3H15"/></svg>
-          </button>
-        </div>
+        <span class="sum-chev open" id="sum-chev"><svg class="icon" width="16" height="16"><use href="#icon-chevron-down"/></svg></span>
       </div>
       <div class="summary-card" id="summary-card">
         <div class="summary-list">
@@ -3391,9 +3385,15 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="form-title">공사 정보</h2>
-      <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정">
-        <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
+      <div id="form-view-actions" style="display:none;align-items:center;gap:2px;margin-left:auto;">
+        <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정" style="margin-left:0;">
+          <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+        </button>
+        <span style="color:#ddd;font-size:14px;padding:0 2px;">|</span>
+        <button id="form-export-icon-btn" onclick="openExportDialog()" title="공사정보 내보내기" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:#555;display:flex;align-items:center;justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7C4.79086 3 3 4.79086 3 7V17C3 19.2091 4.79086 21 7 21H17C19.2091 21 21 19.2091 21 17V15"/><path d="M12.5 11.5L21 3"/><path d="M21 9V3H15"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
@@ -9631,18 +9631,18 @@ function saveFormData() {
 function _showInfoViewPanel(visible) {
   const vp = document.getElementById('form-view-panel');
   const ep = document.getElementById('form-edit-panel');
-  const btn = document.getElementById('form-edit-icon-btn');
+  const actions = document.getElementById('form-view-actions');
   const title = document.getElementById('form-title');
   if (visible) {
     if (vp) vp.style.display = 'block';
     if (ep) ep.style.display = 'none';
-    if (btn) btn.style.display = 'flex';
+    if (actions) actions.style.display = 'flex';
     if (title) title.textContent = '공사 정보';
     _loadInfoView();
   } else {
     if (vp) vp.style.display = 'none';
     if (ep) ep.style.display = 'contents';
-    if (btn) btn.style.display = 'none';
+    if (actions) actions.style.display = 'none';
     if (title) title.textContent = formMode === 'new' ? '내 공사 기본 정보' : '공사 정보 수정';
     loadFormData();
   }
