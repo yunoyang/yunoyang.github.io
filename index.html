@@ -10803,13 +10803,22 @@ function _mergeLocalPreserve(cp, localProjs) {
     merged.floorplanImages = local.floorplanImages;
     merged.floorplanImage = local.floorplanImages.find(Boolean) || null;
   }
-  // ★ meetings: id 기준 합집합 — 로컬 우선 (아직 sync 안 된 기록 보존)
+  // ★ meetings: id 기준 합집합 — updatedAt 최신 버전 우선 (이미지 sync 보장)
   const cpMeetings = cp.meetings || [];
   const localMeetings = local.meetings || [];
   if (localMeetings.length || cpMeetings.length) {
     const map = new Map();
-    cpMeetings.forEach(m => map.set(m.id, m));       // 클라우드 기준
-    localMeetings.forEach(m => map.set(m.id, m));    // 로컬로 덮어쓰기 (최신)
+    cpMeetings.forEach(m => map.set(m.id, m));
+    localMeetings.forEach(m => {
+      const cloud = map.get(m.id);
+      if (!cloud) {
+        map.set(m.id, m); // 로컬에만 있는 기록
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = m.updatedAt || m.createdAt || 0;
+        if (localTs > cloudTs) map.set(m.id, m);
+      }
+    });
     merged.meetings = Array.from(map.values())
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }
@@ -11181,16 +11190,33 @@ function _startCollabListener(cloudId) {
       proj.floorplanImages = mergedImgs;
       proj.floorplanImage = mergedImgs.find(Boolean) || localFloorplan || null;
     }
-    // ★ meetings: 로컬+클라우드 합집합 — 로컬 우선 (sync 안 된 기록 보존)
+    // ★ meetings: 로컬+클라우드 합집합 — updatedAt 기준 최신 버전 우선 (이미지 sync 보장)
     const remoteMeetings = remote.meetings || [];
     const meetMap = new Map();
     remoteMeetings.forEach(m => meetMap.set(m.id, m));
-    localMeetings.forEach(m => meetMap.set(m.id, m)); // 로컬로 덮어쓰기
+    localMeetings.forEach(m => {
+      const cloud = meetMap.get(m.id);
+      if (!cloud) {
+        meetMap.set(m.id, m); // 로컬에만 있는 기록 (아직 미업로드)
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = m.updatedAt || m.createdAt || 0;
+        if (localTs > cloudTs) meetMap.set(m.id, m); // 로컬이 더 최신이면 로컬 사용
+        // 클라우드가 더 최신이면 cloud 버전 유지 (PC에서 수정한 내용 보존)
+      }
+    });
     proj.meetings = Array.from(meetMap.values())
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    // 기록 이미지 복원 (메모리 → IDB)
+    // 기록 이미지 복원: 로컬 base64만 추가 (Firebase URL은 cloud 버전에 이미 포함)
     proj.meetings.forEach(m => {
-      if (localMeetingImgMap[m.id]) m.images = localMeetingImgMap[m.id];
+      const localImgs = localMeetingImgMap[m.id] || [];
+      const localB64 = localImgs.filter(img => img && img.startsWith('data:'));
+      if (localB64.length) {
+        const existing = Array.isArray(m.images) ? m.images : [];
+        if (!existing.some(img => img && img.startsWith('data:'))) {
+          m.images = [...existing, ...localB64];
+        }
+      }
     });
     _MIdb.loadAll().then(() => renderMeetingTab());
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
