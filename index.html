@@ -5922,7 +5922,7 @@ function switchMainTab(tab, btn) {
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); }
-  if (tab === 'meeting') { renderMeetingTab(); }
+  if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
   if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); }
   if (tab === 'calendar') {
     const proj = getProject();
@@ -10857,6 +10857,50 @@ async function _fetchStyleFromCloud() {
       renderStyleTab();
     }
   } catch(e) { console.warn('_fetchStyleFromCloud:', e); }
+}
+
+// 기록 탭 진입 시 Firestore에서 meetings를 직접 가져와 로컬 업데이트
+let _lastMeetingFetch = 0;
+async function _fetchMeetingsFromCloud() {
+  const proj = getProject();
+  if (!proj?.cloudId) return;
+  const now = Date.now();
+  if (now - _lastMeetingFetch < 30000) return; // 30초 쿨다운
+  _lastMeetingFetch = now;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    if (!snap.exists) return;
+    const remote = snap.data()?.projectData;
+    if (!remote?.meetings) return;
+    const localMeetings = proj.meetings || [];
+    const meetMap = new Map();
+    // 클라우드 기준으로 시작
+    (remote.meetings).forEach(m => meetMap.set(m.id, m));
+    // 로컬에만 있거나 로컬이 더 최신인 것만 로컬 우선
+    localMeetings.forEach(m => {
+      const cloud = meetMap.get(m.id);
+      if (!cloud) {
+        meetMap.set(m.id, m); // 로컬 전용 (미업로드)
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = m.updatedAt || m.createdAt || 0;
+        if (localTs > cloudTs) meetMap.set(m.id, m); // 로컬이 더 최신
+      }
+    });
+    const merged = Array.from(meetMap.values())
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // 변경 있으면 반영
+    const localIds = localMeetings.map(m => m.id + (m.updatedAt || m.createdAt || 0)).join();
+    const mergedIds = merged.map(m => m.id + (m.updatedAt || m.createdAt || 0)).join();
+    if (localIds !== mergedIds) {
+      proj.meetings = merged;
+      await _MIdb.loadAll();
+      localStorage.setItem('vibespace', JSON.stringify(state));
+      renderMeetingTab();
+    }
+  } catch(e) { console.warn('_fetchMeetingsFromCloud:', e); }
 }
 
 // Firebase Storage에서 스타일 이미지 복구 (Firestore/localStorage 데이터 소실 시)
