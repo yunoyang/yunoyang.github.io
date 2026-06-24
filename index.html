@@ -10708,6 +10708,15 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
+  // furnitureItems: id 기준 합집합 — 클라우드 기준, 로컬로 덮어쓰기
+  const cpFurniture = cp.furnitureItems || [];
+  const localFurniture = local.furnitureItems || [];
+  if (cpFurniture.length || localFurniture.length) {
+    const fmap = new Map();
+    cpFurniture.forEach(it => fmap.set(it.id, it));
+    localFurniture.forEach(it => fmap.set(it.id, it));
+    merged.furnitureItems = Array.from(fmap.values());
+  }
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(Boolean);
@@ -10938,6 +10947,34 @@ async function _syncStyleImagesToCloud(proj) {
   }
 }
 
+async function _syncFurnitureToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  if (!canWrite) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
+    const localFurniture = proj.furnitureItems || [];
+    const fmap = new Map();
+    cloudFurniture.forEach(it => fmap.set(it.id, it));
+    localFurniture.forEach(it => fmap.set(it.id, it));
+    const merged = Array.from(fmap.values());
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.furnitureItems': merged,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+    proj.furnitureItems = merged;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    console.log('[furnitureSync] ✅', merged.length, 'items');
+  } catch(e) {
+    console.error('[furnitureSync] ❌', e.code, e.message);
+  }
+}
+
 // contentLinks만 Firestore에 업데이트 — read-merge-write로 덮어쓰기 방지
 async function _syncContentLinksToCloud(proj) {
   if (!proj?.cloudId) return;
@@ -11133,7 +11170,7 @@ function _startCollabListener(cloudId) {
     const furnitureMap = new Map();
     remoteFurniture.forEach(it => furnitureMap.set(it.id, it));
     localFurnitureItems.forEach(it => furnitureMap.set(it.id, it)); // 로컬 우선
-    if (furnitureMap.size > 0) proj.furnitureItems = Array.from(furnitureMap.values());
+    proj.furnitureItems = Array.from(furnitureMap.values());
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
@@ -12454,6 +12491,7 @@ function _deleteFurnitureItem(id) {
   if (!confirm('삭제하시겠습니까?')) return;
   proj.furnitureItems = (proj.furnitureItems||[]).filter(i => i.id !== id);
   save();
+  _syncFurnitureToCloud(proj);
   renderFurnitureTab();
 }
 
@@ -12630,6 +12668,7 @@ function _saveFurnitureItem() {
     proj.furnitureItems.push(savedItem);
   }
   save();
+  _syncFurnitureToCloud(proj);
   _closeFurnitureDlg();
   renderFurnitureTab();
 
@@ -13328,6 +13367,7 @@ async function _syncMeetingsToCloud(proj) {
       'projectData.meetings': meetingsLite,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
     });
   } catch(e) {
     console.error('[meetingSync]', e);
