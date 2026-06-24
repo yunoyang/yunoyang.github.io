@@ -3910,7 +3910,7 @@ button, input, textarea, select { font-family:var(--font); }
       </button>
     </div>
     <div style="padding:8px 18px 24px;">
-      <input id="content-url-input" type="url" inputmode="url" placeholder="유튜브 링크를 붙여넣기 하세요"
+      <input id="content-url-input" type="url" inputmode="url" placeholder="유튜브, 인스타, 블로그 링크를 붙여넣기 하세요"
         style="width:100%;box-sizing:border-box;height:48px;border:1.5px solid #e1e5ef;border-radius:12px;padding:0 14px;font-size:15px;font-family:var(--font);outline:none;margin-bottom:12px;"
         onkeydown="if(event.key==='Enter'){_addContentLink();closeAddContent();event.preventDefault();}">
       <button onclick="_addContentLink();closeAddContent();" style="width:100%;height:48px;background:#222;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;">추가</button>
@@ -5943,6 +5943,33 @@ function switchMainTab(tab, btn) {
 }
 
 // ===== 컨텐츠 탭 =====
+function _detectContentType(url) {
+  const u = url.toLowerCase();
+  if (_parseYoutubeId(url)) return 'youtube';
+  if (u.includes('instagram.com') || u.includes('instagr.am')) return 'instagram';
+  if (u.includes('naver.me') || u.includes('blog.naver.com') || u.includes('cafe.naver.com') || u.includes('post.naver.com')) return 'naver';
+  return 'link';
+}
+
+async function _fetchLinkMeta(url) {
+  try {
+    const res = await fetch(
+      `https://api.microlink.io/?url=${encodeURIComponent(url)}&palette=false&audio=false&video=false&iframe=false`,
+      { signal: AbortSignal.timeout ? AbortSignal.timeout(7000) : undefined }
+    );
+    if (!res.ok) return {};
+    const data = await res.json();
+    if (data.status !== 'success') return {};
+    const d = data.data;
+    return {
+      title: d.title || '',
+      description: d.description || '',
+      ogImage: d.image?.url || '',
+      siteName: d.publisher || '',
+    };
+  } catch(e) { return {}; }
+}
+
 function _parseYoutubeId(url) {
   try {
     url = url.trim();
@@ -5969,29 +5996,43 @@ function _getContentLinks() {
   return proj.contentLinks;
 }
 
+function _contentTypeIcon(type) {
+  if (type === 'youtube') return `<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="rgba(0,0,0,0.45)"/><path d="M14 11.5 L27 18 L14 24.5Z" fill="#fff"/></svg>`;
+  if (type === 'instagram') return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="rgba(255,255,255,0.9)"/></svg>`;
+  if (type === 'naver') return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M5 5h5.5l3.5 5.5V5H19v14h-5.5L10 13.5V19H5V5z" fill="rgba(255,255,255,0.9)"/></svg>`;
+  return `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+}
+
+function _contentThumbBg(type) {
+  if (type === 'instagram') return 'linear-gradient(135deg,#f58529,#dd2a7b,#8134af)';
+  if (type === 'naver') return '#03C75A';
+  return '#1a1a2e';
+}
+
 function renderContentTab() {
   const list = document.getElementById('content-list');
   if (!list) return;
-  const links = _getContentLinks().filter(item => {
-    const u = (item.url || '').toLowerCase();
-    return !u.includes('instagram.com') && !u.includes('instagr.am');
-  });
+  const links = _getContentLinks();
   if (!links.length) {
     list.innerHTML = `
       <div class="content-empty-state">
-        <div class="content-empty-icon">🎬</div>
-        <div class="content-empty-text">참고할 영상을 모아두세요</div>
-        <div class="content-empty-sub">유튜브 링크를 붙여넣으면<br>영상·제품을 함께 관리할 수 있어요</div>
+        <div class="content-empty-icon">🔗</div>
+        <div class="content-empty-text">참고 컨텐츠를 모아두세요</div>
+        <div class="content-empty-sub">유튜브, 인스타그램, 블로그 등<br>링크를 붙여넣으면 미리보기로 저장돼요</div>
       </div>`;
     return;
   }
   const _cproj = getProject();
   const _cbadges = _cproj ? _getBadges(_cproj.cloudId || _cproj.id) : {};
   list.innerHTML = links.map(item => {
-    const isYt = item.type === 'youtube';
-    const thumbUrl = isYt ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : '';
-    const title = esc(item.title || (isYt ? 'YouTube 영상' : item.url));
-    const channel = esc(item.channel || '');
+    const type = item.type || 'link';
+    const isYt = type === 'youtube';
+    const thumbUrl = isYt
+      ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg`
+      : (item.ogImage || '');
+    const thumbBg = thumbUrl ? '#111' : _contentThumbBg(type);
+    const title = esc(item.title || item.url);
+    const sub = esc(item.channel || item.siteName || _contentDomain(item.url));
     const products = item.products || [];
     const isItemNew = _isNew(_cbadges.contentLinks?.[item.id]);
     const chipsHtml = products.length
@@ -6000,24 +6041,22 @@ function renderContentTab() {
          ${products.length > 4 ? `<span class="content-product-chip">+${products.length-4}</span>` : ''}
         </div>` : '';
     return `<button class="content-card" onclick="openContentViewer('${item.id}')">
-      <div class="content-card-thumb">
-        ${isYt ? `<img src="${thumbUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
-        <div class="content-card-play">
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="18" fill="rgba(0,0,0,0.45)"/>
-            <path d="M14 11.5 L27 18 L14 24.5Z" fill="#fff"/>
-          </svg>
-        </div>
+      <div class="content-card-thumb" style="background:${thumbBg};">
+        ${thumbUrl ? `<img src="${esc(thumbUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="content-card-play">${_contentTypeIcon(type)}</div>
       </div>
       <div class="content-card-info">
         <div class="content-card-title">${title}${isItemNew ? '<span class="n-badge" style="margin-left:6px;">N</span>' : ''}</div>
-        ${channel ? `<div class="content-card-channel">${channel}</div>` : ''}
+        ${sub ? `<div class="content-card-channel">${sub}</div>` : ''}
         ${chipsHtml}
       </div>
     </button>`;
   }).join('');
-  // 제목 없는 기존 영상 자동 fetch
-  _fetchMissingYTTitles();
+  _fetchMissingMeta();
+}
+
+function _contentDomain(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch(e) { return ''; }
 }
 
 /* ─── YouTube oEmbed 메타데이터 fetch ─── */
@@ -6037,22 +6076,31 @@ async function _fetchYTMeta(videoId) {
   return { title: '', channel: '' };
 }
 
-/* ─── 제목 없는 기존 영상 일괄 fetch ─── */
-function _fetchMissingYTTitles() {
+/* ─── 제목/OG 이미지 없는 항목 일괄 fetch ─── */
+function _fetchMissingMeta() {
   const proj = getProject();
   if (!proj?.contentLinks) return;
-  const missing = proj.contentLinks.filter(l => l.type === 'youtube' && l.videoId && !l.title);
-  if (!missing.length) return;
-  missing.forEach(item => {
-    _fetchYTMeta(item.videoId).then(meta => {
-      if (!meta.title) return;
-      const it = (getProject()?.contentLinks || []).find(l => l.id === item.id);
-      if (!it) return;
-      it.title = meta.title;
-      it.channel = meta.channel;
-      save();
-      renderContentTab();
-    });
+  proj.contentLinks.filter(l => !l.title).forEach(item => {
+    if (item.type === 'youtube' && item.videoId) {
+      _fetchYTMeta(item.videoId).then(meta => {
+        if (!meta.title) return;
+        const it = (getProject()?.contentLinks || []).find(l => l.id === item.id);
+        if (!it) return;
+        it.title = meta.title; it.channel = meta.channel;
+        save(); renderContentTab();
+      });
+    } else if (item.url) {
+      _fetchLinkMeta(item.url).then(meta => {
+        if (!meta.title && !meta.ogImage) return;
+        const it = (getProject()?.contentLinks || []).find(l => l.id === item.id);
+        if (!it) return;
+        if (meta.title) it.title = meta.title;
+        if (meta.ogImage) it.ogImage = meta.ogImage;
+        if (meta.siteName) it.siteName = meta.siteName;
+        if (meta.description) it.description = meta.description;
+        save(); renderContentTab();
+      });
+    }
   });
 }
 
@@ -6076,27 +6124,37 @@ function _addContentLink() {
   if (!proj) return;
   if (!proj.contentLinks) proj.contentLinks = [];
   const videoId = _parseYoutubeId(url);
+  const type = _detectContentType(url);
   const newItem = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    url, type: videoId ? 'youtube' : 'link',
+    url, type,
     videoId: videoId || null, addedAt: Date.now(),
-    title: '', channel: '', products: []
+    title: '', channel: '', siteName: '', ogImage: '', description: '', products: []
   };
   proj.contentLinks.unshift(newItem);
   save();
   input.value = '';
   renderContentTab();
   _syncContentLinksToCloud(proj);
-  // 비동기 메타 fetch — 완료 시 카드 갱신
+  // 비동기 메타 fetch
   if (videoId) {
     _fetchYTMeta(videoId).then(meta => {
       if (!meta.title) return;
       const it = (getProject()?.contentLinks || []).find(l => l.id === newItem.id);
       if (!it) return;
-      it.title = meta.title;
-      it.channel = meta.channel;
-      save();
-      renderContentTab();
+      it.title = meta.title; it.channel = meta.channel;
+      save(); renderContentTab();
+    });
+  } else {
+    _fetchLinkMeta(url).then(meta => {
+      if (!meta.title && !meta.ogImage) return;
+      const it = (getProject()?.contentLinks || []).find(l => l.id === newItem.id);
+      if (!it) return;
+      if (meta.title) it.title = meta.title;
+      if (meta.ogImage) it.ogImage = meta.ogImage;
+      if (meta.siteName) it.siteName = meta.siteName;
+      if (meta.description) it.description = meta.description;
+      save(); renderContentTab(); _syncContentLinksToCloud(getProject());
     });
   }
 }
@@ -6117,16 +6175,33 @@ function openContentViewer(id) {
   const item = (_getContentLinks()).find(l => l.id === id);
   if (!item) return;
   _cvCurrentId = id;
-  document.getElementById('cv-title').textContent = item.title || 'YouTube 영상';
-  document.getElementById('cv-channel').textContent = item.channel || '';
+  const type = item.type || 'link';
+  document.getElementById('cv-title').textContent = item.title || item.url;
   const playerWrap = document.getElementById('cv-player-wrap');
-  if (item.videoId) {
+  const channelEl = document.getElementById('cv-channel');
+  if (type === 'youtube' && item.videoId) {
+    playerWrap.style.display = '';
     playerWrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${item.videoId}?playsinline=1&rel=0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+    channelEl.textContent = item.channel || '';
   } else {
+    playerWrap.style.display = 'none';
     playerWrap.innerHTML = '';
+    const thumbBg = item.ogImage ? '#111' : _contentThumbBg(type);
+    const sub = item.siteName || item.channel || _contentDomain(item.url);
+    channelEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0;">
+        ${item.ogImage ? `<div style="width:100%;aspect-ratio:16/9;background:#111;overflow:hidden;margin-bottom:12px;"><img src="${esc(item.ogImage)}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>` : `<div style="width:100%;height:140px;background:${thumbBg};display:flex;align-items:center;justify-content:center;margin-bottom:12px;">${_contentTypeIcon(type)}</div>`}
+        <div style="padding:0 16px;">
+          ${sub ? `<div style="font-size:12px;color:#aaa;font-weight:500;margin-bottom:4px;">${esc(sub)}</div>` : ''}
+          ${item.description ? `<div style="font-size:14px;color:#555;line-height:1.5;margin-bottom:14px;">${esc(item.description)}</div>` : ''}
+          <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#111;color:#fff;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            링크 열기
+          </a>
+        </div>
+      </div>`;
   }
   _renderCvProducts(item);
-  // 스크롤 최상단
   const scrollBody = document.getElementById('cv-scroll-body');
   if (scrollBody) scrollBody.scrollTop = 0;
   document.getElementById('content-viewer-screen').style.display = 'flex';
@@ -6135,7 +6210,8 @@ function openContentViewer(id) {
 function closeContentViewer() {
   document.getElementById('content-viewer-screen').style.display = 'none';
   const playerWrap = document.getElementById('cv-player-wrap');
-  if (playerWrap) playerWrap.innerHTML = ''; // 영상 정지
+  if (playerWrap) { playerWrap.innerHTML = ''; playerWrap.style.display = ''; }
+  document.getElementById('cv-channel').innerHTML = '';
   _cvCurrentId = null;
 }
 
