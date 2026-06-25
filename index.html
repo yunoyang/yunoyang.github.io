@@ -10973,6 +10973,14 @@ function _syncProjToCloud(proj) {
     delete projData.myRole;
     // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
     projData.contentLinks = proj.contentLinks || [];
+    // furnitureItems: 클라우드에 다른 기기가 추가한 항목 보존 (read-merge-write)
+    const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
+    if (cloudFurniture.length) {
+      const fmap = new Map();
+      cloudFurniture.forEach(it => fmap.set(it.id, it));
+      (proj.furnitureItems || []).forEach(it => fmap.set(it.id, it)); // 로컬 우선
+      projData.furnitureItems = Array.from(fmap.values());
+    }
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
