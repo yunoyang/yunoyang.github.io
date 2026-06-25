@@ -5923,7 +5923,7 @@ function switchMainTab(tab, btn) {
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); }
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
-  if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); }
+  if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); _fetchFurnitureFromCloud(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -10562,6 +10562,10 @@ function renderAll() {
     if (styleTabEl && styleTabEl.style.display !== 'none') renderStyleTab();
     const contentTabEl = document.getElementById('tab-content');
     if (contentTabEl && contentTabEl.style.display !== 'none') renderContentTab();
+    const furnitureTabEl = document.getElementById('tab-furniture');
+    if (furnitureTabEl && furnitureTabEl.style.display !== 'none') renderFurnitureTab();
+    const meetingTabEl = document.getElementById('tab-meeting');
+    if (meetingTabEl && meetingTabEl.style.display !== 'none') renderMeetingTab();
     // 공사정보 뷰 패널 열려있으면 도면 등 최신 상태로 갱신
     const vp = document.getElementById('form-view-panel');
     if (vp && vp.style.display !== 'none') _loadInfoView();
@@ -10857,6 +10861,36 @@ async function _fetchStyleFromCloud() {
       renderStyleTab();
     }
   } catch(e) { console.warn('_fetchStyleFromCloud:', e); }
+}
+
+// 가구&가전 탭 진입 시 Firestore에서 furnitureItems 직접 fetch
+let _lastFurnitureFetch = 0;
+async function _fetchFurnitureFromCloud() {
+  const proj = getProject();
+  if (!proj?.cloudId) return;
+  const now = Date.now();
+  if (now - _lastFurnitureFetch < 30000) return;
+  _lastFurnitureFetch = now;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    if (!snap.exists) return;
+    const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
+    if (!cloudFurniture.length) return;
+    const localFurniture = proj.furnitureItems || [];
+    const fmap = new Map();
+    cloudFurniture.forEach(it => fmap.set(it.id, it));
+    localFurniture.forEach(it => fmap.set(it.id, it)); // 로컬 우선
+    const merged = Array.from(fmap.values());
+    const localKey = localFurniture.map(i => i.id).sort().join();
+    const mergedKey = merged.map(i => i.id).sort().join();
+    if (localKey !== mergedKey) {
+      proj.furnitureItems = merged;
+      localStorage.setItem('vibespace', JSON.stringify(state));
+      renderFurnitureTab();
+    }
+  } catch(e) { console.warn('_fetchFurnitureFromCloud:', e); }
 }
 
 // 기록 탭 진입 시 Firestore에서 meetings를 직접 가져와 로컬 업데이트
