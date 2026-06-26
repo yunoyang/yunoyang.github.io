@@ -12623,7 +12623,7 @@ function _getFurnitureItems() {
   const proj = getProject();
   if (!proj) return [];
   if (!proj.furnitureItems) proj.furnitureItems = [];
-  return proj.furnitureItems;
+  return proj.furnitureItems.filter(it => !it.deleted);
 }
 
 function _getFurnitureStatus(it) {
@@ -12810,7 +12810,9 @@ function _closeFurnitureMenu() {
 function _deleteFurnitureItem(id) {
   const proj = getProject(); if (!proj) return;
   if (!confirm('삭제하시겠습니까?')) return;
-  proj.furnitureItems = (proj.furnitureItems||[]).filter(i => i.id !== id);
+  // 소프트 삭제: deleted:true + updatedAt 갱신 → 클라우드에도 전파
+  const it = (proj.furnitureItems||[]).find(i => i.id === id);
+  if (it) { it.deleted = true; it.updatedAt = Date.now(); }
   save();
   _syncFurnitureToCloud(proj);
   setTimeout(() => renderFurnitureTab(), 0);
