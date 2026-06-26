@@ -12754,8 +12754,9 @@ function _renderFurnitureCategoryDetail(cat) {
           </div>
           ${status === '보유중' ? `<div style="margin-top:10px;"><span style="font-size:14px;color:#2e7d32;">보유중</span></div>` : `
           <div style="margin-top:10px;">
-            <button onclick="event.stopPropagation();_toggleFurniturePending('${it.id}')" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:14px;font-weight:500;color:#888;cursor:pointer;font-family:var(--font);">
-              선택
+            <button onclick="event.stopPropagation();_toggleFurniturePending('${it.id}')" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;border:1.5px solid ${isPending ? '#2e7d32' : '#ddd'};background:${isPending ? '#f0faf0' : '#fff'};font-size:14px;font-weight:${isPending ? '600' : '500'};color:${isPending ? '#2e7d32' : '#888'};cursor:pointer;font-family:var(--font);">
+              ${isPending ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+              선택${isPending && unitPrice ? ' · 예산 포함' : ''}
             </button>
           </div>`}
         </div>
