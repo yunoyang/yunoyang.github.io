@@ -12838,8 +12838,8 @@ function _openFurnitureDlg(it) {
   sel.innerHTML = FURNITURE_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
   dlg.querySelector('#fi-name').value = it?.name || '';
   dlg.querySelector('#fi-brand').value = it?.brand || '';
-  const _fiSt = it ? _getFurnitureStatus(it) : '보유중';
-  _setFiStatus(_fiSt === '미선택' ? '보유중' : _fiSt);
+  const _fiSt = it ? _getFurnitureStatus(it) : '미선택';
+  _setFiStatus(_fiSt);
   dlg.querySelector('#fi-qty').value = it?.qty || 1;
   dlg.querySelector('#fi-price').value = it?.price || '';
   dlg.querySelector('#fi-size').value = it?.size || '';
@@ -12855,13 +12855,14 @@ function _openFurnitureDlg(it) {
 function _setFiStatus(val) {
   document.getElementById('fi-status').value = val;
   const isOwned = val === '보유중';
+  const isPending = val === '구매예정';
   const btnOwned = document.getElementById('fi-status-btn-owned');
   const btnPending = document.getElementById('fi-status-btn-pending');
   if (!btnOwned || !btnPending) return;
   btnOwned.style.background = isOwned ? '#111' : 'transparent';
   btnOwned.style.color = isOwned ? '#fff' : '#999';
-  btnPending.style.background = isOwned ? 'transparent' : '#111';
-  btnPending.style.color = isOwned ? '#999' : '#fff';
+  btnPending.style.background = isPending ? '#111' : 'transparent';
+  btnPending.style.color = isPending ? '#fff' : '#999';
 }
 
 function _closeFurnitureDlg() {
