@@ -12838,8 +12838,9 @@ function _openFurnitureDlg(it) {
   sel.innerHTML = FURNITURE_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
   dlg.querySelector('#fi-name').value = it?.name || '';
   dlg.querySelector('#fi-brand').value = it?.brand || '';
-  const _fiSt = it ? _getFurnitureStatus(it) : '미선택';
-  _setFiStatus(_fiSt);
+  const _fiSt = it ? _getFurnitureStatus(it) : '구매예정';
+  // 미선택은 다이얼로그에서 구매예정 버튼으로 표시
+  _setFiStatus(_fiSt === '미선택' ? '구매예정' : _fiSt);
   dlg.querySelector('#fi-qty').value = it?.qty || 1;
   dlg.querySelector('#fi-price').value = it?.price || '';
   dlg.querySelector('#fi-size').value = it?.size || '';
@@ -12988,7 +12989,12 @@ function _saveFurnitureItem() {
   const fields = {
     name,
     brand:    dlg.querySelector('#fi-brand').value.trim(),
-    status:   dlg.querySelector('#fi-status').value,
+    status:   (() => {
+      const s = dlg.querySelector('#fi-status').value;
+      // 신규 추가 시 구매예정 선택 → 리스트에서는 미선택(선택 버튼) 상태로 시작
+      if (!editId && s === '구매예정') return '미선택';
+      return s;
+    })(),
     qty:      Math.max(1, parseInt(dlg.querySelector('#fi-qty').value) || 1),
     price:    parseInt(dlg.querySelector('#fi-price').value.replace(/,/g,'')) || 0,
     size:     dlg.querySelector('#fi-size').value.trim(),
