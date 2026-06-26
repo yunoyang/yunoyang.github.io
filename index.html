@@ -12669,7 +12669,7 @@ function _renderFurnitureCategoryGrid() {
     </div>
     ${cats.length === 0
       ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 제품이 없습니다</div>`
-      : `<div style="display:grid;grid-template-columns:1fr;gap:4px;">${cats.map(c => catCardHtml(c)).join('')}</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${cats.map(c => catCardHtml(c)).join('')}</div>`
     }
   `;
 }
