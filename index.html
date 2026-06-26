@@ -12701,7 +12701,7 @@ function _renderFurnitureCategoryDetail(cat) {
           <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
             <button onclick="_toggleFurniturePending('${it.id}')" style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid ${isPending ? '#2e7d32' : '#e0e0e0'};background:${isPending ? '#f0faf0' : '#fafafa'};cursor:pointer;font-size:12px;font-weight:600;color:${isPending ? '#2e7d32' : '#aaa'};font-family:var(--font);">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#2e7d32' : '#ccc'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${isPending ? '<polyline points="20 6 9 17 4 12"/>' : '<circle cx="12" cy="12" r="9"/>'}</svg>
-              ${isPending ? '구매예정' : '보유중'}
+              ${isPending ? '구매예정' : '결정'}
             </button>
             ${isPending && unitPrice ? `<span style="font-size:12px;color:#2e7d32;">예산 포함</span>` : ''}
           </div>
