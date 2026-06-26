@@ -5943,7 +5943,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
-  if (tab === 'content') { renderContentTab(); }
+  if (tab === 'content') { renderContentTab(); _fetchContentLinksFromCloud(); }
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
   if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); _fetchFurnitureFromCloud(); }
   if (tab === 'calendar') {
@@ -10810,13 +10810,22 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
-  // furnitureItems: id 기준 합집합 — 클라우드 기준, 로컬로 덮어쓰기
+  // furnitureItems: id 기준 합집합 — 타임스탬프 최신 우선
   const cpFurniture = cp.furnitureItems || [];
   const localFurniture = local.furnitureItems || [];
   if (cpFurniture.length || localFurniture.length) {
     const fmap = new Map();
     cpFurniture.forEach(it => fmap.set(it.id, it));
-    localFurniture.forEach(it => fmap.set(it.id, it));
+    localFurniture.forEach(it => {
+      const cloud = fmap.get(it.id);
+      if (!cloud) {
+        fmap.set(it.id, it);
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = it.updatedAt || it.createdAt || 0;
+        if (localTs > cloudTs) fmap.set(it.id, it);
+      }
+    });
     merged.furnitureItems = Array.from(fmap.values());
   }
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
@@ -10967,6 +10976,31 @@ async function _fetchMeetingsFromCloud() {
       renderMeetingTab();
     }
   } catch(e) { console.warn('_fetchMeetingsFromCloud:', e); }
+}
+
+// 컨텐츠 링크 탭 진입 시 Firestore에서 contentLinks 직접 fetch
+let _lastContentFetch = 0;
+async function _fetchContentLinksFromCloud() {
+  const proj = getProject();
+  if (!proj?.cloudId) return;
+  const now = Date.now();
+  if (now - _lastContentFetch < 30000) return;
+  _lastContentFetch = now;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    if (!snap.exists) return;
+    const cloudLinks = snap.data()?.projectData?.contentLinks || [];
+    const localLinks = proj.contentLinks || [];
+    const seen = new Set(localLinks.map(x => x.id));
+    const extra = cloudLinks.filter(x => !seen.has(x.id));
+    if (!extra.length) return;
+    const merged = [...localLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    proj.contentLinks = merged;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    renderContentTab();
+  } catch(e) { console.warn('_fetchContentLinksFromCloud:', e); }
 }
 
 // Firebase Storage에서 스타일 이미지 복구 (Firestore/localStorage 데이터 소실 시)
