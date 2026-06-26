@@ -13673,6 +13673,7 @@ async function saveMeeting() {
   if (editingId) {
     // ── 수정 모드 ──────────────────────────────
     const idx = proj.meetings.findIndex(m => m.id === editingId);
+    const prevMentions = idx !== -1 ? (proj.meetings[idx].mentions || []) : [];
     if (idx !== -1) {
       proj.meetings[idx] = {
         ...proj.meetings[idx],
@@ -13690,6 +13691,9 @@ async function saveMeeting() {
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
     showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요 (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 수정됐습니다');
     if (proj.cloudId) _syncMeetingsToCloud(proj);
+    // 수정 시 새로 추가된 멘션에만 알림 발송
+    const newMentions = mentionEmails.filter(e => !prevMentions.includes(e));
+    if (newMentions.length && idx !== -1) _sendMentionNotifications(proj.meetings[idx], newMentions, proj);
   } else {
     // ── 신규 생성 ──────────────────────────────
     const meeting = {
@@ -13764,7 +13768,7 @@ async function _sendMentionNotifications(meeting, emails, proj) {
         from_name: sender,
         project_name: projName,
         invite_link: location.href,
-        role: `회의록 "${meeting.title}"에서 멘션됐습니다:\n${meeting.content.slice(0,100)}`,
+        role: `회의록 "${meeting.title}"에서 멘션됐습니다:\n${(()=>{const d=document.createElement('div');d.innerHTML=meeting.content||'';return(d.textContent||'').slice(0,120)})()}`,
       });
     } catch(e) { console.error('[mentionNotify]', e); }
   }
