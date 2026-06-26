@@ -10899,14 +10899,24 @@ async function _fetchFurnitureFromCloud() {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     if (!snap.exists) return;
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
-    if (!cloudFurniture.length) return;
     const localFurniture = proj.furnitureItems || [];
     const fmap = new Map();
     cloudFurniture.forEach(it => fmap.set(it.id, it));
-    localFurniture.forEach(it => fmap.set(it.id, it)); // 로컬 우선
+    // 타임스탬프 기준: 로컬이 더 최신일 때만 로컬 우선
+    localFurniture.forEach(it => {
+      const cloud = fmap.get(it.id);
+      if (!cloud) {
+        fmap.set(it.id, it); // 로컬 전용 (미업로드)
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = it.updatedAt || it.createdAt || 0;
+        if (localTs > cloudTs) fmap.set(it.id, it);
+      }
+    });
     const merged = Array.from(fmap.values());
-    const localKey = localFurniture.map(i => i.id).sort().join();
-    const mergedKey = merged.map(i => i.id).sort().join();
+    // id + updatedAt 기준으로 변경 여부 감지
+    const localKey = localFurniture.map(i => i.id + (i.updatedAt || i.createdAt || 0)).sort().join();
+    const mergedKey = merged.map(i => i.id + (i.updatedAt || i.createdAt || 0)).sort().join();
     if (localKey !== mergedKey) {
       proj.furnitureItems = merged;
       localStorage.setItem('vibespace', JSON.stringify(state));
@@ -11152,7 +11162,17 @@ async function _syncFurnitureToCloud(proj) {
     const localFurniture = proj.furnitureItems || [];
     const fmap = new Map();
     cloudFurniture.forEach(it => fmap.set(it.id, it));
-    localFurniture.forEach(it => fmap.set(it.id, it));
+    // 타임스탬프 기준: 로컬이 더 최신이거나 새 항목만 로컬 우선
+    localFurniture.forEach(it => {
+      const cloud = fmap.get(it.id);
+      if (!cloud) {
+        fmap.set(it.id, it);
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = it.updatedAt || it.createdAt || 0;
+        if (localTs >= cloudTs) fmap.set(it.id, it);
+      }
+    });
     const merged = Array.from(fmap.values());
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.furnitureItems': merged,
@@ -11375,11 +11395,20 @@ function _startCollabListener(cloudId) {
     proj.contentLinks = extraLocal.length
       ? [...cloudLinks, ...extraLocal].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cloudLinks;
-    // furnitureItems: 로컬+클라우드 합집합 — 로컬 우선 (id 기준)
+    // furnitureItems: 타임스탬프 기준 최신 우선 merge
     const remoteFurniture = remote.furnitureItems || [];
     const furnitureMap = new Map();
     remoteFurniture.forEach(it => furnitureMap.set(it.id, it));
-    localFurnitureItems.forEach(it => furnitureMap.set(it.id, it)); // 로컬 우선
+    localFurnitureItems.forEach(it => {
+      const cloud = furnitureMap.get(it.id);
+      if (!cloud) {
+        furnitureMap.set(it.id, it);
+      } else {
+        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
+        const localTs = it.updatedAt || it.createdAt || 0;
+        if (localTs > cloudTs) furnitureMap.set(it.id, it);
+      }
+    });
     proj.furnitureItems = Array.from(furnitureMap.values());
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
