@@ -3867,10 +3867,12 @@ button, input, textarea, select { font-family:var(--font); }
       <select id="fi-category" style="padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);background:#fff;color:#222;"></select>
       <input id="fi-name" type="text" placeholder="제품명 *" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
       <input id="fi-brand" type="text" placeholder="브랜드 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
-      <select id="fi-status" style="padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);background:#fff;color:#222;">
-        <option value="보유중">보유중</option>
-        <option value="구매예정">구매예정</option>
-      </select>
+      <!-- 상태 세그먼트 토글 -->
+      <input type="hidden" id="fi-status" value="보유중">
+      <div style="display:flex;background:#f2f2f5;border-radius:12px;padding:3px;gap:2px;">
+        <button type="button" id="fi-status-btn-owned" onclick="_setFiStatus('보유중')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;background:#111;color:#fff;">보유중</button>
+        <button type="button" id="fi-status-btn-pending" onclick="_setFiStatus('구매예정')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;background:transparent;color:#999;">구매예정</button>
+      </div>
       <div style="display:flex;gap:8px;">
         <input id="fi-qty" type="number" min="1" placeholder="수량" value="1" style="width:80px;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
         <input id="fi-price" type="number" placeholder="가격 (원, 개당)" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
@@ -12794,7 +12796,7 @@ function _openFurnitureDlg(it) {
   sel.innerHTML = FURNITURE_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
   dlg.querySelector('#fi-name').value = it?.name || '';
   dlg.querySelector('#fi-brand').value = it?.brand || '';
-  dlg.querySelector('#fi-status').value = it ? _getFurnitureStatus(it) : '보유중';
+  _setFiStatus(it ? _getFurnitureStatus(it) : '보유중');
   dlg.querySelector('#fi-qty').value = it?.qty || 1;
   dlg.querySelector('#fi-price').value = it?.price || '';
   dlg.querySelector('#fi-size').value = it?.size || '';
@@ -12805,6 +12807,18 @@ function _openFurnitureDlg(it) {
   dlg.querySelector('#fi-title').textContent = isEdit ? '제품 수정' : '제품 추가';
   dlg.dataset.editId = it?.id || '';
   dlg.style.display = 'flex';
+}
+
+function _setFiStatus(val) {
+  document.getElementById('fi-status').value = val;
+  const isOwned = val === '보유중';
+  const btnOwned = document.getElementById('fi-status-btn-owned');
+  const btnPending = document.getElementById('fi-status-btn-pending');
+  if (!btnOwned || !btnPending) return;
+  btnOwned.style.background = isOwned ? '#111' : 'transparent';
+  btnOwned.style.color = isOwned ? '#fff' : '#999';
+  btnPending.style.background = isOwned ? 'transparent' : '#111';
+  btnPending.style.color = isOwned ? '#999' : '#fff';
 }
 
 function _closeFurnitureDlg() {
