@@ -12589,57 +12589,56 @@ function _getFurnitureStatus(it) {
   return it.purchased ? '현재 보유중' : '구매예정';
 }
 
+let _furnitureCategoryView = null; // null = 카테고리 목록, string = 해당 카테고리 상세
+
 function renderFurnitureTab() {
+  if (_furnitureCategoryView) {
+    _renderFurnitureCategoryDetail(_furnitureCategoryView);
+  } else {
+    _renderFurnitureCategoryGrid();
+  }
+}
+
+function _renderFurnitureCategoryGrid() {
   const el = document.getElementById('furniture-list');
   if (!el) return;
   const items = _getFurnitureItems();
-
   const pendingItems = items.filter(it => _getFurnitureStatus(it) === '구매예정');
-  const ownedItems  = items.filter(it => _getFurnitureStatus(it) === '현재 보유중');
   const pendingTotal = pendingItems.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
 
-  const cardHtml = (it) => {
-    const status = _getFurnitureStatus(it);
-    const isPending = status === '구매예정';
-    const qty = it.qty || 1;
-    const unitPrice = it.price || 0;
-    const totalPrice = unitPrice * qty;
+  // 카테고리별 그룹핑
+  const catMap = {};
+  items.forEach(it => {
+    const cat = it.category || '기타';
+    if (!catMap[cat]) catMap[cat] = [];
+    catMap[cat].push(it);
+  });
 
-    const imgBlock = it.imageUrl
-      ? `<img src="${it.imageUrl}" alt="${esc(it.name)}" style="display:block;object-fit:cover;width:120px;height:120px;border-radius:12px;border:1px solid #eef0f5;">`
-      : `<div style="background:#f2f3f5;display:flex;align-items:center;justify-content:center;width:120px;height:120px;border-radius:12px;border:1px solid #eef0f5;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+  const cats = Object.keys(catMap);
 
-    const statusBadge = isPending ? `<span style="font-size:12px;font-weight:500;color:#2e7d32;">${status}</span>` : `<span style="font-size:12px;font-weight:500;color:#888;">${status}</span>`;
+  const catCardHtml = (cat) => {
+    const catItems = catMap[cat];
+    // 가장 최근에 이미지 있는 항목 찾기
+    const withImg = [...catItems].reverse().find(it => it.imageUrl);
+    const pendingCount = catItems.filter(it => _getFurnitureStatus(it) === '구매예정').length;
+    const totalCount = catItems.length;
+
+    const imgBlock = withImg
+      ? `<img src="${withImg.imageUrl}" alt="${esc(cat)}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f2f3f5;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
 
     return `
-      <div style="background:#fff;position:relative;display:flex;flex-direction:row;align-items:flex-start;">
-        <div style="flex-shrink:0;padding:14px 0 14px 14px;">
-          ${imgBlock}
-        </div>
-        <div style="flex:1;min-width:0;padding:14px 16px 14px 14px;">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:6px;">
-            <div style="min-width:0;flex:1;">
-              <div style="font-size:12px;color:#888;margin-bottom:4px;">${esc(it.category||'기타')}${it.brand ? ` · ${esc(it.brand)}` : ''}</div>
-              <div style="${it.url ? 'cursor:pointer;' : ''}" ${it.url ? `onclick="event.stopPropagation();window.open('${it.url}','_blank')"` : ''}>
-                <span style="font-size:15px;font-weight:500;line-height:1.3;color:#111;">${esc(it.name)}${it.url ? `<svg style="display:inline-block;vertical-align:middle;margin-left:2px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</span>
-              </div>
-            </div>
-            <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:-2px;margin-right:-4px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-            </button>
-          </div>
-          ${unitPrice ? `<div style="font-size:16px;font-weight:400;color:#222;margin-top:6px;">${qty > 1 ? `${unitPrice.toLocaleString()}원 × ${qty}개 = ${totalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}원`}</div>` : ''}
-          ${it.size ? `<div style="font-size:12px;color:#888;margin-top:5px;">${esc(it.size)}</div>` : ''}
-          ${it.note ? `<div style="font-size:12px;color:#bbb;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.note)}</div>` : ''}
-          <div style="margin-top:6px;">${statusBadge}</div>
+      <div onclick="_openFurnitureCategoryDetail('${esc(cat)}')" style="background:#fff;border-radius:14px;border:1px solid #eef0f5;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;">
+        <div style="width:100%;aspect-ratio:1/1;overflow:hidden;background:#f2f3f5;">${imgBlock}</div>
+        <div style="padding:10px 12px 12px;">
+          <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;">${esc(cat)}</div>
+          <div style="font-size:12px;color:#888;">${totalCount}개${pendingCount > 0 ? ` · <span style="color:#2e7d32;">구매예정 ${pendingCount}</span>` : ''}</div>
         </div>
       </div>`;
   };
 
-  const listHtml = `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(it => cardHtml(it)).join('')}</div>`;
-
   el.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px;border:1px solid #eef0f5;">
+    <div style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:16px;border:1px solid #eef0f5;">
       <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">예산 현황</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
         <span style="font-size:13px;color:#888;">구매예정 총액</span>
@@ -12647,11 +12646,95 @@ function renderFurnitureTab() {
       </div>
       <div style="display:flex;justify-content:space-between;">
         <span style="font-size:13px;color:#888;">제품 현황</span>
-        <span style="font-size:13px;color:#555;">구매예정 ${pendingItems.length}개 · 보유중 ${ownedItems.length}개 (총 ${items.length}개)</span>
+        <span style="font-size:13px;color:#555;">구매예정 ${pendingItems.length}개 · 총 ${items.length}개</span>
       </div>
     </div>
-    ${items.length === 0 ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 제품이 없습니다</div>` : listHtml}
+    ${cats.length === 0
+      ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 제품이 없습니다</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${cats.map(c => catCardHtml(c)).join('')}</div>`
+    }
   `;
+}
+
+function _openFurnitureCategoryDetail(cat) {
+  _furnitureCategoryView = cat;
+  _renderFurnitureCategoryDetail(cat);
+}
+
+function _closeFurnitureCategoryDetail() {
+  _furnitureCategoryView = null;
+  _renderFurnitureCategoryGrid();
+}
+
+function _renderFurnitureCategoryDetail(cat) {
+  const el = document.getElementById('furniture-list');
+  if (!el) return;
+  const items = _getFurnitureItems().filter(it => (it.category || '기타') === cat);
+
+  const rowHtml = (it) => {
+    const status = _getFurnitureStatus(it);
+    const isPending = status === '구매예정';
+    const qty = it.qty || 1;
+    const unitPrice = it.price || 0;
+    const totalPrice = unitPrice * qty;
+
+    const imgBlock = it.imageUrl
+      ? `<img src="${it.imageUrl}" alt="${esc(it.name)}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #eef0f5;flex-shrink:0;">`
+      : `<div style="width:72px;height:72px;border-radius:10px;border:1px solid #eef0f5;background:#f2f3f5;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+
+    return `
+      <div style="background:#fff;border-radius:14px;border:1px solid #eef0f5;padding:14px;display:flex;gap:14px;align-items:flex-start;">
+        ${imgBlock}
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">
+            <div style="min-width:0;flex:1;">
+              ${it.brand ? `<div style="font-size:11px;color:#aaa;margin-bottom:2px;">${esc(it.brand)}</div>` : ''}
+              <div style="font-size:14px;font-weight:600;color:#111;line-height:1.3;${it.url ? 'cursor:pointer;' : ''}" ${it.url ? `onclick="window.open('${it.url}','_blank')"` : ''}>${esc(it.name)}${it.url ? `<svg style="display:inline-block;vertical-align:middle;margin-left:2px;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}</div>
+              ${unitPrice ? `<div style="font-size:13px;color:#555;margin-top:4px;">${qty > 1 ? `${unitPrice.toLocaleString()}원 × ${qty} = ${totalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}원`}</div>` : ''}
+              ${it.size ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">${esc(it.size)}</div>` : ''}
+            </div>
+            <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#bbb"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+            </button>
+          </div>
+          <!-- 구매예정 토글 -->
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+            <button onclick="_toggleFurniturePending('${it.id}')" style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid ${isPending ? '#2e7d32' : '#e0e0e0'};background:${isPending ? '#f0faf0' : '#fafafa'};cursor:pointer;font-size:12px;font-weight:600;color:${isPending ? '#2e7d32' : '#aaa'};font-family:var(--font);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#2e7d32' : '#ccc'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${isPending ? '<polyline points="20 6 9 17 4 12"/>' : '<circle cx="12" cy="12" r="9"/>'}</svg>
+              ${isPending ? '구매예정' : '보유중'}
+            </button>
+            ${isPending && unitPrice ? `<span style="font-size:12px;color:#2e7d32;">예산 포함</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  };
+
+  el.innerHTML = `
+    <!-- 뒤로가기 헤더 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <button onclick="_closeFurnitureCategoryDetail()" style="width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-left:-4px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span style="font-size:17px;font-weight:700;color:#111;">${esc(cat)}</span>
+      <span style="font-size:13px;color:#aaa;margin-left:2px;">${items.length}개</span>
+    </div>
+    ${items.length === 0
+      ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">이 카테고리에 제품이 없습니다</div>`
+      : `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(it => rowHtml(it)).join('')}</div>`
+    }
+  `;
+}
+
+function _toggleFurniturePending(id) {
+  const proj = getProject(); if (!proj) return;
+  const it = (proj.furnitureItems||[]).find(i => i.id === id);
+  if (!it) return;
+  const current = _getFurnitureStatus(it);
+  it.status = current === '구매예정' ? '현재 보유중' : '구매예정';
+  it.updatedAt = Date.now();
+  save();
+  _syncFurnitureToCloud(proj);
+  renderFurnitureTab();
 }
 
 
