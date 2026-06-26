@@ -3867,14 +3867,11 @@ button, input, textarea, select { font-family:var(--font); }
       <select id="fi-category" style="padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);background:#fff;color:#222;"></select>
       <input id="fi-name" type="text" placeholder="제품명 *" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
       <input id="fi-brand" type="text" placeholder="브랜드 (선택)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
-      <!-- 상태 스위치 토글 -->
+      <!-- 상태 세그먼트 토글 -->
       <input type="hidden" id="fi-status" value="보유중">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8f8fa;border-radius:12px;">
-        <span id="fi-status-label-owned" style="font-size:14px;font-weight:600;color:#111;">보유중</span>
-        <div onclick="_setFiStatus(document.getElementById('fi-status').value==='보유중'?'구매예정':'보유중')" id="fi-status-switch" style="position:relative;width:52px;height:28px;border-radius:9999px;background:#e0e0e0;cursor:pointer;transition:background .2s;flex-shrink:0;">
-          <div id="fi-status-thumb" style="position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:9999px;background:#fff;box-shadow:0px 0px 2px 0px rgba(0,0,0,0.12),0px 1px 2px 0px rgba(0,0,0,0.14);transition:transform .2s;"></div>
-        </div>
-        <span id="fi-status-label-pending" style="font-size:14px;font-weight:600;color:#bbb;">구매예정</span>
+      <div style="display:flex;background:#f2f2f5;border-radius:12px;padding:3px;gap:2px;">
+        <button type="button" id="fi-status-btn-owned" onclick="_setFiStatus('보유중')" style="flex:1;height:40px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;background:#111;color:#fff;">보유중</button>
+        <button type="button" id="fi-status-btn-pending" onclick="_setFiStatus('구매예정')" style="flex:1;height:40px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;background:transparent;color:#999;">구매예정</button>
       </div>
       <div style="display:flex;gap:8px;">
         <input id="fi-qty" type="number" min="1" placeholder="수량" value="1" style="width:80px;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
@@ -12814,16 +12811,14 @@ function _openFurnitureDlg(it) {
 
 function _setFiStatus(val) {
   document.getElementById('fi-status').value = val;
-  const isPending = val === '구매예정';
-  const sw = document.getElementById('fi-status-switch');
-  const thumb = document.getElementById('fi-status-thumb');
-  const labelOwned = document.getElementById('fi-status-label-owned');
-  const labelPending = document.getElementById('fi-status-label-pending');
-  if (!sw) return;
-  sw.style.background = isPending ? '#3B75FC' : '#e0e0e0';
-  thumb.style.transform = isPending ? 'translateX(24px)' : 'translateX(0)';
-  if (labelOwned) { labelOwned.style.color = isPending ? '#bbb' : '#111'; labelOwned.style.fontWeight = isPending ? '500' : '600'; }
-  if (labelPending) { labelPending.style.color = isPending ? '#111' : '#bbb'; labelPending.style.fontWeight = isPending ? '600' : '500'; }
+  const isOwned = val === '보유중';
+  const btnOwned = document.getElementById('fi-status-btn-owned');
+  const btnPending = document.getElementById('fi-status-btn-pending');
+  if (!btnOwned || !btnPending) return;
+  btnOwned.style.background = isOwned ? '#111' : 'transparent';
+  btnOwned.style.color = isOwned ? '#fff' : '#999';
+  btnPending.style.background = isOwned ? 'transparent' : '#111';
+  btnPending.style.color = isOwned ? '#999' : '#fff';
 }
 
 function _closeFurnitureDlg() {
