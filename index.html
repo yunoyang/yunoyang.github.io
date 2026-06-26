@@ -14324,7 +14324,7 @@ async function confirmPublishToInblog() {
         proj.meetings[idx].publicMetaDesc  = metaDesc;
         proj.meetings[idx].publicPublishedAt = new Date().toISOString();
         save();
-        _syncMeetingsToCloud(proj.id, proj.meetings);
+        _syncMeetingsToCloud(proj);
       }
     }
 
@@ -14360,7 +14360,7 @@ async function confirmPublishToInblog() {
         proj2.meetings[idx2].inblogSlug         = postSlug;
         proj2.meetings[idx2].inblogPublishedAt  = new Date().toISOString();
         save();
-        _syncMeetingsToCloud(proj2.id, proj2.meetings);
+        _syncMeetingsToCloud(proj2);
       }
 
       const publishBtn = document.getElementById('btn-publish-blog');
