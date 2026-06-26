@@ -12771,7 +12771,7 @@ function _deleteFurnitureItem(id) {
   proj.furnitureItems = (proj.furnitureItems||[]).filter(i => i.id !== id);
   save();
   _syncFurnitureToCloud(proj);
-  renderFurnitureTab();
+  setTimeout(() => renderFurnitureTab(), 0);
 }
 
 function _editFurnitureItem(id) {
