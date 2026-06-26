@@ -12632,7 +12632,8 @@ function _renderFurnitureCategoryGrid() {
 
   const catCardHtml = (cat) => {
     const catItems = catMap[cat];
-    const withImg = [...catItems].reverse().find(it => it.imageUrl);
+    const withImg = [...catItems].reverse().find(it => it.imageUrl && _getFurnitureStatus(it) === '구매예정')
+                 || [...catItems].reverse().find(it => it.imageUrl);
     const pendingCount = catItems.filter(it => _getFurnitureStatus(it) === '구매예정').length;
     const totalCount = catItems.length;
 
