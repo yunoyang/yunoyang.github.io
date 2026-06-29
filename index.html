@@ -11076,7 +11076,17 @@ function _syncProjToCloud(proj) {
     const projData = JSON.parse(JSON.stringify(proj));
     delete projData.myRole;
     // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
-    projData.contentLinks = proj.contentLinks || [];
+    const _cloudLinks = snap.data()?.projectData?.contentLinks || [];
+    const _localLinks = proj.contentLinks || [];
+    if (_cloudLinks.length) {
+      const _seenIds = new Set(_localLinks.map(x => x.id));
+      const _extra = _cloudLinks.filter(x => !_seenIds.has(x.id));
+      projData.contentLinks = _extra.length
+        ? [..._localLinks, ..._extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
+        : _localLinks;
+    } else {
+      projData.contentLinks = _localLinks;
+    }
     // furnitureItems: 클라우드에 다른 기기가 추가한 항목 보존 (read-merge-write)
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
     if (cloudFurniture.length) {
@@ -11090,12 +11100,20 @@ function _syncProjToCloud(proj) {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
       m.content = _stripBase64FromHtml(m.content);
     });
-    // styleImages: base64 폴백(Storage 업로드 실패) 항목 제거 → 1MB 제한 방지
-    if (projData.styleImages) {
-      Object.keys(projData.styleImages).forEach(room => {
-        projData.styleImages[room] = (projData.styleImages[room] || []).filter(it => it?.url && !it.url.startsWith('data:'));
-      });
-    }
+    // styleImages: 클라우드 우선 + 로컬 전용 항목 병합 (base64 제거 포함)
+    const _cloudImgs = snap.data()?.projectData?.styleImages || {};
+    const _localImgs = proj.styleImages || {};
+    const _mergedStyleImages = {};
+    const _styleRooms = new Set([...Object.keys(_cloudImgs), ...Object.keys(_localImgs)]);
+    _styleRooms.forEach(r => {
+      const ci = _cloudImgs[r] || [];
+      const li = (_localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
+      const cloudUrls = new Set(ci.map(x => x.url));
+      const localOnly = li.filter(x => !cloudUrls.has(x.url));
+      const m = [...ci, ...localOnly];
+      if (m.length) _mergedStyleImages[r] = m;
+    });
+    projData.styleImages = _mergedStyleImages;
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
     // floorplanCanvasJSON: 500KB 초과 시 Firestore 저장 제외 (localStorage에만 유지)
@@ -13043,7 +13061,7 @@ function _saveFurnitureItem() {
   let savedItem;
   if (editId) {
     const it = proj.furnitureItems.find(i => i.id === editId);
-    if (it) { Object.assign(it, fields); savedItem = it; }
+    if (it) { Object.assign(it, fields); it.updatedAt = Date.now(); savedItem = it; }
   } else {
     savedItem = { id: 'fi_' + Date.now(), ...fields, createdAt: Date.now() };
     proj.furnitureItems.push(savedItem);
