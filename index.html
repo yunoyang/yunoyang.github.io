@@ -10861,9 +10861,13 @@ function _mergeLocalPreserve(cp, localProjs) {
 }
 
 // 스타일 탭 진입 시 Firestore에서 styleImages를 직접 가져와 로컬 업데이트
+let _lastStyleFetch = 0;
 async function _fetchStyleFromCloud() {
   const proj = getProject();
   if (!proj?.cloudId) return;
+  const now = Date.now();
+  if (now - _lastStyleFetch < 30000) return;
+  _lastStyleFetch = now;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
@@ -11326,7 +11330,6 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localFloorplanImages = Array.isArray(proj.floorplanImages) && proj.floorplanImages.some(Boolean) ? proj.floorplanImages : null;
-    const cloudHasFloorplanImgs = Array.isArray(remote.floorplanImages) && remote.floorplanImages.some(Boolean);
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
