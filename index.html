@@ -9849,15 +9849,21 @@ function _loadInfoView() {
     const compMap = new Map();
     (proj.processes || []).forEach(p => {
       if (p.company) {
-        if (!compMap.has(p.company)) compMap.set(p.company, []);
-        compMap.get(p.company).push(p.name || '');
+        if (!compMap.has(p.company)) {
+          const cId = p.companyData?.contractorId || p.companyData?.id || '';
+          compMap.set(p.company, { procs: [], cId });
+        }
+        compMap.get(p.company).procs.push(p.name || '');
       }
     });
     if (compMap.size > 0) {
-      companiesList.innerHTML = [...compMap.entries()].map(([name, procs], i, arr) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}">
-          <span style="font-size:15px;font-weight:500;color:#222;">${esc(name)}</span>
-          <span style="font-size:13px;color:#aaa;">${procs.map(esc).join(', ')}</span>
+      companiesList.innerHTML = [...compMap.entries()].map(([name, { procs, cId }], i, arr) => `
+        <div onclick="${cId ? `_openContractorDetail('${esc(cId)}')` : ''}" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}${cId ? 'cursor:pointer;' : ''}">
+          <div>
+            <div style="font-size:15px;font-weight:600;color:#222;margin-bottom:2px;">${esc(name)}</div>
+            <div style="font-size:13px;color:#aaa;">${procs.map(esc).join(', ')}</div>
+          </div>
+          ${cId ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}
         </div>`).join('');
       companiesCard.style.display = 'block';
     } else {
