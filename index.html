@@ -3270,13 +3270,19 @@ button, input, textarea, select { font-family:var(--font); }
               <div id="sum-cost-detail" style="font-size:12px;font-weight:400;color:#aaa;margin-top:2px;display:none;"></div>
             </div>
           </div>
-          <div class="summary-row">
+          <div class="summary-row" style="align-items:flex-start;">
             <span class="label">공사 기간</span>
-            <span class="value" id="sum-duration">-</span>
+            <div style="text-align:right;">
+              <span class="value" id="sum-duration">-</span>
+              <div id="sum-duration-detail" style="font-size:12px;font-weight:400;color:#aaa;margin-top:2px;display:none;"></div>
+            </div>
           </div>
-          <div class="summary-row">
+          <div class="summary-row" style="align-items:flex-start;">
             <span class="label">참여 업체</span>
-            <span class="value" id="sum-companies">-</span>
+            <div style="text-align:right;">
+              <span class="value" id="sum-companies">-</span>
+              <div id="sum-companies-detail" style="font-size:12px;font-weight:400;color:#aaa;margin-top:2px;display:none;"></div>
+            </div>
           </div>
         </div>
         <button class="summary-more-btn" onclick="goTo('form');closeAllMenus();">
@@ -5949,12 +5955,34 @@ function updateSummary() {
   if (menuDdEl) menuDdEl.textContent = ddText;
   const menuDdMobileEl = document.getElementById('menu-dday-mobile');
   if (menuDdMobileEl) menuDdMobileEl.textContent = ddText;
+  const durationDetailEl = document.getElementById('sum-duration-detail');
   if (proj.form.startDate && proj.form.endDate) {
     const s = new Date(proj.form.startDate), e = new Date(proj.form.endDate);
     const months = Math.max(1, Math.round((e-s)/(1000*60*60*24*30)));
     document.getElementById('sum-duration').textContent = '약 ' + months + '개월';
-  } else { document.getElementById('sum-duration').textContent = '-'; }
-  document.getElementById('sum-companies').textContent = companies.size + '개 업체';
+    if (durationDetailEl) {
+      const fmt = d => { const dt = new Date(d+'T00:00:00'); return `${String(dt.getFullYear()).slice(2)}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`; };
+      durationDetailEl.textContent = `${fmt(proj.form.startDate)}-${fmt(proj.form.endDate)}`;
+      durationDetailEl.style.display = '';
+    }
+  } else {
+    document.getElementById('sum-duration').textContent = '-';
+    if (durationDetailEl) durationDetailEl.style.display = 'none';
+  }
+  const companiesArr = [...companies];
+  document.getElementById('sum-companies').textContent = companiesArr.length + '개 업체';
+  const companiesDetailEl = document.getElementById('sum-companies-detail');
+  if (companiesDetailEl) {
+    if (companiesArr.length > 1) {
+      companiesDetailEl.textContent = `${companiesArr[0]} 외 ${companiesArr.length - 1}개`;
+      companiesDetailEl.style.display = '';
+    } else if (companiesArr.length === 1) {
+      companiesDetailEl.textContent = companiesArr[0];
+      companiesDetailEl.style.display = '';
+    } else {
+      companiesDetailEl.style.display = 'none';
+    }
+  }
   const isOpen = state.summaryOpen !== false;
   document.getElementById('summary-card').classList.toggle('collapsed', !isOpen);
   const unified = document.querySelector('.summary-unified');
