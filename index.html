@@ -4541,8 +4541,11 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="overlay" id="mobile-main-menu-sheet">
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
-    <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
+    <button class="mobile-sheet-item" onclick="goTo('form');closeAllMenus();" style="justify-content:space-between;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
+      </span>
+      <span id="menu-dday-mobile" style="font-size:13px;font-weight:600;color:#5084ff;"></span>
     </button>
     <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();" style="justify-content:space-between;">
       <span style="display:flex;align-items:center;gap:8px;">
@@ -5901,6 +5904,8 @@ function updateSummary() {
   }
   if (ddEl) ddEl.textContent = ddText;
   if (menuDdEl) menuDdEl.textContent = ddText;
+  const menuDdMobileEl = document.getElementById('menu-dday-mobile');
+  if (menuDdMobileEl) menuDdMobileEl.textContent = ddText;
   if (proj.form.startDate && proj.form.endDate) {
     const s = new Date(proj.form.startDate), e = new Date(proj.form.endDate);
     const months = Math.max(1, Math.round((e-s)/(1000*60*60*24*30)));
