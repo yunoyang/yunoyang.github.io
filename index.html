@@ -5889,15 +5889,15 @@ function updateSummary() {
   // D-day 계산 (공사 시작일 기준)
   const ddEl = document.getElementById('sum-dday');
   const menuDdEl = document.getElementById('menu-dday');
-  const startDate = proj.form?.startDate;
+  const endDate = proj.form?.endDate;
   let ddText = '';
-  if (startDate) {
+  if (endDate) {
     const today = new Date(); today.setHours(0,0,0,0);
-    const start = new Date(startDate + 'T00:00:00');
-    const diff = Math.round((start - today) / (1000*60*60*24));
-    if (diff > 0) ddText = `D-${diff}일`;
+    const end = new Date(endDate + 'T00:00:00');
+    const diff = Math.round((end - today) / (1000*60*60*24));
+    if (diff > 0) ddText = `D-${diff}`;
     else if (diff === 0) ddText = 'D-Day';
-    else ddText = `D+${Math.abs(diff)}일`;
+    else ddText = `D+${Math.abs(diff)}`;
   }
   if (ddEl) ddEl.textContent = ddText;
   if (menuDdEl) menuDdEl.textContent = ddText;
