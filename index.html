@@ -11433,6 +11433,7 @@ function _startCollabListener(cloudId) {
         }
       }
     });
+    localStorage.setItem('vibespace', JSON.stringify(state));
     _MIdb.loadAll().then(() => {
       renderMeetingTab();
       // 상세 화면이 열려 있고 현재 기록이 업데이트된 경우 자동 갱신
