@@ -3955,6 +3955,18 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="_mwFmt('bold')" title="굵게" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-weight:700;color:#333;font-family:serif;">B</button>
       <button onclick="_mwFmt('italic')" title="기울임" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:15px;font-style:italic;color:#333;font-family:serif;">I</button>
       <button onclick="_mwFmt('underline')" title="밑줄" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;text-decoration:underline;font-family:serif;">U</button>
+      <select onchange="_mwSetFontSize(this.value);this.value=''" title="폰트 크기" style="height:28px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;color:#555;background:#fff;padding:0 2px;cursor:pointer;flex-shrink:0;outline:none;">
+        <option value="">크기</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="17">17</option>
+        <option value="18">18</option>
+        <option value="20">20</option>
+        <option value="22">22</option>
+        <option value="24">24</option>
+      </select>
       <div style="width:1px;height:18px;background:#e0e0e0;margin:0 3px;flex-shrink:0;"></div>
       <!-- 리스트 -->
       <button onclick="_mwFmt('insertUnorderedList')" title="목록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#333;">•≡</button>
@@ -13532,6 +13544,22 @@ function _mwRestoreRange() {
     sel.removeAllRanges();
     sel.addRange(_mwSavedRange);
   }
+}
+function _mwSetFontSize(px) {
+  if (!px) return;
+  _mwRestoreRange();
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+  document.execCommand('fontSize', false, '7');
+  const editor = document.getElementById('meeting-editor');
+  if (!editor) return;
+  editor.querySelectorAll('font[size="7"]').forEach(el => {
+    const span = document.createElement('span');
+    span.style.fontSize = px + 'px';
+    span.innerHTML = el.innerHTML;
+    el.parentNode.replaceChild(span, el);
+  });
+  _mwSaveRange();
 }
 
 async function _meetingImagePreview(input) {
