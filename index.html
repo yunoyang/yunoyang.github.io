@@ -186,7 +186,7 @@ button, input, textarea, select { font-family:var(--font); }
   overflow:hidden;
 }
 .screen.active { opacity:1; pointer-events:all; transform:translateX(0); z-index:2; }
-.screen-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; }
+.screen-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; background:#fff; }
 .screen-scroll::-webkit-scrollbar { display:none; }
 
 /* ===== HEADER ===== */
@@ -362,12 +362,12 @@ button, input, textarea, select { font-family:var(--font); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  padding: 0 20px;
+  height: 48px;
+  padding: 0 22px;
   border: 1.5px solid #e0e2e8;
   border-radius: 999px;
   background: #fff;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 500;
   color: #333;
   cursor: pointer;
@@ -1136,12 +1136,12 @@ button, input, textarea, select { font-family:var(--font); }
   align-items: center;
   justify-content: center;
   flex: none;
-  height: 46px;
+  height: 44px;
   padding: 0 14px;
   border: none;
   border-radius: 0;
   background: transparent;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #9a9da8;
   cursor: pointer;
@@ -3282,7 +3282,7 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
 
     <!-- Plan Tab -->
-    <div id="tab-plan" style="background:#fff; display:flex; flex-direction:column;">
+    <div id="tab-plan" style="background:#fff; display:flex; flex-direction:column; flex:1;">
       <!-- 공정 단계 필터 (세그먼트 컨트롤) -->
       <div class="plan-phase-bar" id="plan-phase-bar">
         <div class="phase-segment">
