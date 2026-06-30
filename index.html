@@ -5922,12 +5922,12 @@ function updateSummary() {
   // D-day 계산 (공사 시작일 기준)
   const ddEl = document.getElementById('sum-dday');
   const menuDdEl = document.getElementById('menu-dday');
-  const endDate = proj.form?.endDate;
+  const startDate = proj.form?.startDate;
   let ddText = '';
-  if (endDate) {
+  if (startDate) {
     const today = new Date(); today.setHours(0,0,0,0);
-    const end = new Date(endDate + 'T00:00:00');
-    const diff = Math.round((end - today) / (1000*60*60*24));
+    const start = new Date(startDate + 'T00:00:00');
+    const diff = Math.round((start - today) / (1000*60*60*24));
     if (diff > 0) ddText = `D-${diff}`;
     else if (diff === 0) ddText = 'D-Day';
     else ddText = `D+${Math.abs(diff)}`;
@@ -9793,27 +9793,28 @@ function _loadInfoView() {
   // D-day 배지 (종료일 기준)
   const ddBadge = document.getElementById('iv-dday-badge');
   if (ddBadge) {
-    const endDate = f.endDate;
-    if (endDate) {
+    const startDateStr = f.startDate;
+    const endDateStr = f.endDate;
+    if (startDateStr) {
       const today = new Date(); today.setHours(0,0,0,0);
-      const end = new Date(endDate + 'T00:00:00');
-      const startDate = f.startDate ? new Date(f.startDate + 'T00:00:00') : null;
-      const diff = Math.round((end - today) / (1000*60*60*24));
-      const inProgress = startDate && today >= startDate && diff >= 0;
+      const start = new Date(startDateStr + 'T00:00:00');
+      const end = endDateStr ? new Date(endDateStr + 'T00:00:00') : null;
+      const diffStart = Math.round((start - today) / (1000*60*60*24));
+      const inProgress = today >= start && (!end || today <= end);
       if (inProgress) {
         ddBadge.textContent = '공사중';
         ddBadge.style.color = '#fff';
         ddBadge.style.background = '#27ae60';
-      } else if (diff > 0) {
-        ddBadge.textContent = `D-${diff}`;
+      } else if (diffStart > 0) {
+        ddBadge.textContent = `D-${diffStart}`;
         ddBadge.style.color = '#5084ff';
         ddBadge.style.background = '#eef2ff';
-      } else if (diff === 0) {
+      } else if (diffStart === 0) {
         ddBadge.textContent = 'D-Day';
         ddBadge.style.color = '#5084ff';
         ddBadge.style.background = '#eef2ff';
       } else {
-        ddBadge.textContent = `D+${Math.abs(diff)}`;
+        ddBadge.textContent = `D+${Math.abs(diffStart)}`;
         ddBadge.style.color = '#888';
         ddBadge.style.background = '#f0f0f0';
       }
