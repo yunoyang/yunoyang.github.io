@@ -1335,24 +1335,18 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== CARDS ===== */
 .cards-area {
-  padding:12px 18px 80px;
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:8px;
-  align-items:start;
-  align-content:start;
-}
-@media (min-width: 660px) {
-  .cards-area { grid-template-columns: 1fr 1fr; }
+  padding:0 18px 80px;
+  display:flex;
+  flex-direction:column;
 }
 .work-card {
-  background:#fff; border-radius:18px;
-  border:1px solid var(--border-light);
+  border-bottom:1px solid #e8e8e8;
   will-change:transform; overflow:hidden;
+  background:#fff;
 }
 .work-card-row {
-  display:flex; align-items:center; padding:0 18px; gap:8px;
-  height:56px; overflow:hidden; flex-shrink:0;
+  display:flex; align-items:center; padding:20px 0; gap:8px;
+  overflow:hidden; flex-shrink:0; cursor:pointer;
 }
 .work-card-name-area {
   display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer; overflow:hidden;
@@ -1365,27 +1359,20 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-fold-area {
   display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
-.work-card-cost-sm { font-size:16px; font-weight:400; color:#222; }
-.work-card.expanded .work-card-cost-sm { display:none; }
+.work-card-cost-sm { font-size:16px; font-weight:500; color:#000; }
 .work-card-fold-btn {
-  background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; color:#999;
+  background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#555;
 }
 .work-card-fold-chev { width:18px; height:18px; transition:transform .2s; color:#555; }
 .work-card.expanded .work-card-fold-chev { transform:rotate(180deg); }
 .work-card-body {
-  max-height:0; overflow:hidden; opacity:0; padding:0 18px;
-  transition:max-height .35s cubic-bezier(.22,1,.36,1), padding .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
-}
-.work-card.expanded {
-  box-shadow: 0px 4px 16px rgba(0,0,0,0.10), 0px 1px 4px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.04), 0px 6px 24px rgba(55,109,255,0.03);
-  border-color: transparent;
+  max-height:0; overflow:hidden; opacity:0; padding:0;
+  transition:max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
 }
 .work-card.expanded .work-card-body {
-  max-height:420px; overflow-y:auto; opacity:1; padding:2px 18px 0;
-  border-top:1px solid #f0f2f5;
+  max-height:600px; overflow-y:auto; opacity:1; padding:0 0 16px;
 }
 .work-card-body .work-field { pointer-events:none; }
-
 .work-card-body .f-value { cursor:pointer; }
 .work-card.expanded .work-card-body { cursor:pointer; }
 .work-card-body .f-value.readonly { color:var(--primary) !important; }
@@ -8133,7 +8120,7 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row">
         <div class="work-card-name-area" onclick="toggleCardExpand('${p.id}')">
-          <span class="work-card-title" style="font-size:17px;font-weight:500;color:#1a1a1a;">${esc(p.name)}</span>
+          <span class="work-card-title" style="font-size:14px;font-weight:600;color:#555;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
@@ -8171,7 +8158,7 @@ function renderWorkCards() {
           </div>`).join('')}
           ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#555555;letter-spacing:2px;">···</div>` : ''}
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
-        <div style="height:1px;background:#E4E9F2;margin:8px -20px 0;"></div>
+        <div style="height:1px;background:#f0f2f5;margin:8px 0 0;"></div>
         <div class="proc-card-actions">
           <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg class="icon" width="15" height="15" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-right"/></svg></button>
         </div>
