@@ -3392,7 +3392,10 @@ button, input, textarea, select { font-family:var(--font); }
       <!-- 프로젝트명 최상단 -->
       <div class="info-view-hero">
         <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
-        <div class="info-view-project-name" id="iv-project-name">-</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div class="info-view-project-name" id="iv-project-name">-</div>
+          <span id="iv-dday-badge" style="display:none;flex-shrink:0;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
+        </div>
       </div>
       <!-- 도면 카드 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card">
@@ -9760,6 +9763,38 @@ function _loadInfoView() {
   };
   // 프로젝트명
   set('iv-project-name', proj.name);
+  // D-day 배지 (종료일 기준)
+  const ddBadge = document.getElementById('iv-dday-badge');
+  if (ddBadge) {
+    const endDate = f.endDate;
+    if (endDate) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const end = new Date(endDate + 'T00:00:00');
+      const startDate = f.startDate ? new Date(f.startDate + 'T00:00:00') : null;
+      const diff = Math.round((end - today) / (1000*60*60*24));
+      const inProgress = startDate && today >= startDate && diff >= 0;
+      if (inProgress) {
+        ddBadge.textContent = '공사중';
+        ddBadge.style.color = '#fff';
+        ddBadge.style.background = '#222';
+      } else if (diff > 0) {
+        ddBadge.textContent = `D-${diff}`;
+        ddBadge.style.color = '#5084ff';
+        ddBadge.style.background = '#eef2ff';
+      } else if (diff === 0) {
+        ddBadge.textContent = 'D-Day';
+        ddBadge.style.color = '#5084ff';
+        ddBadge.style.background = '#eef2ff';
+      } else {
+        ddBadge.textContent = `D+${Math.abs(diff)}`;
+        ddBadge.style.color = '#888';
+        ddBadge.style.background = '#f0f0f0';
+      }
+      ddBadge.style.display = '';
+    } else {
+      ddBadge.style.display = 'none';
+    }
+  }
   // 시공종류
   set('iv-type', f.type?.[0] || '');
   // 평형
