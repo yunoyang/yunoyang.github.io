@@ -1335,7 +1335,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== CARDS ===== */
 .cards-area {
-  padding:0 18px 80px;
+  padding:0 20px 80px;
   display:flex;
   flex-direction:column;
 }
@@ -8132,7 +8132,7 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row">
         <div class="work-card-name-area" onclick="toggleCardExpand('${p.id}')">
-          <span class="work-card-title" style="font-size:14px;font-weight:600;color:#555;">${esc(p.name)}</span>
+          <span class="work-card-title" style="font-size:16px;font-weight:600;color:#555;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
