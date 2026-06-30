@@ -4189,7 +4189,7 @@ button, input, textarea, select { font-family:var(--font); }
 </div>
 
 <!-- ===== 시공 상세 스크린 ===== -->
-<div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+<div id="screen-proc-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <div class="form-header" style="background:#fff;flex-shrink:0;">
     <button class="back-btn" onclick="_closeProcDetailScreen()">
       <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
@@ -4203,8 +4203,8 @@ button, input, textarea, select { font-family:var(--font); }
     <button id="ptab-btn-tip"   onclick="switchProcDetailTab('tip',this)"   style="flex:1;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#818590;cursor:pointer;font-family:var(--font);padding:4px 0;">공정 기록</button>
   </div>
   <div id="ptab-info"  class="screen-scroll" style="flex:1;background:#fff;"></div>
-  <div id="ptab-check" class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;"></div>
-  <div id="ptab-tip"   class="screen-scroll" style="flex:1;display:none;background:#f7f8fa;position:relative;"></div>
+  <div id="ptab-check" class="screen-scroll" style="flex:1;display:none;background:#fff;"></div>
+  <div id="ptab-tip"   class="screen-scroll" style="flex:1;display:none;background:#fff;position:relative;"></div>
 </div>
 <!-- ===== 기록 포스팅 미리보기 ===== -->
 <div id="meeting-preview-overlay" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.55);" onclick="if(event.target===this)_mwClosePreview()">
