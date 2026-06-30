@@ -6242,7 +6242,7 @@ function _renderCvProducts(item) {
   if (!list) return;
   const products = item.products || [];
   if (!products.length) {
-    list.innerHTML = `<div class="cv-empty-products">✏️ 아래 버튼을 눌러<br>영상에 나오는 제품을 추가해보세요</div>`;
+    list.innerHTML = '';
     return;
   }
   list.innerHTML = `<div class="cv-prod-section-title">제품 리스트 ${products.length}</div>` +
@@ -16537,12 +16537,6 @@ async function fpShareLink() {
     <div class="cv-player-wrap" id="cv-player-wrap"></div>
     <div id="cv-channel"></div>
     <div id="cv-product-list"></div>
-  </div>
-  <!-- floating pencil button -->
-  <div id="cv-product-float">
-    <button class="sv-memo-float-btn" onclick="openCvProductSheet()" title="제품 추가">
-      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
   </div>
 </div>
 
