@@ -3249,13 +3249,40 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="collab-bar-text" id="collab-bar-text"></div>
   </div>
 
-  <!-- hidden elements for summary data (JS 참조용) -->
-  <span id="sum-dday" style="display:none;"></span>
-  <span id="sum-cost" style="display:none;"></span>
-  <span id="sum-duration" style="display:none;"></span>
-  <span id="sum-companies" style="display:none;"></span>
-  <div id="summary-card" style="display:none;"></div>
-
+  <!-- 공사정보 요약 카드 -->
+  <div class="summary-wrap">
+    <div class="summary-unified">
+      <button class="summary-toggle-row" onclick="toggleSummary()" style="width:100%;">
+        <span>공사 정보</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="sum-dday" style="font-size:13px;font-weight:600;color:#5084ff;"></span>
+          <span class="sum-chev open" id="sum-chev">
+            <svg class="icon" width="20" height="20" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-down"/></svg>
+          </span>
+        </div>
+      </button>
+      <div class="summary-card" id="summary-card">
+        <div class="summary-list">
+          <div class="summary-row">
+            <span class="label">예상 비용</span>
+            <span class="value" id="sum-cost">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">공사 기간</span>
+            <span class="value" id="sum-duration">-</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">참여 업체</span>
+            <span class="value" id="sum-companies">-</span>
+          </div>
+        </div>
+        <button class="summary-more-btn" onclick="goTo('form');closeAllMenus();">
+          공사 정보 상세보기
+          <svg class="icon" width="14" height="14" style="stroke-width:2;margin-left:2px;" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-right"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 
     <!-- Tabs -->
     <div class="tab-section">
