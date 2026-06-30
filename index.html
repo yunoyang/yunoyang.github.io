@@ -3263,9 +3263,12 @@ button, input, textarea, select { font-family:var(--font); }
       </button>
       <div class="summary-card" id="summary-card">
         <div class="summary-list">
-          <div class="summary-row">
+          <div class="summary-row" style="align-items:flex-start;">
             <span class="label">예상 비용</span>
-            <span class="value" id="sum-cost">-</span>
+            <div style="text-align:right;">
+              <span class="value" id="sum-cost">-</span>
+              <div id="sum-cost-detail" style="font-size:12px;font-weight:400;color:#aaa;margin-top:2px;display:none;"></div>
+            </div>
           </div>
           <div class="summary-row">
             <span class="label">공사 기간</span>
@@ -5918,7 +5921,17 @@ function updateSummary() {
     if (p.company) companies.add(p.company);
   });
   const furnitureCost = (proj.furnitureItems || []).filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-  document.getElementById('sum-cost').textContent = (totalCost + furnitureCost) > 0 ? '약 ' + formatNum(totalCost + furnitureCost) + '원' : '0원';
+  const totalAll = totalCost + furnitureCost;
+  document.getElementById('sum-cost').textContent = totalAll > 0 ? '약 ' + formatNum(totalAll) + '원' : '0원';
+  const detailEl = document.getElementById('sum-cost-detail');
+  if (detailEl) {
+    if (totalCost > 0 && furnitureCost > 0) {
+      detailEl.textContent = `공사 ${formatNum(totalCost)}원 + 가구 ${formatNum(furnitureCost)}원`;
+      detailEl.style.display = '';
+    } else {
+      detailEl.style.display = 'none';
+    }
+  }
   // D-day 계산 (공사 시작일 기준)
   const ddEl = document.getElementById('sum-dday');
   const menuDdEl = document.getElementById('menu-dday');
