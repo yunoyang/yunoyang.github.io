@@ -970,6 +970,7 @@ button, input, textarea, select { font-family:var(--font); }
   grid-template-columns: 1fr;
   gap: 12px;
   padding: 6px 14px 100px;
+  align-items: start;
 }
 @media (min-width: 660px) { #content-list { grid-template-columns: 1fr 1fr; } }
 /* Card */
@@ -980,7 +981,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 .content-card:active { opacity: .85; }
 .content-card-thumb {
-  aspect-ratio: 1 / 1; background: #111;
+  aspect-ratio: 16 / 9; background: #111;
   overflow: hidden; border-radius: 12px; margin: 8px 8px 0;
   position: relative;
 }
