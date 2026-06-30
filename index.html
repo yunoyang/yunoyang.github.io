@@ -10830,6 +10830,10 @@ function _mergeLocalPreserve(cp, localProjs) {
   }
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
+  if (Array.isArray(local.floorplanEditedImages) && local.floorplanEditedImages.some(Boolean)) {
+    const cloudEdited = Array.isArray(cp.floorplanEditedImages) ? cp.floorplanEditedImages : [];
+    merged.floorplanEditedImages = local.floorplanEditedImages.map((lImg, i) => lImg || cloudEdited[i] || null);
+  }
   const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(Boolean);
   if (cloudHasImgs) {
     merged.floorplanImages = cp.floorplanImages;
@@ -11116,6 +11120,10 @@ function _syncProjToCloud(proj) {
     projData.styleImages = _mergedStyleImages;
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
+    // floorplanEditedImages 배열의 base64도 제거 (Storage URL만 허용)
+    if (Array.isArray(projData.floorplanEditedImages)) {
+      projData.floorplanEditedImages = projData.floorplanEditedImages.map(img => (img && img.startsWith('data:')) ? null : img);
+    }
     // floorplanCanvasJSON: 500KB 초과 시 Firestore 저장 제외 (localStorage에만 유지)
     if (projData.floorplanCanvasJSON && projData.floorplanCanvasJSON.length > 500000) delete projData.floorplanCanvasJSON;
     // floorplanImages/floorplanImage는 소형 압축 base64로 Firestore에 직접 저장 (기기 간 공유)
@@ -11348,6 +11356,7 @@ function _startCollabListener(cloudId) {
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
     const localFloorplanImages = Array.isArray(proj.floorplanImages) && proj.floorplanImages.some(Boolean) ? proj.floorplanImages : null;
+    const localFloorplanEditedImages = Array.isArray(proj.floorplanEditedImages) && proj.floorplanEditedImages.some(Boolean) ? [...proj.floorplanEditedImages] : null;
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
@@ -11364,6 +11373,10 @@ function _startCollabListener(cloudId) {
     Object.assign(proj, remote, { cloudId: proj.cloudId, myRole, collaborators: fixedCollabs, owner: fixedOwner });
     // 도면 보존 — 슬롯별 로컬 우선 머지 (local 非null이면 유지, null이면 cloud 사용)
     if (localFloorplanEdited) proj.floorplanEditedImage = localFloorplanEdited;
+    if (localFloorplanEditedImages) {
+      const cloudEditedImgs = remote.floorplanEditedImages || [];
+      proj.floorplanEditedImages = localFloorplanEditedImages.map((lImg, i) => lImg || cloudEditedImgs[i] || null);
+    }
     // floorplanCanvasJSON: 로컬 우선 (편집 레이어) — 없으면 cloud 백업 사용
     if (localCanvasJSON) proj.floorplanCanvasJSON = localCanvasJSON;
     if (localFloorplan || localFloorplanImages) {
