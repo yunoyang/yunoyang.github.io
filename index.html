@@ -10994,6 +10994,9 @@ async function _fetchMeetingsFromCloud() {
       await _MIdb.loadAll();
       localStorage.setItem('vibespace', JSON.stringify(state));
       renderMeetingTab();
+      if (_currentMeetingId && proj.meetings.find(m => m.id === _currentMeetingId)) {
+        openMeetingDetail(_currentMeetingId);
+      }
     }
   } catch(e) { console.warn('_fetchMeetingsFromCloud:', e); }
 }
@@ -11426,7 +11429,14 @@ function _startCollabListener(cloudId) {
         }
       }
     });
-    _MIdb.loadAll().then(() => renderMeetingTab());
+    _MIdb.loadAll().then(() => {
+      renderMeetingTab();
+      // 상세 화면이 열려 있고 현재 기록이 업데이트된 경우 자동 갱신
+      if (_currentMeetingId) {
+        const updatedM = proj.meetings.find(m => m.id === _currentMeetingId);
+        if (updatedM) openMeetingDetail(_currentMeetingId);
+      }
+    });
     // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
     const cloudImages = remote.styleImages || {};
     const merged = {};
