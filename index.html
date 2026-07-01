@@ -3643,14 +3643,14 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
       <!-- 로그아웃 -->
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;overflow:hidden;margin-bottom:16px;">
-        <button onclick="if(confirm('로그아웃 하시겠습니까?'))doLogout();" style="width:100%;display:flex;align-items:center;gap:12px;padding:17px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#333;font-size:15px;font-weight:600;">
-          <svg class="icon" width="18" height="18"><use href="#icon-log-out"/></svg> 로그아웃
+        <button onclick="if(confirm('로그아웃 하시겠습니까?'))doLogout();" style="width:100%;display:flex;align-items:center;justify-content:center;padding:17px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#333;font-size:15px;font-weight:600;">
+          로그아웃
         </button>
       </div>
       <!-- 탈퇴하기 -->
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;overflow:hidden;">
-        <button onclick="requestAccountDeletion()" style="width:100%;display:flex;align-items:center;gap:12px;padding:17px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#e03c3c;font-size:15px;font-weight:600;">
-          <svg class="icon" width="18" height="18" style="color:#e03c3c;"><use href="#icon-trash-2"/></svg> 탈퇴하기
+        <button onclick="openWithdrawConfirm()" style="width:100%;display:flex;align-items:center;justify-content:center;padding:17px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#999;font-size:15px;font-weight:600;">
+          탈퇴하기
         </button>
       </div>
     </div>
@@ -4905,6 +4905,18 @@ button, input, textarea, select { font-family:var(--font); }
     <!-- GSI 렌더 성공 시 위 버튼 대체 (PC 전용) -->
     <div id="google-signin-btn" style="display:none;justify-content:center;margin:0 0 4px;"></div>
     <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-login')">취소</button></div>
+  </div>
+</div>
+
+<!-- 탈퇴 확인 바텀시트 -->
+<div class="overlay" id="dlg-withdraw" style="align-items:flex-end;padding:0;">
+  <div class="dialog" style="border-radius:22px 22px 0 0;max-width:520px;margin:0 auto;width:100%;">
+    <h3>탈퇴하시겠습니까?</h3>
+    <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:20px;">탈퇴하면 모든 데이터가 사라지며 복구할 수 없습니다.</p>
+    <div class="dialog-actions split">
+      <button class="btn-cancel" onclick="closeDialog('dlg-withdraw')">취소</button>
+      <button class="btn-danger" style="height:48px;" onclick="closeDialog('dlg-withdraw');requestAccountDeletion();">탈퇴하기</button>
+    </div>
   </div>
 </div>
 
@@ -12763,8 +12775,10 @@ function openAccountDialog() {
   goTo('account');
 }
 
+function openWithdrawConfirm() {
+  openDialog('dlg-withdraw');
+}
 function requestAccountDeletion() {
-  if (!confirm('탈퇴하시겠습니까?\n모든 프로젝트와 업로드한 콘텐츠가 삭제되며 복구할 수 없습니다.')) return;
   const subject = encodeURIComponent('[바이브스페이스] 회원 탈퇴 요청');
   const body = encodeURIComponent(`이메일: ${state.user?.email || ''}\n이름: ${state.user?.name || ''}\n\n위 계정의 탈퇴를 요청합니다.`);
   window.location.href = `mailto:yunoenemy@gmail.com?subject=${subject}&body=${body}`;
