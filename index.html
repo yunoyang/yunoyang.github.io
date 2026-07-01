@@ -1533,12 +1533,14 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ── 모바일 메뉴 바텀시트 — 항상 하단 고정 ── */
 #mobile-main-menu-sheet,
-#mobile-card-menu-sheet {
+#mobile-card-menu-sheet,
+#landing-menu-sheet {
   align-items:flex-end !important;
   padding:0 !important;
 }
 #mobile-main-menu-sheet .dialog,
-#mobile-card-menu-sheet .dialog {
+#mobile-card-menu-sheet .dialog,
+#landing-menu-sheet .dialog {
   border-radius:22px 22px 0 0 !important;
   max-height:80vh;
 }
@@ -3186,6 +3188,11 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 배경 이미지 (랜덤) -->
   <img class="landing-bg-img" id="landing-bg-img" src="landing-bg.jpg" alt="">
 
+  <!-- 프로필 아바타 (서비스 전체 메뉴) -->
+  <div style="position:absolute;top:20px;right:20px;z-index:2;">
+    <button id="landing-avatar-btn" class="profile-avatar-btn" onclick="toggleLandingMenu(event)" title="메뉴"></button>
+  </div>
+
   <!-- 타이틀 + 서브카피 -->
   <div class="landing-mid">
     <div class="landing-logo-wrap">
@@ -3245,7 +3252,9 @@ button, input, textarea, select { font-family:var(--font); }
       </button>
     </div>
     <div class="header-actions">
-      <button id="profile-avatar-btn" class="profile-avatar-btn" onclick="handleAvatarClick(event)" title="메뉴"></button>
+      <button id="project-menu-btn" class="icon-btn" onclick="toggleProjectMenu(event)" title="메뉴">
+        <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
     </div>
   </div>
   <!-- 공동작업 활성 표시 바 -->
@@ -3367,37 +3376,6 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
 
-  <!-- Dropdown Menu -->
-  <div class="dropdown" id="main-menu" style="top:68px;right:20px;">
-    <button class="dropdown-item" onclick="goTo('form');closeAllMenus();" style="justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 공사 정보
-      </span>
-      <span id="menu-dday" style="font-size:13px;font-weight:600;color:#5084ff;"></span>
-    </button>
-    <button class="dropdown-item" onclick="openShareDialog()" style="justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
-      </span>
-      <span id="collab-menu-badge" style="font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;"></span>
-    </button>
-    <button class="dropdown-item" onclick="openNoticeDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
-    </button>
-    <button class="dropdown-item" onclick="openExpertDialog()">
-      <svg class="icon" width="20" height="20"><use href="#icon-star"/></svg> 전문가 검토 받기<span class="menu-badge">준비 중</span>
-    </button>
-    <button class="dropdown-item" onclick="openFeedbackDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
-    </button>
-    <button class="dropdown-item" id="menu-admin-btn" style="display:none;" onclick="openAdminDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
-    </button>
-    <div class="dropdown-sep"></div>
-    <button class="dropdown-item" id="menu-login-btn" onclick="openAccountDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 설정
-    </button>
-  </div>
 </div>
 
 <!-- ===== FORM ===== -->
@@ -4626,21 +4604,28 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
     <button class="mobile-sheet-item" onclick="openShareDialog();closeAllMenus();" style="justify-content:space-between;">
       <span style="display:flex;align-items:center;gap:8px;">
-        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자 초대
+        <svg class="icon" width="20" height="20"><use href="#icon-share-2"/></svg> 공동작업자
       </span>
       <span id="collab-menu-badge-mobile" style="font-size:13px;font-weight:500;color:#333;"></span>
     </button>
+    <button class="mobile-sheet-item" onclick="goTo('consulting');closeAllMenus();">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
+    </button>
+  </div>
+</div>
+
+<!-- ===== BOTTOM SHEET: 서비스 전체 메뉴 (랜딩 프로필) ===== -->
+<div class="overlay" id="landing-menu-sheet">
+  <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" onclick="openNoticeDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문
     </button>
     <button class="mobile-sheet-item" onclick="openFeedbackDialog();closeAllMenus();">
-      <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 &amp; 아이디어
+      <svg class="icon" width="20" height="20"><use href="#icon-message-square"/></svg> 피드백 제안하기
     </button>
     <button class="mobile-sheet-item" id="mobile-menu-admin-btn" style="display:none;" onclick="openAdminDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
-    </button>
-    <button class="mobile-sheet-item" onclick="goTo('consulting');closeAllMenus();">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
     </button>
     <button class="mobile-sheet-item" id="mobile-menu-login-btn" onclick="openAccountDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 설정
@@ -5788,7 +5773,7 @@ function _onAcctAvatarFile(input) {
   input.value = '';
 }
 function _renderProfileAvatar() {
-  const avatarBtn = document.getElementById('profile-avatar-btn');
+  const avatarBtn = document.getElementById('landing-avatar-btn');
   if (!avatarBtn) return;
   if (state.loggedIn) {
     const { name, email } = state.user;
@@ -5805,14 +5790,15 @@ function _renderProfileAvatar() {
   }
 }
 
-function handleAvatarClick(e) {
-  if (state.loggedIn) {
-    toggleMainMenu(e);
-  } else {
-    pendingAction = null;
-    openLoginDialog();
-  }
+function toggleLandingMenu(e) {
+  e.stopPropagation();
+  if (!state.loggedIn) { pendingAction = null; openLoginDialog(); return; }
+  const sheet = document.getElementById('landing-menu-sheet');
+  const isOpen = sheet.classList.contains('active');
+  closeAllMenus();
+  if (!isOpen) { openDialog('landing-menu-sheet'); _updateAdminMenuVisibility(); }
 }
+
 
 function _getInitials(name) {
   if (!name) return '?';
@@ -11112,7 +11098,7 @@ function _openContractorMoreSheet() {
 function _closeContractorMoreSheet() {
   closeDialog('contractor-more-sheet');
 }
-function toggleMainMenu(e) {
+function toggleProjectMenu(e) {
   e.stopPropagation();
   // 모바일·PC 모두 바텀시트 사용
   const sheet = document.getElementById('mobile-main-menu-sheet');
@@ -11126,6 +11112,7 @@ function closeAllMenus() {
   document.querySelectorAll('.project-badge').forEach(b => b.classList.remove('open'));
   closeDialog('mobile-main-menu-sheet');
   closeDialog('mobile-card-menu-sheet');
+  closeDialog('landing-menu-sheet');
   _hideMenuBackdrop();
 }
 document.addEventListener('click', e => {
