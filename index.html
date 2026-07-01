@@ -3620,19 +3620,16 @@ button, input, textarea, select { font-family:var(--font); }
           </button>
           <input type="file" id="acct-avatar-file" accept="image/*" style="display:none;" onchange="_onAcctAvatarFile(this)">
         </div>
-        <div id="acct-name" style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px;">사용자</div>
-        <div id="acct-email" style="font-size:14px;color:#888;text-decoration:none;">-</div>
+        <div id="acct-name" style="font-size:20px;font-weight:700;color:#111;">사용자</div>
       </div>
       <!-- 정보 카드 (폼필드 가로형 UI) -->
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:0 20px;margin-bottom:16px;">
         <div class="work-field">
           <span class="f-label">이름</span>
-          <span class="f-value readonly" id="acct-name-row" style="cursor:default;"></span>
-        </div>
-        <div style="height:1px;background:#f0f2f5;"></div>
-        <div class="work-field">
-          <span class="f-label">이메일</span>
-          <span class="f-value readonly" id="acct-email-row" style="cursor:default;word-break:break-all;text-align:right;color:#222;text-decoration:none;"></span>
+          <div style="text-align:right;">
+            <div class="f-value readonly" id="acct-name-row" style="cursor:default;"></div>
+            <div id="acct-email-row" style="font-size:13px;color:#999;word-break:break-all;margin-top:2px;"></div>
+          </div>
         </div>
         <div style="height:1px;background:#f0f2f5;"></div>
         <div class="work-field">
@@ -5914,7 +5911,6 @@ function goTo(screen) {
     if (av) av.innerHTML = `<img src="${_getUserAvatarUrl()}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`;
     document.getElementById('acct-name').textContent = name;
     document.getElementById('acct-name-row').textContent = name;
-    document.getElementById('acct-email').textContent = email;
     document.getElementById('acct-email-row').textContent = email;
     _loadAcctJoinDate();
   }
@@ -12818,9 +12814,13 @@ async function _loadAcctJoinDate() {
   try {
     const ok = await _initFirebase();
     if (!ok || !_db) return;
-    let doc = await _db.collection('vb_users').doc(state.user.email).get();
-    if (!doc.exists) doc = await _db.collection('vb_users').doc(state.user.email.replace(/\./g,'_')).get();
-    const ts = doc.exists ? (doc.data().firstLoginAt || doc.data().createdAt) : null;
+    let ts = null;
+    const doc1 = await _db.collection('vb_users').doc(state.user.email).get();
+    if (doc1.exists) ts = doc1.data().firstLoginAt || doc1.data().createdAt;
+    if (!ts) {
+      const doc2 = await _db.collection('vb_users').doc(state.user.email.replace(/\./g,'_')).get();
+      if (doc2.exists) ts = doc2.data().firstLoginAt || doc2.data().createdAt;
+    }
     if (ts && ts.toDate) {
       const d = ts.toDate();
       el.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
