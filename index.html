@@ -3613,20 +3613,20 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="form-body" style="padding:0 20px 40px;">
       <!-- 프로필 섹션 -->
       <div style="display:flex;flex-direction:column;align-items:center;padding:32px 0 28px;">
-        <div id="acct-avatar" style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;margin-bottom:16px;"></div>
-        <div id="acct-name" style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px;">사용자</div>
-        <div id="acct-email" style="font-size:14px;color:#888;">-</div>
+        <div style="position:relative;width:88px;height:88px;margin-bottom:16px;">
+          <div id="acct-avatar" style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;"></div>
+          <button onclick="document.getElementById('acct-avatar-file').click()" style="position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:#222;border:2.5px solid #f7f8fa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+          <input type="file" id="acct-avatar-file" accept="image/*" style="display:none;" onchange="_onAcctAvatarFile(this)">
+        </div>
+        <div id="acct-name" style="font-size:20px;font-weight:700;color:#111;">사용자</div>
       </div>
       <!-- 정보 카드 (폼필드 가로형 UI) -->
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:0 20px;margin-bottom:16px;">
         <div class="work-field">
           <span class="f-label">이름</span>
           <span class="f-value readonly" id="acct-name-row" style="cursor:default;"></span>
-        </div>
-        <div style="height:1px;background:#f0f2f5;"></div>
-        <div class="work-field">
-          <span class="f-label">이메일</span>
-          <span class="f-value readonly" id="acct-email-row" style="cursor:default;word-break:break-all;text-align:right;"></span>
         </div>
         <div style="height:1px;background:#f0f2f5;"></div>
         <div class="work-field">
@@ -5741,22 +5741,53 @@ function updateLoginUI() {
   if (loginGate) loginGate.style.display = state.loggedIn ? 'none' : 'flex';
 }
 
+const DEFAULT_AVATAR_COUNT = 4;
+function _getUserAvatarUrl() {
+  const user = state.user || {};
+  if (user.customAvatar) return user.customAvatar;
+  if (user.picture) return user.picture;
+  if (!user.defaultAvatarIdx) {
+    user.defaultAvatarIdx = 1 + Math.floor(Math.random() * DEFAULT_AVATAR_COUNT);
+    save();
+  }
+  return `assets/avatars/default${user.defaultAvatarIdx}.jpg`;
+}
+function _onAcctAvatarFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2, sy = (img.height - size) / 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = 400; canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 400, 400);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      state.user.customAvatar = dataUrl;
+      save();
+      _renderProfileAvatar();
+      const av = document.getElementById('acct-avatar');
+      if (av) av.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
 function _renderProfileAvatar() {
   const avatarBtn = document.getElementById('profile-avatar-btn');
   if (!avatarBtn) return;
   if (state.loggedIn) {
-    const { name, email, picture } = state.user;
+    const { name, email } = state.user;
     avatarBtn.className = 'profile-avatar-btn';
-    if (picture) {
-      const initials = _getInitials(name);
-      const bgColor = _avatarColor(email);
-      avatarBtn.style.background = bgColor;
-      avatarBtn.innerHTML = `<img class="profile-avatar-img" src="${picture}" alt="${initials}"
-        onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'profile-avatar-initials\\'>${initials}</span>';this.parentElement.style.background='${bgColor}';">`;
-    } else {
-      avatarBtn.style.background = _avatarColor(email);
-      avatarBtn.innerHTML = `<span class="profile-avatar-initials">${_getInitials(name)}</span>`;
-    }
+    const initials = _getInitials(name);
+    const bgColor = _avatarColor(email);
+    avatarBtn.style.background = bgColor;
+    avatarBtn.innerHTML = `<img class="profile-avatar-img" src="${_getUserAvatarUrl()}" alt="${initials}"
+      onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'profile-avatar-initials\\'>${initials}</span>';this.parentElement.style.background='${bgColor}';">`;
   } else {
     avatarBtn.className = 'profile-avatar-btn profile-avatar-login';
     avatarBtn.style.background = '';
@@ -5867,15 +5898,10 @@ function goTo(screen) {
   if (screen === 'account') {
     const user = state.user || {};
     const name = user.name || '사용자';
-    const email = user.email || '-';
-    const picture = user.picture || '';
-    const initials = name.charAt(0).toUpperCase();
     const av = document.getElementById('acct-avatar');
-    if (av) av.innerHTML = picture
-      ? `<img src="${picture}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`
-      : initials;
-    ['acct-name','acct-name-row'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = name; });
-    ['acct-email','acct-email-row'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = email; });
+    if (av) av.innerHTML = `<img src="${_getUserAvatarUrl()}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`;
+    document.getElementById('acct-name').textContent = name;
+    document.getElementById('acct-name-row').textContent = name;
   }
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;
