@@ -265,10 +265,10 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== PROFILE AVATAR ===== */
 .profile-avatar-btn {
-  width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; padding:0;
+  width:36px; height:36px; border-radius:50%; border:1px solid #fff; cursor:pointer; padding:0;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden; flex-shrink:0; transition:transform .15s, box-shadow .15s;
-  font-family:var(--font); background:#333333;
+  font-family:var(--font); background:#333333; box-sizing:border-box;
 }
 .profile-avatar-btn:hover { transform:scale(1.07); box-shadow:0 3px 12px rgba(0,0,0,0.18); }
 .profile-avatar-btn:active { transform:scale(.96); }
@@ -3242,8 +3242,11 @@ button, input, textarea, select { font-family:var(--font); }
 <div class="screen" id="screen-main">
   <div class="screen-scroll" id="main-scroll">
   <div class="header">
-    <button class="header-home-btn" onclick="goTo('landing')" title="홈으로">
-      <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.7633 23.3452V15.3539C26.7633 14.1542 26.2841 13.0029 25.4128 12.1783C24.3913 11.2116 22.9742 9.90754 21.8301 8.9942C19.666 7.26652 18.5859 5.85492 16.0001 5.85492C13.4142 5.85492 12.3341 7.26652 10.17 8.9942C9.0259 9.90754 7.60877 11.2116 6.58735 12.1783C5.716 13.0029 5.23682 14.1542 5.23682 15.3539V23.3452C5.23682 24.8313 6.44153 25.6378 7.92763 25.6378H12.7639H19.3216H24.0725C25.5586 25.6378 26.7633 24.8313 26.7633 23.3452Z" stroke="#333" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+    <button class="header-home-btn" onclick="goTo('landing')" title="홈으로" style="background:none;border:none;padding:0;width:40px;height:40px;">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 20C0 8.95431 8.95431 0 20 0V0C31.0457 0 40 8.95431 40 20V20C40 31.0457 31.0457 40 20 40V40C8.95431 40 0 31.0457 0 20V20Z" fill="white"/>
+        <path d="M30 26.4667V18.9431C30 17.8136 29.5548 16.7297 28.7452 15.9533C27.7962 15.0432 26.4796 13.8154 25.4167 12.9556C23.406 11.329 22.4025 10 20 10C17.5975 10 16.594 11.329 14.5833 12.9556C13.5204 13.8154 12.2038 15.0432 11.2548 15.9533C10.4452 16.7297 10 17.8136 10 18.9431V26.4667C10 27.8658 11.1193 29 12.5 29H15.8333C16.7538 29 17.5 28.2439 17.5 27.3111V23.6002C17.5 22.7532 17.9178 21.9622 18.6132 21.4924C19.453 20.9251 20.547 20.9251 21.3868 21.4924C22.0822 21.9622 22.5 22.7532 22.5 23.6002V27.3111C22.5 28.2439 23.2462 29 24.1667 29H27.5C28.8807 29 30 27.8658 30 26.4667Z" fill="black"/>
+      </svg>
     </button>
     <div class="project-selector" id="project-selector">
       <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
@@ -3252,8 +3255,13 @@ button, input, textarea, select { font-family:var(--font); }
       </button>
     </div>
     <div class="header-actions">
-      <button id="project-menu-btn" class="icon-btn" onclick="toggleProjectMenu(event)" title="메뉴">
-        <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      <button id="project-menu-btn" onclick="toggleProjectMenu(event)" title="메뉴" style="background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z" fill="white"/>
+          <path d="M12 14H28" stroke="black" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M12 20H28" stroke="black" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M12 26H20" stroke="black" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
       </button>
     </div>
   </div>
