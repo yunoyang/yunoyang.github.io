@@ -5763,7 +5763,7 @@ function _onAcctAvatarFile(input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2, sy = (img.height - size) / 2;
       const canvas = document.createElement('canvas');
@@ -5771,11 +5771,26 @@ function _onAcctAvatarFile(input) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, sx, sy, size, size, 0, 0, 400, 400);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      // 즉시 미리보기 반영 (업로드 전)
       state.user.customAvatar = dataUrl;
       save();
       _renderProfileAvatar();
       const av = document.getElementById('acct-avatar');
       if (av) av.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      // Firebase Storage에 업로드해 재로그인/기기변경 후에도 유지되도록 영속화
+      try {
+        const ok = await _initFirebase();
+        if (ok && _fbStorage && state.user?.email) {
+          const ref = _fbStorage.ref(`avatars/${state.user.email}.jpg`);
+          await ref.put(_dataUrlToBlob(dataUrl), { contentType: 'image/jpeg' });
+          const url = await ref.getDownloadURL();
+          state.user.customAvatar = url;
+          save();
+          if (_db) {
+            await _db.collection('vb_users').doc(state.user.email).set({ avatarUrl: url }, { merge: true });
+          }
+        }
+      } catch(err) { console.warn('avatar upload failed:', err); }
     };
     img.src = e.target.result;
   };
@@ -12867,13 +12882,22 @@ async function _checkWithdrawRecovery() {
     const ok = await _initFirebase();
     if (!ok || !_db) return;
     const doc = await _db.collection('vb_users').doc(email).get();
-    if (doc.exists && doc.data().withdrawn) {
-      await _db.collection('vb_users').doc(email).set({
-        withdrawn: false,
-        withdrawnAt: null,
-        recoveredAt: firebase.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
-      showToastMessage('계정이 복구되었습니다. 기존 데이터가 그대로 유지되어 있습니다.');
+    if (doc.exists) {
+      const data = doc.data();
+      // 업로드했던 프로필 이미지 복원 (재로그인/기기변경 시 유실 방지)
+      if (data.avatarUrl && !state.user.customAvatar) {
+        state.user.customAvatar = data.avatarUrl;
+        save();
+        _renderProfileAvatar();
+      }
+      if (data.withdrawn) {
+        await _db.collection('vb_users').doc(email).set({
+          withdrawn: false,
+          withdrawnAt: null,
+          recoveredAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        showToastMessage('계정이 복구되었습니다. 기존 데이터가 그대로 유지되어 있습니다.');
+      }
     }
   } catch(e) { console.warn('withdraw recovery check failed:', e); }
 }
