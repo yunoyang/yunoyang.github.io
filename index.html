@@ -5433,7 +5433,7 @@ function handleGoogleResponse(response) {
     const _b64 = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
     const payload = JSON.parse(decodeURIComponent(escape(atob(_b64))));
     state.loggedIn = true;
-    state.user = { name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
+    state.user = { ...(state.user||{}), name: payload.name || '사용자', email: payload.email || '', picture: payload.picture || '' };
     // GA4 user_id 설정 (이메일 해시 기반)
     if (typeof gtag !== 'undefined') {
       gtag('set', 'user_id', btoa(state.user.email).replace(/[^a-zA-Z0-9]/g,'').slice(0,16));
@@ -11287,7 +11287,7 @@ async function _initFirebase() {
 async function _handleFirebaseUser(user) {
   try {
     state.loggedIn = true;
-    state.user = { name: user.displayName || '사용자', email: user.email || '', picture: user.photoURL || '' };
+    state.user = { ...(state.user||{}), name: user.displayName || '사용자', email: user.email || '', picture: user.photoURL || '' };
     if (typeof gtag !== 'undefined') {
       gtag('set', 'user_id', btoa(state.user.email).replace(/[^a-zA-Z0-9]/g,'').slice(0,16));
       gtag('set', 'user_properties', { login_method: 'google', user_type: 'registered' });
