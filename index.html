@@ -5449,6 +5449,7 @@ function handleGoogleResponse(response) {
     updateLoginUI();
     // GSI credential → Firebase Auth 세션 연결 후 클라우드 업로드 + 신규 가입자 알림
     _signInToFirebaseAuth(response.credential).then(async () => {
+      await _checkWithdrawRecovery();
       await _autoUploadOnLogin();
       _loadContractors(); // 로그인 후 업체 DB 재로드 (Firestore 권한 확보 후)
     });
@@ -11300,6 +11301,7 @@ async function _handleFirebaseUser(user) {
     closeDialog('dlg-login');
     updateLoginUI();
     showToastMessage(_ti('user') + '로그인됐습니다!');
+    await _checkWithdrawRecovery();
     await _autoUploadOnLogin();
     _loadContractors();
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
@@ -12837,10 +12839,44 @@ function openAccountDialog() {
 function openWithdrawConfirm() {
   openDialog('dlg-withdraw');
 }
-function requestAccountDeletion() {
-  const subject = encodeURIComponent('[바이브스페이스] 회원 탈퇴 요청');
-  const body = encodeURIComponent(`이메일: ${state.user?.email || ''}\n이름: ${state.user?.name || ''}\n\n위 계정의 탈퇴를 요청합니다.`);
-  window.location.href = `mailto:yunoenemy@gmail.com?subject=${subject}&body=${body}`;
+const WITHDRAW_RECOVERY_DAYS = 30;
+async function requestAccountDeletion() {
+  const email = state.user?.email || '';
+  const name = state.user?.name || '';
+  try {
+    const ok = await _initFirebase();
+    if (ok && _db && email) {
+      await _db.collection('vb_users').doc(email).set({
+        withdrawn: true,
+        withdrawnAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+  } catch(e) { console.warn('withdraw flag save failed:', e); }
+  // 알림용 메일 (실제 삭제는 진행하지 않음 — 데이터는 보관되어 재로그인 시 자동 복구됨)
+  const subject = encodeURIComponent('[바이브스페이스] 회원 탈퇴 신청');
+  const body = encodeURIComponent(`이메일: ${email}\n이름: ${name}\n\n위 계정이 탈퇴 신청되었습니다. (데이터는 ${WITHDRAW_RECOVERY_DAYS}일간 보관됩니다)`);
+  window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  doLogout();
+  showToastMessage(`탈퇴 처리되었습니다. ${WITHDRAW_RECOVERY_DAYS}일 이내 재로그인하면 데이터가 그대로 복구됩니다.`);
+}
+
+// 재로그인 시 탈퇴 신청 취소 + 데이터 복구 알림
+async function _checkWithdrawRecovery() {
+  const email = state.user?.email;
+  if (!email) return;
+  try {
+    const ok = await _initFirebase();
+    if (!ok || !_db) return;
+    const doc = await _db.collection('vb_users').doc(email).get();
+    if (doc.exists && doc.data().withdrawn) {
+      await _db.collection('vb_users').doc(email).set({
+        withdrawn: false,
+        withdrawnAt: null,
+        recoveredAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      showToastMessage('계정이 복구되었습니다. 기존 데이터가 그대로 유지되어 있습니다.');
+    }
+  } catch(e) { console.warn('withdraw recovery check failed:', e); }
 }
 
 async function openAdminDialog() {
