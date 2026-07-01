@@ -5741,11 +5741,12 @@ function _getUserAvatarUrl() {
   const user = state.user || {};
   if (user.customAvatar) return user.customAvatar;
   if (user.picture) return user.picture;
-  if (!user.defaultAvatarIdx) {
-    user.defaultAvatarIdx = 1 + Math.floor(Math.random() * DEFAULT_AVATAR_COUNT);
-    save();
-  }
-  return `assets/avatars/default${user.defaultAvatarIdx}.jpg`;
+  // 이메일 해시 기반 결정론적 배정 — 저장 시점/타이밍과 무관하게 항상 동일한 이미지 반환
+  const key = user.email || user.name || 'guest';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
+  const idx = 1 + (Math.abs(hash) % DEFAULT_AVATAR_COUNT);
+  return `assets/avatars/default${idx}.jpg`;
 }
 function _onAcctAvatarFile(input) {
   const file = input.files && input.files[0];
