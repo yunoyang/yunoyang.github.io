@@ -3255,7 +3255,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button class="summary-toggle-row" onclick="toggleSummary()" style="width:100%;">
         <span style="color:#111;font-weight:700;">공사 정보</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span id="sum-dday" style="font-size:13px;font-weight:600;color:#5084ff;"></span>
+          <span id="sum-dday" style="display:none;flex-shrink:0;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
           <span class="sum-chev open" id="sum-chev">
             <svg class="icon" width="20" height="20" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-down"/></svg>
           </span>
@@ -5918,6 +5918,30 @@ function toggleSummary() {
   updateSummary();
   localStorage.setItem('vibespace', JSON.stringify(state));
 }
+function _applyDdayBadge(el, startDateStr, endDateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = new Date(startDateStr + 'T00:00:00');
+  const end = endDateStr ? new Date(endDateStr + 'T00:00:00') : null;
+  const diffStart = Math.round((start - today) / (1000*60*60*24));
+  const inProgress = today >= start && (!end || today <= end);
+  if (inProgress) {
+    el.textContent = '공사중';
+    el.style.color = '#fff';
+    el.style.background = '#27ae60';
+  } else if (diffStart > 0) {
+    el.textContent = `D-${diffStart}`;
+    el.style.color = '#5084ff';
+    el.style.background = '#eef2ff';
+  } else if (diffStart === 0) {
+    el.textContent = 'D-Day';
+    el.style.color = '#5084ff';
+    el.style.background = '#eef2ff';
+  } else {
+    el.textContent = `D+${Math.abs(diffStart)}`;
+    el.style.color = '#888';
+    el.style.background = '#f0f0f0';
+  }
+}
 function updateSummary() {
   const proj = getProject(); if (!proj) return;
   let totalCost = 0;
@@ -5942,6 +5966,7 @@ function updateSummary() {
   const ddEl = document.getElementById('sum-dday');
   const menuDdEl = document.getElementById('menu-dday');
   const startDate = proj.form?.startDate;
+  const endDate = proj.form?.endDate;
   let ddText = '';
   if (startDate) {
     const today = new Date(); today.setHours(0,0,0,0);
@@ -5951,7 +5976,10 @@ function updateSummary() {
     else if (diff === 0) ddText = 'D-Day';
     else ddText = `D+${Math.abs(diff)}`;
   }
-  if (ddEl) ddEl.textContent = ddText;
+  if (ddEl) {
+    if (startDate) { _applyDdayBadge(ddEl, startDate, endDate); ddEl.style.display = ''; }
+    else ddEl.style.display = 'none';
+  }
   if (menuDdEl) menuDdEl.textContent = ddText;
   const menuDdMobileEl = document.getElementById('menu-dday-mobile');
   if (menuDdMobileEl) menuDdMobileEl.textContent = ddText;
@@ -9831,34 +9859,11 @@ function _loadInfoView() {
   };
   // 프로젝트명
   set('iv-project-name', proj.name);
-  // D-day 배지 (종료일 기준)
+  // D-day 배지 (시작일 기준)
   const ddBadge = document.getElementById('iv-dday-badge');
   if (ddBadge) {
-    const startDateStr = f.startDate;
-    const endDateStr = f.endDate;
-    if (startDateStr) {
-      const today = new Date(); today.setHours(0,0,0,0);
-      const start = new Date(startDateStr + 'T00:00:00');
-      const end = endDateStr ? new Date(endDateStr + 'T00:00:00') : null;
-      const diffStart = Math.round((start - today) / (1000*60*60*24));
-      const inProgress = today >= start && (!end || today <= end);
-      if (inProgress) {
-        ddBadge.textContent = '공사중';
-        ddBadge.style.color = '#fff';
-        ddBadge.style.background = '#27ae60';
-      } else if (diffStart > 0) {
-        ddBadge.textContent = `D-${diffStart}`;
-        ddBadge.style.color = '#5084ff';
-        ddBadge.style.background = '#eef2ff';
-      } else if (diffStart === 0) {
-        ddBadge.textContent = 'D-Day';
-        ddBadge.style.color = '#5084ff';
-        ddBadge.style.background = '#eef2ff';
-      } else {
-        ddBadge.textContent = `D+${Math.abs(diffStart)}`;
-        ddBadge.style.color = '#888';
-        ddBadge.style.background = '#f0f0f0';
-      }
+    if (f.startDate) {
+      _applyDdayBadge(ddBadge, f.startDate, f.endDate);
       ddBadge.style.display = '';
     } else {
       ddBadge.style.display = 'none';
