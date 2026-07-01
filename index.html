@@ -3636,6 +3636,11 @@ button, input, textarea, select { font-family:var(--font); }
         </div>
         <div style="height:1px;background:#f0f2f5;"></div>
         <div class="work-field">
+          <span class="f-label">가입일</span>
+          <span class="f-value readonly" id="acct-joined-row" style="cursor:default;">-</span>
+        </div>
+        <div style="height:1px;background:#f0f2f5;"></div>
+        <div class="work-field">
           <span class="f-label">프로젝트 공개</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:12px;color:#bbb;">추후 업데이트</span>
@@ -5911,6 +5916,7 @@ function goTo(screen) {
     document.getElementById('acct-name-row').textContent = name;
     document.getElementById('acct-email').textContent = email;
     document.getElementById('acct-email-row').textContent = email;
+    _loadAcctJoinDate();
   }
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;
@@ -12803,6 +12809,23 @@ function _updateAdminMenuVisibility() {
 function _updateMenuAccountCard() {
   // 로그인 버튼 텍스트: 로그인 여부와 무관하게 "계정 정보" 고정
   // (로그인 안된 경우 openAccountDialog가 로그인 다이얼로그로 분기)
+}
+
+async function _loadAcctJoinDate() {
+  const el = document.getElementById('acct-joined-row');
+  if (!el || !state.user?.email) return;
+  el.textContent = '-';
+  try {
+    const ok = await _initFirebase();
+    if (!ok || !_db) return;
+    let doc = await _db.collection('vb_users').doc(state.user.email).get();
+    if (!doc.exists) doc = await _db.collection('vb_users').doc(state.user.email.replace(/\./g,'_')).get();
+    const ts = doc.exists ? (doc.data().firstLoginAt || doc.data().createdAt) : null;
+    if (ts && ts.toDate) {
+      const d = ts.toDate();
+      el.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    }
+  } catch(e) { console.warn('join date load failed:', e); }
 }
 
 function openAccountDialog() {
