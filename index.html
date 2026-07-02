@@ -3615,7 +3615,7 @@ button, input, textarea, select { font-family:var(--font); }
       <!-- 프로필 섹션 -->
       <div style="display:flex;flex-direction:column;align-items:center;padding:32px 0 28px;">
         <div style="position:relative;width:88px;height:88px;margin-bottom:16px;">
-          <div id="acct-avatar" style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#3176ff,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;"></div>
+          <div id="acct-avatar" style="width:88px;height:88px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;"></div>
           <button onclick="document.getElementById('acct-avatar-file').click()" style="position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:#222;border:2.5px solid #f7f8fa;display:flex;align-items:center;justify-content:center;cursor:pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </button>
@@ -5771,17 +5771,15 @@ function updateLoginUI() {
   if (loginGate) loginGate.style.display = state.loggedIn ? 'none' : 'flex';
 }
 
-const DEFAULT_AVATAR_COUNT = 4;
 function _getUserAvatarUrl() {
   const user = state.user || {};
   if (user.customAvatar) return user.customAvatar;
   if (user.picture) return user.picture;
-  // 이메일 해시 기반 결정론적 배정 — 저장 시점/타이밍과 무관하게 항상 동일한 이미지 반환
-  const key = user.email || user.name || 'guest';
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
-  const idx = 1 + (Math.abs(hash) % DEFAULT_AVATAR_COUNT);
-  return `assets/avatars/default${idx}.jpg`;
+  return null;
+}
+function _getUserInitial() {
+  const name = (state.user?.name || '').trim();
+  return name ? name.charAt(0).toUpperCase() : '?';
 }
 function _onAcctAvatarFile(input) {
   const file = input.files && input.files[0];
@@ -5827,13 +5825,17 @@ function _renderProfileAvatar() {
   const avatarBtn = document.getElementById('landing-avatar-btn');
   if (!avatarBtn) return;
   if (state.loggedIn) {
-    const { name, email } = state.user;
     avatarBtn.className = 'profile-avatar-btn';
-    const initials = _getInitials(name);
-    const bgColor = _avatarColor(email);
-    avatarBtn.style.background = bgColor;
-    avatarBtn.innerHTML = `<img class="profile-avatar-img" src="${_getUserAvatarUrl()}" alt="${initials}"
-      onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'profile-avatar-initials\\'>${initials}</span>';this.parentElement.style.background='${bgColor}';">`;
+    const url = _getUserAvatarUrl();
+    const initial = _getUserInitial();
+    if (url) {
+      avatarBtn.style.background = '#000';
+      avatarBtn.innerHTML = `<img class="profile-avatar-img" src="${url}" alt="${initial}"
+        onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'profile-avatar-initials\\'>${initial}</span>';this.parentElement.style.background='#000';">`;
+    } else {
+      avatarBtn.style.background = '#000';
+      avatarBtn.innerHTML = `<span class="profile-avatar-initials">${initial}</span>`;
+    }
   } else {
     avatarBtn.className = 'profile-avatar-btn profile-avatar-login';
     avatarBtn.style.background = '';
@@ -5947,7 +5949,13 @@ function goTo(screen) {
     const name = user.name || '사용자';
     const email = user.email || '-';
     const av = document.getElementById('acct-avatar');
-    if (av) av.innerHTML = `<img src="${_getUserAvatarUrl()}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`;
+    if (av) {
+      const url = _getUserAvatarUrl();
+      av.style.background = '#000';
+      av.innerHTML = url
+        ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`
+        : `<span style="color:#fff;">${_getUserInitial()}</span>`;
+    }
     document.getElementById('acct-name').textContent = name;
     document.getElementById('acct-name-row').textContent = name;
     document.getElementById('acct-email-row').textContent = email;
