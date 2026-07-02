@@ -4051,7 +4051,7 @@ button, input, textarea, select { font-family:var(--font); }
       <button onclick="_mwInsertBlockquote()" title="인용구" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:16px;color:#888;">"</button>
       <button onclick="_mwInsertCodeBlock()" title="코드 블록" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;color:#555;font-family:monospace;">&lt;/&gt;</button>
       <button onclick="_mwInsertHr()" title="구분선" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:14px;color:#aaa;">—</button>
-      <button onclick="_mwInsertLink()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+      <button onclick="_mwOpenLinkInsert()" title="링크 삽입" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </button>
       <button onclick="_mwOpenLinkList()" title="링크 리스트 삽입 (업체명+URL 여러 줄)" style="width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;">
@@ -4321,6 +4321,19 @@ button, input, textarea, select { font-family:var(--font); }
 </div>
 
 <!-- ===== 기록 에디터: 링크 리스트 삽입 ===== -->
+<div id="mw-linkinsert-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9300;" onclick="if(event.target===this)_mwCloseLinkInsert()"></div>
+<div id="mw-linkinsert-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));z-index:9301;max-width:540px;margin:0 auto;">
+  <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:14px;">링크 삽입</div>
+  <label style="font-size:12px;font-weight:600;color:#888;display:block;margin-bottom:6px;">표시할 텍스트</label>
+  <input id="mw-linkinsert-label" placeholder="예: 구매하러가기" style="width:100%;height:46px;border:1.5px solid #e5e5ec;border-radius:12px;padding:0 14px;font-size:14px;font-family:var(--font);box-sizing:border-box;outline:none;margin-bottom:14px;">
+  <label style="font-size:12px;font-weight:600;color:#888;display:block;margin-bottom:6px;">링크 URL</label>
+  <input id="mw-linkinsert-url" placeholder="https://" style="width:100%;height:46px;border:1.5px solid #e5e5ec;border-radius:12px;padding:0 14px;font-size:14px;font-family:var(--font);box-sizing:border-box;outline:none;">
+  <div style="display:flex;gap:10px;margin-top:16px;">
+    <button onclick="_mwCloseLinkInsert()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:12px;background:#fff;font-size:15px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);">취소</button>
+    <button onclick="_mwConfirmLinkInsert()" style="flex:2;height:48px;border:none;border-radius:12px;background:#222;font-size:15px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--font);">삽입하기</button>
+  </div>
+</div>
+
 <div id="mw-linklist-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9300;" onclick="if(event.target===this)_mwCloseLinkList()"></div>
 <div id="mw-linklist-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:22px 20px max(20px,env(safe-area-inset-bottom));z-index:9301;max-width:540px;margin:0 auto;max-height:80vh;overflow-y:auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px;">링크 리스트 삽입</div>
@@ -13890,15 +13903,36 @@ function _mwInsertCodeBlock() {
   document.execCommand('insertHTML', false,
     `<pre style="background:#f5f5f5;border-radius:8px;padding:12px 16px;font-size:13px;font-family:monospace;color:#333;overflow-x:auto;margin:10px 0;white-space:pre-wrap;">${selectedText}</pre><p><br></p>`);
 }
-function _mwInsertLink() {
-  document.getElementById('meeting-editor').focus();
+function _mwOpenLinkInsert() {
+  const ed = document.getElementById('meeting-editor');
+  ed.focus();
   const sel = window.getSelection();
   const selectedText = sel && !sel.isCollapsed ? sel.toString() : '';
-  const url = prompt('링크 URL을 입력하세요:', 'https://');
-  if (!url || url === 'https://') return;
-  const label = selectedText || url;
+  _mwSaveRange();
+  document.getElementById('mw-linkinsert-label').value = selectedText;
+  document.getElementById('mw-linkinsert-url').value = '';
+  document.getElementById('mw-linkinsert-overlay').style.display = '';
+  document.getElementById('mw-linkinsert-sheet').style.display = '';
+  setTimeout(() => {
+    const target = selectedText ? 'mw-linkinsert-url' : 'mw-linkinsert-label';
+    document.getElementById(target).focus();
+  }, 100);
+}
+function _mwCloseLinkInsert() {
+  document.getElementById('mw-linkinsert-overlay').style.display = 'none';
+  document.getElementById('mw-linkinsert-sheet').style.display = 'none';
+}
+function _mwConfirmLinkInsert() {
+  let url = document.getElementById('mw-linkinsert-url').value.trim();
+  const label = document.getElementById('mw-linkinsert-label').value.trim();
+  if (!url) { showToastMessage('링크 URL을 입력해주세요'); return; }
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  _mwCloseLinkInsert();
+  _mwRestoreRange();
+  const text = label || url;
   document.execCommand('insertHTML', false,
-    `<a href="${url}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;">${label}</a>`);
+    `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#5084ff;text-decoration:underline;">${esc(text)}</a>`);
+  _mwSaveRange();
 }
 // ── 링크 리스트 삽입 (업체명 + URL 여러 줄 → 클릭 가능한 목록) ──────────────
 let _mwLinkListSavedRange = null;
