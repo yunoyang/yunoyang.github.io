@@ -374,8 +374,12 @@ button, input, textarea, select { font-family:var(--font); }
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background .15s, color .15s, border-color .15s;
+  transition: background .15s, color .15s, border-color .15s, transform .15s cubic-bezier(.34,1.56,.64,1);
   font-family: var(--font);
+  transform: scale(1);
+}
+.tab-btn:active {
+  transform: scale(.92);
 }
 .tab-btn .tab-label {
   display: inline;
@@ -385,6 +389,7 @@ button, input, textarea, select { font-family:var(--font); }
   border-color: #111;
   color: #fff;
   font-weight: 700;
+  transform: scale(1.04);
 }
 
 /* ===== 스타일 뷰어 — 제품 핀 ===== */
