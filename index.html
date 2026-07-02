@@ -3456,6 +3456,14 @@ button, input, textarea, select { font-family:var(--font); }
           <div class="info-view-divider"></div>
           <div class="info-view-card-inner" style="padding-top:10px;padding-bottom:14px;">
             <div id="iv-cost-rows"></div>
+            <div id="iv-cost-exclude-row" style="display:none;align-items:center;justify-content:space-between;padding:10px 0 0;margin-top:6px;border-top:1px solid #f2f2f5;">
+              <span style="font-size:13px;color:#888;">총 비용에서 가구&amp;가전 제외</span>
+              <label style="position:relative;display:inline-block;width:40px;height:24px;flex-shrink:0;">
+                <input type="checkbox" id="iv-cost-exclude-toggle" onchange="_toggleCostExcludeFurniture(this.checked)" style="opacity:0;width:0;height:0;">
+                <span id="iv-cost-exclude-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:24px;transition:.2s;"></span>
+                <span id="iv-cost-exclude-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -10106,16 +10114,27 @@ function _loadInfoView() {
     // 가구&가전 비용
     const furnitureItems = proj.furnitureItems || [];
     const furnitureCost = furnitureItems.filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s,it) => s+(it.price||0)*(it.qty||1), 0);
-    const total = procCost + furnitureCost;
+    const excludeFurniture = !!proj.costExcludeFurniture;
+    const total = procCost + (excludeFurniture ? 0 : furnitureCost);
+    const grandTotal = procCost + furnitureCost;
 
-    if (total > 0) {
+    if (grandTotal > 0) {
       const rows = [
         ...procDetails.map(d => `<div class="iv-cost-row"><span>${esc(d.label)}</span><span>${d.cost.toLocaleString()}원</span></div>`),
-        ...(furnitureCost > 0 ? [`<div class="iv-cost-row"><span>가구&amp;가전</span><span>${furnitureCost.toLocaleString()}원</span></div>`] : [])
+        ...(furnitureCost > 0 ? [`<div class="iv-cost-row"${excludeFurniture ? ' style="color:#bbb;text-decoration:line-through;"' : ''}><span>가구&amp;가전</span><span>${furnitureCost.toLocaleString()}원${excludeFurniture ? ' (제외)' : ''}</span></div>`] : [])
       ];
       costRows.innerHTML = rows.join('');
       costTotal.textContent = total.toLocaleString() + '원';
       costCard.style.display = '';
+      // 가구&가전 제외 토글 (가구비가 있을 때만 표시)
+      const excludeRow = document.getElementById('iv-cost-exclude-row');
+      const excludeToggle = document.getElementById('iv-cost-exclude-toggle');
+      const excludeSlider = document.getElementById('iv-cost-exclude-slider');
+      const excludeKnob = document.getElementById('iv-cost-exclude-knob');
+      if (excludeRow) excludeRow.style.display = furnitureCost > 0 ? 'flex' : 'none';
+      if (excludeToggle) excludeToggle.checked = excludeFurniture;
+      if (excludeSlider) excludeSlider.style.background = excludeFurniture ? 'var(--primary)' : '#e0e0e0';
+      if (excludeKnob) excludeKnob.style.transform = excludeFurniture ? 'translateX(16px)' : 'none';
       // 열림 상태 초기화 (항상 닫힌 채로 시작)
       const detail = document.getElementById('iv-cost-detail');
       const arrow = document.getElementById('iv-cost-arrow');
@@ -10124,6 +10143,25 @@ function _loadInfoView() {
     } else {
       costCard.style.display = 'none';
     }
+  }
+}
+function _toggleCostExcludeFurniture(checked) {
+  const proj = getProject(); if (!proj) return;
+  proj.costExcludeFurniture = checked;
+  save();
+  const slider = document.getElementById('iv-cost-exclude-slider');
+  const knob = document.getElementById('iv-cost-exclude-knob');
+  if (slider) slider.style.background = checked ? 'var(--primary)' : '#e0e0e0';
+  if (knob) knob.style.transform = checked ? 'translateX(16px)' : 'none';
+  // 상세 열림 상태 유지한 채 재렌더
+  const detail = document.getElementById('iv-cost-detail');
+  const wasOpen = detail && detail.style.display !== 'none';
+  _loadInfoView();
+  if (wasOpen) {
+    const d2 = document.getElementById('iv-cost-detail');
+    const arrow = document.getElementById('iv-cost-arrow');
+    if (d2) d2.style.display = '';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
 }
 
