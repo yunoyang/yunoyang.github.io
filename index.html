@@ -9769,7 +9769,7 @@ function renderCalendar() {
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const today = new Date(); today.setHours(0,0,0,0);
   const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const DOW    = ['일','월','화','수','목','금','토'];
+  const DOW    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
   // Build weeks (array of 7-slot arrays with day numbers or null)
   const weeks = [];
