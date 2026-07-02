@@ -8358,7 +8358,7 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row">
         <div class="work-card-name-area" onclick="toggleCardExpand('${p.id}')">
-          <span class="work-card-title" style="font-size:16px;font-weight:700;color:#555;">${esc(p.name)}</span>
+          <span class="work-card-title" style="font-size:16px;font-weight:500;color:#000;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
