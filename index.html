@@ -1725,9 +1725,6 @@ button, input, textarea, select { font-family:var(--font); }
 .cal-day-pname {
   font-size:13px; font-weight:500; color:#333; line-height:1.3;
 }
-.cal-day-detail {
-  font-size:14px; color:#888; line-height:1.3;
-}
 /* 전체일정 공정명 — 공정별 컬러 */
 .cal-day-proc.c0  .cal-day-pname { color:#38BDF8; }
 .cal-day-proc.c1  .cal-day-pname { color:#3EB6F8; }
@@ -9787,7 +9784,6 @@ function renderCalendar() {
   function getDayInfo(d, col) {
     if (d === null) return { html: '', bg: '' };
     const dateD = new Date(year, month, d);
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const active = proj.processes.filter(p => {
       if (!p.scheduleStart || !p.scheduleEnd) return false;
       return dateD >= new Date(p.scheduleStart+'T00:00:00') && dateD <= new Date(p.scheduleEnd+'T23:59:59');
@@ -9795,17 +9791,12 @@ function renderCalendar() {
     if (!active.length) return { html: '', bg: '' };
     const html = active.map(p => {
       const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
-      // 날짜가 지정된 상세내역 중 오늘 날짜와 일치하는 것만 표시
-      const todayDetails = (p.details||[]).filter(dt => dt.date === dateStr);
-      const detailsHtml = todayDetails.map(dt =>
-        `<div class="cal-day-detail">· ${esc(dt.desc)}</div>`
-      ).join('');
       // 2일 이상 이어지는 일정은 시작일(또는 주 첫 칸)에만 공정명 텍스트 노출
       const isStart = dateD.getTime() === new Date(p.scheduleStart+'T00:00:00').getTime();
       const isMultiDay = p.scheduleStart !== p.scheduleEnd;
       const showName = !isMultiDay || isStart || col === 0;
       const nameHtml = showName ? `<div class="cal-day-pname">${esc(p.name)}</div>` : '';
-      return `<div class="cal-day-proc ${cls}">${nameHtml}${detailsHtml}</div>`;
+      return `<div class="cal-day-proc ${cls}">${nameHtml}</div>`;
     }).join('');
     const firstCls = PROCESS_COLORS[active[0].type] || ('c'+(Math.abs(hashCode(active[0].name))%8));
     const hex = COLOR_HEX[firstCls] || '#3176ff';
