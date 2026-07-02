@@ -6102,12 +6102,15 @@ function updateSummary() {
     if (p.company) companies.add(p.company);
   });
   const furnitureCost = (proj.furnitureItems || []).filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-  const totalAll = totalCost + furnitureCost;
+  const excludeFurniture = !!proj.costExcludeFurniture;
+  const totalAll = totalCost + (excludeFurniture ? 0 : furnitureCost);
   document.getElementById('sum-cost').textContent = totalAll > 0 ? '약 ' + formatNum(totalAll) + '원' : '0원';
   const detailEl = document.getElementById('sum-cost-detail');
   if (detailEl) {
     if (totalCost > 0 && furnitureCost > 0) {
-      detailEl.textContent = `공사 ${formatNum(totalCost)}원 + 가구 ${formatNum(furnitureCost)}원`;
+      detailEl.textContent = excludeFurniture
+        ? `공사 ${formatNum(totalCost)}원 (가구 ${formatNum(furnitureCost)}원 제외)`
+        : `공사 ${formatNum(totalCost)}원 + 가구 ${formatNum(furnitureCost)}원`;
       detailEl.style.display = '';
     } else {
       detailEl.style.display = 'none';
@@ -10154,6 +10157,7 @@ function _toggleCostExcludeFurniture(checked) {
   const proj = getProject(); if (!proj) return;
   proj.costExcludeFurniture = checked;
   save();
+  updateSummary();
   const slider = document.getElementById('iv-cost-exclude-slider');
   const knob = document.getElementById('iv-cost-exclude-knob');
   if (slider) slider.style.background = checked ? 'var(--primary)' : '#e0e0e0';
