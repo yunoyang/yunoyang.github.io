@@ -13104,7 +13104,7 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 // 랜딩 배경 랜덤 적용
 (function() {
-  const bgs = ['landing-bg.jpg', 'landing-bg-2.jpg', 'landing-bg-3.jpg'];
+  const bgs = ['landing-bg.jpg', 'landing-bg-2.jpg'];
   const img = document.getElementById('landing-bg-img');
   if (img) img.src = bgs[Math.floor(Math.random() * bgs.length)];
 })();
