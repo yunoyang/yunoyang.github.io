@@ -1723,26 +1723,29 @@ button, input, textarea, select { font-family:var(--font); }
 /* Process entry inside a day cell */
 .cal-day-proc { margin-bottom:4px; }
 .cal-day-pname {
-  font-size:14px; font-weight:700; color:#333; line-height:1.3;
+  font-size:13px; font-weight:500; color:#333; line-height:1.3;
+}
+.cal-day-bar {
+  height:4px; border-radius:2px; background:currentColor; margin:5px 0;
 }
 .cal-day-detail {
   font-size:14px; color:#888; line-height:1.3;
 }
 /* 전체일정 공정명 — 공정별 컬러 */
-.cal-day-proc.c0  .cal-day-pname { color:#00C144; }
-.cal-day-proc.c1  .cal-day-pname { color:#10B569; }
-.cal-day-proc.c2  .cal-day-pname { color:#20A98F; }
-.cal-day-proc.c3  .cal-day-pname { color:#309CB4; }
-.cal-day-proc.c4  .cal-day-pname { color:#4090DA; }
-.cal-day-proc.c5  .cal-day-pname { color:#5084FF; }
-.cal-day-proc.c6  .cal-day-pname { color:#577CFF; }
-.cal-day-proc.c7  .cal-day-pname { color:#5E74FF; }
-.cal-day-proc.c8  .cal-day-pname { color:#646CFF; }
-.cal-day-proc.c9  .cal-day-pname { color:#6B64FF; }
-.cal-day-proc.c10 .cal-day-pname { color:#725CFF; }
-.cal-day-proc.c11 .cal-day-pname { color:#8E5AD6; }
-.cal-day-proc.c12 .cal-day-pname { color:#AA58AD; }
-.cal-day-proc.c13 .cal-day-pname { color:#C75584; }
+.cal-day-proc.c0  .cal-day-pname, .cal-day-proc.c0  .cal-day-bar { color:#00C144; }
+.cal-day-proc.c1  .cal-day-pname, .cal-day-proc.c1  .cal-day-bar { color:#10B569; }
+.cal-day-proc.c2  .cal-day-pname, .cal-day-proc.c2  .cal-day-bar { color:#20A98F; }
+.cal-day-proc.c3  .cal-day-pname, .cal-day-proc.c3  .cal-day-bar { color:#309CB4; }
+.cal-day-proc.c4  .cal-day-pname, .cal-day-proc.c4  .cal-day-bar { color:#4090DA; }
+.cal-day-proc.c5  .cal-day-pname, .cal-day-proc.c5  .cal-day-bar { color:#5084FF; }
+.cal-day-proc.c6  .cal-day-pname, .cal-day-proc.c6  .cal-day-bar { color:#577CFF; }
+.cal-day-proc.c7  .cal-day-pname, .cal-day-proc.c7  .cal-day-bar { color:#5E74FF; }
+.cal-day-proc.c8  .cal-day-pname, .cal-day-proc.c8  .cal-day-bar { color:#646CFF; }
+.cal-day-proc.c9  .cal-day-pname, .cal-day-proc.c9  .cal-day-bar { color:#6B64FF; }
+.cal-day-proc.c10 .cal-day-pname, .cal-day-proc.c10 .cal-day-bar { color:#725CFF; }
+.cal-day-proc.c11 .cal-day-pname, .cal-day-proc.c11 .cal-day-bar { color:#8E5AD6; }
+.cal-day-proc.c12 .cal-day-pname, .cal-day-proc.c12 .cal-day-bar { color:#AA58AD; }
+.cal-day-proc.c13 .cal-day-pname, .cal-day-proc.c13 .cal-day-bar { color:#C75584; }
 
 /* ===== DAY BOTTOM POPUP ===== */
 #dlg-day-popup {
@@ -9784,7 +9787,7 @@ function renderCalendar() {
   }
 
   // Get content HTML + bg color for a given day
-  function getDayInfo(d) {
+  function getDayInfo(d, col) {
     if (d === null) return { html: '', bg: '' };
     const dateD = new Date(year, month, d);
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -9800,7 +9803,14 @@ function renderCalendar() {
       const detailsHtml = todayDetails.map(dt =>
         `<div class="cal-day-detail">· ${esc(dt.desc)}</div>`
       ).join('');
-      return `<div class="cal-day-proc ${cls}"><div class="cal-day-pname">${esc(p.name)}</div>${detailsHtml}</div>`;
+      // 2일 이상 이어지는 일정은 시작일(또는 주 첫 칸)에만 공정명 텍스트 노출
+      const isStart = dateD.getTime() === new Date(p.scheduleStart+'T00:00:00').getTime();
+      const isMultiDay = p.scheduleStart !== p.scheduleEnd;
+      const showName = !isMultiDay || isStart || col === 0;
+      const nameHtml = showName
+        ? `<div class="cal-day-pname">${esc(p.name)}</div>`
+        : `<div class="cal-day-bar"></div>`;
+      return `<div class="cal-day-proc ${cls}">${nameHtml}${detailsHtml}</div>`;
     }).join('');
     const firstCls = PROCESS_COLORS[active[0].type] || ('c'+(Math.abs(hashCode(active[0].name))%8));
     const hex = COLOR_HEX[firstCls] || '#3176ff';
@@ -9818,7 +9828,7 @@ function renderCalendar() {
   let weeksHtml = '';
   weeks.forEach(wk => {
     // Pre-compute day info for this week
-    const dayInfos = wk.map(d => getDayInfo(d));
+    const dayInfos = wk.map((d, i) => getDayInfo(d, i));
 
     // Date number row
     let dateRow = '<tr>';
