@@ -7513,6 +7513,54 @@ function svTouchEnd(e) {
 
 // ===== PROCESS TIPS =====
 const DEFAULT_PROC_CHECKLISTS = {
+  '실측': [
+    {
+      section: '천장',
+      items: [
+        { id: 'chk_m_01', text: '조명/감지기/스프링클러/공조디퓨저 개수 및 사이즈 파악', checked: false },
+        { id: 'chk_m_02', text: '교체 예정 기물은 철거 전 배선 상태(스위치-조명 매칭) 확인 및 기록', checked: false },
+        { id: 'chk_m_03', text: '석고보드 내부 깊이 확인 (매입등 탈거 후 줄자 또는 베란다 천장 높이 비교)', checked: false },
+        { id: 'chk_m_04', text: '매입형 다운라이트 시공 가능 여부 확인', checked: false },
+        { id: 'chk_m_05', text: '시스템에어컨 매립 예정 시 여유 공간(약 16cm) 확보 여부 확인', checked: false },
+        { id: 'chk_m_06', text: '커튼 박스 내부 깊이 확인', checked: false },
+        { id: 'chk_m_07', text: '천장 콘크리트 여부 확인 (두드려서 체크)', checked: false },
+        { id: 'chk_m_08', text: '누수 흔적 확인 (특히 욕실·싱크대 상부)', checked: false },
+        { id: 'chk_m_09', text: '석고 삭음/부서짐 여부 확인', checked: false },
+      ]
+    },
+    {
+      section: '벽',
+      items: [
+        { id: 'chk_m_10', text: '비디오폰/콘센트/스위치/보일러컨트롤러/통신함/차단기함/세대스피커/점검구 위치 및 교체 여부 파악', checked: false },
+        { id: 'chk_m_11', text: '비디오폰 교체 시 목공 보강 필요 여부 확인', checked: false },
+        { id: 'chk_m_12', text: '차단기함·통신함 노출 여부 및 이동/은폐 계획 필요 여부 확인', checked: false },
+        { id: 'chk_m_13', text: '콘센트 개수 충분한지, 가구·가전 배치 기준으로 추가 필요 위치 체크', checked: false },
+        { id: 'chk_m_14', text: '도어 교체 여부 및 타입(스텝도어/히든도어/9mm 문선) 결정', checked: false },
+        { id: 'chk_m_15', text: '샤시 교체 여부 확인 (특히 알루미늄 샤시)', checked: false },
+        { id: 'chk_m_16', text: '외부 인접 벽면·모서리 곰팡이 여부 확인', checked: false },
+        { id: 'chk_m_17', text: '단열 작업 범위 확인', checked: false },
+      ]
+    },
+    {
+      section: '바닥',
+      items: [
+        { id: 'chk_m_18', text: '기존 바닥재 종류 확인 (마루/장판)', checked: false },
+        { id: 'chk_m_19', text: '장판인 경우 들춰서 하부 바닥재 존재 여부 확인', checked: false },
+      ]
+    },
+    {
+      section: '설비',
+      items: [
+        { id: 'chk_m_20', text: '욕실/싱크대/베란다 급수·배수 상태 확인', checked: false },
+        { id: 'chk_m_21', text: '보일러·분배기 사용연수 확인 (10~15년 이상 시 교체 권장) 및 누수 여부 확인', checked: false },
+        { id: 'chk_m_22', text: '각방 제어시스템 유무 확인 (없을 시 컨트롤러·구동기·UTP 배선 계획)', checked: false },
+        { id: 'chk_m_23', text: '에어컨 배관 경로 및 실외기 위치 계획 (베란다 확장 시 매립 가능 여부 포함)', checked: false },
+        { id: 'chk_m_24', text: '인터넷 선 인입 경로 확인', checked: false },
+        { id: 'chk_m_25', text: '도시가스 배관 철거 여부 확인 (인덕션 사용 시)', checked: false },
+        { id: 'chk_m_26', text: '도시가스 계량기 이동 필요 여부 확인 (베란다 확장/타워형 세탁기 설치 등)', checked: false },
+      ]
+    },
+  ],
   '철거': [
     {
       section: '1. 구조 변경과 내력벽 확인',
