@@ -1360,14 +1360,16 @@ button, input, textarea, select { font-family:var(--font); }
   padding:0 20px 80px;
   display:flex;
   flex-direction:column;
+  gap:10px;
 }
 .work-card {
-  border-bottom:1px solid #e8e8e8;
+  border:1px solid #eee;
+  border-radius:16px;
   will-change:transform; overflow:hidden;
   background:#fff;
 }
 .work-card-row {
-  display:flex; align-items:center; padding:28px 0; gap:8px;
+  display:flex; align-items:center; padding:18px 20px; gap:8px;
   overflow:hidden; flex-shrink:0; cursor:pointer;
 }
 .work-card-name-area {
@@ -1381,7 +1383,7 @@ button, input, textarea, select { font-family:var(--font); }
 .work-card-fold-area {
   display:flex; align-items:center; gap:8px; flex-shrink:0;
 }
-.work-card-cost-sm { font-size:16px; font-weight:500; color:#000; }
+.work-card-cost-sm { display:none; }
 .work-card.expanded .work-card-cost-sm { display:none; }
 .work-card-fold-btn {
   background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; color:#555;
@@ -1393,7 +1395,7 @@ button, input, textarea, select { font-family:var(--font); }
   transition:max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
 }
 .work-card.expanded .work-card-body {
-  max-height:600px; overflow-y:auto; opacity:1; padding:0 0 16px;
+  max-height:600px; overflow-y:auto; opacity:1; padding:0 20px 16px;
 }
 .work-card-body .work-field { pointer-events:none; }
 .work-card-body .f-value { cursor:pointer; }
@@ -1623,10 +1625,16 @@ button, input, textarea, select { font-family:var(--font); }
 .d-cost { font-size:16px; font-weight:400; color:#222; white-space:nowrap; }
 .d-chev { color:#555; flex-shrink:0; }
 .detail-empty { text-align:center; padding:16px 0; font-size:14px; color:#ccc; }
-.proc-card-actions { display:flex; align-items:center; justify-content:center; padding:6px 0; }
+.proc-card-actions { display:flex; align-items:center; justify-content:center; padding-top:14px; }
 .proc-delete-btn { display:flex; align-items:center; padding:8px 10px; color:#111; cursor:pointer; background:none; border:none; border-radius:8px; }
 .proc-delete-btn:active { color:#e03535; background:#fff0f0; }
-.proc-detail-link { display:flex; align-items:center; gap:4px; padding:8px 10px; font-size:14px; font-weight:600; color:#555555; cursor:pointer; background:none; border:none; font-family:var(--font); border-radius:8px; }
+.proc-detail-link {
+  display:flex; align-items:center; justify-content:center; width:100%;
+  height:44px; font-size:14px; font-weight:500; color:#555;
+  cursor:pointer; background:#f5f5f7; border:none; border-radius:12px;
+  font-family:var(--font);
+}
+.proc-detail-link:active { background:#ececef; }
 /* 상세내역 다이얼로그 날짜 영역 */
 .detail-date-section { margin-top:4px; }
 .detail-date-label { font-size:13px; color:#888; margin-bottom:5px; }
@@ -8461,7 +8469,7 @@ function renderWorkCards() {
           <span class="f-value${p.scheduleStart ? ' filled' : ''}">${esc(schedDisplay)}</span>
         </div>
         <div class="work-field">
-          <span class="f-label">담당 업체</span>
+          <span class="f-label">참여 업체</span>
           <span class="f-value${(p.companyData||p.company) ? ' filled' : ''}">${esc(compDisplay)}</span>
         </div>
         <div class="detail-header" style="padding:14px 0 4px;">
@@ -8480,9 +8488,8 @@ function renderWorkCards() {
           </div>`).join('')}
           ${p.details.length > 3 ? `<div style="text-align:center;padding:4px 0 2px;font-size:13px;color:#555555;letter-spacing:2px;">···</div>` : ''}
         </div>` : `<div class="detail-empty" style="font-size:14px;color:#bbb;padding:10px 0;">상세내역이 없습니다</div>`}
-        <div style="height:1px;background:#e0e0e0;margin:8px 0 0;"></div>
         <div class="proc-card-actions">
-          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기 <svg class="icon" width="15" height="15" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-right"/></svg></button>
+          <button class="proc-detail-link" onclick="event.stopPropagation();openProcDetailScreen('${p.id}')">상세보기</button>
         </div>
       </div>
     </div>`;
