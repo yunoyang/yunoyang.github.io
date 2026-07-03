@@ -8769,8 +8769,8 @@ function _renderProcChecklist(procId) {
     return;
   }
 
-  // 최초 진입 시 기본 체크리스트 자동 세팅
-  if (!proc.checklist) {
+  // 최초 진입 시(또는 비어있는 경우) 기본 체크리스트 자동 세팅
+  if (!proc.checklist || proc.checklist.length === 0) {
     const lookupKey = proc.type || proc.name || '';
     const def = _getDefaultChecklist(lookupKey);
     if (def) {
