@@ -8824,15 +8824,22 @@ function _renderProcChecklist(procId) {
       <!-- 섹션별 체크리스트 -->
       ${checklist.map((sec, si) => `
         <div style="background:#fff;border-radius:16px;margin-bottom:10px;border:1px solid #eef0f5;overflow:hidden;">
-          <div style="padding:14px 16px 10px;font-size:18px;font-weight:600;color:#111;border-bottom:1px solid #f5f7fa;">${esc(sec.section)}</div>
-          ${sec.items.map((it, ii) => `
+          <div style="padding:14px 16px 10px;font-size:16px;font-weight:500;color:#111;border-bottom:1px solid #f5f7fa;">${esc(sec.section)}</div>
+          ${sec.items.map((it, ii) => {
+            const parts = it.text.split(' — ');
+            const mainText = parts[0];
+            const subText = parts[1] || '';
+            return `
             <label style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid #f7f8fa;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleCheckItem('${procId}',${si},${ii})">
               <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;">
                 ${it.checked ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
               </div>
-              <span style="font-size:16px;font-weight:500;color:${it.checked?'#aaa':'#222'};line-height:1.55;text-decoration:${it.checked?'line-through':'none'};flex:1;">${esc(it.text)}</span>
+              <span style="flex:1;text-decoration:${it.checked?'line-through':'none'};">
+                <span style="display:block;font-size:16px;font-weight:500;color:${it.checked?'#aaa':'#222'};line-height:1.5;">${esc(mainText)}</span>
+                ${subText ? `<span style="display:block;font-size:14px;font-weight:400;color:${it.checked?'#ccc':'#999'};line-height:1.5;margin-top:2px;">${esc(subText)}</span>` : ''}
+              </span>
             </label>
-          `).join('')}
+          `;}).join('')}
           ${canEdit ? `
           <div style="padding:10px 14px;">
             <button onclick="_addCheckItem('${procId}',${si})" style="width:100%;padding:9px;background:#f7f8fa;border:1.5px dashed #d0d5e0;border-radius:10px;font-size:13px;color:#aaa;cursor:pointer;font-family:var(--font);">+ 항목 추가</button>
