@@ -8446,8 +8446,8 @@ function renderWorkCards() {
     const isExpanded = _expandedCards.has(p.id);
     return `
     <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
-      <div class="work-card-row">
-        <div class="work-card-name-area" onclick="toggleCardExpand('${p.id}')">
+      <div class="work-card-row" onclick="toggleCardExpand('${p.id}')">
+        <div class="work-card-name-area">
           <span class="work-card-title" style="font-size:16px;font-weight:500;color:#000;">${esc(p.name)}</span>
         </div>
         <div class="work-card-fold-area">
