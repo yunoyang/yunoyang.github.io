@@ -8262,7 +8262,7 @@ function confirmContractorSelect() {
   const proc = getProject()?.processes.find(p => p.id === _compSearchProcId);
   if (proc) {
     proc.company = c.name;
-    proc.companyData = { name: c.name, phone: c.phone||'', source: c.source||'db', area: c.area||'', rating: c.rating||0 };
+    proc.companyData = { name: c.name, phone: c.phone||'', source: c.source||'db', area: c.area||'', rating: c.rating||0, contractorId: c.id||'' };
     save(); renderAll();
   }
   closeDialog('dlg-company-search');
