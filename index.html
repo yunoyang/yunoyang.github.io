@@ -13590,6 +13590,7 @@ function _closeFurnitureCategoryDetail() {
   _furnitureCategoryView = null;
   const scr = document.getElementById('screen-furniture-detail');
   if (scr) { scr.style.transform = 'translateY(100%)'; scr.style.pointerEvents = 'none'; }
+  _renderFurnitureCategoryGrid();
 }
 
 function _renderFurnitureCategoryDetail(cat) {
@@ -13653,6 +13654,7 @@ function _toggleFurniturePending(id) {
   save();
   _syncFurnitureToCloud(proj);
   renderFurnitureTab();
+  updateSummary();
 }
 
 
