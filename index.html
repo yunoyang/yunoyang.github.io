@@ -4523,10 +4523,12 @@ button, input, textarea, select { font-family:var(--font); }
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span id="furniture-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
-    <span id="furniture-detail-count" style="font-size:13px;color:#aaa;"></span>
-    <button onclick="_openAddFurnitureItemForCurrentCategory()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
+    <div style="display:flex;align-items:center;gap:2px;">
+      <span id="furniture-detail-count" style="font-size:13px;color:#aaa;"></span>
+      <button onclick="_openAddFurnitureItemForCurrentCategory()" style="width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
   </div>
   <div id="furniture-detail-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px;"></div>
 </div>
