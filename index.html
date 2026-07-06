@@ -11984,6 +11984,30 @@ async function _syncFurnitureToCloud(proj) {
   }
 }
 
+// 도면 이미지만 Firestore에 업데이트 — 협업자(편집자)도 반영되도록 별도 sync
+async function _syncFloorplanToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  if (!canWrite) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const editedImage = (proj.floorplanEditedImage && proj.floorplanEditedImage.startsWith('data:')) ? null : (proj.floorplanEditedImage || null);
+    const editedImages = (proj.floorplanEditedImages || []).map(img => (img && img.startsWith('data:')) ? null : img);
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.floorplanImages': proj.floorplanImages || [null, null, null],
+      'projectData.floorplanImage': proj.floorplanImage || null,
+      'projectData.floorplanEditedImage': editedImage,
+      'projectData.floorplanEditedImages': editedImages,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+  } catch(e) {
+    console.error('[floorplanSync] ❌', e.code, e.message);
+  }
+}
+
 // contentLinks만 Firestore에 업데이트 — read-merge-write로 덮어쓰기 방지
 async function _syncContentLinksToCloud(proj) {
   if (!proj?.cloudId) return;
@@ -12812,6 +12836,7 @@ function _fpSlotUpload(e, idx) {
     if (idx === 0) proj.floorplanImage = finalSrc;
     try { localStorage.setItem(`vb_fpi_${proj.id}`, JSON.stringify(proj.floorplanImages)); } catch(_) {}
     save();
+    _syncFloorplanToCloud(proj);
     showToastMessage('✅ 도면 이미지가 저장됐습니다');
     _renderFpSlots();
     if (e.target) e.target.value = '';
@@ -12830,6 +12855,7 @@ function _fpSlotDelete(e, idx) {
       if (!proj.floorplanImage) delete proj.floorplanImage;
     }
     save();
+    _syncFloorplanToCloud(proj);
   }
   _renderFpSlots();
 }
@@ -12889,6 +12915,7 @@ function clearFloorplan(e) {
     delete proj.floorplanImage;
     proj.floorplanImages = [null, null, null];
     save();
+    _syncFloorplanToCloud(proj);
   }
   _renderFpSlots();
 }
@@ -16939,16 +16966,19 @@ async function fpSave() {
         const downloadUrl = await ref.getDownloadURL();
         _setEditedImage(downloadUrl);
         save();
+        _syncFloorplanToCloud(proj);
         _loadInfoView();
       } catch(storageErr) {
         console.warn('Storage 업로드 실패, 로컬 저장으로 전환:', storageErr.message);
         _setEditedImage(dataURL);
         save();
+        _syncFloorplanToCloud(proj);
         _loadInfoView();
       }
     } else {
       _setEditedImage(dataURL);
       save();
+      _syncFloorplanToCloud(proj);
       _loadInfoView();
     }
 
