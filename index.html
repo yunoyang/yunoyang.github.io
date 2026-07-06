@@ -6820,7 +6820,7 @@ function addStyleImage(room, item) {
   if (!proj) return;
   if (!proj.styleImages) proj.styleImages = {};
   if (!proj.styleImages[room]) proj.styleImages[room] = [];
-  proj.styleImages[room].push(item);
+  proj.styleImages[room].unshift(item);
   try { save(); } catch(e) { console.warn('save failed:', e); }
   // 공동작업자는 save()에서 Firestore 못 씀 → projectData.styleImages 직접 업데이트
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
@@ -6836,8 +6836,7 @@ function addStyleImage(room, item) {
   // 뷰어가 현재 같은 방으로 열려있으면 새 이미지로 이동하며 갱신
   const svScreen = document.getElementById('style-viewer-screen');
   if (svScreen && svScreen.style.display !== 'none' && styleViewerRoom === room) {
-    const newIdx = (proj.styleImages[room].length - 1);
-    openStyleViewer(room, newIdx);
+    openStyleViewer(room, 0);
   }
 }
 
@@ -13913,7 +13912,7 @@ function _saveFurnitureItem() {
     if (it) { Object.assign(it, fields); it.updatedAt = Date.now(); savedItem = it; }
   } else {
     savedItem = { id: 'fi_' + Date.now(), ...fields, createdAt: Date.now() };
-    proj.furnitureItems.push(savedItem);
+    proj.furnitureItems.unshift(savedItem);
   }
   save();
   _syncFurnitureToCloud(proj);
