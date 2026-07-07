@@ -11560,23 +11560,20 @@ function _mergeLocalPreserve(cp, localProjs) {
       ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cpLinks;
   }
-  // furnitureItems: id 기준 합집합 — 타임스탬프 최신 우선
+  // furnitureItems: id 기준 합집합 — 타임스탬프 최신 우선, 새 로컬 항목은 맨 앞 유지
   const cpFurniture = cp.furnitureItems || [];
   const localFurniture = local.furnitureItems || [];
   if (cpFurniture.length || localFurniture.length) {
-    const fmap = new Map();
-    cpFurniture.forEach(it => fmap.set(it.id, it));
-    localFurniture.forEach(it => {
-      const cloud = fmap.get(it.id);
-      if (!cloud) {
-        fmap.set(it.id, it);
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = it.updatedAt || it.createdAt || 0;
-        if (localTs > cloudTs) fmap.set(it.id, it);
-      }
+    const cpIds = new Set(cpFurniture.map(it => it.id));
+    const newLocalOnly = localFurniture.filter(it => !cpIds.has(it.id));
+    const existingMerged = cpFurniture.map(ci => {
+      const li = localFurniture.find(it => it.id === ci.id);
+      if (!li) return ci;
+      const cloudTs = ci.updatedAt || ci.createdAt || 0;
+      const localTs = li.updatedAt || li.createdAt || 0;
+      return localTs > cloudTs ? li : ci;
     });
-    merged.furnitureItems = Array.from(fmap.values());
+    merged.furnitureItems = [...newLocalOnly, ...existingMerged];
   }
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
@@ -11667,20 +11664,18 @@ async function _fetchFurnitureFromCloud() {
     if (!snap.exists) return;
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
     const localFurniture = proj.furnitureItems || [];
-    const fmap = new Map();
-    cloudFurniture.forEach(it => fmap.set(it.id, it));
-    // 타임스탬프 기준: 로컬이 더 최신일 때만 로컬 우선
-    localFurniture.forEach(it => {
-      const cloud = fmap.get(it.id);
-      if (!cloud) {
-        fmap.set(it.id, it); // 로컬 전용 (미업로드)
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = it.updatedAt || it.createdAt || 0;
-        if (localTs > cloudTs) fmap.set(it.id, it);
-      }
+    const cloudIds = new Set(cloudFurniture.map(it => it.id));
+    // 로컬 전용(미업로드) 새 항목은 맨 앞에 유지
+    const newLocalOnly = localFurniture.filter(it => !cloudIds.has(it.id));
+    // 타임스탬프 기준: 로컬이 더 최신일 때만 로컬 우선, 클라우드 순서는 유지
+    const existingMerged = cloudFurniture.map(ci => {
+      const li = localFurniture.find(it => it.id === ci.id);
+      if (!li) return ci;
+      const cloudTs = ci.updatedAt || ci.createdAt || 0;
+      const localTs = li.updatedAt || li.createdAt || 0;
+      return localTs > cloudTs ? li : ci;
     });
-    const merged = Array.from(fmap.values());
+    const merged = [...newLocalOnly, ...existingMerged];
     // id + updatedAt 기준으로 변경 여부 감지
     const localKey = localFurniture.map(i => i.id + (i.updatedAt || i.createdAt || 0)).sort().join();
     const mergedKey = merged.map(i => i.id + (i.updatedAt || i.createdAt || 0)).sort().join();
@@ -12239,7 +12234,7 @@ function _startCollabListener(cloudId) {
         }
         return result;
       });
-      merged[r] = [...cloudWithPins, ...li.filter(x => !seen.has(x.url))];
+      merged[r] = [...li.filter(x => !seen.has(x.url)), ...cloudWithPins];
     });
     proj.styleImages = merged;
     // contentLinks: 클라우드와 로컬 합집합 (id 기준 중복 제거, 로컬 전용 항목 보존)
@@ -12249,21 +12244,18 @@ function _startCollabListener(cloudId) {
     proj.contentLinks = extraLocal.length
       ? [...cloudLinks, ...extraLocal].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
       : cloudLinks;
-    // furnitureItems: 타임스탬프 기준 최신 우선 merge
+    // furnitureItems: 타임스탬프 기준 최신 우선 merge, 새 로컬 항목은 맨 앞 유지
     const remoteFurniture = remote.furnitureItems || [];
-    const furnitureMap = new Map();
-    remoteFurniture.forEach(it => furnitureMap.set(it.id, it));
-    localFurnitureItems.forEach(it => {
-      const cloud = furnitureMap.get(it.id);
-      if (!cloud) {
-        furnitureMap.set(it.id, it);
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = it.updatedAt || it.createdAt || 0;
-        if (localTs > cloudTs) furnitureMap.set(it.id, it);
-      }
+    const remoteFurnitureIds = new Set(remoteFurniture.map(it => it.id));
+    const newLocalOnlyFurniture = localFurnitureItems.filter(it => !remoteFurnitureIds.has(it.id));
+    const existingMergedFurniture = remoteFurniture.map(ci => {
+      const li = localFurnitureItems.find(it => it.id === ci.id);
+      if (!li) return ci;
+      const cloudTs = ci.updatedAt || ci.createdAt || 0;
+      const localTs = li.updatedAt || li.createdAt || 0;
+      return localTs > cloudTs ? li : ci;
     });
-    proj.furnitureItems = Array.from(furnitureMap.values());
+    proj.furnitureItems = [...newLocalOnlyFurniture, ...existingMergedFurniture];
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
@@ -13547,7 +13539,10 @@ function _getFurnitureItems() {
   const proj = getProject();
   if (!proj) return [];
   if (!proj.furnitureItems) proj.furnitureItems = [];
-  return proj.furnitureItems.filter(it => !it.deleted);
+  // 방어적 정렬: 클라우드 병합 등으로 순서가 꼬여도 항상 최신(createdAt)순으로 노출
+  return proj.furnitureItems
+    .filter(it => !it.deleted)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
 function _getFurnitureStatus(it) {
