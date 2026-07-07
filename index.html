@@ -11630,7 +11630,7 @@ async function _fetchStyleFromCloud() {
         const ri = remote.styleImages[r] || [];
         const li = local[r] || [];
         const seen = new Set(ri.map(x => x.url));
-        merged[r] = [...ri, ...li.filter(x => !seen.has(x.url))];
+        merged[r] = [...li.filter(x => !seen.has(x.url)), ...ri];
       });
       if (JSON.stringify(merged) !== JSON.stringify(local)) { proj.styleImages = merged; changed = true; }
     }
@@ -11836,19 +11836,22 @@ function _syncProjToCloud(proj) {
       projData.contentLinks = _localLinks;
     }
     // furnitureItems: 클라우드에 다른 기기가 추가한 항목 보존 (read-merge-write)
+    // 새로 추가된(클라우드에 없는) 로컬 항목은 맨 앞에 유지 — 최신순 정렬 보존
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
     if (cloudFurniture.length) {
-      const fmap = new Map();
-      cloudFurniture.forEach(it => fmap.set(it.id, it));
-      (proj.furnitureItems || []).forEach(it => fmap.set(it.id, it)); // 로컬 우선
-      projData.furnitureItems = Array.from(fmap.values());
+      const localFurniture = proj.furnitureItems || [];
+      const cloudIds = new Set(cloudFurniture.map(it => it.id));
+      const localOnly = localFurniture.filter(it => !cloudIds.has(it.id));
+      const merged = cloudFurniture.map(ci => localFurniture.find(li => li.id === ci.id) || ci);
+      projData.furnitureItems = [...localOnly, ...merged];
     }
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
       m.content = _stripBase64FromHtml(m.content);
     });
-    // styleImages: 클라우드 우선 + 로컬 전용 항목 병합 (base64 제거 포함)
+    // styleImages: 클라우드 + 로컬 전용 항목 병합 (base64 제거 포함)
+    // 새로 추가된(클라우드에 없는) 로컬 이미지는 맨 앞에 유지 — 최신순 정렬 보존
     const _cloudImgs = snap.data()?.projectData?.styleImages || {};
     const _localImgs = proj.styleImages || {};
     const _mergedStyleImages = {};
@@ -11858,7 +11861,7 @@ function _syncProjToCloud(proj) {
       const li = (_localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
       const cloudUrls = new Set(ci.map(x => x.url));
       const localOnly = li.filter(x => !cloudUrls.has(x.url));
-      const m = [...ci, ...localOnly];
+      const m = [...localOnly, ...ci];
       if (m.length) _mergedStyleImages[r] = m;
     });
     projData.styleImages = _mergedStyleImages;
@@ -11968,20 +11971,18 @@ async function _syncFurnitureToCloud(proj) {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
     const localFurniture = proj.furnitureItems || [];
-    const fmap = new Map();
-    cloudFurniture.forEach(it => fmap.set(it.id, it));
-    // 타임스탬프 기준: 로컬이 더 최신이거나 새 항목만 로컬 우선
-    localFurniture.forEach(it => {
-      const cloud = fmap.get(it.id);
-      if (!cloud) {
-        fmap.set(it.id, it);
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = it.updatedAt || it.createdAt || 0;
-        if (localTs >= cloudTs) fmap.set(it.id, it);
-      }
+    const cloudIds = new Set(cloudFurniture.map(it => it.id));
+    // 새로 추가된(클라우드에 없는) 로컬 항목은 맨 앞에 유지 — 최신순 정렬 보존
+    const localOnly = localFurniture.filter(it => !cloudIds.has(it.id));
+    // 타임스탬프 기준: 로컬이 더 최신이면 로컬 버전 사용, 클라우드 순서는 유지
+    const existing = cloudFurniture.map(ci => {
+      const li = localFurniture.find(it => it.id === ci.id);
+      if (!li) return ci;
+      const cloudTs = ci.updatedAt || ci.createdAt || 0;
+      const localTs = li.updatedAt || li.createdAt || 0;
+      return localTs >= cloudTs ? li : ci;
     });
-    const merged = Array.from(fmap.values());
+    const merged = [...localOnly, ...existing];
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.furnitureItems': merged,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
