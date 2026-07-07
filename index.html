@@ -6631,6 +6631,15 @@ function renderStyleTab() {
   }
   const proj = getProject();
   const _badges = proj ? _getBadges(proj.cloudId || proj.id) : {};
+  // 방어적 정렬: 과거 병합 버그 등으로 순서가 꼬인 경우에도 항상 최신(createdAt)순으로 교정
+  let _reordered = false;
+  Object.keys(data).forEach(room => {
+    const arr = data[room];
+    if (!Array.isArray(arr) || arr.length < 2) return;
+    const sorted = [...arr].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (JSON.stringify(sorted) !== JSON.stringify(arr)) { data[room] = sorted; _reordered = true; }
+  });
+  if (_reordered) { try { save(); } catch(e) {} }
   const container = document.getElementById('style-rooms-container');
   container.innerHTML = rooms.map(room => {
     const r = room.replace(/'/g, "\\'");
@@ -6801,7 +6810,7 @@ async function handleStyleFileSelect(e) {
           thumbTask.snapshot.ref.getDownloadURL()
         ]);
 
-        addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '' });
+        addStyleImage(room, { url, thumb, type: 'upload', uploadedBy: state.user?.email || '', createdAt: Date.now() });
         done++;
         continue;
       } catch(err) {
@@ -6817,7 +6826,7 @@ async function handleStyleFileSelect(e) {
       _compressImage(file, 600, 0.82)
     ]);
     if (dataUrl) {
-      addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '' });
+      addStyleImage(room, { url: dataUrl, thumb: thumbUrl || dataUrl, type: 'upload', uploadedBy: state.user?.email || '', createdAt: Date.now() });
       done++;
     }
   }
