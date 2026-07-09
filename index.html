@@ -1647,6 +1647,11 @@ button, input, textarea, select { font-family:var(--font); }
   font-family:var(--font);
 }
 .proc-detail-link:active { background:#ececef; }
+/* 상태(임박/공사중) 카드의 상세보기 버튼 — Figma 상태 카드 버튼 디자인 */
+.work-card.upcoming .proc-detail-link {
+  background:#e6eaf4; border:1px solid #dcdfe6; color:#000; font-weight:600;
+}
+.work-card.upcoming .proc-detail-link:active { background:#dbe0ee; }
 /* 상세내역 다이얼로그 날짜 영역 */
 .detail-date-section { margin-top:4px; }
 .detail-date-label { font-size:13px; color:#888; margin-bottom:5px; }
