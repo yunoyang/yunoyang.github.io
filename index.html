@@ -1370,31 +1370,17 @@ button, input, textarea, select { font-family:var(--font); }
 }
 /* 시공 시작일이 다가오면(2일 전부터) 강조되는 카드 상태 */
 .work-card.upcoming {
-  border:0;
+  border-color:#4e92ff;
   background:#f8faff;
-  box-shadow:0 4px 16px rgba(78,146,255,0.12);
+  animation:cardBlueGlow 2.4s ease-in-out infinite;
 }
-/* 상태 카드: 흐르는 그라디언트 스트로크 (테두리를 도는 애니메이션) */
-.work-card.upcoming::before {
-  content:'';
-  position:absolute; inset:0;
-  border-radius:inherit;
-  padding:2px;
-  background:linear-gradient(115deg, #4e92ff, #8ec5ff, #0088ff, #4e92ff, #8ec5ff, #4e92ff);
-  background-size:300% 100%;
-  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-          mask-composite:exclude;
-  animation:cardStrokeFlow 3s linear infinite;
-  pointer-events:none;
-  z-index:2;
-}
-@keyframes cardStrokeFlow {
-  to { background-position:300% 0; }
+/* 상태 카드: 블루 4% 쉐도우가 커졌다 작아지는 움직임 */
+@keyframes cardBlueGlow {
+  0%,100% { box-shadow:0 2px 8px 0 rgba(0,136,255,0.04); }
+  50%     { box-shadow:0 8px 26px 6px rgba(0,136,255,0.04); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .work-card.upcoming::before { animation:none; }
+  .work-card.upcoming { animation:none; box-shadow:0 4px 16px rgba(0,136,255,0.04); }
 }
 .work-card-dday-badge {
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
