@@ -8819,6 +8819,24 @@ function _renderProcChecklist(procId) {
     } else {
       proc.checklist = [];
     }
+  } else {
+    // 기존에 저장된 체크리스트에도 새로 추가된 reason(체크 이유 설명)을 텍스트 기준으로 보강
+    const lookupKey = proc.type || proc.name || '';
+    const def = _getDefaultChecklist(lookupKey);
+    if (def) {
+      let _reasonAdded = false;
+      const defItemByText = new Map();
+      def.forEach(sec => sec.items.forEach(it => defItemByText.set(sec.section + '||' + it.text, it)));
+      proc.checklist.forEach(sec => {
+        sec.items.forEach(it => {
+          if (!it.reason) {
+            const match = defItemByText.get(sec.section + '||' + it.text);
+            if (match?.reason) { it.reason = match.reason; _reasonAdded = true; }
+          }
+        });
+      });
+      if (_reasonAdded) save();
+    }
   }
 
   const checklist = proc.checklist;
