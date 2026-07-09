@@ -11854,6 +11854,10 @@ function _syncProjToCloud(proj) {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
       m.content = _stripBase64FromHtml(m.content);
     });
+    // furnitureItems 이미지도 base64면 제거 (Storage 업로드 실패 시 로컬 폴백된 대용량 data URL)
+    (projData.furnitureItems || []).forEach(it => {
+      if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
+    });
     // styleImages: 클라우드 + 로컬 전용 항목 병합 (base64 제거 포함)
     // 새로 추가된(클라우드에 없는) 로컬 이미지는 맨 앞에 유지 — 최신순 정렬 보존
     const _cloudImgs = snap.data()?.projectData?.styleImages || {};
@@ -11987,8 +11991,10 @@ async function _syncFurnitureToCloud(proj) {
       return localTs >= cloudTs ? li : ci;
     });
     const merged = [...localOnly, ...existing];
+    // base64 이미지는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
+    const mergedForCloud = merged.map(it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
-      'projectData.furnitureItems': merged,
+      'projectData.furnitureItems': mergedForCloud,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
       'meta.updatedBySessionId': _sessionId,
