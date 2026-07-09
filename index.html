@@ -7555,47 +7555,47 @@ const DEFAULT_PROC_CHECKLISTS = {
     {
       section: '천장',
       items: [
-        { id: 'chk_m_01', text: '조명/감지기/스프링클러/공조디퓨저 개수 및 사이즈 파악', checked: false },
-        { id: 'chk_m_02', text: '교체 예정 기물은 철거 전 배선 상태(스위치-조명 매칭) 확인 및 기록', checked: false },
-        { id: 'chk_m_03', text: '석고보드 내부 깊이 확인 (매입등 탈거 후 줄자 또는 베란다 천장 높이 비교)', checked: false },
-        { id: 'chk_m_04', text: '매입형 다운라이트 시공 가능 여부 확인', checked: false },
-        { id: 'chk_m_05', text: '시스템에어컨 매립 예정 시 여유 공간(약 16cm) 확보 여부 확인', checked: false },
-        { id: 'chk_m_06', text: '커튼 박스 내부 깊이 확인', checked: false },
-        { id: 'chk_m_07', text: '천장 콘크리트 여부 확인 (두드려서 체크)', checked: false },
-        { id: 'chk_m_08', text: '누수 흔적 확인 (특히 욕실·싱크대 상부)', checked: false },
-        { id: 'chk_m_09', text: '석고 삭음/부서짐 여부 확인', checked: false },
+        { id: 'chk_m_01', text: '조명/감지기/스프링클러/공조디퓨저 개수 및 사이즈 파악', checked: false, reason: '조명 계획·목공 설계 시 위치를 그대로 반영하지 않으면 재시공이 필요할 수 있어요' },
+        { id: 'chk_m_02', text: '교체 예정 기물은 철거 전 배선 상태(스위치-조명 매칭) 확인 및 기록', checked: false, reason: '철거 후에는 어떤 스위치가 어떤 조명에 연결됐는지 알 수 없어져 재배선 비용이 추가로 들 수 있어요' },
+        { id: 'chk_m_03', text: '석고보드 내부 깊이 확인 (매입등 탈거 후 줄자 또는 베란다 천장 높이 비교)', checked: false, reason: '매립형 조명·에어컨 설치 가능 여부와 여유 공간을 미리 알아야 시공 중 변경을 막을 수 있어요' },
+        { id: 'chk_m_04', text: '매입형 다운라이트 시공 가능 여부 확인', checked: false, reason: '천장 속 공간이 부족하면 다운라이트 대신 직부등으로 계획을 바꿔야 해요' },
+        { id: 'chk_m_05', text: '시스템에어컨 매립 예정 시 여유 공간(약 16cm) 확보 여부 확인', checked: false, reason: '공간이 부족하면 매립형 대신 벽걸이형으로 변경해야 하고, 이는 예산과 배치에 큰 영향을 줘요' },
+        { id: 'chk_m_06', text: '커튼 박스 내부 깊이 확인', checked: false, reason: '깊이가 얕으면 원하는 커튼레일·시스템창호를 못 넣을 수 있어요' },
+        { id: 'chk_m_07', text: '천장 콘크리트 여부 확인 (두드려서 체크)', checked: false, reason: '콘크리트가 아니면 하중을 견디는 매립 조명·설비 시공 방식이 달라져요' },
+        { id: 'chk_m_08', text: '누수 흔적 확인 (특히 욕실·싱크대 상부)', checked: false, reason: '공사 중 발견되면 별도 방수 공정과 추가 비용이 발생해요 — 미리 알아야 견적에 반영 가능해요' },
+        { id: 'chk_m_09', text: '석고 삭음/부서짐 여부 확인', checked: false, reason: '도배·마감 전에 보강하지 않으면 마감재가 들뜨거나 떨어질 수 있어요' },
       ]
     },
     {
       section: '벽',
       items: [
-        { id: 'chk_m_10', text: '비디오폰/콘센트/스위치/보일러컨트롤러/통신함/차단기함/세대스피커/점검구 위치 및 교체 여부 파악', checked: false },
-        { id: 'chk_m_11', text: '비디오폰 교체 시 목공 보강 필요 여부 확인', checked: false },
-        { id: 'chk_m_12', text: '차단기함·통신함 노출 여부 및 이동/은폐 계획 필요 여부 확인', checked: false },
-        { id: 'chk_m_13', text: '콘센트 개수 충분한지, 가구·가전 배치 기준으로 추가 필요 위치 체크', checked: false },
-        { id: 'chk_m_14', text: '도어 교체 여부 및 타입(스텝도어/히든도어/9mm 문선) 결정', checked: false },
-        { id: 'chk_m_15', text: '샤시 교체 여부 확인 (특히 알루미늄 샤시)', checked: false },
-        { id: 'chk_m_16', text: '외부 인접 벽면·모서리 곰팡이 여부 확인', checked: false },
-        { id: 'chk_m_17', text: '단열 작업 범위 확인', checked: false },
+        { id: 'chk_m_10', text: '비디오폰/콘센트/스위치/보일러컨트롤러/통신함/차단기함/세대스피커/점검구 위치 및 교체 여부 파악', checked: false, reason: '위치를 미리 파악해야 목공·도배 시공 시 가리거나 잘못 이동시키는 실수를 막을 수 있어요' },
+        { id: 'chk_m_11', text: '비디오폰 교체 시 목공 보강 필요 여부 확인', checked: false, reason: '벽 내부 보강이 없으면 무거운 신형 비디오폰이 처지거나 떨어질 수 있어요' },
+        { id: 'chk_m_12', text: '차단기함·통신함 노출 여부 및 이동/은폐 계획 필요 여부 확인', checked: false, reason: '위치를 못 정하면 도배 시공 후 다시 뜯어야 하는 상황이 생겨요' },
+        { id: 'chk_m_13', text: '콘센트 개수 충분한지, 가구·가전 배치 기준으로 추가 필요 위치 체크', checked: false, reason: '입주 후 콘센트가 부족하면 멀티탭을 덕지덕지 써야 하고, 추가 공사는 비용이 훨씬 비싸요' },
+        { id: 'chk_m_14', text: '도어 교체 여부 및 타입(스텝도어/히든도어/9mm 문선) 결정', checked: false, reason: '문틀 종류에 따라 목공 작업 범위와 비용이 크게 달라져요' },
+        { id: 'chk_m_15', text: '샤시 교체 여부 확인 (특히 알루미늄 샤시)', checked: false, reason: '단열·결로 문제와 직결되고, 샤시 교체는 공정 순서상 가장 먼저 결정돼야 해요' },
+        { id: 'chk_m_16', text: '외부 인접 벽면·모서리 곰팡이 여부 확인', checked: false, reason: '단열 보강 없이 마감하면 같은 자리에 곰팡이가 다시 생겨요' },
+        { id: 'chk_m_17', text: '단열 작업 범위 확인', checked: false, reason: '범위를 잘못 잡으면 냉난방비 절감 효과가 기대만큼 안 나올 수 있어요' },
       ]
     },
     {
       section: '바닥',
       items: [
-        { id: 'chk_m_18', text: '기존 바닥재 종류 확인 (마루/장판)', checked: false },
-        { id: 'chk_m_19', text: '장판인 경우 들춰서 하부 바닥재 존재 여부 확인', checked: false },
+        { id: 'chk_m_18', text: '기존 바닥재 종류 확인 (마루/장판)', checked: false, reason: '철거 방식과 폐기물 처리 비용이 바닥재 종류에 따라 달라져요' },
+        { id: 'chk_m_19', text: '장판인 경우 들춰서 하부 바닥재 존재 여부 확인', checked: false, reason: '하부에 또 다른 바닥재가 있으면 철거 공수가 늘어나 견적이 바뀔 수 있어요' },
       ]
     },
     {
       section: '설비',
       items: [
-        { id: 'chk_m_20', text: '욕실/싱크대/베란다 급수·배수 상태 확인', checked: false },
-        { id: 'chk_m_21', text: '보일러·분배기 사용연수 확인 (10~15년 이상 시 교체 권장) 및 누수 여부 확인', checked: false },
-        { id: 'chk_m_22', text: '각방 제어시스템 유무 확인 (없을 시 컨트롤러·구동기·UTP 배선 계획)', checked: false },
-        { id: 'chk_m_23', text: '에어컨 배관 경로 및 실외기 위치 계획 (베란다 확장 시 매립 가능 여부 포함)', checked: false },
-        { id: 'chk_m_24', text: '인터넷 선 인입 경로 확인', checked: false },
-        { id: 'chk_m_25', text: '도시가스 배관 철거 여부 확인 (인덕션 사용 시)', checked: false },
-        { id: 'chk_m_26', text: '도시가스 계량기 이동 필요 여부 확인 (베란다 확장/타워형 세탁기 설치 등)', checked: false },
+        { id: 'chk_m_20', text: '욕실/싱크대/베란다 급수·배수 상태 확인', checked: false, reason: '배수 불량은 공사 후 발견되면 바닥을 다시 뜯어야 하는 큰 공사가 돼요' },
+        { id: 'chk_m_21', text: '보일러·분배기 사용연수 확인 (10~15년 이상 시 교체 권장) 및 누수 여부 확인', checked: false, reason: '노후 보일러는 입주 후 고장 나면 겨울철 온수·난방이 끊길 수 있어요' },
+        { id: 'chk_m_22', text: '각방 제어시스템 유무 확인 (없을 시 컨트롤러·구동기·UTP 배선 계획)', checked: false, reason: '없으면 방별 온도 조절이 안 돼 매립 배선 공사를 추가로 계획해야 해요' },
+        { id: 'chk_m_23', text: '에어컨 배관 경로 및 실외기 위치 계획 (베란다 확장 시 매립 가능 여부 포함)', checked: false, reason: '경로를 미리 안 잡으면 배관이 노출되어 미관을 해치거나 벽에 구멍을 새로 뚫어야 해요' },
+        { id: 'chk_m_24', text: '인터넷 선 인입 경로 확인', checked: false, reason: '경로가 불명확하면 도배 후 선이 노출되거나 와이파이 음영구역이 생길 수 있어요' },
+        { id: 'chk_m_25', text: '도시가스 배관 철거 여부 확인 (인덕션 사용 시)', checked: false, reason: '철거하지 않으면 안전 점검에서 문제가 되거나 불필요한 배관이 그대로 남아요' },
+        { id: 'chk_m_26', text: '도시가스 계량기 이동 필요 여부 확인 (베란다 확장/타워형 세탁기 설치 등)', checked: false, reason: '이동은 가스공사 승인이 필요해 일정이 오래 걸릴 수 있어 미리 확인해야 해요' },
       ]
     },
   ],
@@ -8858,6 +8858,7 @@ function _renderProcChecklist(procId) {
               <span style="flex:1;text-decoration:${it.checked?'line-through':'none'};">
                 <span style="display:block;font-size:16px;font-weight:500;color:${it.checked?'#aaa':'#222'};line-height:1.5;">${esc(mainText)}</span>
                 ${subText ? `<span style="display:block;font-size:14px;font-weight:400;color:${it.checked?'#ccc':'#999'};line-height:1.5;margin-top:2px;">${esc(subText)}</span>` : ''}
+                ${it.reason ? `<span style="display:block;font-size:13px;font-weight:400;color:${it.checked?'#ccc':'#aaa'};line-height:1.5;margin-top:4px;text-decoration:none;">💡 ${esc(it.reason)}</span>` : ''}
               </span>
             </label>
           `;}).join('')}
