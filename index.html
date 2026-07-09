@@ -8494,8 +8494,8 @@ function renderWorkCards() {
     const isImminent = daysUntilStart !== null && daysUntilStart >= 1 && daysUntilStart <= 2;
     const isUpcoming = inProgress || isImminent;
     let ddayLabel = '';
-    if (inProgress) ddayLabel = daysUntilStart === 0 ? '오늘 시작' : '공사중';
-    else if (isImminent) ddayLabel = daysUntilStart + '일 남았습니다';
+    if (inProgress) ddayLabel = '공사중';
+    else if (isImminent) ddayLabel = 'D-' + daysUntilStart;
     const ddayBadge = ddayLabel
       ? `<span class="work-card-dday-badge">${ddayLabel}</span>` : '';
     return `
