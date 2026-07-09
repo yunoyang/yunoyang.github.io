@@ -8918,8 +8918,8 @@ function _renderProcChecklist(procId) {
               </div>
               <span style="flex:1;text-decoration:${it.checked?'line-through':'none'};">
                 <span style="display:block;font-size:16px;font-weight:500;color:${it.checked?'#aaa':'#222'};line-height:1.5;">${esc(mainText)}</span>
-                ${subText ? `<span style="display:block;font-size:14px;font-weight:400;color:${it.checked?'#ccc':'#999'};line-height:1.5;margin-top:2px;">${esc(subText)}</span>` : ''}
-                ${it.reason ? `<span style="display:block;font-size:13px;font-weight:400;color:${it.checked?'#ccc':'#aaa'};line-height:1.5;margin-top:4px;text-decoration:none;">💡 ${esc(it.reason)}</span>` : ''}
+                ${subText ? `<span style="display:block;font-size:15px;font-weight:400;color:${it.checked?'#ccc':'#555'};line-height:1.5;margin-top:2px;">${esc(subText)}</span>` : ''}
+                ${it.reason ? `<span style="display:block;font-size:15px;font-weight:400;color:${it.checked?'#ccc':'#555'};line-height:1.5;margin-top:4px;text-decoration:none;">💡 ${esc(it.reason)}</span>` : ''}
               </span>
             </label>
           `;}).join('')}
