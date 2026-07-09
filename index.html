@@ -1365,6 +1365,20 @@ button, input, textarea, select { font-family:var(--font); }
   border-radius:24px;
   will-change:transform; overflow:hidden;
   background:#FDFCFB;
+  transition:border-color .3s ease, background-color .3s ease, box-shadow .3s ease;
+}
+/* 시공 시작일이 다가오면(2일 전부터) 강조되는 카드 상태 */
+.work-card.upcoming {
+  border-color:#4e92ff;
+  background:#f8faff;
+  box-shadow:0 4px 16px rgba(78,146,255,0.12);
+}
+.work-card-dday-badge {
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  background:rgba(126,180,255,0.12);
+  color:#0088ff;
+  font-size:14px; font-weight:500; letter-spacing:-0.25px;
+  padding:4px 10px; border-radius:10px; white-space:nowrap;
 }
 .work-card-row {
   display:flex; align-items:center; padding:24px; gap:8px;
@@ -1374,7 +1388,7 @@ button, input, textarea, select { font-family:var(--font); }
   display:flex; align-items:center; gap:4px; flex:1; min-width:0; cursor:pointer; overflow:hidden;
 }
 .work-card-name-area .work-card-title {
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;
 }
 .work-card-name-area:active { opacity:.7; }
 .work-card-nav-chev { display:none; }
@@ -8459,17 +8473,32 @@ function renderWorkCards() {
   const newProcId = _pendingNewProcId;
   _pendingNewProcId = null;
 
+  // 시공 시작일 임박 판정 기준일 (오늘 자정)
+  const _today = new Date(); _today.setHours(0,0,0,0);
   container.innerHTML = sorted.map(p => {
     const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
     const schedDisplay = (p.scheduleStart && p.scheduleEnd)
       ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 설정하기';
     const compDisplay = p.companyData?.name || p.company || '업체 설정하기';
     const isExpanded = _expandedCards.has(p.id);
+    // 시작일까지 남은 일수 → 2일 전부터 당일까지, 그리고 공사 진행 중이면 카드 강조
+    const daysUntilStart = p.scheduleStart
+      ? Math.round((new Date(p.scheduleStart + 'T00:00:00') - _today) / 86400000) : null;
+    const procEnd = p.scheduleEnd ? new Date(p.scheduleEnd + 'T00:00:00') : null;
+    const inProgress = daysUntilStart !== null && daysUntilStart <= 0 && (!procEnd || _today <= procEnd);
+    const isImminent = daysUntilStart !== null && daysUntilStart >= 1 && daysUntilStart <= 2;
+    const isUpcoming = inProgress || isImminent;
+    let ddayLabel = '';
+    if (inProgress) ddayLabel = daysUntilStart === 0 ? '오늘 시작' : '공사중';
+    else if (isImminent) ddayLabel = daysUntilStart + '일 남았습니다';
+    const ddayBadge = ddayLabel
+      ? `<span class="work-card-dday-badge">${ddayLabel}</span>` : '';
     return `
-    <div class="work-card${isExpanded ? ' expanded' : ''}" data-proc-id="${p.id}">
+    <div class="work-card${isExpanded ? ' expanded' : ''}${isUpcoming ? ' upcoming' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row" onclick="toggleCardExpand('${p.id}')">
         <div class="work-card-name-area">
           <span class="work-card-title" style="font-size:16px;font-weight:500;color:#000;">${esc(p.name)}</span>
+          ${ddayBadge}
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
