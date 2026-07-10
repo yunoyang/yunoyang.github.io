@@ -11633,7 +11633,7 @@ function _mergeLocalPreserve(cp, localProjs) {
       if (!li) return ci;
       const cloudTs = ci.updatedAt || ci.createdAt || 0;
       const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs > cloudTs ? li : ci;
+      return localTs >= cloudTs ? li : ci;
     });
     merged.furnitureItems = [...newLocalOnly, ...existingMerged];
   }
@@ -11735,7 +11735,7 @@ async function _fetchFurnitureFromCloud() {
       if (!li) return ci;
       const cloudTs = ci.updatedAt || ci.createdAt || 0;
       const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs > cloudTs ? li : ci;
+      return localTs >= cloudTs ? li : ci;
     });
     const merged = [...newLocalOnly, ...existingMerged];
     // id + updatedAt 기준으로 변경 여부 감지
@@ -12321,7 +12321,7 @@ function _startCollabListener(cloudId) {
       if (!li) return ci;
       const cloudTs = ci.updatedAt || ci.createdAt || 0;
       const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs > cloudTs ? li : ci;
+      return localTs >= cloudTs ? li : ci;
     });
     proj.furnitureItems = [...newLocalOnlyFurniture, ...existingMergedFurniture];
     localStorage.setItem('vibespace', JSON.stringify(state));
