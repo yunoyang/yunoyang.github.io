@@ -5202,12 +5202,16 @@ function save() {
             try { localStorage.setItem(`vb_fp_${p.id}`, p.floorplanEditedImage); } catch(_) {}
             p.floorplanEditedImage = '__vb_fp__';
           }
-          // styleImages data URL만 제거 (Firebase URL은 보존)
+          // styleImages data URL만 제거 (Firebase URL은 보존) — 항목은 {url,...} 객체
           if (p.styleImages) {
             Object.keys(p.styleImages).forEach(room => {
-              p.styleImages[room] = (p.styleImages[room] || []).filter(u => !u.startsWith('data:'));
+              p.styleImages[room] = (p.styleImages[room] || []).filter(it => !(it?.url || '').startsWith('data:'));
             });
           }
+          // furnitureItems 대용량 base64 이미지 제거 (Storage 업로드 실패 시 로컬 폴백된 이미지)
+          (p.furnitureItems || []).forEach(it => {
+            if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
+          });
           // 혹시 남은 회의록 이미지도 제거
           (p.meetings || []).forEach(m => {
             if (m.images && m.images !== '__vb_mi__') m.images = [];
