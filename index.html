@@ -9031,15 +9031,17 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
       try {
         const dataUrl = await _compressImage(file, 1200, 0.85);
         let finalUrl = dataUrl;
+        if (state.loggedIn) await _initFirebase();
         if (state.loggedIn && _fbStorage) {
           try {
             const proj = getProject();
             const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-            const ref = _fbStorage.ref(`checklist/${projId}/${procId}/${Date.now()}_${Math.random().toString(36).slice(2,6)}.jpg`);
+            const ref = _fbStorage.ref(`styleImages/${projId}/_checklist/${procId}/${Date.now()}_${Math.random().toString(36).slice(2,6)}.jpg`);
             await ref.put(_dataUrlToBlob(dataUrl), { contentType: 'image/jpeg' });
             finalUrl = await ref.getDownloadURL();
           } catch(err) {
             console.warn('checklist photo upload failed, using local data URL:', err);
+            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
           }
         }
         const proj2 = getProject();
@@ -14004,17 +14006,19 @@ function _onFurnitureImageFile(input) {
     if (labelEl) labelEl.textContent = '업로드 중...';
     try {
       const dataUrl = await _compressImage(file, 1200, 0.85);
+      if (state.loggedIn) await _initFirebase();
       if (state.loggedIn && _fbStorage) {
         try {
           const proj = getProject();
           const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
-          const ref = _fbStorage.ref(`furniture/${projId}/${Date.now()}.jpg`);
+          const ref = _fbStorage.ref(`styleImages/${projId}/_furniture/${Date.now()}.jpg`);
           await ref.put(_dataUrlToBlob(dataUrl), { contentType: 'image/jpeg' });
           const url = await ref.getDownloadURL();
           imgInput.value = url;
         } catch(err) {
           console.warn('furniture image upload failed, using local data URL:', err);
           imgInput.value = dataUrl;
+          showToastMessage('⚠️ 이미지가 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
         }
       } else {
         imgInput.value = dataUrl;
