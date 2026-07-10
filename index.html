@@ -8948,7 +8948,15 @@ function _renderProcChecklist(procId) {
               </div>
               ${expanded ? `
               <div style="padding:0 16px 16px 50px;" onclick="event.stopPropagation();">
-                <textarea placeholder="메모를 남겨보세요" oninput="_onChecklistNoteInput(this,'${procId}',${si},${ii})" style="width:100%;min-height:64px;border:1px solid #eee;border-radius:10px;padding:10px 12px;font-size:14px;font-family:var(--font);resize:vertical;box-sizing:border-box;outline:none;">${esc(it.note||'')}</textarea>
+                ${_editingChecklistNotes.has(key) ? `
+                <textarea id="chk-note-${key}" placeholder="메모를 남겨보세요" onblur="_saveChecklistNote(this,'${procId}',${si},${ii})" style="width:100%;min-height:64px;border:1.5px solid #5084ff;border-radius:10px;padding:10px 12px;font-size:14px;font-family:var(--font);resize:vertical;box-sizing:border-box;outline:none;">${esc(it.note||'')}</textarea>
+                ` : hasNote ? `
+                <div onclick="_editChecklistNote('${procId}',${si},${ii})" style="padding:10px 12px;background:#f7f8fa;border-radius:10px;font-size:14px;color:#333;line-height:1.5;white-space:pre-wrap;cursor:pointer;">${esc(it.note)}</div>
+                ` : `
+                <button onclick="_editChecklistNote('${procId}',${si},${ii})" style="display:flex;align-items:center;gap:6px;padding:9px 14px;background:#f7f8fa;border:1.5px dashed #d0d5e0;border-radius:10px;font-size:13px;color:#888;cursor:pointer;font-family:var(--font);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 메모 추가
+                </button>
+                `}
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
                   ${photos.map((img,pi) => `
                     <div style="position:relative;width:64px;height:64px;flex-shrink:0;">
@@ -8994,15 +9002,25 @@ function _toggleChecklistItemExpand(procId, si, ii) {
   _renderProcChecklist(procId);
 }
 
-let _checklistNoteSaveTimer = null;
-function _onChecklistNoteInput(textarea, procId, si, ii) {
+function _editChecklistNote(procId, si, ii) {
+  const key = `${procId}_${si}_${ii}`;
+  _editingChecklistNotes.add(key);
+  _renderProcChecklist(procId);
+  setTimeout(() => {
+    const ta = document.getElementById(`chk-note-${key}`);
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 0);
+}
+
+function _saveChecklistNote(textarea, procId, si, ii) {
+  const key = `${procId}_${si}_${ii}`;
   const proj = getProject();
   const proc = proj?.processes.find(p => p.id === procId);
   const it = proc?.checklist?.[si]?.items?.[ii];
-  if (!it) return;
-  it.note = textarea.value;
-  clearTimeout(_checklistNoteSaveTimer);
-  _checklistNoteSaveTimer = setTimeout(() => save(), 500);
+  if (it) it.note = textarea.value.trim();
+  save();
+  _editingChecklistNotes.delete(key);
+  _renderProcChecklist(procId);
 }
 
 function _onChecklistPhotoFile(input, procId, si, ii) {
@@ -9505,6 +9523,7 @@ function toggleTipCheck(procId, phase, itemId) {
 // ===== COLLAPSIBLE CARDS =====
 const _expandedCards = new Set();
 const _expandedChecklistItems = new Set();
+const _editingChecklistNotes = new Set();
 function toggleCardExpand(procId) {
   const card = document.querySelector(`.work-card[data-proc-id="${procId}"]`);
   if (!card) return;
