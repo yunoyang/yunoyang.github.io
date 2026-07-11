@@ -6837,6 +6837,7 @@ async function handleStyleFileSelect(e) {
   const total = files.length;
   let done = 0;
   let storageFailed = false;
+  if (state.loggedIn) await _initFirebase(); // _fbStorage 미초기화 시 조용히 base64로 새는 것 방지
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -14964,6 +14965,7 @@ async function saveMeeting() {
   // 인라인 이미지 추출 — 에디터 HTML에서 base64 img를 Firebase Storage로 업로드 후 URL 교체
   const tmpDiv = document.createElement('div');
   tmpDiv.innerHTML = content;
+  if (state.loggedIn) await _initFirebase(); // _fbStorage 미초기화 시 조용히 base64로 새는 것 방지
   const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
   let _mwUploadFailed = false;
   if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
@@ -17386,6 +17388,7 @@ async function fpSave() {
       proj.floorplanEditedImages[editIdx] = url;
       if (editIdx === 0) proj.floorplanEditedImage = url; // 구버전 하위호환
     };
+    if (state.loggedIn) await _initFirebase(); // _fbStorage 미초기화 시 조용히 로컬에만 남는 것 방지
     if (_fbStorage && uid) {
       try {
         const blob = _dataUrlToBlob(dataURL);
