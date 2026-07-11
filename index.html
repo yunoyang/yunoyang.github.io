@@ -12455,6 +12455,11 @@ function _startCollabListener(cloudId) {
   if (!_db) return;
   _collabUnsub = _db.collection('vb_projects').doc(cloudId).onSnapshot(snap => {
     if (!snap.exists) return;
+    // 서버 확정 전 로컬 낙관적(pending) 쓰기 echo는 건너뜀 — 이 시점의 스냅샷은
+    // 아직 다른 병합 함수(_syncProcessesToCloud 등)가 진행 중일 수 있어, 여기서
+    // 그대로 merge/덮어쓰기하면 방금 로컬에 추가한 기록(사진 포함)이 레이스 컨디션으로
+    // 통째로 사라질 수 있음. 서버가 확정한 스냅샷에서 다시 정상 처리됨.
+    if (snap.metadata && snap.metadata.hasPendingWrites) return;
     const data = snap.data();
     const meta = data.meta || {};
     // Skip our own save echoes
