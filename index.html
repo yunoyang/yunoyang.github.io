@@ -5236,6 +5236,9 @@ function save() {
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
   if (proj && proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
     _syncProjToCloud(proj);
+  } else if (proj && proj.isCloud && proj.cloudId && proj.myRole === '편집자' && typeof _db !== 'undefined' && _db) {
+    // 편집자(오너 아님)는 공정 기록·체크리스트만 별도로 Firestore에 반영 — 전체 덮어쓰기 방지
+    _syncProcessesToCloud(proj);
   }
 }
 let toastTimer = null;
@@ -8999,6 +9002,7 @@ function _toggleCheckItem(procId, si, ii) {
   const proc = proj?.processes.find(p => p.id === procId);
   if (!proc?.checklist) return;
   proc.checklist[si].items[ii].checked = !proc.checklist[si].items[ii].checked;
+  proc.updatedAt = Date.now();
   save();
   _renderProcChecklist(procId);
 }
@@ -9026,6 +9030,7 @@ function _saveChecklistNote(textarea, procId, si, ii) {
   const proc = proj?.processes.find(p => p.id === procId);
   const it = proc?.checklist?.[si]?.items?.[ii];
   if (it) it.note = textarea.value.trim();
+  if (proc) proc.updatedAt = Date.now();
   save();
   _editingChecklistNotes.delete(key);
   _renderProcChecklist(procId);
@@ -9053,10 +9058,12 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
           }
         }
         const proj2 = getProject();
-        const it = proj2?.processes.find(p => p.id === procId)?.checklist?.[si]?.items?.[ii];
+        const proc2 = proj2?.processes.find(p => p.id === procId);
+        const it = proc2?.checklist?.[si]?.items?.[ii];
         if (it) {
           if (!it.images) it.images = [];
           it.images.push(finalUrl);
+          if (proc2) proc2.updatedAt = Date.now();
         }
       } catch(e) {
         console.warn('checklist photo processing failed:', e);
@@ -9070,9 +9077,11 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
 
 function _removeChecklistPhoto(procId, si, ii, photoIdx) {
   const proj = getProject();
-  const it = proj?.processes.find(p => p.id === procId)?.checklist?.[si]?.items?.[ii];
+  const proc = proj?.processes.find(p => p.id === procId);
+  const it = proc?.checklist?.[si]?.items?.[ii];
   if (!it?.images) return;
   it.images.splice(photoIdx, 1);
+  if (proc) proc.updatedAt = Date.now();
   save();
   _renderProcChecklist(procId);
 }
@@ -9088,6 +9097,7 @@ function _addCheckItem(procId, si) {
     text: text.trim(),
     checked: false
   });
+  proc.updatedAt = Date.now();
   save();
   _renderProcChecklist(procId);
 }
@@ -12210,6 +12220,54 @@ async function _syncFurnitureToCloud(proj) {
   }
 }
 
+// processes(공정 기록·체크리스트)만 Firestore에 업데이트 — 편집자도 반영되도록 별도 sync
+async function _syncProcessesToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  if (!canWrite) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudProcesses = snap.data()?.projectData?.processes || [];
+    const localProcesses = proj.processes || [];
+    const cloudIds = new Set(cloudProcesses.map(p => p.id));
+    // 로컬에만 있는(아직 클라우드에 없는) 공정은 보존
+    const localOnly = localProcesses.filter(p => !cloudIds.has(p.id));
+    // 같은 공정은 updatedAt 기준 최신 버전 사용 — 클라우드 순서 유지
+    const merged = cloudProcesses.map(cp => {
+      const lp = localProcesses.find(p => p.id === cp.id);
+      if (!lp) return cp;
+      const cloudTs = cp.updatedAt || 0;
+      const localTs = lp.updatedAt || 0;
+      return localTs >= cloudTs ? lp : cp;
+    });
+    const finalProcesses = [...merged, ...localOnly];
+    // 체크리스트 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
+    const finalForCloud = finalProcesses.map(p => {
+      if (!p.checklist) return p;
+      return { ...p, checklist: p.checklist.map(sec => ({
+        ...sec,
+        items: (sec.items || []).map(it => Array.isArray(it.images)
+          ? { ...it, images: it.images.filter(img => img && !img.startsWith('data:')) }
+          : it)
+      })) };
+    });
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.processes': finalForCloud,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+    proj.processes = finalProcesses;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    console.log('[processSync] ✅', finalProcesses.length, 'processes');
+  } catch(e) {
+    console.error('[processSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 공정 동기화 실패 — 다른 기기에 반영되지 않았습니다');
+  }
+}
+
 // 도면 이미지만 Firestore에 업데이트 — 협업자(편집자)도 반영되도록 별도 sync
 async function _syncFloorplanToCloud(proj) {
   if (!proj?.cloudId) return;
@@ -12341,6 +12399,7 @@ function _startCollabListener(cloudId) {
     const localFloorplanEditedImages = Array.isArray(proj.floorplanEditedImages) && proj.floorplanEditedImages.some(Boolean) ? [...proj.floorplanEditedImages] : null;
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
+    const localProcesses = proj.processes || []; // 공정 기록·체크리스트 보존 (미동기화 로컬 편집 유실 방지)
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -12465,6 +12524,18 @@ function _startCollabListener(cloudId) {
       return localTs >= cloudTs ? li : ci;
     });
     proj.furnitureItems = [...newLocalOnlyFurniture, ...existingMergedFurniture];
+    // processes(공정 기록·체크리스트): id 기준 updatedAt 최신 우선 merge — 아직 동기화 안 된 로컬 편집 보존
+    const remoteProcesses = remote.processes || [];
+    const remoteProcIds = new Set(remoteProcesses.map(p => p.id));
+    const newLocalOnlyProcesses = localProcesses.filter(p => !remoteProcIds.has(p.id));
+    const mergedProcesses = remoteProcesses.map(cp => {
+      const lp = localProcesses.find(p => p.id === cp.id);
+      if (!lp) return cp;
+      const cloudTs = cp.updatedAt || 0;
+      const localTs = lp.updatedAt || 0;
+      return localTs >= cloudTs ? lp : cp;
+    });
+    proj.processes = [...mergedProcesses, ...newLocalOnlyProcesses];
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     updateCollabIndicator(meta.collaborators || [], meta.owner);
