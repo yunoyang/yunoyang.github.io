@@ -5817,15 +5817,20 @@ async function _fetchAllMyCloudProjects() {
     } catch(e) { console.warn('meta.owner.email query failed:', e); }
   }
 
-  // 전략 4: 로컬에 cloudId 있으면 직접 조회 (PC→Mobile 최후 수단)
+  // 전략 4: 로컬에 cloudId 있으면 직접 조회 (PC→Mobile 최후 수단, 협업자가 가장 많이 타는 경로)
+  // { source: 'server' }로 강제 — 캐시된 오래된 스냅샷 때문에 방금 저장한 데이터(사진 등)가
+  // 새로고침 직후 안 보이는 문제를 방지
   if (!result.length) {
     const localIds = (state.projects || []).map(p => p.cloudId).filter(Boolean);
     await Promise.all(localIds.map(async id => {
       if (seenIds.has(id)) return;
       try {
-        const snap = await _db.collection('vb_projects').doc(id).get();
+        const snap = await _db.collection('vb_projects').doc(id).get({ source: 'server' });
         _parseDoc(snap);
-      } catch(e) {}
+      } catch(e) {
+        // 오프라인 등으로 서버 조회 실패 시 캐시로 폴백
+        try { const snap2 = await _db.collection('vb_projects').doc(id).get(); _parseDoc(snap2); } catch(e2) {}
+      }
     }));
   }
 
@@ -13160,6 +13165,7 @@ async function _acceptInvite(token, invite, cloudProjData) {
       'meta.collaborators': firebase.firestore.FieldValue.arrayUnion(collaboratorEntry),
     });
     await _db.collection('vb_invites').doc(token).update({ used: true });
+    _saveUserIndex(invite.projectId); // 협업자도 vb_users 인덱스에 등록 — 안 하면 새 기기/재접속 시 프로젝트를 못 찾을 수 있음
 
     const remoteProj = cloudProjData.projectData || {};
     const localProj = { ...remoteProj, cloudId: invite.projectId, isCloud: true, myRole: invite.role,
