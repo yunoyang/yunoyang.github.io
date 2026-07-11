@@ -9022,6 +9022,33 @@ function _isProjOwner(proj) {
   return !!proj && (!proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email);
 }
 
+// 공정의 records(공정 기록)는 id 기준으로 항상 합집합 병합 — 공정 전체를 updatedAt
+// 기준으로 한쪽만 채택하면, 동시에 다른 부분을 수정한 반대편의 기록(사진 포함)이
+// 통째로 사라지는 문제가 있어 records만큼은 별도로 항상 병합해준다.
+function _mergeProcessRecords(localRecords, cloudRecords) {
+  localRecords = localRecords || [];
+  cloudRecords = cloudRecords || [];
+  const cloudIds = new Set(cloudRecords.map(r => r.id));
+  const localOnly = localRecords.filter(r => !cloudIds.has(r.id));
+  const merged = cloudRecords.map(cr => {
+    const lr = localRecords.find(r => r.id === cr.id);
+    if (!lr) return cr;
+    const ct = cr.updatedAt || cr.createdAt || 0;
+    const lt = lr.updatedAt || lr.createdAt || 0;
+    return lt > ct ? lr : cr;
+  });
+  return [...merged, ...localOnly];
+}
+// 공정 하나를 병합 — 스칼라 필드는 updatedAt이 더 최신인 쪽을 채택하되, records는 항상 합집합
+function _mergeOneProcess(localProc, cloudProc) {
+  if (!localProc) return cloudProc;
+  if (!cloudProc) return localProc;
+  const cloudTs = cloudProc.updatedAt || 0;
+  const localTs = localProc.updatedAt || 0;
+  const winner = localTs > cloudTs ? localProc : cloudProc;
+  return { ...winner, records: _mergeProcessRecords(localProc.records, cloudProc.records) };
+}
+
 function _toggleChecklistItemExpand(procId, si, ii) {
   const key = `${procId}_${si}_${ii}`;
   if (_expandedChecklistItems.has(key)) _expandedChecklistItems.delete(key);
@@ -12092,10 +12119,7 @@ function _syncProjToCloud(proj) {
       const _cloudOnly = _cloudProcesses.filter(p => !_localProcIds.has(p.id));
       const _mergedProcesses = _localProcesses.map(lp => {
         const cp = _cloudProcesses.find(p => p.id === lp.id);
-        if (!cp) return lp; // 로컬 전용(신규) 공정
-        const cloudTs = cp.updatedAt || 0;
-        const localTs = lp.updatedAt || 0;
-        return localTs > cloudTs ? lp : cp;
+        return cp ? _mergeOneProcess(lp, cp) : lp; // 로컬 전용(신규) 공정
       });
       projData.processes = [..._mergedProcesses, ..._cloudOnly];
     }
@@ -12275,10 +12299,7 @@ async function _syncProcessesToCloud(proj) {
     // 로컬을 기본값으로 두면 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어써 유실될 수 있음)
     const merged = cloudProcesses.map(cp => {
       const lp = localProcesses.find(p => p.id === cp.id);
-      if (!lp) return cp;
-      const cloudTs = cp.updatedAt || 0;
-      const localTs = lp.updatedAt || 0;
-      return localTs > cloudTs ? lp : cp;
+      return lp ? _mergeOneProcess(lp, cp) : cp;
     });
     const finalProcesses = [...merged, ...localOnly];
     // 체크리스트 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
@@ -12570,10 +12591,7 @@ function _startCollabListener(cloudId) {
     const newLocalOnlyProcesses = localProcesses.filter(p => !remoteProcIds.has(p.id));
     const mergedProcesses = remoteProcesses.map(cp => {
       const lp = localProcesses.find(p => p.id === cp.id);
-      if (!lp) return cp;
-      const cloudTs = cp.updatedAt || 0;
-      const localTs = lp.updatedAt || 0;
-      return localTs > cloudTs ? lp : cp;
+      return lp ? _mergeOneProcess(lp, cp) : cp;
     });
     proj.processes = [...mergedProcesses, ...newLocalOnlyProcesses];
     localStorage.setItem('vibespace', JSON.stringify(state));
