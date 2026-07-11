@@ -11935,6 +11935,21 @@ function _mergeLocalPreserve(cp, localProjs) {
     merged.floorplanImages = local.floorplanImages;
     merged.floorplanImage = local.floorplanImages.find(Boolean) || null;
   }
+  // processes(공정 기록·체크리스트): id 기준으로 항상 병합 — 이 부분이 빠져 있으면
+  // 새로고침할 때마다 방금 로컬에 저장한 공정기록(사진 포함)이 클라우드에서 읽어온
+  // 값으로 그냥 덮어써져서 사라지는 문제가 생김 (다른 sync 함수들은 이미 병합하는데
+  // 새로고침 경로인 이 함수만 빠져 있었음)
+  const cpProcesses = cp.processes || [];
+  const localProcesses = local.processes || [];
+  if (localProcesses.length || cpProcesses.length) {
+    const cpIds = new Set(cpProcesses.map(p => p.id));
+    const localOnlyProcs = localProcesses.filter(p => !cpIds.has(p.id));
+    const mergedProcs = cpProcesses.map(cpP => {
+      const lp = localProcesses.find(p => p.id === cpP.id);
+      return lp ? _mergeOneProcess(lp, cpP) : cpP;
+    });
+    merged.processes = [...mergedProcs, ...localOnlyProcs];
+  }
   // ★ meetings: id 기준 합집합 — updatedAt 최신 버전 우선 (이미지 sync 보장)
   const cpMeetings = cp.meetings || [];
   const localMeetings = local.meetings || [];
