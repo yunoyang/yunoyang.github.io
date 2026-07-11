@@ -9048,6 +9048,26 @@ function _mergeOneProcess(localProc, cloudProc) {
   const winner = localTs > cloudTs ? localProc : cloudProc;
   return { ...winner, records: _mergeProcessRecords(localProc.records, cloudProc.records) };
 }
+// Storage 업로드 실패 시 로컬 base64로 폴백된 이미지는 Firestore에 저장하지 않음
+// (1MB 문서 제한을 넘기면 processes 전체 쓰기가 통째로 실패해 다른 사람 화면에
+// 아무것도 안 보이는 문제가 생길 수 있음) — 체크리스트 사진 + 공정기록 사진 모두 대상
+function _stripProcessBase64(p) {
+  let out = p;
+  if (Array.isArray(p.checklist)) {
+    out = { ...out, checklist: p.checklist.map(sec => ({
+      ...sec,
+      items: (sec.items || []).map(it => Array.isArray(it.images)
+        ? { ...it, images: it.images.filter(img => img && !img.startsWith('data:')) }
+        : it)
+    })) };
+  }
+  if (Array.isArray(p.records)) {
+    out = { ...out, records: p.records.map(r => Array.isArray(r.images)
+      ? { ...r, images: r.images.filter(img => img && !img.startsWith('data:')) }
+      : r) };
+  }
+  return out;
+}
 
 function _toggleChecklistItemExpand(procId, si, ii) {
   const key = `${procId}_${si}_${ii}`;
@@ -9357,7 +9377,10 @@ async function _prImgPreview(input) {
         const ref = _fbStorage.ref(`styleImages/${projId}/prec_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`);
         await ref.put(_dataUrlToBlob(compressed), { contentType:'image/jpeg' });
         finalSrc = await ref.getDownloadURL();
-      } catch(e) { console.warn('[prImg]', e.message); }
+      } catch(e) {
+        console.warn('[prImg]', e.message);
+        showToastMessage('⚠️ 사진 업로드 실패 — 다른 사람 화면에는 보이지 않을 수 있어요. 다시 시도해주세요');
+      }
     }
     _prImages.push(finalSrc);
     added++;
@@ -12123,14 +12146,8 @@ function _syncProjToCloud(proj) {
       });
       projData.processes = [..._mergedProcesses, ..._cloudOnly];
     }
-    // 체크리스트 메모 사진도 base64면 제거
-    (projData.processes || []).forEach(p => {
-      (p.checklist || []).forEach(sec => {
-        (sec.items || []).forEach(it => {
-          if (Array.isArray(it.images)) it.images = it.images.filter(img => img && !img.startsWith('data:'));
-        });
-      });
-    });
+    // 체크리스트 메모 사진 + 공정기록 사진 모두 base64면 제거 (Storage 업로드 실패 폴백분)
+    if (Array.isArray(projData.processes)) projData.processes = projData.processes.map(_stripProcessBase64);
     // styleImages: 클라우드 + 로컬 전용 항목 병합 (base64 제거 포함)
     // 새로 추가된(클라우드에 없는) 로컬 이미지는 맨 앞에 유지 — 최신순 정렬 보존
     const _cloudImgs = snap.data()?.projectData?.styleImages || {};
@@ -12302,16 +12319,8 @@ async function _syncProcessesToCloud(proj) {
       return lp ? _mergeOneProcess(lp, cp) : cp;
     });
     const finalProcesses = [...merged, ...localOnly];
-    // 체크리스트 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
-    const finalForCloud = finalProcesses.map(p => {
-      if (!p.checklist) return p;
-      return { ...p, checklist: p.checklist.map(sec => ({
-        ...sec,
-        items: (sec.items || []).map(it => Array.isArray(it.images)
-          ? { ...it, images: it.images.filter(img => img && !img.startsWith('data:')) }
-          : it)
-      })) };
-    });
+    // 체크리스트 사진 + 공정기록 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
+    const finalForCloud = finalProcesses.map(_stripProcessBase64);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.processes': finalForCloud,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
