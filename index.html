@@ -8545,8 +8545,8 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}${isUpcoming ? ' upcoming' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row" onclick="toggleCardExpand('${p.id}')">
         <div class="work-card-name-area">
-          <span class="work-card-title" style="font-size:16px;font-weight:500;color:#000;">${esc(p.name)}</span>
-          ${ddayBadge}
+          <span class="work-card-title" style="font-size:16px;font-weight:500;color:${p.completed?'#999':'#000'};">${esc(p.name)}</span>
+          ${p.completed ? `<span style="font-size:12px;font-weight:700;color:#999;background:#f0f2f5;padding:3px 8px;border-radius:999px;">완료</span>` : ddayBadge}
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
@@ -8844,8 +8844,40 @@ function _renderProcDetailContent(procId) {
           </div>
         </div>`).join('') : '<div class="detail-empty">+ 버튼으로 내역 추가</div>'}
       ${p.details.length ? '</div>' : ''}
-    </div>`;
+    </div>
+    ${_procCompleteButtonHtml(p)}`;
   _renderProcRecords(procId);
+}
+// 공정 일정 종료일이 지났는지 판정
+function _isProcOverdue(p) {
+  if (!p.scheduleEnd) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = new Date(p.scheduleEnd + 'T00:00:00');
+  return end < today;
+}
+function _procCompleteButtonHtml(p) {
+  if (p.completed) {
+    return `<div style="padding:20px;">
+      <button onclick="_setProcCompleted('${p.id}', false)" style="width:100%;padding:16px;background:#fff;border:1.5px solid #d0d5e0;border-radius:14px;font-size:15px;font-weight:700;color:#555;cursor:pointer;font-family:var(--font);">다시 수정</button>
+    </div>`;
+  }
+  if (_isProcOverdue(p)) {
+    return `<div style="padding:20px;">
+      <button onclick="_setProcCompleted('${p.id}', true)" style="width:100%;padding:16px;background:#222;border:none;border-radius:14px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);">완료</button>
+    </div>`;
+  }
+  return '';
+}
+function _setProcCompleted(procId, completed) {
+  const proj = getProject();
+  const proc = proj?.processes.find(p => p.id === procId);
+  if (!proc) return;
+  proc.completed = completed;
+  proc.updatedAt = Date.now();
+  save();
+  _renderProcDetailContent(procId);
+  renderAll();
+  showToastMessage(completed ? '✅ 공정을 완료 처리했습니다' : '✏️ 다시 수정할 수 있어요');
 }
 function _refreshProcDetailIfOpen() {
   if (!_currentProcDetailId) return;
