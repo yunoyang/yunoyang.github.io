@@ -8624,7 +8624,7 @@ function editField(procId, key, label) {
 }
 function confirmEditField() {
   const proc = getProject().processes.find(p => p.id === editingProcessId);
-  if (proc) { proc[editingFieldKey] = document.getElementById('edit-field-input').value; save(); renderAll(); }
+  if (proc) { proc[editingFieldKey] = document.getElementById('edit-field-input').value; proc.updatedAt = Date.now(); save(); renderAll(); }
   closeDialog('dlg-edit-field');
 }
 function deleteProcess(procId) {
@@ -8640,7 +8640,7 @@ function deleteProcess(procId) {
 }
 function deleteDetail(procId, detailId) {
   const proc = getProject()?.processes.find(p => p.id === procId);
-  if (proc) { proc.details = proc.details.filter(d => d.id !== detailId); save(); renderAll(); }
+  if (proc) { proc.details = proc.details.filter(d => d.id !== detailId); proc.updatedAt = Date.now(); save(); renderAll(); }
 }
 
 // ===== COMPANY SEARCH =====
@@ -9363,6 +9363,7 @@ function saveProcRecord() {
     if (mentionEmails.length) _sendProcRecordMentionNotifications(record, proc, mentionEmails, proj);
     showToastMessage('✅ 기록이 저장됐습니다');
   }
+  proc.updatedAt = Date.now();
   save();
   closeProcRecord();
   _renderProcRecords(_currentProcDetailId);
@@ -9393,6 +9394,7 @@ function _deleteProcRecord(recordId) {
   const proc = proj?.processes.find(p => p.id === _currentProcDetailId);
   if (!proc) return;
   proc.records = (proc.records||[]).filter(r => r.id !== recordId);
+  proc.updatedAt = Date.now();
   save();
   _renderProcRecords(_currentProcDetailId);
   showToastMessage('🗑️ 기록이 삭제됐습니다');
@@ -9898,6 +9900,7 @@ function confirmAddDetail() {
   const proc = getProject()?.processes.find(p => p.id === addDetailProcessId);
   if (proc) {
     proc.details.push({ id:'d_'+Date.now(), desc, subDesc, cost, date });
+    proc.updatedAt = Date.now();
     save(); renderAll();
   }
   closeDialog('dlg-add-detail');
@@ -9931,7 +9934,7 @@ function confirmEditDetail() {
   if (!desc) { alert('작업 내용을 입력하세요.'); return; }
   const proc = getProject()?.processes.find(p => p.id === editDetailProcId);
   const detail = proc?.details.find(d => d.id === editDetailId);
-  if (detail) { detail.desc = desc; detail.subDesc = subDesc; detail.cost = cost; detail.date = date; save(); renderAll(); }
+  if (detail) { detail.desc = desc; detail.subDesc = subDesc; detail.cost = cost; detail.date = date; proc.updatedAt = Date.now(); save(); renderAll(); }
   closeDialog('dlg-edit-detail');
   _refreshProcDetailIfOpen();
 }
@@ -9939,7 +9942,7 @@ function confirmEditDetail() {
 function deleteDetailFromEdit() {
   if (!confirm('이 상세내역을 삭제할까요?')) return;
   const proc = getProject()?.processes.find(p => p.id === editDetailProcId);
-  if (proc) { proc.details = proc.details.filter(d => d.id !== editDetailId); save(); renderAll(); }
+  if (proc) { proc.details = proc.details.filter(d => d.id !== editDetailId); proc.updatedAt = Date.now(); save(); renderAll(); }
   closeDialog('dlg-edit-detail');
   _refreshProcDetailIfOpen();
 }
@@ -12235,12 +12238,14 @@ async function _syncProcessesToCloud(proj) {
     // 로컬에만 있는(아직 클라우드에 없는) 공정은 보존
     const localOnly = localProcesses.filter(p => !cloudIds.has(p.id));
     // 같은 공정은 updatedAt 기준 최신 버전 사용 — 클라우드 순서 유지
+    // updatedAt이 없거나 동일하면 클라우드를 우선 (상세내역·기록 등 updatedAt이 안 찍히는 편집이 많아
+    // 로컬을 기본값으로 두면 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어써 유실될 수 있음)
     const merged = cloudProcesses.map(cp => {
       const lp = localProcesses.find(p => p.id === cp.id);
       if (!lp) return cp;
       const cloudTs = cp.updatedAt || 0;
       const localTs = lp.updatedAt || 0;
-      return localTs >= cloudTs ? lp : cp;
+      return localTs > cloudTs ? lp : cp;
     });
     const finalProcesses = [...merged, ...localOnly];
     // 체크리스트 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
@@ -12525,6 +12530,8 @@ function _startCollabListener(cloudId) {
     });
     proj.furnitureItems = [...newLocalOnlyFurniture, ...existingMergedFurniture];
     // processes(공정 기록·체크리스트): id 기준 updatedAt 최신 우선 merge — 아직 동기화 안 된 로컬 편집 보존
+    // updatedAt이 없거나 동일하면 클라우드를 우선 (상세내역·기록 등 updatedAt이 안 찍히는 편집이 많아
+    // 로컬을 기본값으로 두면 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어써 유실될 수 있음)
     const remoteProcesses = remote.processes || [];
     const remoteProcIds = new Set(remoteProcesses.map(p => p.id));
     const newLocalOnlyProcesses = localProcesses.filter(p => !remoteProcIds.has(p.id));
@@ -12533,7 +12540,7 @@ function _startCollabListener(cloudId) {
       if (!lp) return cp;
       const cloudTs = cp.updatedAt || 0;
       const localTs = lp.updatedAt || 0;
-      return localTs >= cloudTs ? lp : cp;
+      return localTs > cloudTs ? lp : cp;
     });
     proj.processes = [...mergedProcesses, ...newLocalOnlyProcesses];
     localStorage.setItem('vibespace', JSON.stringify(state));
