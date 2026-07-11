@@ -5775,7 +5775,9 @@ async function _fetchAllMyCloudProjects() {
       pd.myRole = 'owner';
     } else {
       const myCollab = pd.collaborators.find(c => c.email === state.user.email);
-      pd.myRole = myCollab?.role || pd.myRole || '뷰어';
+      // collaborators 목록에서 못 찾은 경우(등록 지연·대소문자 차이 등) 뷰어로 강등시키면
+      // 정상 편집자의 업로드·동기화가 막힐 수 있어 기존 로컬 역할 → 편집자 순으로 폴백
+      pd.myRole = myCollab?.role || pd.myRole || '편집자';
     }
     result.push(pd);
   }
@@ -12576,6 +12578,7 @@ function _startCollabListener(cloudId) {
     proj.processes = [...mergedProcesses, ...newLocalOnlyProcesses];
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
+    _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
     updateCollabIndicator(meta.collaborators || [], meta.owner);
     updateCollabMenuBadge();
   });
