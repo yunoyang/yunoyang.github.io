@@ -8912,6 +8912,7 @@ function _renderProcChecklist(procId) {
 
   const canEdit = !proc?.myRole || proc?.myRole === 'owner' ||
     (getProject()?.owner?.email === state.user?.email);
+  const isOwner = _isProjOwner(getProject());
 
   el.innerHTML = `
     <div style="padding:16px 16px 100px;">
@@ -8942,7 +8943,7 @@ function _renderProcChecklist(procId) {
             return `
             <div style="border-bottom:1px solid #f7f8fa;">
               <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleChecklistItemExpand('${procId}',${si},${ii})">
-                <div onclick="event.stopPropagation();_toggleCheckItem('${procId}',${si},${ii})" style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;">
+                <div onclick="event.stopPropagation();_toggleCheckItem('${procId}',${si},${ii})" title="${isOwner?'':'체크리스트는 프로젝트 오너만 체크할 수 있어요'}" style="width:22px;height:22px;border-radius:6px;border:2px solid ${it.checked?'#5084ff':'#d0d5e0'};background:${it.checked?'#5084ff':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s;${isOwner?'':'opacity:.5;cursor:not-allowed;'}">
                   ${it.checked ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
                 </div>
                 <span style="flex:1;text-decoration:${it.checked?'line-through':'none'};">
@@ -8999,12 +9000,16 @@ function _renderProcChecklist(procId) {
 
 function _toggleCheckItem(procId, si, ii) {
   const proj = getProject();
+  if (!_isProjOwner(proj)) { showToastMessage('⚠️ 체크리스트는 프로젝트 오너만 체크할 수 있어요'); return; }
   const proc = proj?.processes.find(p => p.id === procId);
   if (!proc?.checklist) return;
   proc.checklist[si].items[ii].checked = !proc.checklist[si].items[ii].checked;
   proc.updatedAt = Date.now();
   save();
   _renderProcChecklist(procId);
+}
+function _isProjOwner(proj) {
+  return !!proj && (!proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email);
 }
 
 function _toggleChecklistItemExpand(procId, si, ii) {
