@@ -9455,7 +9455,7 @@ async function _prImgPreview(input) {
 
 function _prRemoveImg(idx, el) { _prImages.splice(idx, 1); el.remove(); }
 
-function saveProcRecord() {
+async function saveProcRecord() {
   const editor = document.getElementById('proc-record-editor');
   const content = editor?.innerHTML.trim() || '';
   if (!content && !_prImages.length) { showToastMessage('⚠️ 내용 또는 사진을 추가해주세요'); return; }
@@ -9469,12 +9469,12 @@ function saveProcRecord() {
   const proc = proj?.processes.find(p => p.id === _currentProcDetailId);
   if (!proc) return;
   if (!proc.records) proc.records = [];
-  if (_prEditingId) {
+  const isEditing = !!_prEditingId;
+  if (isEditing) {
     const idx = proc.records.findIndex(r => r.id === _prEditingId);
     if (idx !== -1) {
       proc.records[idx] = { ...proc.records[idx], content, images: [..._prImages], mentions: mentionEmails, updatedAt: Date.now() };
     }
-    showToastMessage('✅ 기록이 수정됐습니다');
   } else {
     const record = {
       id: 'prec_' + Date.now() + Math.random().toString(36).slice(2,5),
@@ -9486,10 +9486,22 @@ function saveProcRecord() {
     proc.records.push(record);
     // 새 기록에서만 멘션 알림 발송
     if (mentionEmails.length) _sendProcRecordMentionNotifications(record, proc, mentionEmails, proj);
-    showToastMessage('✅ 기록이 저장됐습니다');
   }
   proc.updatedAt = Date.now();
   save();
+  // save()의 클라우드 sync는 fire-and-forget이라, 여기서 바로 새로고침/화면 이동을 하면
+  // 네트워크 요청이 끝나기 전에 끊겨서 방금 저장한 기록(사진 포함)이 클라우드에 반영 안 될 수 있음.
+  // 그래서 화면을 닫기 전에 클라우드 반영이 끝날 때까지 직접 한 번 더 대기한다.
+  const saveBtn = document.querySelector('#screen-proc-record-write .form-header button[onclick="saveProcRecord()"]');
+  if (saveBtn) { saveBtn.textContent = '저장 중…'; saveBtn.disabled = true; }
+  try {
+    if (proj?.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
+      if (_isProjOwner(proj)) await _syncProjToCloud(proj);
+      else if (proj.myRole === '편집자') await _syncProcessesToCloud(proj);
+    }
+  } catch(e) { console.warn('[saveProcRecord] cloud sync wait failed:', e); }
+  if (saveBtn) { saveBtn.textContent = '저장'; saveBtn.disabled = false; }
+  showToastMessage(isEditing ? '✅ 기록이 수정됐습니다' : '✅ 기록이 저장됐습니다');
   closeProcRecord();
   _renderProcRecords(_currentProcDetailId);
 }
@@ -12155,9 +12167,11 @@ async function _pushProjToCloud(proj) {
 }
 
 function _syncProjToCloud(proj) {
-  if (!_db || !proj.cloudId) return;
+  if (!_db || !proj.cloudId) return Promise.resolve();
   // contentLinks는 협업자가 로컬에만 저장한 데이터를 잃지 않도록 read-merge-write
-  _db.collection('vb_projects').doc(proj.cloudId).get().then(snap => {
+  // (return 필수 — 호출부에서 await로 완료를 기다릴 수 있어야 함. 안 그러면 빠른 새로고침/
+  // 화면전환 시 아직 끝나지 않은 네트워크 요청이 끊겨 방금 저장한 데이터가 유실될 수 있음)
+  return _db.collection('vb_projects').doc(proj.cloudId).get().then(snap => {
     const projData = JSON.parse(JSON.stringify(proj));
     delete projData.myRole;
     // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
