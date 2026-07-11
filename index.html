@@ -5237,8 +5237,9 @@ function save() {
   const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
   if (proj && proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
     _syncProjToCloud(proj);
-  } else if (proj && proj.isCloud && proj.cloudId && proj.myRole === '편집자' && typeof _db !== 'undefined' && _db) {
-    // 편집자(오너 아님)는 공정 기록·체크리스트만 별도로 Firestore에 반영 — 전체 덮어쓰기 방지
+  } else if (proj && proj.isCloud && proj.cloudId && (proj.myRole === '편집자' || proj.myRole === '뷰어') && typeof _db !== 'undefined' && _db) {
+    // 편집자/뷰어(오너 아님)는 공정 기록·체크리스트만 별도로 Firestore에 반영 — 전체 덮어쓰기 방지
+    // (뷰어도 공정기록 작성은 허용되는 액션이라 sync 대상에 포함)
     _syncProcessesToCloud(proj);
   }
 }
@@ -9497,7 +9498,7 @@ async function saveProcRecord() {
   try {
     if (proj?.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
       if (_isProjOwner(proj)) await _syncProjToCloud(proj);
-      else if (proj.myRole === '편집자') await _syncProcessesToCloud(proj);
+      else if (proj.myRole === '편집자' || proj.myRole === '뷰어') await _syncProcessesToCloud(proj);
     }
   } catch(e) { console.warn('[saveProcRecord] cloud sync wait failed:', e); }
   if (saveBtn) { saveBtn.textContent = '저장'; saveBtn.disabled = false; }
@@ -12374,7 +12375,12 @@ async function _syncFurnitureToCloud(proj) {
 // processes(공정 기록·체크리스트)만 Firestore에 업데이트 — 편집자도 반영되도록 별도 sync
 async function _syncProcessesToCloud(proj) {
   if (!proj?.cloudId) return;
-  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  // 뷰어도 포함 — 공정기록(사진) 작성은 뷰어에게도 허용되는 협업 액션인데,
+  // 여기서 뷰어를 막으면 뷰어가 올린 기록/사진이 로컬에만 남고 클라우드에
+  // 전혀 반영되지 않아 새로고침하면 통째로 사라지는 버그가 있었음.
+  // (체크리스트 체크 등 실제로 막아야 하는 오너 전용 액션은 클라이언트에서
+  // 이미 별도로 차단되므로, 여기서 뷰어의 sync 자체를 막을 필요는 없음)
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.myRole === '뷰어' || proj.owner?.email === state.user?.email;
   if (!canWrite) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
