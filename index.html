@@ -5695,10 +5695,12 @@ async function _autoUploadOnLogin() {
 
   if (allCloudProjs.length) {
     allCloudProjs.sort((a,b) => (b.processes?.length||0) - (a.processes?.length||0));
-    const cloudTotal = allCloudProjs.reduce((s,p) => s + (p.processes?.length||0), 0);
-    const localTotal = (state.projects||[]).reduce((s,p) => s + (p.processes?.length||0), 0);
-    // 클라우드에 실제 데이터가 있고, 로컬보다 많거나 같을 때만 교체 (로컬 데이터 보호)
-    if (cloudTotal > 0 && cloudTotal >= localTotal) {
+    // 예전에는 "클라우드 프로세스 총개수 >= 로컬 총개수"일 때만 병합을 적용했는데,
+    // _mergeLocalPreserve()가 이제 필드별로 안전하게 병합(로컬 전용 데이터 보존)하기 때문에
+    // 이 개수 비교 게이트는 더 이상 필요 없음 — 오히려 로컬에 동기화 안 된 공정이 하나라도
+    // 있으면 전체 병합이 통째로 스킵돼서, 다른 협업자가 클라우드에 올린 최신 데이터
+    // (공정기록 사진 등)를 오너가 새로고침해도 영영 못 보게 되는 버그의 원인이었음.
+    {
       // 새로 생성된 로컬 전용 프로젝트(cloudId 없음) 보존
       const newLocalProjs = (state.projects||[]).filter(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
       const currentProj = getProject();
