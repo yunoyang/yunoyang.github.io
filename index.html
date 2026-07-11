@@ -12066,6 +12066,24 @@ function _syncProjToCloud(proj) {
     (projData.furnitureItems || []).forEach(it => {
       if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
     });
+    // processes(공정 기록·체크리스트): 다른 기기/협업자가 클라우드에만 추가/수정한 내용을 잃지 않도록
+    // read-merge-write — updatedAt이 더 최신인 쪽을 채택 (없거나 동일하면 클라우드 우선, 로컬이
+    // 확실히 더 최신일 때만 로컬 채택 — 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어쓰는
+    // 사고 방지). 로컬에만 있는(아직 클라우드에 없는) 공정은 그대로 보존.
+    const _cloudProcesses = snap.data()?.projectData?.processes || [];
+    if (_cloudProcesses.length) {
+      const _localProcesses = proj.processes || [];
+      const _localProcIds = new Set(_localProcesses.map(p => p.id));
+      const _cloudOnly = _cloudProcesses.filter(p => !_localProcIds.has(p.id));
+      const _mergedProcesses = _localProcesses.map(lp => {
+        const cp = _cloudProcesses.find(p => p.id === lp.id);
+        if (!cp) return lp; // 로컬 전용(신규) 공정
+        const cloudTs = cp.updatedAt || 0;
+        const localTs = lp.updatedAt || 0;
+        return localTs > cloudTs ? lp : cp;
+      });
+      projData.processes = [..._mergedProcesses, ..._cloudOnly];
+    }
     // 체크리스트 메모 사진도 base64면 제거
     (projData.processes || []).forEach(p => {
       (p.checklist || []).forEach(sec => {
