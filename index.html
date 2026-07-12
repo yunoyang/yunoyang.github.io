@@ -6698,8 +6698,11 @@ function getStyleData() {
 let _styleRecoveryAttempted = false;
 
 function renderStyleTab() {
-  const rooms = getStyleRooms();
   const data = getStyleData();
+  // 방어적 보강: styleRooms 목록에 없어도 실제로 이미지가 있는 방(예: 협업자가 만든
+  // 커스텀 공간이 styleRooms 동기화 누락으로 목록에 빠진 경우)은 항상 표시되도록 함
+  const knownRooms = getStyleRooms();
+  const rooms = [...new Set([...knownRooms, ...Object.keys(data).filter(r => data[r]?.length > 0)])];
   // 이미지가 전혀 없으면 Firebase Storage에서 자동 복구 시도 (1회)
   const hasAnyImage = Object.values(data).some(arr => arr?.length > 0);
   if (!hasAnyImage && !_styleRecoveryAttempted && state.loggedIn && typeof _fbStorage !== 'undefined' && _fbStorage) {
@@ -12359,14 +12362,22 @@ async function _syncStyleImagesToCloud(proj) {
       if (m.length) merged[r] = m;
     });
     // 3) 병합 결과 쓰기
+    // styleRooms(방 목록)도 함께 병합해서 push — 안 하면 협업자가 새로 만든 커스텀 공간이
+    // 클라우드에 전혀 반영되지 않아, 그 방에 올린 이미지가 있어도 오너 화면의 방 목록에
+    // 그 방 자체가 안 나타나서(getStyleRooms()가 모르는 방) 이미지가 안 보이는 것처럼 됨
+    const cloudRooms = snap.data()?.projectData?.styleRooms || [];
+    const localRooms = proj.styleRooms || [];
+    const mergedRooms = [...new Set([...cloudRooms, ...localRooms])];
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.styleImages': merged,
+      'projectData.styleRooms': mergedRooms,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
       'meta.updatedBySessionId': _sessionId,
     });
     // 로컬도 병합된 값으로 갱신
     proj.styleImages = merged;
+    proj.styleRooms = mergedRooms;
     localStorage.setItem('vibespace', JSON.stringify(state));
     _lastSaveTime = Date.now();
     console.log('[styleSync] ✅ merged', Object.values(merged).reduce((s,a)=>s+a.length,0), 'images');
