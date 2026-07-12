@@ -12024,7 +12024,9 @@ async function _fetchStyleFromCloud() {
   const proj = getProject();
   if (!proj?.cloudId) return;
   const now = Date.now();
-  if (now - _lastStyleFetch < 30000) return;
+  // 30초 쿨다운은 협업자가 방금 올린 이미지가 오너 화면에 늦게(최대 30초) 반영되는
+  // 원인이 될 수 있어 3초로 단축 — 탭 재진입 시 거의 항상 최신 데이터를 받아오게 함
+  if (now - _lastStyleFetch < 3000) return;
   _lastStyleFetch = now;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
