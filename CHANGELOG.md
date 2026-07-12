@@ -14,7 +14,15 @@
 컨디션 항목을 체크리스트에 새로 추가 (CHECK-1~8, 상세는 `.claude/scheduled-tasks/vibespace-sync-audit/SKILL.md` 참고).
 이 시점까지 이 세션에서 직접 발견해 수정한 이슈(공정기록·스타일이미지 클라우드 동기화 관련)는
 별도 커밋들(`6c8dc0e`~`7a2c70f`)로 기록됨 — 자동 루틴이 아닌 대화 중 직접 디버깅으로 처리.
-루틴 자체의 이번 첫 매일-점검 실행 결과는 완료 후 추가 예정.
+
+**루틴의 첫 매일-점검 실행 결과 (commit `6148fc5`)**:
+- CHECK-2 새로고침(`_mergeLocalPreserve`) / CHECK-4 실시간 리스너(`_startCollabListener`) ⚠️ → 수정:
+  두 경로 모두 `styleRooms`(커스텀 공간 목록) 병합 로직이 빠져 있어, 클라우드 값을 그대로
+  덮어썼음 — 로컬에서 막 만든 커스텀 공간이 클라우드에 반영되기 전에 새로고침하거나 다른
+  협업자 변경으로 리스너가 발동하면 사라질 수 있었음. `_syncStyleImagesToCloud`의 이름 기준
+  합집합 병합 패턴을 두 경로에 동일 적용.
+- CHECK-7 이미지 업로드 에러 처리 ⚠️ → 수정: `fpSave()`(도면 저장)가 Storage 업로드 실패 시
+  다른 업로드 함수들과 달리 에러 토스트 없이 조용히 base64로 전환되던 부분에 토스트 추가.
 
 ### 2026-07-06 — 도면(floorplan) 협업자 sync 누락 수정
 - **CHECK-9 도면 이미지 sync ⚠️ → ✅**: 도면 업로드/삭제/편집(`_fpSlotUpload`, `_fpSlotDelete`,
