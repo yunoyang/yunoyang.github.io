@@ -4,6 +4,21 @@
 
 ---
 
+## [2026-07-12] — 클라우드 병합 로직 구조적 리팩터링 (근본 원인 해결)
+
+반복된 "협업자 데이터가 새로고침/실시간 업데이트 시 사라짐" 버그들의 근본 원인은 로컬↔클라우드
+병합 로직이 최소 7곳(`_mergeLocalPreserve`, `_startCollabListener`, `_syncProjToCloud`,
+`_syncStyleImagesToCloud`, `_syncFurnitureToCloud`, `_syncProcessesToCloud`, `_syncMeetingsToCloud`)에
+각각 따로 중복 구현돼 있었던 것 — 필드 추가/규칙 변경 시 한두 곳씩 빠뜨려 같은 버그가 반복됨
+(`styleRooms`가 `_syncProjToCloud`엔 아예 없었고, `_syncMeetingsToCloud`는 read-merge 없이
+로컬을 통째로 덮어쓰기만 했음).
+
+공용 병합 헬퍼 4개(`_mergeListById`, `_mergeStyleImagesObj`, `_mergeStyleRoomsArr`,
+`_mergeProcessesArr`)를 도입하고 위 7개 함수 모두 이 헬퍼를 호출하도록 리팩터링. 이제 병합
+규칙을 한 곳만 고치면 모든 sync 경로에 동시 적용됨. commit: `ff3f490`
+
+---
+
 ## [자동 점검] 데이터 싱크 자동 점검 루틴 (`vibespace-sync-audit`) 실행 이력
 
 매일 오전 실행되는 자동 점검 루틴이 처리·발견·수정한 내용 기록. 이슈 없으면 커밋 없이 통과.
