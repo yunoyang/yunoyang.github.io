@@ -4,6 +4,37 @@
 
 ---
 
+## [자동 점검] 데이터 싱크 자동 점검 루틴 (`vibespace-sync-audit`) 실행 이력
+
+매일 오전 실행되는 자동 점검 루틴이 처리·발견·수정한 내용 기록. 이슈 없으면 커밋 없이 통과.
+
+### 2026-07-12 — 매일 점검으로 확장, 체크리스트 8종으로 재편
+기존 주간(월요일) 점검을 매일 점검으로 전환하고, 이날 하루 동안 반복적으로 발견·수정됐던
+공정(processes)/일정/체크리스트/공정기록, 협업자 권한(myRole), 저장 직후 새로고침 레이스
+컨디션 항목을 체크리스트에 새로 추가 (CHECK-1~8, 상세는 `.claude/scheduled-tasks/vibespace-sync-audit/SKILL.md` 참고).
+이 시점까지 이 세션에서 직접 발견해 수정한 이슈(공정기록·스타일이미지 클라우드 동기화 관련)는
+별도 커밋들(`6c8dc0e`~`7a2c70f`)로 기록됨 — 자동 루틴이 아닌 대화 중 직접 디버깅으로 처리.
+루틴 자체의 이번 첫 매일-점검 실행 결과는 완료 후 추가 예정.
+
+### 2026-07-06 — 도면(floorplan) 협업자 sync 누락 수정
+- **CHECK-9 도면 이미지 sync ⚠️ → ✅**: 도면 업로드/삭제/편집(`_fpSlotUpload`, `_fpSlotDelete`,
+  `clearFloorplan`, `fpSave`)이 전부 범용 `save()`에만 의존했는데, `save()`는 오너일 때만
+  `_syncProjToCloud`를 호출해 **편집자 권한 협업자가 도면을 수정해도 클라우드에 전혀 반영되지
+  않는 버그**였음. 오너/편집자 모두 쓰기 가능한 `_syncFloorplanToCloud(proj)` 신규 추가.
+  commit: `f3ce0cc`
+
+### 2026-06-30 — 도면 멀티슬롯(floorplanEditedImages) sync 누락 수정
+- **CHECK-1/2/3, CHECK-9 ⚠️ → ✅**: 단일 슬롯 `floorplanEditedImage`는 처리되고 있었으나,
+  멀티슬롯 배열 `floorplanEditedImages`가 `_syncProjToCloud`(base64 미제거로 1MB 한도 초과 위험),
+  `_startCollabListener`(실시간 리스너에서 배열 복원 누락으로 로컬 편집 도면 덮어써짐),
+  `_mergeLocalPreserve`(앱 시작 시 슬롯별 merge 누락) 세 곳 모두에서 빠져 있었음. 세 곳 모두 수정.
+
+### 이전 실행 (2026-06-26 ~ 2026-06-29)
+반복적으로 도면 관련 read-merge-write 누락을 발견·수정. 상세 내역은 각 세션 로그 참고
+(세션 검색: "Vibespace sync audit").
+
+---
+
 ## [2026-03-27] — 카드 폴더블 리디자인 + 상세 스크린 + subDesc + 업체 UI + 캘린더 디폴트
 
 ### Added
