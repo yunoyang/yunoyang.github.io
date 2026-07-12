@@ -5066,7 +5066,7 @@ function isExpert() {
 function canEdit() {
   const proj = getProject();
   if (!proj) return false;
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   return isOwner || isExpert();
 }
 
@@ -5234,7 +5234,7 @@ function save() {
   _lastSaveTime = Date.now();
   const proj = getProject();
   // 공동작업자(myRole 있음)는 로컬만 저장 — owner만 projectData를 Firestore에 씀
-  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj && proj.isCloud && proj.cloudId && isOwner && typeof _db !== 'undefined' && _db) {
     _syncProjToCloud(proj);
   } else if (proj && proj.isCloud && proj.cloudId && (proj.myRole === '편집자' || proj.myRole === '뷰어') && typeof _db !== 'undefined' && _db) {
@@ -6928,10 +6928,9 @@ async function addStyleImage(room, item) {
   // save()의 클라우드 sync는 fire-and-forget이라, 여기서 명시적으로 한 번 더 기다린다.
   // 안 기다리면 업로드 완료 토스트를 본 사용자가 바로 새로고침/화면전환 시 아직 끝나지 않은
   // 네트워크 요청이 끊겨서 방금 올린 스타일 이미지가 클라우드에 반영 안 될 수 있음.
-  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
   try {
     if (proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
-      if (isOwner) await _syncProjToCloud(proj);
+      if (_isProjOwner(proj)) await _syncProjToCloud(proj);
       else await _syncStyleImagesToCloud(proj);
     }
   } catch(e) { console.warn('[addStyleImage] cloud sync wait failed:', e); }
@@ -7278,7 +7277,7 @@ function _svAddMemo() {
   });
   input.value = '';
   save();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
@@ -7295,7 +7294,7 @@ function _svToggleMemoLike(memoId, replyId) {
   const idx = target.likes.indexOf(state.user.email);
   idx >= 0 ? target.likes.splice(idx,1) : target.likes.push(state.user.email);
   save();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
@@ -7308,7 +7307,7 @@ function _svDeleteMemo(memoId) {
   if (idx < 0) return;
   item.memos.splice(idx,1);
   save();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
@@ -7341,7 +7340,7 @@ function _svDeleteReply(memoId, replyId) {
   if (idx < 0) return;
   memo.replies.splice(idx, 1);
   save();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
@@ -7423,7 +7422,7 @@ function _svSubmitMemoSheet() {
   }
   closeMemoSheet();
   save();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
   _svRenderProductList();
 }
@@ -7493,7 +7492,7 @@ function _deleteProdPin(pinIndex) {
   items[styleViewerIndex].productPins.splice(pinIndex, 1);
   save();
   // 협업자: _syncProjToCloud 대신 styleImages만 직접 sync
-  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
   _svBuildReel();
   _svRenderProductList();
@@ -7542,7 +7541,7 @@ function _savePinDlg() {
   });
   save();
   // 협업자: styleImages 직접 sync (오너는 save()→_syncProjToCloud 로 이미 처리됨)
-  const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (!isOwner && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
   _closePinDlg();
   _svBuildReel();
@@ -12284,8 +12283,14 @@ function _syncProjToCloud(proj) {
       });
   }).catch(e => {
     if (e.code === 'permission-denied' || e.code === 'unauthenticated') {
-      // 로그인 직후 auth 전파 지연 — 조용히 무시
-      console.warn('sync skipped (auth pending):', e.code);
+      console.warn('sync permission issue:', e.code);
+      // 로그인 직후 잠깐(5초 이내)의 auth 전파 지연은 조용히 무시하되, 그 이후에도
+      // permission-denied가 나면 실제 권한 문제(예: 역할 오판정으로 오너 전용 쓰기를
+      // 시도)일 가능성이 높으므로 조용히 삼키지 않고 사용자에게 알림 — 이걸 계속
+      // 숨기면 협업자가 올린 데이터가 "이유 없이" 클라우드에 반영 안 되는 것처럼 보임
+      if (Date.now() - (window._appLoadedAt || 0) > 5000) {
+        showToastMessage('⚠️ 권한 문제로 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
+      }
       return;
     }
     console.error('sync err', e);
@@ -12296,7 +12301,7 @@ function _syncProjToCloud(proj) {
 // 스타일 이미지만 Firestore에 업데이트 — read-merge-write로 타인 이미지 덮어쓰기 방지
 async function _syncStyleImagesToCloud(proj) {
   if (!proj?.cloudId) return;
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   // 뷰어도 허용 — 스타일 뷰어 화면의 "이미지 추가" 버튼은 뷰어에게도 열려 있는데
   // (canEdit() 게이트가 안 걸려 있음) 여기서 뷰어 sync를 막으면 뷰어가 올린 이미지가
   // 로컬에만 남고 클라우드에 전혀 반영되지 않아 새로고침하면 사라지는 버그가 있었음
@@ -12674,7 +12679,7 @@ async function renderCollabTab() {
   }
 
   const proj = getProject();
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   const collaborators = proj.collaborators || [];
   const invites = proj.invites || [];
 
@@ -12766,7 +12771,7 @@ async function renderCollabTab() {
 async function _recoverCollaboratorsFromIndex() {
   const proj = getProject();
   if (!proj?.cloudId || !_db || !state.loggedIn) return;
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email;
+  const isOwner = _isProjOwner(proj);
   if (!isOwner) return;
   if ((proj.collaborators||[]).length > 0) return; // 이미 있으면 스킵
 
@@ -13591,6 +13596,7 @@ function _applyBrandLogo(dataUrl) {
 const _applyHeaderLogo = _applyBrandLogo;
 
 // ===== INIT =====
+window._appLoadedAt = Date.now(); // 로그인 직후 auth 전파 지연 여부 판단용
 load();
 // 회의록 이미지: localStorage 구 포맷 마이그레이션 후 IDB에서 복원
 async function _initMeetingImages() {
@@ -14332,7 +14338,7 @@ async function _saveFurnitureItem() {
   // save()의 클라우드 sync는 fire-and-forget이라 여기서 명시적으로 완료를 기다린다
   // (안 기다리면 빠른 새로고침/화면전환 시 방금 저장한 가구·사진이 클라우드에 반영 안 될 수 있음)
   try {
-    const isOwner = !proj?.myRole || proj.myRole === 'owner' || proj?.owner?.email === state.user?.email;
+    const isOwner = _isProjOwner(proj);
     if (proj.isCloud && proj.cloudId && typeof _db !== 'undefined' && _db) {
       if (isOwner) await _syncProjToCloud(proj);
       else await _syncFurnitureToCloud(proj);
