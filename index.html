@@ -11923,6 +11923,15 @@ function _mergeLocalPreserve(cp, localProjs) {
     });
     if (Object.keys(mergedStyleImages).length) merged.styleImages = mergedStyleImages;
   }
+  // styleRooms(커스텀 공간 목록): 이름 기준 합집합 병합 — 안 하면 로컬에서 방금 만든
+  // 커스텀 공간이 아직 클라우드에 반영되기 전에 새로고침하면 목록에서 사라짐
+  {
+    const cloudRooms = cp.styleRooms || [];
+    const localRooms = local.styleRooms || [];
+    if (localRooms.length || cloudRooms.length) {
+      merged.styleRooms = [...new Set([...cloudRooms, ...localRooms])];
+    }
+  }
   // contentLinks: id 기준 합집합 병합
   const cpLinks = cp.contentLinks || [];
   const localLinks = local.contentLinks || [];
@@ -12606,6 +12615,7 @@ function _startCollabListener(cloudId) {
     const localFloorplanImages = Array.isArray(proj.floorplanImages) && proj.floorplanImages.some(Boolean) ? proj.floorplanImages : null;
     const localFloorplanEditedImages = Array.isArray(proj.floorplanEditedImages) && proj.floorplanEditedImages.some(Boolean) ? [...proj.floorplanEditedImages] : null;
     const localContentLinks = proj.contentLinks || []; // contentLinks 보존
+    const localStyleRooms = proj.styleRooms || []; // styleRooms(커스텀 공간) 보존
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
     const localProcesses = proj.processes || []; // 공정 기록·체크리스트 보존 (미동기화 로컬 편집 유실 방지)
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
@@ -12713,6 +12723,12 @@ function _startCollabListener(cloudId) {
       merged[r] = [...li.filter(x => !seen.has(x.url)), ...cloudWithPins];
     });
     proj.styleImages = merged;
+    // styleRooms(커스텀 공간 목록): 이름 기준 합집합 — 아직 클라우드에 반영 안 된
+    // 로컬 전용 커스텀 공간이 리스너 echo로 덮어써져 사라지는 것 방지
+    const remoteStyleRooms = remote.styleRooms || [];
+    if (localStyleRooms.length || remoteStyleRooms.length) {
+      proj.styleRooms = [...new Set([...remoteStyleRooms, ...localStyleRooms])];
+    }
     // contentLinks: 클라우드와 로컬 합집합 (id 기준 중복 제거, 로컬 전용 항목 보존)
     const cloudLinks = remote.contentLinks || [];
     const seenIds = new Set(cloudLinks.map(x => x.id));
@@ -17553,6 +17569,7 @@ async function fpSave() {
         save();
         _syncFloorplanToCloud(proj);
         _loadInfoView();
+        showToastMessage('⚠️ 도면이 이 기기에만 저장됐어요(' + (storageErr.code || storageErr.message || '업로드 실패') + ') — 다른 사람 화면에는 보이지 않을 수 있어요. 다시 시도해주세요');
       }
     } else {
       _setEditedImage(dataURL);
