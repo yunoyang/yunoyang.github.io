@@ -11898,65 +11898,110 @@ function _genToken(len = 28) {
 
 // ===== CLOUD MERGE HELPER =====
 // 클라우드 프로젝트를 로컬 프로젝트와 병합
+// ===== 범용 클라우드 병합 헬퍼 =====
+// 지금까지 계속된 협업자 데이터 유실 버그들의 근본 원인은, 로컬↔클라우드 병합 로직이
+// _mergeLocalPreserve(새로고침) / _startCollabListener(실시간 리스너) / _syncProjToCloud(오너
+// 전체 sync) 세 곳에 각각 따로(중복) 구현돼 있었다는 것. 필드가 추가되거나 병합 규칙이
+// 바뀔 때마다 세 곳을 전부 고쳐야 했고, 실제로 매번 한두 곳씩 빠뜨려서 "새로고침하면
+// 사라짐" 류의 버그가 반복됐다. 이제부터는 아래 공용 헬퍼를 세 곳 모두에서 호출해서,
+// 병합 규칙을 한 군데만 고치면 모든 경로에 동시에 적용되도록 한다.
+
+// id 기준 합집합 + updatedAt(또는 createdAt/addedAt) 최신 우선 병합
+// furnitureItems / contentLinks / meetings 등 "id를 가진 리스트" 전반에 공통 사용
+function _mergeListById(localArr, cloudArr, opts) {
+  opts = opts || {};
+  const tsOf = it => (it && (it.updatedAt || it.createdAt || it.addedAt)) || 0;
+  localArr = localArr || [];
+  cloudArr = cloudArr || [];
+  const cloudIds = new Set(cloudArr.map(it => it.id));
+  const localOnly = localArr.filter(it => !cloudIds.has(it.id));
+  const merged = cloudArr.map(ci => {
+    const li = localArr.find(it => it.id === ci.id);
+    if (!li) return ci;
+    return tsOf(li) >= tsOf(ci) ? li : ci;
+  });
+  const combined = opts.newFirst ? [...localOnly, ...merged] : [...merged, ...localOnly];
+  return opts.sortByTsDesc ? combined.sort((a, b) => tsOf(b) - tsOf(a)) : combined;
+}
+
+// styleImages: room별 URL 기준 합집합 (로컬 전용/미동기화 이미지 보존)
+function _mergeStyleImagesObj(localImgs, cloudImgs) {
+  localImgs = localImgs || {};
+  cloudImgs = cloudImgs || {};
+  const merged = {};
+  const rooms = new Set([...Object.keys(cloudImgs), ...Object.keys(localImgs)]);
+  rooms.forEach(r => {
+    const ci = cloudImgs[r] || [];
+    const li = (localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
+    const cloudUrls = new Set(ci.map(x => x.url));
+    // 같은 URL 이미지는 productPins·memos도 id 기준 합집합으로 병합 (핀/댓글 유실 방지)
+    const cloudWithMerged = ci.map(cloudItem => {
+      const localItem = li.find(x => x.url === cloudItem.url);
+      if (!localItem) return cloudItem;
+      let result = cloudItem;
+      const cP = cloudItem.productPins || [], lP = localItem.productPins || [];
+      if (lP.length) {
+        const seenP = new Set(cP.map(p => p.id));
+        const extraP = lP.filter(p => !seenP.has(p.id));
+        if (extraP.length) result = { ...result, productPins: [...cP, ...extraP] };
+      }
+      const cM = cloudItem.memos || [], lM = localItem.memos || [];
+      if (lM.length) {
+        const seenM = new Set(cM.map(m => m.id));
+        const extraM = lM.filter(m => !seenM.has(m.id));
+        const mergedM = cM.map(cm => {
+          const lm = lM.find(m => m.id === cm.id);
+          if (!lm) return cm;
+          const likes = [...new Set([...(cm.likes || []), ...(lm.likes || [])])];
+          return likes.length !== (cm.likes || []).length ? { ...cm, likes } : cm;
+        });
+        if (extraM.length || JSON.stringify(mergedM) !== JSON.stringify(cM)) {
+          result = { ...result, memos: [...mergedM, ...extraM] };
+        }
+      }
+      return result;
+    });
+    const localOnly = li.filter(x => !cloudUrls.has(x.url));
+    const m = [...localOnly, ...cloudWithMerged];
+    if (m.length) merged[r] = m;
+  });
+  return merged;
+}
+
+// styleRooms(커스텀 공간 목록): 이름 기준 합집합
+function _mergeStyleRoomsArr(localRooms, cloudRooms) {
+  return [...new Set([...(cloudRooms || []), ...(localRooms || [])])];
+}
+
+// processes: id 기준 병합, 없는 로컬 항목은 신규(local-only)로 보존
+function _mergeProcessesArr(localArr, cloudArr) {
+  localArr = localArr || [];
+  cloudArr = cloudArr || [];
+  const cloudIds = new Set(cloudArr.map(p => p.id));
+  const localOnly = localArr.filter(p => !cloudIds.has(p.id));
+  const merged = cloudArr.map(cp => {
+    const lp = localArr.find(p => p.id === cp.id);
+    return lp ? _mergeOneProcess(lp, cp) : cp;
+  });
+  return [...merged, ...localOnly];
+}
+
 function _mergeLocalPreserve(cp, localProjs) {
   const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
   if (!local) return cp;
   const merged = { ...cp };
   // 공동작업자 역할 보존
   if (local.myRole) merged.myRole = local.myRole;
-  // styleImages: 방(room)별로 URL 기준 항상 합집합 병합 (기존에는 클라우드에 이미지가
-  // "하나라도" 있으면 로컬 값을 통째로 버렸음 — 실제 프로젝트는 거의 항상 클라우드에
-  // 이미지가 있으므로 사실상 항상 로컬 전용/미동기화 이미지를 버리는 것과 같았고,
-  // 이게 "협업자가 올린 스타일 이미지가 새로고침하면 사라진다"는 버그의 원인이었음)
-  {
-    const cloudImgs = cp.styleImages || {};
-    const localImgs = local.styleImages || {};
-    const mergedStyleImages = {};
-    const rooms = new Set([...Object.keys(cloudImgs), ...Object.keys(localImgs)]);
-    rooms.forEach(r => {
-      const ci = cloudImgs[r] || [];
-      const li = (localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
-      const cloudUrls = new Set(ci.map(x => x.url));
-      const localOnly = li.filter(x => !cloudUrls.has(x.url));
-      const m = [...localOnly, ...ci];
-      if (m.length) mergedStyleImages[r] = m;
-    });
-    if (Object.keys(mergedStyleImages).length) merged.styleImages = mergedStyleImages;
-  }
-  // styleRooms(커스텀 공간 목록): 이름 기준 합집합 병합 — 안 하면 로컬에서 방금 만든
-  // 커스텀 공간이 아직 클라우드에 반영되기 전에 새로고침하면 목록에서 사라짐
-  {
-    const cloudRooms = cp.styleRooms || [];
-    const localRooms = local.styleRooms || [];
-    if (localRooms.length || cloudRooms.length) {
-      merged.styleRooms = [...new Set([...cloudRooms, ...localRooms])];
-    }
-  }
-  // contentLinks: id 기준 합집합 병합
-  const cpLinks = cp.contentLinks || [];
-  const localLinks = local.contentLinks || [];
-  if (localLinks.length) {
-    const seen = new Set(cpLinks.map(x => x.id));
-    const extra = localLinks.filter(x => !seen.has(x.id));
-    merged.contentLinks = extra.length
-      ? [...cpLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
-      : cpLinks;
-  }
-  // furnitureItems: id 기준 합집합 — 타임스탬프 최신 우선, 새 로컬 항목은 맨 앞 유지
-  const cpFurniture = cp.furnitureItems || [];
-  const localFurniture = local.furnitureItems || [];
-  if (cpFurniture.length || localFurniture.length) {
-    const cpIds = new Set(cpFurniture.map(it => it.id));
-    const newLocalOnly = localFurniture.filter(it => !cpIds.has(it.id));
-    const existingMerged = cpFurniture.map(ci => {
-      const li = localFurniture.find(it => it.id === ci.id);
-      if (!li) return ci;
-      const cloudTs = ci.updatedAt || ci.createdAt || 0;
-      const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs >= cloudTs ? li : ci;
-    });
-    merged.furnitureItems = [...newLocalOnly, ...existingMerged];
-  }
+  // 아래 필드들은 모두 공용 헬퍼(_mergeStyleImagesObj 등)로 병합한다 — 이 함수와
+  // _startCollabListener, _syncProjToCloud가 전부 같은 헬퍼를 호출하므로, 병합 규칙을
+  // 한 곳에서 고치면 세 경로 모두에 동시 적용된다 (예전엔 각자 따로 구현돼 있어서
+  // 매번 한두 곳씩 누락되는 게 반복되는 버그의 근본 원인이었음).
+  merged.styleImages = _mergeStyleImagesObj(local.styleImages, cp.styleImages);
+  merged.styleRooms = _mergeStyleRoomsArr(local.styleRooms, cp.styleRooms);
+  merged.contentLinks = _mergeListById(local.contentLinks, cp.contentLinks, { sortByTsDesc: true });
+  merged.furnitureItems = _mergeListById(local.furnitureItems, cp.furnitureItems, { newFirst: true });
+  merged.meetings = _mergeListById(local.meetings, cp.meetings, { sortByTsDesc: true });
+  merged.processes = _mergeProcessesArr(local.processes, cp.processes);
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   if (Array.isArray(local.floorplanEditedImages) && local.floorplanEditedImages.some(Boolean)) {
@@ -11970,40 +12015,6 @@ function _mergeLocalPreserve(cp, localProjs) {
   } else if (Array.isArray(local.floorplanImages) && local.floorplanImages.some(Boolean)) {
     merged.floorplanImages = local.floorplanImages;
     merged.floorplanImage = local.floorplanImages.find(Boolean) || null;
-  }
-  // processes(공정 기록·체크리스트): id 기준으로 항상 병합 — 이 부분이 빠져 있으면
-  // 새로고침할 때마다 방금 로컬에 저장한 공정기록(사진 포함)이 클라우드에서 읽어온
-  // 값으로 그냥 덮어써져서 사라지는 문제가 생김 (다른 sync 함수들은 이미 병합하는데
-  // 새로고침 경로인 이 함수만 빠져 있었음)
-  const cpProcesses = cp.processes || [];
-  const localProcesses = local.processes || [];
-  if (localProcesses.length || cpProcesses.length) {
-    const cpIds = new Set(cpProcesses.map(p => p.id));
-    const localOnlyProcs = localProcesses.filter(p => !cpIds.has(p.id));
-    const mergedProcs = cpProcesses.map(cpP => {
-      const lp = localProcesses.find(p => p.id === cpP.id);
-      return lp ? _mergeOneProcess(lp, cpP) : cpP;
-    });
-    merged.processes = [...mergedProcs, ...localOnlyProcs];
-  }
-  // ★ meetings: id 기준 합집합 — updatedAt 최신 버전 우선 (이미지 sync 보장)
-  const cpMeetings = cp.meetings || [];
-  const localMeetings = local.meetings || [];
-  if (localMeetings.length || cpMeetings.length) {
-    const map = new Map();
-    cpMeetings.forEach(m => map.set(m.id, m));
-    localMeetings.forEach(m => {
-      const cloud = map.get(m.id);
-      if (!cloud) {
-        map.set(m.id, m); // 로컬에만 있는 기록
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = m.updatedAt || m.createdAt || 0;
-        if (localTs > cloudTs) map.set(m.id, m);
-      }
-    });
-    merged.meetings = Array.from(map.values())
-      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }
   return merged;
 }
@@ -12226,28 +12237,16 @@ function _syncProjToCloud(proj) {
   return _db.collection('vb_projects').doc(proj.cloudId).get().then(snap => {
     const projData = JSON.parse(JSON.stringify(proj));
     delete projData.myRole;
-    // 클라우드 contentLinks와 로컬 병합 (id 기준 합집합)
-    const _cloudLinks = snap.data()?.projectData?.contentLinks || [];
-    const _localLinks = proj.contentLinks || [];
-    if (_cloudLinks.length) {
-      const _seenIds = new Set(_localLinks.map(x => x.id));
-      const _extra = _cloudLinks.filter(x => !_seenIds.has(x.id));
-      projData.contentLinks = _extra.length
-        ? [..._localLinks, ..._extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
-        : _localLinks;
-    } else {
-      projData.contentLinks = _localLinks;
-    }
-    // furnitureItems: 클라우드에 다른 기기가 추가한 항목 보존 (read-merge-write)
-    // 새로 추가된(클라우드에 없는) 로컬 항목은 맨 앞에 유지 — 최신순 정렬 보존
-    const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
-    if (cloudFurniture.length) {
-      const localFurniture = proj.furnitureItems || [];
-      const cloudIds = new Set(cloudFurniture.map(it => it.id));
-      const localOnly = localFurniture.filter(it => !cloudIds.has(it.id));
-      const merged = cloudFurniture.map(ci => localFurniture.find(li => li.id === ci.id) || ci);
-      projData.furnitureItems = [...localOnly, ...merged];
-    }
+    const cloudData = snap.data()?.projectData || {};
+    // 아래 필드들은 모두 공용 헬퍼로 병합 — _mergeLocalPreserve/_startCollabListener와 동일한
+    // 규칙을 공유하므로, 병합 로직을 한 곳만 고치면 세 경로 모두에 동시 적용된다.
+    // (예전엔 이 함수가 styleRooms를 아예 push조차 안 했던 것처럼, 세 경로에 각자 따로
+    // 구현돼 있어서 필드 하나가 통째로 누락되는 사고가 반복됐음)
+    projData.contentLinks = _mergeListById(proj.contentLinks, cloudData.contentLinks, { sortByTsDesc: true });
+    projData.furnitureItems = _mergeListById(proj.furnitureItems, cloudData.furnitureItems, { newFirst: true });
+    projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
+    projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
+    projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
@@ -12257,38 +12256,8 @@ function _syncProjToCloud(proj) {
     (projData.furnitureItems || []).forEach(it => {
       if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
     });
-    // processes(공정 기록·체크리스트): 다른 기기/협업자가 클라우드에만 추가/수정한 내용을 잃지 않도록
-    // read-merge-write — updatedAt이 더 최신인 쪽을 채택 (없거나 동일하면 클라우드 우선, 로컬이
-    // 확실히 더 최신일 때만 로컬 채택 — 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어쓰는
-    // 사고 방지). 로컬에만 있는(아직 클라우드에 없는) 공정은 그대로 보존.
-    const _cloudProcesses = snap.data()?.projectData?.processes || [];
-    if (_cloudProcesses.length) {
-      const _localProcesses = proj.processes || [];
-      const _localProcIds = new Set(_localProcesses.map(p => p.id));
-      const _cloudOnly = _cloudProcesses.filter(p => !_localProcIds.has(p.id));
-      const _mergedProcesses = _localProcesses.map(lp => {
-        const cp = _cloudProcesses.find(p => p.id === lp.id);
-        return cp ? _mergeOneProcess(lp, cp) : lp; // 로컬 전용(신규) 공정
-      });
-      projData.processes = [..._mergedProcesses, ..._cloudOnly];
-    }
     // 체크리스트 메모 사진 + 공정기록 사진 모두 base64면 제거 (Storage 업로드 실패 폴백분)
     if (Array.isArray(projData.processes)) projData.processes = projData.processes.map(_stripProcessBase64);
-    // styleImages: 클라우드 + 로컬 전용 항목 병합 (base64 제거 포함)
-    // 새로 추가된(클라우드에 없는) 로컬 이미지는 맨 앞에 유지 — 최신순 정렬 보존
-    const _cloudImgs = snap.data()?.projectData?.styleImages || {};
-    const _localImgs = proj.styleImages || {};
-    const _mergedStyleImages = {};
-    const _styleRooms = new Set([...Object.keys(_cloudImgs), ...Object.keys(_localImgs)]);
-    _styleRooms.forEach(r => {
-      const ci = _cloudImgs[r] || [];
-      const li = (_localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
-      const cloudUrls = new Set(ci.map(x => x.url));
-      const localOnly = li.filter(x => !cloudUrls.has(x.url));
-      const m = [...localOnly, ...ci];
-      if (m.length) _mergedStyleImages[r] = m;
-    });
-    projData.styleImages = _mergedStyleImages;
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
     if (projData.floorplanEditedImage && projData.floorplanEditedImage.startsWith('data:')) delete projData.floorplanEditedImage;
     // floorplanEditedImages 배열의 base64도 제거 (Storage URL만 허용)
@@ -12339,44 +12308,11 @@ async function _syncStyleImagesToCloud(proj) {
     // 1) 현재 Firestore 값 읽기
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudImages = snap.data()?.projectData?.styleImages || {};
-    // 2) cloud + local 병합 (URL 기준 + productPins·memos 내부 머지)
-    const merged = {};
-    const allRooms = new Set([...Object.keys(cloudImages), ...Object.keys(proj.styleImages || {})]);
-    allRooms.forEach(r => {
-      const ci = cloudImages[r] || [];
-      const li = (proj.styleImages || {})[r] || [];
-      // cloud 기준으로 핀·메모 병합
-      const cloudUrlMap = new Map(ci.map(x => [x.url, x]));
-      const result = ci.map(cloudItem => {
-        const lc = li.find(x => x.url === cloudItem.url);
-        if (!lc) return cloudItem;
-        let it = cloudItem;
-        // pins
-        const cP = cloudItem.productPins || [], lP = lc.productPins || [];
-        if (lP.length) { const s=new Set(cP.map(p=>p.id)); const ex=lP.filter(p=>!s.has(p.id)); if(ex.length) it={...it,productPins:[...cP,...ex]}; }
-        // memos
-        const cM = cloudItem.memos || [], lM = lc.memos || [];
-        if (lM.length) {
-          const s=new Set(cM.map(m=>m.id));
-          const ex=lM.filter(m=>!s.has(m.id));
-          const mg=cM.map(cm=>{const lm=lM.find(m=>m.id===cm.id);if(!lm)return cm;const lk=[...new Set([...(cm.likes||[]),...(lm.likes||[])])];return lk.length!==(cm.likes||[]).length?{...cm,likes:lk}:cm;});
-          if(ex.length||JSON.stringify(mg)!==JSON.stringify(cM)) it={...it,memos:[...mg,...ex]};
-        }
-        return it;
-      });
-      // local에만 있는 이미지 추가 (base64 폴백은 1MB 제한 방지 위해 제외 — Storage 업로드 재시도 필요)
-      const cloudUrls = new Set(ci.map(x => x.url));
-      const localOnly = li.filter(x => !cloudUrls.has(x.url) && x.url && !x.url.startsWith('data:'));
-      const m = [...result, ...localOnly];
-      if (m.length) merged[r] = m;
-    });
-    // 3) 병합 결과 쓰기
-    // styleRooms(방 목록)도 함께 병합해서 push — 안 하면 협업자가 새로 만든 커스텀 공간이
-    // 클라우드에 전혀 반영되지 않아, 그 방에 올린 이미지가 있어도 오너 화면의 방 목록에
-    // 그 방 자체가 안 나타나서(getStyleRooms()가 모르는 방) 이미지가 안 보이는 것처럼 됨
+    // 2) cloud + local 병합 (다른 sync 경로들과 동일한 공용 헬퍼 사용)
+    const merged = _mergeStyleImagesObj(proj.styleImages, cloudImages);
+    // 3) 병합 결과 쓰기 — styleRooms(방 목록)도 함께 병합해서 push
     const cloudRooms = snap.data()?.projectData?.styleRooms || [];
-    const localRooms = proj.styleRooms || [];
-    const mergedRooms = [...new Set([...cloudRooms, ...localRooms])];
+    const mergedRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudRooms);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.styleImages': merged,
       'projectData.styleRooms': mergedRooms,
@@ -12407,19 +12343,7 @@ async function _syncFurnitureToCloud(proj) {
   try {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
-    const localFurniture = proj.furnitureItems || [];
-    const cloudIds = new Set(cloudFurniture.map(it => it.id));
-    // 새로 추가된(클라우드에 없는) 로컬 항목은 맨 앞에 유지 — 최신순 정렬 보존
-    const localOnly = localFurniture.filter(it => !cloudIds.has(it.id));
-    // 타임스탬프 기준: 로컬이 더 최신이면 로컬 버전 사용, 클라우드 순서는 유지
-    const existing = cloudFurniture.map(ci => {
-      const li = localFurniture.find(it => it.id === ci.id);
-      if (!li) return ci;
-      const cloudTs = ci.updatedAt || ci.createdAt || 0;
-      const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs >= cloudTs ? li : ci;
-    });
-    const merged = [...localOnly, ...existing];
+    const merged = _mergeListById(proj.furnitureItems, cloudFurniture, { newFirst: true });
     // base64 이미지는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
     const mergedForCloud = merged.map(it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
@@ -12451,18 +12375,8 @@ async function _syncProcessesToCloud(proj) {
   try {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudProcesses = snap.data()?.projectData?.processes || [];
-    const localProcesses = proj.processes || [];
-    const cloudIds = new Set(cloudProcesses.map(p => p.id));
-    // 로컬에만 있는(아직 클라우드에 없는) 공정은 보존
-    const localOnly = localProcesses.filter(p => !cloudIds.has(p.id));
-    // 같은 공정은 updatedAt 기준 최신 버전 사용 — 클라우드 순서 유지
-    // updatedAt이 없거나 동일하면 클라우드를 우선 (상세내역·기록 등 updatedAt이 안 찍히는 편집이 많아
-    // 로컬을 기본값으로 두면 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어써 유실될 수 있음)
-    const merged = cloudProcesses.map(cp => {
-      const lp = localProcesses.find(p => p.id === cp.id);
-      return lp ? _mergeOneProcess(lp, cp) : cp;
-    });
-    const finalProcesses = [...merged, ...localOnly];
+    // 다른 sync 경로들과 동일한 공용 헬퍼로 병합 (updatedAt 기준, records는 항상 합집합)
+    const finalProcesses = _mergeProcessesArr(proj.processes, cloudProcesses);
     // 체크리스트 사진 + 공정기록 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
     const finalForCloud = finalProcesses.map(_stripProcessBase64);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
@@ -12646,22 +12560,8 @@ function _startCollabListener(cloudId) {
       proj.floorplanImage = mergedImgs.find(Boolean) || localFloorplan || null;
     }
     // ★ meetings: 로컬+클라우드 합집합 — updatedAt 기준 최신 버전 우선 (이미지 sync 보장)
-    const remoteMeetings = remote.meetings || [];
-    const meetMap = new Map();
-    remoteMeetings.forEach(m => meetMap.set(m.id, m));
-    localMeetings.forEach(m => {
-      const cloud = meetMap.get(m.id);
-      if (!cloud) {
-        meetMap.set(m.id, m); // 로컬에만 있는 기록 (아직 미업로드)
-      } else {
-        const cloudTs = cloud.updatedAt || cloud.createdAt || 0;
-        const localTs = m.updatedAt || m.createdAt || 0;
-        if (localTs > cloudTs) meetMap.set(m.id, m); // 로컬이 더 최신이면 로컬 사용
-        // 클라우드가 더 최신이면 cloud 버전 유지 (PC에서 수정한 내용 보존)
-      }
-    });
-    proj.meetings = Array.from(meetMap.values())
-      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // (_mergeLocalPreserve/_syncProjToCloud와 동일한 공용 헬퍼 사용)
+    proj.meetings = _mergeListById(localMeetings, remote.meetings, { sortByTsDesc: true });
     // 기록 이미지 복원: 로컬 base64만 추가 (Firebase URL은 cloud 버전에 이미 포함)
     proj.meetings.forEach(m => {
       const localImgs = localMeetingImgMap[m.id] || [];
@@ -12682,83 +12582,13 @@ function _startCollabListener(cloudId) {
         if (updatedM) openMeetingDetail(_currentMeetingId);
       }
     });
-    // styleImages: 클라우드와 로컬 합집합 (로컬에만 있는 이미지 보존)
-    const cloudImages = remote.styleImages || {};
-    const merged = {};
-    const rooms = new Set([...Object.keys(cloudImages), ...Object.keys(localImages)]);
-    rooms.forEach(r => {
-      const ri = cloudImages[r] || [];
-      const li = localImages[r] || [];
-      const seen = new Set(ri.map(x => x.url));
-      // 같은 URL의 이미지는 productPins·memos를 ID 기준 합집합으로 머지
-      const cloudWithPins = ri.map(cloudItem => {
-        const localItem = li.find(x => x.url === cloudItem.url);
-        if (!localItem) return cloudItem;
-        let result = cloudItem;
-        // productPins 머지
-        const cPins = cloudItem.productPins || [];
-        const lPins = localItem.productPins || [];
-        if (lPins.length) {
-          const seenP = new Set(cPins.map(p => p.id));
-          const extra = lPins.filter(p => !seenP.has(p.id));
-          if (extra.length) result = {...result, productPins: [...cPins, ...extra]};
-        }
-        // memos 머지 (ID 기준 합집합 + likes union)
-        const cMemos = cloudItem.memos || [];
-        const lMemos = localItem.memos || [];
-        if (lMemos.length) {
-          const seenM = new Set(cMemos.map(m => m.id));
-          const extraM = lMemos.filter(m => !seenM.has(m.id));
-          const mergedM = cMemos.map(cm => {
-            const lm = lMemos.find(m => m.id === cm.id);
-            if (!lm) return cm;
-            const likes = [...new Set([...(cm.likes||[]), ...(lm.likes||[])])];
-            return likes.length !== (cm.likes||[]).length ? {...cm, likes} : cm;
-          });
-          if (extraM.length || JSON.stringify(mergedM) !== JSON.stringify(cMemos))
-            result = {...result, memos: [...mergedM, ...extraM]};
-        }
-        return result;
-      });
-      merged[r] = [...li.filter(x => !seen.has(x.url)), ...cloudWithPins];
-    });
-    proj.styleImages = merged;
-    // styleRooms(커스텀 공간 목록): 이름 기준 합집합 — 아직 클라우드에 반영 안 된
-    // 로컬 전용 커스텀 공간이 리스너 echo로 덮어써져 사라지는 것 방지
-    const remoteStyleRooms = remote.styleRooms || [];
-    if (localStyleRooms.length || remoteStyleRooms.length) {
-      proj.styleRooms = [...new Set([...remoteStyleRooms, ...localStyleRooms])];
-    }
-    // contentLinks: 클라우드와 로컬 합집합 (id 기준 중복 제거, 로컬 전용 항목 보존)
-    const cloudLinks = remote.contentLinks || [];
-    const seenIds = new Set(cloudLinks.map(x => x.id));
-    const extraLocal = localContentLinks.filter(x => !seenIds.has(x.id));
-    proj.contentLinks = extraLocal.length
-      ? [...cloudLinks, ...extraLocal].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0))
-      : cloudLinks;
-    // furnitureItems: 타임스탬프 기준 최신 우선 merge, 새 로컬 항목은 맨 앞 유지
-    const remoteFurniture = remote.furnitureItems || [];
-    const remoteFurnitureIds = new Set(remoteFurniture.map(it => it.id));
-    const newLocalOnlyFurniture = localFurnitureItems.filter(it => !remoteFurnitureIds.has(it.id));
-    const existingMergedFurniture = remoteFurniture.map(ci => {
-      const li = localFurnitureItems.find(it => it.id === ci.id);
-      if (!li) return ci;
-      const cloudTs = ci.updatedAt || ci.createdAt || 0;
-      const localTs = li.updatedAt || li.createdAt || 0;
-      return localTs >= cloudTs ? li : ci;
-    });
-    proj.furnitureItems = [...newLocalOnlyFurniture, ...existingMergedFurniture];
-    // processes(공정 기록·체크리스트): id 기준 updatedAt 최신 우선 merge — 아직 동기화 안 된 로컬 편집 보존
-    // updatedAt이 없거나 동일하면 클라우드를 우선 (상세내역·기록 등 updatedAt이 안 찍히는 편집이 많아
-    // 로컬을 기본값으로 두면 오래된 기기의 로컬 데이터가 최신 클라우드 데이터를 덮어써 유실될 수 있음)
-    const remoteProcesses = remote.processes || [];
-    const remoteProcIds = new Set(remoteProcesses.map(p => p.id));
-    const newLocalOnlyProcesses = localProcesses.filter(p => !remoteProcIds.has(p.id));
-    const mergedProcesses = remoteProcesses.map(cp => {
-      const lp = localProcesses.find(p => p.id === cp.id);
-      return lp ? _mergeOneProcess(lp, cp) : cp;
-    });
-    proj.processes = [...mergedProcesses, ...newLocalOnlyProcesses];
+    // 아래 필드들은 모두 공용 헬퍼로 병합 — _mergeLocalPreserve/_syncProjToCloud와 동일한
+    // 규칙을 공유하므로, 병합 로직을 한 곳만 고치면 세 경로 모두에 동시 적용된다.
+    proj.styleImages = _mergeStyleImagesObj(localImages, remote.styleImages);
+    proj.styleRooms = _mergeStyleRoomsArr(localStyleRooms, remote.styleRooms);
+    proj.contentLinks = _mergeListById(localContentLinks, remote.contentLinks, { sortByTsDesc: true });
+    proj.furnitureItems = _mergeListById(localFurnitureItems, remote.furnitureItems, { newFirst: true });
+    proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
@@ -15238,8 +15068,13 @@ async function _syncMeetingsToCloud(proj) {
   const ok = await _initFirebase();
   if (!ok || !_db || !proj.cloudId) return;
   try {
+    // read-merge-write — 로컬을 그대로 push하면 다른 기기/협업자가 그 사이에 추가한
+    // 기록을 통째로 지워버릴 수 있어, 다른 sync 함수들과 동일한 공용 헬퍼로 병합한다.
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudMeetings = snap.data()?.projectData?.meetings || [];
+    const mergedMeetings = _mergeListById(proj.meetings, cloudMeetings, { sortByTsDesc: true });
     // base64 이미지는 localStorage에만 저장 → Firestore 1MB 제한 방지
-    const meetingsLite = (proj.meetings || []).map(m => ({
+    const meetingsLite = mergedMeetings.map(m => ({
       ...m,
       content: _stripBase64FromHtml(m.content),
       images: Array.isArray(m.images)
@@ -15252,6 +15087,8 @@ async function _syncMeetingsToCloud(proj) {
       'meta.updatedBy': state.user?.email || '',
       'meta.updatedBySessionId': _sessionId,
     });
+    proj.meetings = mergedMeetings;
+    localStorage.setItem('vibespace', JSON.stringify(state));
   } catch(e) {
     console.error('[meetingSync]', e);
     showToastMessage('⚠️ 기록 동기화 실패 — 네트워크를 확인해주세요');
