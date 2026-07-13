@@ -395,19 +395,19 @@ button, input, textarea, select { font-family:var(--font); }
   height: auto;
   min-height: 180px;
   position: relative;
-  background: #000;
-  border-radius: 12px;
   margin: 8px;
 }
 #sv-image-area .sv-reel-wrap {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 14px;
 }
 .sv-slide {
   width: 100%;
   position: relative;
-  background: #000;
+  background: #e8e8ec;
+  border-radius: 10px;     /* 2단(그리드) 뷰의 .sv-gallery-item과 동일한 radius */
+  overflow: hidden;
 }
 .sv-slide img {
   width: 100%;
@@ -416,6 +416,29 @@ button, input, textarea, select { font-family:var(--font); }
   user-select: none;
   pointer-events: none;
 }
+/* 이미지 사이 좋아요·댓글 섹션 (인스타그램 포스트 액션바 스타일) */
+.sv-slide-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 2px 4px 0;
+}
+.sv-slide-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+.sv-slide-action-btn svg { flex-shrink: 0; }
+.sv-slide-action-btn.liked { color: #e0245e; }
 .prod-pin-dot {
   position: absolute;
   width: 26px;
@@ -7037,11 +7060,41 @@ function _svBuildReel() {
     const shopBtn = pinCount ? `<button class="sv-slide-shop-btn" onclick="event.stopPropagation();openPinsSheet(${si})" title="제품 보기">
       <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
     </button>` : '';
+    const liked = (item.likes || []).includes(state.user?.email);
+    const likeCount = (item.likes || []).length;
+    const commentCount = (item.memos || []).length;
+    const actions = `<div class="sv-slide-actions">
+      <button class="sv-slide-action-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation();_svTogglePhotoLike(${si})">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        ${likeCount > 0 ? likeCount : ''}
+      </button>
+      <button class="sv-slide-action-btn" onclick="event.stopPropagation();styleViewerIndex=${si};_svToggleMemoInput(true)">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        ${commentCount > 0 ? commentCount : ''}
+      </button>
+    </div>`;
     return `<div class="sv-slide" data-slide="${si}">
       <img src="${item.url}" alt="">
       ${badge}${pins}${shopBtn}
-    </div>`;
+    </div>${actions}`;
   }).join('');
+}
+
+// 이미지(포스트) 단위 좋아요 — 댓글의 좋아요(_svToggleMemoLike)와 별개로 사진 자체에 하트를 남기는 기능
+function _svTogglePhotoLike(index) {
+  if (!state.loggedIn) { openLoginDialog(); return; }
+  const proj = getProject();
+  if (!proj) return;
+  const item = (proj.styleImages?.[styleViewerRoom] || [])[index];
+  if (!item) return;
+  if (!item.likes) item.likes = [];
+  const idx = item.likes.indexOf(state.user.email);
+  idx >= 0 ? item.likes.splice(idx, 1) : item.likes.push(state.user.email);
+  save();
+  const isOwner = _isProjOwner(proj);
+  if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
+  _svBuildReel();
+  _svObserveSlides();
 }
 
 // ===== STYLE VIEWER — VIEW MODE (carousel / list / grid) =====
