@@ -15700,12 +15700,29 @@ ${rawText}
   }
 
   const data = await res.json();
-  const text = data.content?.[0]?.text || '';
+  // content[0]이 항상 텍스트 블록이라고 가정하면 안 됨 — 모델이 먼저 thinking 블록을
+  // 반환하는 경우 content[0].text가 undefined가 되어 파싱이 항상 실패했음. type이
+  // 'text'인 첫 번째 블록을 명시적으로 찾는다.
+  const textBlock = (data.content || []).find(b => b.type === 'text');
+  const text = textBlock?.text || '';
+  if (!text) {
+    console.error('[inblog] Anthropic 응답에 텍스트 블록 없음:', JSON.stringify(data).slice(0, 500));
+    throw new Error(data.stop_reason === 'max_tokens' ? 'AI 응답이 길이 제한에 걸려 잘렸습니다' : 'AI가 빈 응답을 반환했습니다');
+  }
 
   // JSON 파싱 (마크다운 코드블록 제거 포함)
   const jsonMatch = text.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('AI 응답 파싱 실패');
-  const parsed = JSON.parse(jsonMatch[0]);
+  if (!jsonMatch) {
+    console.error('[inblog] JSON 매치 실패, 원문:', text.slice(0, 500));
+    throw new Error('AI 응답 파싱 실패 (JSON 형식 아님)');
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch(e) {
+    console.error('[inblog] JSON.parse 실패:', e.message, '원문:', jsonMatch[0].slice(0, 500));
+    throw new Error('AI 응답 파싱 실패: ' + e.message);
+  }
 
   // 이미지 추가
   if (imgsHtml) parsed.html += imgsHtml;
