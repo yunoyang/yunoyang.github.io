@@ -15734,21 +15734,23 @@ function _setGhToken(t) { try { localStorage.setItem('vb_gh_token', t); } catch(
 // ── GitHub Contents API로 records/[id]/index.html 생성 ──────────────────────
 const _GH_REPO = 'yunoyang/yunoyang.github.io';
 
-async function _publishRecordToGitHub(recordId, htmlContent, commitMsg) {
+// GitHub Contents API 범용 read/write 헬퍼 — sitemap.xml, records 인덱스 페이지 등
+// 여러 파일을 같은 방식으로 갱신해야 해서 공용으로 뺌.
+async function _ghGetFile(path) {
   const token = _getGhToken();
   if (!token) throw new Error('GitHub 토큰이 설정되지 않았습니다.');
-  const path = `records/${recordId}/index.html`;
   const apiUrl = `https://api.github.com/repos/${_GH_REPO}/contents/${path}`;
-
-  let sha;
-  try {
-    const check = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
-    if (check.ok) { const d = await check.json(); sha = d.sha; }
-  } catch(_) {}
-
-  const body = { message: commitMsg, content: btoa(unescape(encodeURIComponent(htmlContent))) };
+  const res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+  if (!res.ok) return null; // 파일 없음 등 — 호출부에서 신규 생성으로 처리
+  const d = await res.json();
+  return { sha: d.sha, content: decodeURIComponent(escape(atob(d.content.replace(/\n/g, '')))) };
+}
+async function _ghPutFile(path, content, commitMsg, sha) {
+  const token = _getGhToken();
+  if (!token) throw new Error('GitHub 토큰이 설정되지 않았습니다.');
+  const apiUrl = `https://api.github.com/repos/${_GH_REPO}/contents/${path}`;
+  const body = { message: commitMsg, content: btoa(unescape(encodeURIComponent(content))) };
   if (sha) body.sha = sha;
-
   const res = await fetch(apiUrl, {
     method: 'PUT',
     headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
@@ -15758,7 +15760,80 @@ async function _publishRecordToGitHub(recordId, htmlContent, commitMsg) {
     const e = await res.json().catch(() => ({}));
     throw new Error(e.message || `GitHub API 오류 ${res.status}`);
   }
+}
+
+async function _publishRecordToGitHub(recordId, htmlContent, commitMsg) {
+  const path = `records/${recordId}/index.html`;
+  const existing = await _ghGetFile(path).catch(() => null);
+  await _ghPutFile(path, htmlContent, commitMsg, existing?.sha);
   return `https://vibespacekorea.com/records/${recordId}/`;
+}
+
+// sitemap.xml에 새 기록 URL을 추가 — 이게 없으면 구글이 sitemap을 통해 이 페이지를
+// 발견할 방법이 없어서, 발행해도 색인될 가능성이 거의 없었음 (검색 노출의 핵심 누락 부분)
+async function _addRecordToSitemap(url) {
+  const path = 'sitemap.xml';
+  const existing = await _ghGetFile(path).catch(() => null);
+  if (!existing) return; // sitemap.xml 자체가 없으면 건드리지 않음 (구조를 모르니 안전하게 skip)
+  if (existing.content.includes(`<loc>${url}</loc>`)) return; // 이미 등록됨
+  const today = new Date().toISOString().slice(0, 10);
+  const entry = `  <url>\n    <loc>${url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+  const updated = existing.content.replace('</urlset>', entry + '</urlset>');
+  await _ghPutFile(path, updated, `chore: sitemap에 공개 기록 추가 — ${url}`, existing.sha);
+}
+
+// records/index.html — 발행된 기록들을 모아 링크로 연결하는 허브 페이지.
+// 구글은 링크를 따라가며 페이지를 발견하기 때문에, sitemap 등록과 별개로
+// "실제로 어딘가에서 링크되는 페이지"가 있어야 크롤링·색인 가능성이 올라간다.
+// 상단에 바이브스페이스 유도 CTA를 강조해서, 검색 유입을 앱 사용으로 연결한다.
+async function _addRecordToIndexPage(url, title) {
+  const path = 'records/index.html';
+  const existing = await _ghGetFile(path).catch(() => null);
+  const marker = '<!-- RECORD_LIST -->';
+  const itemHtml = `\n<li><a href="${url}">${_htmlEsc(title)}</a></li>`;
+
+  if (existing && existing.content.includes(marker)) {
+    if (existing.content.includes(`href="${url}"`)) return; // 이미 등록됨
+    const updated = existing.content.replace(marker, marker + itemHtml);
+    await _ghPutFile(path, updated, `chore: records 인덱스에 추가 — ${title}`, existing.sha);
+    return;
+  }
+
+  // 최초 생성
+  const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>시공 기록 모아보기 | 바이브스페이스(Vibespace)</title>
+<meta name="description" content="반셀프·턴키 인테리어 시공 기록 모음. 바이브스페이스로 나만의 공정을 무료로 계획해보세요.">
+<link rel="canonical" href="https://vibespacekorea.com/records/">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f7f8fa;color:#222;line-height:1.7}
+a{color:inherit;text-decoration:none}
+.cta{background:#111;color:#fff;padding:22px 20px;text-align:center}
+.cta a{display:inline-block;margin-top:10px;background:#5084ff;color:#fff;padding:10px 22px;border-radius:24px;font-weight:700}
+main{max-width:640px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:20px;margin-bottom:16px}
+ul{list-style:none}
+li{background:#fff;border:1px solid #eef0f5;border-radius:12px;padding:16px;margin-bottom:10px}
+li a{font-weight:600;color:#111}
+</style>
+</head>
+<body>
+<div class="cta">
+  반셀프 인테리어, 계획부터 기록까지 — <strong>바이브스페이스</strong>에서 무료로 관리하세요<br>
+  <a href="https://vibespacekorea.com/">바이브스페이스 시작하기 →</a>
+</div>
+<main>
+  <h1>시공 기록 모아보기</h1>
+  <ul>${marker}
+  </ul>
+</main>
+</body>
+</html>`;
+  const updated = html.replace(marker, marker + itemHtml);
+  await _ghPutFile(path, updated, `chore: records 인덱스 페이지 생성 — ${title}`, undefined);
 }
 
 // ── 기록 랜딩 페이지 HTML 생성 ───────────────────────────────────────────────
@@ -15990,6 +16065,18 @@ async function confirmPublishToInblog() {
       landingHtml,
       `feat: 기록 공개 발행 — ${title}`
     );
+
+    // 구글 검색 노출을 위한 두 가지 후속 처리 — sitemap 등록 + 링크 허브 페이지 추가.
+    // 둘 중 하나가 실패해도(예: 동시 커밋 충돌) 이미 만들어진 기록 페이지 자체는
+    // 살아있으니 발행 자체를 실패로 처리하지 않고 콘솔에만 남긴다.
+    btn.textContent = '검색 노출 설정 중...';
+    try {
+      await _addRecordToSitemap(publicUrl);
+      await _addRecordToSitemap('https://vibespacekorea.com/records/'); // 허브 페이지 자체도 sitemap에 등록
+      await _addRecordToIndexPage(publicUrl, title);
+    } catch(e) {
+      console.warn('[SEO 후속 처리 실패]', e.message);
+    }
 
     // Firestore에 공개 URL 저장
     const idx = proj.meetings.findIndex(x=>x.id===meeting.id);
