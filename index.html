@@ -16028,30 +16028,38 @@ async function confirmPublishToInblog() {
       headers: { 'Authorization': `Bearer ${INBLOG_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const json = await res.json();
+    const json = await res.json().catch(() => ({}));
 
-    if (res.ok && json.data?.id) {
-      const postId   = json.data.id;
-      const postSlug = json.data.attributes?.slug || payload.data.attributes.slug;
+    // fetch()는 4xx/5xx 응답에도 reject하지 않으므로, res.ok/json.data.id를 직접 확인해서
+    // 실패 시 명시적으로 던져야 한다. 이 체크가 없으면 inblog API가 실패해도(예: 잘못된
+    // 슬러그, 요금제 한도 등) catch 블록을 타지 않고 그대로 "발행 완료" 토스트가 떠서,
+    // 사용자에게는 성공한 것처럼 보이지만 실제로는 글이 올라가지 않는(inblogPostId도
+    // 저장 안 되는) 원인이 되고 있었음 — "발행이 계속 실패한다"는 문제의 실제 원인.
+    if (!res.ok || !json.data?.id) {
+      const msg = json?.errors?.[0]?.detail || json?.error || json?.message || `inblog API 오류 (HTTP ${res.status})`;
+      throw new Error(msg);
+    }
 
-      const proj2 = getProject();
-      const idx2  = proj2.meetings.findIndex(x=>x.id===_blogPreviewData.meetingId);
-      if (idx2 !== -1) {
-        proj2.meetings[idx2].inblogPostId       = postId;
-        proj2.meetings[idx2].inblogSlug         = postSlug;
-        proj2.meetings[idx2].inblogPublishedAt  = new Date().toISOString();
-        save();
-        _syncMeetingsToCloud(proj2);
-      }
+    const postId   = json.data.id;
+    const postSlug = json.data.attributes?.slug || payload.data.attributes.slug;
 
-      const publishBtn = document.getElementById('btn-publish-blog');
-      if (publishBtn) {
-        publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
-        publishBtn.style.background = '#f0f5ff';
-        publishBtn.style.borderColor = '#c7d9ff';
-        publishBtn.disabled = false;
-        publishBtn.onclick = () => window.open(publicUrl || `https://vibespace.inblog.ai/${postSlug}`, '_blank');
-      }
+    const proj2 = getProject();
+    const idx2  = proj2.meetings.findIndex(x=>x.id===_blogPreviewData.meetingId);
+    if (idx2 !== -1) {
+      proj2.meetings[idx2].inblogPostId       = postId;
+      proj2.meetings[idx2].inblogSlug         = postSlug;
+      proj2.meetings[idx2].inblogPublishedAt  = new Date().toISOString();
+      save();
+      _syncMeetingsToCloud(proj2);
+    }
+
+    const publishBtn = document.getElementById('btn-publish-blog');
+    if (publishBtn) {
+      publishBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 발행됨`;
+      publishBtn.style.background = '#f0f5ff';
+      publishBtn.style.borderColor = '#c7d9ff';
+      publishBtn.disabled = false;
+      publishBtn.onclick = () => window.open(publicUrl || `https://vibespace.inblog.ai/${postSlug}`, '_blank');
     }
 
     closeInblogPreview();
