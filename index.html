@@ -12333,11 +12333,14 @@ function _syncProjToCloud(proj) {
   }).catch(e => {
     if (e.code === 'permission-denied' || e.code === 'unauthenticated') {
       console.warn('sync permission issue:', e.code);
-      // 로그인 직후 잠깐(5초 이내)의 auth 전파 지연은 조용히 무시하되, 그 이후에도
-      // permission-denied가 나면 실제 권한 문제(예: 역할 오판정으로 오너 전용 쓰기를
-      // 시도)일 가능성이 높으므로 조용히 삼키지 않고 사용자에게 알림 — 이걸 계속
-      // 숨기면 협업자가 올린 데이터가 "이유 없이" 클라우드에 반영 안 되는 것처럼 보임
-      if (Date.now() - (window._appLoadedAt || 0) > 5000) {
+      // Firestore 보안규칙은 "allow write: if request.auth != null" 로 완전히 열려 있어서
+      // permission-denied는 오직 "그 순간 실제로 인증이 안 된 상태"에서만 발생할 수 있음
+      // (역할별 권한 체크가 규칙에 없으므로 역할 오판정으로는 이 에러가 날 수 없음).
+      // 고정 5초 타이머로는 느린 네트워크에서 auth 토큰 전파가 늦어질 때 오탐(false
+      // positive)이 났었음 — firebase.auth().currentUser가 실제로 있는지 직접 확인해서,
+      // 진짜 인증된 상태에서도 거부된 경우에만 알림 (그 외엔 auth 전파 중인 것으로 간주해 무시)
+      const hasAuthUser = typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser;
+      if (hasAuthUser) {
         showToastMessage('⚠️ 권한 문제로 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
       }
       return;
@@ -13645,7 +13648,6 @@ function _applyBrandLogo(dataUrl) {
 const _applyHeaderLogo = _applyBrandLogo;
 
 // ===== INIT =====
-window._appLoadedAt = Date.now(); // 로그인 직후 auth 전파 지연 여부 판단용
 load();
 // 회의록 이미지: localStorage 구 포맷 마이그레이션 후 IDB에서 복원
 async function _initMeetingImages() {
