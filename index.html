@@ -15200,6 +15200,11 @@ function _saveGhToken() {
     _pendingPublicAfterGhToken = false;
     confirmPublishToInblog();
   }
+  if (_pendingShareMeetingId) {
+    _currentMeetingId = _pendingShareMeetingId;
+    _pendingShareMeetingId = null;
+    shareMeetingUrl();
+  }
 }
 const SEO_KEYWORDS = ['반셀프 인테리어','턴키 인테리어','분당 구축 인테리어','분당 국평 인테리어','성남 인테리어','판교 인테리어','분당 인테리어','인테리어 공정 관리','시공 회의'];
 let _currentMeetingId = null;
@@ -15386,57 +15391,74 @@ function closeMeetingDetail() {
 }
 
 // ── 회의록 URL 공유 ───────────────────────────────────────────────────────
+// 카카오톡 등 메신저의 링크 미리보기 봇은 JS를 실행하지 않고 최초 HTML의
+// <meta> 태그만 읽는다. 기존 ?meeting=SHARE_ID 방식은 og:title/og:image를
+// 페이지 로드 후 JS(_setMeta)로 갈아끼우는 방식이라, 미리보기 봇에는 항상
+// 기본 썸네일/제목만 보였음 — GitHub에 정적 페이지를 실제로 커밋해서
+// meta 태그가 처음부터 박혀있는 URL을 공유하도록 변경.
+let _pendingShareMeetingId = null;
 async function shareMeetingUrl() {
   if (!_currentMeetingId) return;
   const proj = getProject();
   const m = (proj?.meetings||[]).find(x=>x.id===_currentMeetingId);
   if (!m) return;
+
+  // 이미 공개 발행된 기록이면 그 URL이 이미 올바른 썸네일/제목을 갖고 있으므로 바로 재사용
+  if (m.publicUrl) { await _copyToClipboard(m.publicUrl); return; }
+
+  if (!_getGhToken()) {
+    _pendingShareMeetingId = _currentMeetingId;
+    document.getElementById('gh-token-input').value = '';
+    document.getElementById('dlg-gh-token').style.display = 'flex';
+    return;
+  }
+
   const btn = event?.currentTarget;
   if (btn) { btn.disabled = true; }
-  showToastMessage('🔗 URL 생성 중...');
+  showToastMessage('🔗 미리보기 페이지 생성 중...');
   try {
-    const ok = await _initFirebase();
-    if (!ok || !_db) throw new Error('Firebase 연결 실패');
-    if (!firebase.auth().currentUser) {
-      try { await firebase.auth().signInAnonymously(); } catch(e) {}
+    const title    = m.title || '(제목 없음)';
+    const rawText  = (m.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const metaDesc = rawText.slice(0, 100) || `${proj.name || 'Vibespace'}의 시공 기록`;
+    const bodyHtml = _stripBase64FromHtml(m.content || '');
+
+    const landingHtml = _buildRecordLandingHtml({ meeting: m, proj, seoTitle: title, metaDesc, bodyHtml });
+    const publicUrl = await _publishRecordToGitHub(m.id, landingHtml, `feat: 기록 공유 페이지 생성 — ${title}`);
+    try {
+      await _addRecordToSitemap(publicUrl);
+      await _addRecordToIndexPage(publicUrl, title);
+    } catch(e) { console.warn('[SEO 후속 처리 실패]', e.message); }
+
+    const idx = proj.meetings.findIndex(x => x.id === m.id);
+    if (idx !== -1) {
+      proj.meetings[idx].publicUrl = publicUrl;
+      proj.meetings[idx].publicTitle = title;
+      proj.meetings[idx].publicMetaDesc = metaDesc;
+      proj.meetings[idx].publicPublishedAt = new Date().toISOString();
+      save();
+      _syncMeetingsToCloud(proj);
     }
-    const d = new Date(m.createdAt||0);
-    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-    // images: m.images[] Firebase URL 우선, 없으면 content HTML에서 추출
-    const _shareImgs = (() => {
-      const fromArr = (m.images||[]).filter(img => img && !img.startsWith('data:'));
-      if (fromArr.length) return fromArr;
-      const tmp = document.createElement('div');
-      tmp.innerHTML = m.content || '';
-      return [...tmp.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(s => s && !s.startsWith('data:'));
-    })();
-    // base64 인라인 이미지는 모바일에서 렌더 실패/메모리 문제를 일으킬 수 있어 공유본에서 제거
-    const _shareContent = _stripBase64FromHtml(m.content || '');
-    const shareData = {
-      title: m.title || '(제목 없음)',
-      content: _shareContent,
-      images: _shareImgs,
-      createdAt: m.createdAt || 0,
-      createdByName: m.createdByName || m.createdBy || '',
-      projectName: proj.name || '',
-      dateStr,
-      sharedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-    const docRef = await _db.collection('vb_meeting_shares').add(shareData);
-    const url = `${window.location.origin}${window.location.pathname}?meeting=${docRef.id}`;
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
-      showToastMessage('✅ URL이 클립보드에 복사됐습니다');
-    } else {
+    renderMeetingTab();
+    if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
+
+    await _copyToClipboard(publicUrl);
+  } catch(e) {
+    showToastMessage('⚠️ 공유 링크 생성 실패: ' + e.message);
+  }
+  if (btn) { btn.disabled = false; }
+}
+async function _copyToClipboard(url) {
+  try {
+    if (navigator.clipboard) await navigator.clipboard.writeText(url);
+    else {
       const ta = document.createElement('textarea');
       ta.value = url; ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
       document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      showToastMessage('✅ URL이 클립보드에 복사됐습니다');
     }
+    showToastMessage('✅ URL이 클립보드에 복사됐습니다 (썸네일·제목 포함)');
   } catch(e) {
-    showToastMessage('⚠️ URL 생성 실패: ' + e.message);
+    showToastMessage('⚠️ 클립보드 복사 실패: ' + e.message);
   }
-  if (btn) { btn.disabled = false; }
 }
 
 // ── 회의록 공유 URL 진입 핸들러 (?meeting=SHARE_ID) ─────────────────────────
