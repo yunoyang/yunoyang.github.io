@@ -6870,7 +6870,11 @@ async function handleStyleFileSelect(e) {
   const total = files.length;
   let done = 0;
   let storageFailed = false;
-  if (state.loggedIn) await _initFirebase(); // _fbStorage 미초기화 시 조용히 base64로 새는 것 방지
+  // _fbStorage 초기화 + 모바일에서 느릴 수 있는 auth 세션 복원을 파일 처리 전에 한 번만 대기
+  // (안 기다리면 _fbStorage는 이미 있어도 currentUser가 아직 null이라 업로드가 permission-denied로
+  // 실패해 조용히 base64로 새어버림 → base64는 클라우드 push 시 제거되기 때문에 다른 사람 화면/
+  // 새로고침 후 스타일 이미지가 사라지는 원인이 됨. _prImgPreview와 동일한 패턴)
+  if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); }
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
