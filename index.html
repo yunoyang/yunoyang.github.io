@@ -13883,7 +13883,7 @@ function renderMeetingTab() {
   const proj = getProject();
   const list = document.getElementById('meeting-list');
   if (!list) return;
-  const meetings = (proj?.meetings || []).slice().sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+  const meetings = (proj?.meetings || []).filter(m => !m.deleted).sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
   if (!meetings.length) {
     list.innerHTML = `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 기록이 없습니다</div>`;
     return;
@@ -14479,8 +14479,13 @@ function deleteMeeting() {
   const proj = getProject();
   if (!proj) return;
   const delId = _currentMeetingId;
-  proj.meetings = (proj.meetings||[]).filter(m => m.id !== delId);
-  _MIdb.del(delId); // IDB 이미지 삭제
+  // 배열에서 완전히 제거(hard delete)하면 안 됨 — meetings는 클라우드와 id 기준
+  // 합집합(union) 병합을 하는데, union 병합은 "삭제됐다"는 사실을 표현할 수 없어서
+  // 클라우드에 아직 안 지워진(또는 다른 기기가 갖고 있던) 옛 버전이 병합 시 다시
+  // 살아나 버림. furnitureItems처럼 soft-delete(.deleted 플래그)로 표시만 한다.
+  const m = (proj.meetings || []).find(x => x.id === delId);
+  if (m) { m.deleted = true; m.updatedAt = Date.now(); }
+  _MIdb.del(delId); // IDB 이미지 삭제 (로컬 전용 데이터라 하드 삭제 무방)
   try { localStorage.removeItem(`vb_mi_${delId}`); } catch(_) {} // localStorage 백업 삭제
   save();
   if (proj.cloudId) _syncMeetingsToCloud(proj);
@@ -15264,7 +15269,7 @@ function openMeetingDetail(id) {
   _currentMeetingId = id;
   const proj = getProject();
   const m = (proj?.meetings||[]).find(x=>x.id===id);
-  if (!m) return;
+  if (!m || m.deleted) { closeMeetingDetail(); return; }
   const d = new Date(m.createdAt||0);
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   const { decoded: rawContent, type: contentType } = _normalizeMeetingContent(m.content || '');
