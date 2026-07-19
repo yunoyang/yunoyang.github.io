@@ -5802,7 +5802,14 @@ async function _fetchAllMyCloudProjects() {
       const myCollab = pd.collaborators.find(c => c.email === state.user.email);
       // collaborators 목록에서 못 찾은 경우(등록 지연·대소문자 차이 등) 뷰어로 강등시키면
       // 정상 편집자의 업로드·동기화가 막힐 수 있어 기존 로컬 역할 → 편집자 순으로 폴백
-      pd.myRole = myCollab?.role || pd.myRole || '편집자';
+      // role이 영문('editor'/'viewer')으로 저장된 경우(_recoverCollaboratorsFromIndex,
+      // changeCollaboratorRole 드롭다운의 과거 버그로 실제 Firestore에 남아있을 수 있음)를
+      // 국문으로 정규화 — 코드 전체의 canWrite 검사가 전부 '편집자'/'뷰어' 국문 문자열만
+      // 비교하기 때문에, 영문 role이 남아있으면 매칭 실패로 sync 자체가 조용히 막혀버림
+      // (공동작업자가 올린 이미지/가구/공정기록이 오너 화면에 전혀 반영되지 않던 원인)
+      const _roleKo = { editor: '편집자', viewer: '뷰어' };
+      const rawRole = myCollab?.role || pd.myRole || '편집자';
+      pd.myRole = _roleKo[rawRole] || rawRole;
     }
     result.push(pd);
   }
@@ -12824,10 +12831,10 @@ async function renderCollabTab() {
           </div>
           ${isOwner
             ? `<select class="cm-role-select" onchange="changeCollaboratorRole('${m.email}',this.value)">
-                <option value="editor" ${m.role!=='viewer'?'selected':''}>편집 가능</option>
-                <option value="viewer" ${m.role==='viewer'?'selected':''}>보기만</option>
+                <option value="편집자" ${m.role!=='뷰어'?'selected':''}>편집 가능</option>
+                <option value="뷰어" ${m.role==='뷰어'?'selected':''}>보기만</option>
                </select>`
-            : `<span class="cm-role">${m.role==='viewer'?'보기만':'편집 가능'}</span>`}
+            : `<span class="cm-role">${m.role==='뷰어'?'보기만':'편집 가능'}</span>`}
           ${isOwner ? `<button class="cm-remove" onclick="removeCollaborator('${m.email}')" title="멤버 제거"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
         </div>`).join('')}
       ${invites.filter(inv => new Date(inv.expiresAt) >= new Date()).map(inv => `
@@ -12839,7 +12846,7 @@ async function renderCollabTab() {
             <div class="cm-name pending">${esc(inv.email||'초대 링크')}</div>
             <div class="cm-email pending">초대 전송됨 · ~${inv.expiresAt.slice(0,10)}</div>
           </div>
-          <span class="cm-role" style="color:#ccc;">${inv.role==='viewer'?'보기만':'편집 가능'}</span>
+          <span class="cm-role" style="color:#ccc;">${inv.role==='뷰어'?'보기만':'편집 가능'}</span>
           ${isOwner ? `<button class="cm-remove" onclick="cancelInvite('${inv.token}')" title="초대 취소"><svg class="icon" width="14" height="14"><use href="#icon-x"/></svg></button>` : ''}
         </div>`).join('')}
     </div>
@@ -12864,7 +12871,7 @@ async function _recoverCollaboratorsFromIndex() {
       if (doc.id === state.user.email) return; // 본인 제외
       const ids = doc.data().projectIds || [];
       if (ids.includes(proj.cloudId)) {
-        recovered.push({ email: doc.id, name: doc.data().name || doc.id.split('@')[0], role: 'editor', joinedAt: new Date().toISOString() });
+        recovered.push({ email: doc.id, name: doc.data().name || doc.id.split('@')[0], role: '편집자', joinedAt: new Date().toISOString() });
       }
     });
     if (!recovered.length) return;
@@ -12889,7 +12896,11 @@ async function generateInviteLink() {
   const emailEl = document.getElementById('invite-email-input');
   const roleEl = document.getElementById('invite-role-select');
   const email = emailEl ? emailEl.value.trim() : '';
-  const role = roleEl ? roleEl.value : 'editor';
+  // collaborators[].role / myRole 비교는 코드 전체에서 국문('편집자'/'뷰어')만 사용하므로,
+  // <select>의 영문 value를 그대로 저장하면 canWrite 검사가 전부 매칭 실패해 초대받은
+  // 협업자가 아무것도 클라우드에 동기화하지 못하는 조용한 버그로 이어짐(sendInviteByMail의
+  // role 변환과 동일한 방식으로 여기서도 국문으로 변환해서 저장)
+  const role = (roleEl?.value === 'viewer') ? '뷰어' : '편집자';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     emailEl?.classList.add('error');
     emailEl?.focus();
@@ -13058,7 +13069,7 @@ async function changeCollaboratorRole(email, newRole) {
     } catch(e) { console.error('changeCollaboratorRole:', e); }
   }
   save();
-  showToastMessage(`${email} 권한을 ${newRole==='viewer'?'보기만':'편집 가능'}으로 변경했습니다.`);
+  showToastMessage(`${email} 권한을 ${newRole==='뷰어'?'보기만':'편집 가능'}으로 변경했습니다.`);
 }
 
 async function removeCollaborator(email) {
@@ -13142,8 +13153,8 @@ async function _processInviteToken(token) {
           <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-user"/></svg> ${esc(invite.ownerName||invite.ownerEmail)}</div>
           <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-users"/></svg> 멤버 ${(meta.collaborators||[]).length+1}명</div>
         </div>
-        <span class="join-role-badge ${invite.role==='editor'?'editor':''}">
-          ${invite.role==='editor'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
+        <span class="join-role-badge ${invite.role==='편집자'?'editor':''}">
+          ${invite.role==='편집자'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
         </span>
       </div>
       <p style="font-size:13.5px;color:#555;line-height:1.7;margin:0;">
