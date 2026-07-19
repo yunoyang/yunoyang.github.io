@@ -12290,6 +12290,14 @@ function _syncProjToCloud(proj) {
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
+    // floorplanImages: 슬롯별 로컬 우선 머지 (_startCollabListener와 동일 정책) — 그냥 덮어쓰면
+    // 협업자가 다른 슬롯에 방금 올린 도면이 오너의 전체 sync로 통째로 사라질 수 있음
+    {
+      const cloudFpImgs = cloudData.floorplanImages || [null, null, null];
+      const localFpImgs = Array.isArray(proj.floorplanImages) ? proj.floorplanImages : [null, null, null];
+      projData.floorplanImages = cloudFpImgs.map((ci, i) => localFpImgs[i] || ci || null);
+      projData.floorplanImage = projData.floorplanImages.find(Boolean) || projData.floorplanImage || null;
+    }
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
     (projData.meetings || []).forEach(m => {
       if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
@@ -12449,7 +12457,10 @@ async function _syncProcessesToCloud(proj) {
 // 도면 이미지만 Firestore에 업데이트 — 협업자(편집자)도 반영되도록 별도 sync
 async function _syncFloorplanToCloud(proj) {
   if (!proj?.cloudId) return;
-  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  // 뷰어도 허용 — 정보 탭의 "도면수정하기"/"도면추가" 버튼이 뷰어에게도 열려 있는데
+  // (role 게이트 없음) 여기서 뷰어 sync를 막으면 뷰어가 올린/수정한 도면이 로컬에만
+  // 남고 클라우드에 반영되지 않아 새로고침하면 사라지는 버그가 있었음
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.myRole === '뷰어' || proj.owner?.email === state.user?.email;
   if (!canWrite) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
