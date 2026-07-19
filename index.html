@@ -5778,6 +5778,19 @@ async function _saveUserIndex(cloudId) {
   } catch(e) { console.warn('User index save failed:', e); }
 }
 
+// role이 영문('editor'/'viewer')으로 저장된 경우(_recoverCollaboratorsFromIndex,
+// changeCollaboratorRole 드롭다운, invite.role의 과거 버그로 실제 Firestore/로컬 캐시에
+// 남아있을 수 있음)를 국문으로 정규화 — 코드 전체의 canWrite 검사가 전부 '편집자'/'뷰어'
+// 국문 문자열만 비교하기 때문에, 영문 role이 남아있으면 매칭 실패로 sync 자체가 조용히
+// 막혀버림 (공동작업자가 올린 이미지/가구/공정기록이 오너 화면에 전혀 반영되지 않던 원인).
+// _parseDoc과 _mergeLocalPreserve 양쪽 모두에서 호출해야 함 — _mergeLocalPreserve가
+// "로컬 캐시된 myRole을 보존"하는 로직을 갖고 있어서, _parseDoc에서만 정규화하면 바로
+// 다음 줄에서 로컬에 남아있던 옛 영문 값으로 다시 덮어써져 정규화가 무효화됨.
+function _normalizeRole(role) {
+  const roleKo = { editor: '편집자', viewer: '뷰어' };
+  return roleKo[role] || role;
+}
+
 // ── 내 모든 클라우드 프로젝트 조회 (3단계 전략) ──
 async function _fetchAllMyCloudProjects() {
   if (!_db || !state.user?.email) return [];
@@ -5802,14 +5815,7 @@ async function _fetchAllMyCloudProjects() {
       const myCollab = pd.collaborators.find(c => c.email === state.user.email);
       // collaborators 목록에서 못 찾은 경우(등록 지연·대소문자 차이 등) 뷰어로 강등시키면
       // 정상 편집자의 업로드·동기화가 막힐 수 있어 기존 로컬 역할 → 편집자 순으로 폴백
-      // role이 영문('editor'/'viewer')으로 저장된 경우(_recoverCollaboratorsFromIndex,
-      // changeCollaboratorRole 드롭다운의 과거 버그로 실제 Firestore에 남아있을 수 있음)를
-      // 국문으로 정규화 — 코드 전체의 canWrite 검사가 전부 '편집자'/'뷰어' 국문 문자열만
-      // 비교하기 때문에, 영문 role이 남아있으면 매칭 실패로 sync 자체가 조용히 막혀버림
-      // (공동작업자가 올린 이미지/가구/공정기록이 오너 화면에 전혀 반영되지 않던 원인)
-      const _roleKo = { editor: '편집자', viewer: '뷰어' };
-      const rawRole = myCollab?.role || pd.myRole || '편집자';
-      pd.myRole = _roleKo[rawRole] || rawRole;
+      pd.myRole = _normalizeRole(myCollab?.role || pd.myRole || '편집자');
     }
     result.push(pd);
   }
@@ -12061,8 +12067,10 @@ function _mergeLocalPreserve(cp, localProjs) {
   const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
   if (!local) return cp;
   const merged = { ...cp };
-  // 공동작업자 역할 보존
-  if (local.myRole) merged.myRole = local.myRole;
+  // 공동작업자 역할 보존 — 단, cp.myRole은 이미 _parseDoc에서 클라우드 기준으로 정규화된
+  // 최신 값이므로, 로컬 캐시에 옛날(영문 'editor'/'viewer' 등) 값이 남아있다는 이유만으로
+  // 그대로 덮어쓰면 정규화가 매번 무효화된다. local 값도 동일하게 정규화해서 적용
+  if (local.myRole) merged.myRole = _normalizeRole(local.myRole);
   // 아래 필드들은 모두 공용 헬퍼(_mergeStyleImagesObj 등)로 병합한다 — 이 함수와
   // _startCollabListener, _syncProjToCloud가 전부 같은 헬퍼를 호출하므로, 병합 규칙을
   // 한 곳에서 고치면 세 경로 모두에 동시 적용된다 (예전엔 각자 따로 구현돼 있어서
@@ -12615,7 +12623,9 @@ function _startCollabListener(cloudId) {
     if (!proj) return;
     const remote = data.projectData;
     if (!remote) return;
-    const myRole = proj.myRole;
+    // 여기서도 정규화 — proj.myRole에 옛 영문 값이 남아있으면 이 리스너가 매 스냅샷마다
+    // 계속 영문 값을 그대로 재적용해 _parseDoc/_mergeLocalPreserve의 정규화를 무효화시킴
+    const myRole = _normalizeRole(proj.myRole);
     const localImages = proj.styleImages || {};
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
@@ -13153,8 +13163,8 @@ async function _processInviteToken(token) {
           <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-user"/></svg> ${esc(invite.ownerName||invite.ownerEmail)}</div>
           <div class="join-meta-item"><svg class="icon" width="13" height="13"><use href="#icon-users"/></svg> 멤버 ${(meta.collaborators||[]).length+1}명</div>
         </div>
-        <span class="join-role-badge ${invite.role==='편집자'?'editor':''}">
-          ${invite.role==='편집자'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
+        <span class="join-role-badge ${_normalizeRole(invite.role)==='편집자'?'editor':''}">
+          ${_normalizeRole(invite.role)==='편집자'?'✏️ 편집자':'👁 뷰어'} 권한으로 초대
         </span>
       </div>
       <p style="font-size:13.5px;color:#555;line-height:1.7;margin:0;">
@@ -13185,9 +13195,12 @@ async function _acceptInvite(token, invite, cloudProjData) {
   if (body) body.innerHTML = `<div style="display:flex;justify-content:center;padding:20px 0;"><div class="join-spinner"></div></div><p style="text-align:center;color:#888;font-size:13px;">참여 처리 중...</p>`;
 
   try {
+    // 7일 유효한 초대 링크는 이 코드 배포 이전에 생성돼 invite.role이 아직 영문일 수 있으므로
+    // 정규화해서 저장 (신규 생성분은 generateInviteLink에서 이미 국문으로 저장됨)
+    const acceptedRole = _normalizeRole(invite.role);
     const collaboratorEntry = {
       email: state.user.email, name: state.user.name,
-      role: invite.role, joinedAt: new Date().toISOString(),
+      role: acceptedRole, joinedAt: new Date().toISOString(),
     };
     await _db.collection('vb_projects').doc(invite.projectId).update({
       'meta.collaborators': firebase.firestore.FieldValue.arrayUnion(collaboratorEntry),
@@ -13196,7 +13209,7 @@ async function _acceptInvite(token, invite, cloudProjData) {
     _saveUserIndex(invite.projectId); // 협업자도 vb_users 인덱스에 등록 — 안 하면 새 기기/재접속 시 프로젝트를 못 찾을 수 있음
 
     const remoteProj = cloudProjData.projectData || {};
-    const localProj = { ...remoteProj, cloudId: invite.projectId, isCloud: true, myRole: invite.role,
+    const localProj = { ...remoteProj, cloudId: invite.projectId, isCloud: true, myRole: acceptedRole,
       owner: cloudProjData.meta?.owner || { email: invite.ownerEmail, name: invite.ownerName },
       collaborators: [...(cloudProjData.meta?.collaborators || []), collaboratorEntry],
     };
