@@ -7627,6 +7627,11 @@ function deleteStyleImage() {
   const proj = getProject();
   if (!proj || styleViewerRoom === null || styleViewerIndex === null) return;
   if (!confirm('이 이미지를 삭제할까요?')) return;
+  const removedUrl = proj.styleImages[styleViewerRoom]?.[styleViewerIndex]?.url;
+  // union 병합(_mergeStyleImagesObj)이 삭제 직전 클라우드 스냅샷과 합쳐지면서 방금 지운
+  // 이미지를 되살리지 못하도록, 삭제 직후 곧바로 tombstone 등록 (save()가 유발하는
+  // owner 전체 sync보다 먼저 등록돼야 그 경로에서도 걸러짐)
+  _markStyleImgDeleted(removedUrl);
   proj.styleImages[styleViewerRoom].splice(styleViewerIndex, 1);
   try { save(); } catch(e) {}
   if (!_isProjOwner(proj) && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
@@ -11965,6 +11970,24 @@ function _mergeListById(localArr, cloudArr, opts) {
   return opts.sortByTsDesc ? combined.sort((a, b) => tsOf(b) - tsOf(a)) : combined;
 }
 
+// 스타일 이미지 삭제 직후 짧은 시간 동안의 tombstone — union 병합은 "삭제"를 표현할 수 없어서,
+// save()가 트리거하는 owner 전체 sync(_syncProjToCloud)가 삭제 직전(pre-delete) 클라우드
+// 스냅샷을 로컬(post-delete)과 union해버리면 방금 지운 이미지가 그대로 되살아나는 문제가 있었음
+// (실제 증상: 스타일 이미지를 지워도 새로고침하거나 다른 기기에서 보면 다시 나타남).
+// _mergeStyleImagesObj를 호출하는 모든 경로(_syncProjToCloud/_syncStyleImagesToCloud/
+// _mergeLocalPreserve/_startCollabListener)가 이 헬퍼 하나를 공유하므로, 여기서 한 번만
+// 걸러주면 어떤 경로가 레이스에서 이기든 삭제가 항상 반영된다.
+const _deletedStyleImgUrls = new Map(); // url -> deletedAt(ms)
+function _markStyleImgDeleted(url) {
+  if (url) _deletedStyleImgUrls.set(url, Date.now());
+}
+function _isRecentlyDeletedStyleImg(url) {
+  const t = _deletedStyleImgUrls.get(url);
+  if (!t) return false;
+  if (Date.now() - t > 60000) { _deletedStyleImgUrls.delete(url); return false; } // 60초면 클라우드에 실제 반영되고도 남을 시간
+  return true;
+}
+
 // styleImages: room별 URL 기준 합집합 (로컬 전용/미동기화 이미지 보존)
 function _mergeStyleImagesObj(localImgs, cloudImgs) {
   localImgs = localImgs || {};
@@ -12003,7 +12026,7 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
       return result;
     });
     const localOnly = li.filter(x => !cloudUrls.has(x.url));
-    const m = [...localOnly, ...cloudWithMerged];
+    const m = [...localOnly, ...cloudWithMerged].filter(x => !_isRecentlyDeletedStyleImg(x.url));
     if (m.length) merged[r] = m;
   });
   return merged;
