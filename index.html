@@ -9234,7 +9234,10 @@ function _mergeProcessRecords(localRecords, cloudRecords) {
     const lt = lr.updatedAt || lr.createdAt || 0;
     return lt > ct ? lr : cr;
   });
-  return [...merged, ...localOnly];
+  // records는 항상 합집합 병합이라 "삭제"를 표현할 수 없음 — 스타일 이미지 삭제가
+  // 되살아나던 것과 동일한 원인(삭제 직후 save()가 유발하는 전체 sync가 삭제 직전
+  // 클라우드 스냅샷과 union)이므로 동일한 tombstone 패턴으로 필터링
+  return [...merged, ...localOnly].filter(r => !_isRecentlyDeletedId('record', r.id));
 }
 // 공정 하나를 병합 — 스칼라 필드는 updatedAt이 더 최신인 쪽을 채택하되, records는 항상 합집합
 function _mergeOneProcess(localProc, cloudProc) {
@@ -9675,6 +9678,9 @@ function _deleteProcRecord(recordId) {
   if (!proc) return;
   proc.records = (proc.records||[]).filter(r => r.id !== recordId);
   proc.updatedAt = Date.now();
+  // save()가 유발하는 전체 sync가 삭제 직전 클라우드 스냅샷과 union하면서 방금 지운
+  // 기록을 되살리지 못하도록, save() 호출보다 먼저 tombstone 등록
+  _markIdDeleted('record', recordId);
   save();
   _renderProcRecords(_currentProcDetailId);
   showToastMessage('🗑️ 기록이 삭제됐습니다');
