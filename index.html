@@ -9306,7 +9306,10 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
       try {
         const dataUrl = await _compressImage(file, 1200, 0.85);
         let finalUrl = dataUrl;
-        if (state.loggedIn) await _initFirebase();
+        // 모바일에서는 auth 세션 복원이 느릴 수 있어 _prImgPreview/handleStyleFileSelect와
+        // 동일하게 대기 — 안 기다리면 permission-denied로 조용히 base64 폴백되어 다른
+        // 기기/협업자 화면에는 사진이 반영되지 않는 문제가 있었음
+        if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); }
         if (state.loggedIn && _fbStorage) {
           try {
             const proj = getProject();
@@ -14341,7 +14344,10 @@ function _onFurnitureImageFile(input) {
     if (labelEl) labelEl.textContent = '업로드 중...';
     try {
       const dataUrl = await _compressImage(file, 1200, 0.85);
-      if (state.loggedIn) await _initFirebase();
+      // 모바일에서는 auth 세션 복원이 느릴 수 있어 _prImgPreview/handleStyleFileSelect와
+      // 동일하게 대기 — 안 기다리면 permission-denied로 조용히 base64 폴백되어 다른
+      // 기기/협업자 화면에는 사진이 반영되지 않는 문제가 있었음
+      if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); }
       if (state.loggedIn && _fbStorage) {
         try {
           const proj = getProject();
