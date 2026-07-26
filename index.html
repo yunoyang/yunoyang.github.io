@@ -12614,19 +12614,23 @@ async function _syncFloorplanToCloud(proj) {
 // contentLinks만 Firestore에 업데이트 — read-merge-write로 덮어쓰기 방지
 async function _syncContentLinksToCloud(proj) {
   if (!proj?.cloudId) return;
-  const isOwner = !proj.myRole || proj.myRole === 'owner' || proj.owner?.email === state.user?.email || isExpert();
-  if (!isOwner) return;
+  // 뷰어도 허용 — 컨텐츠 링크 추가 버튼은 뷰어/편집자에게도 열려 있는데, 여기서 오너만
+  // 쓰기를 허용하면 뷰어/편집자가 추가·삭제한 링크가 로컬에만 남고 클라우드에 전혀
+  // 반영되지 않아 다른 기기·오너 화면에 영원히 나타나지 않는 버그가 있었음
+  // (스타일이미지/가구/공정 sync와 동일한 원인으로, 이 함수만 예전 owner 전용 로직이 남아있었음)
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.myRole === '뷰어' || proj.owner?.email === state.user?.email || isExpert();
+  if (!canWrite) return;
   const ok = await _initFirebase();
   if (!ok || !_db) return;
   try {
     // 1) 현재 Firestore 값 읽기
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudLinks = snap.data()?.projectData?.contentLinks || [];
-    const localLinks = proj.contentLinks || [];
-    // 2) local이 최신 상태(추가/삭제 모두 반영) → local을 정본으로 사용
-    //    삭제된 항목이 cloud에서 되살아나는 버그를 방지하기 위해 cloud 전용 항목은 병합하지 않음
-    const mergedFinal = [...localLinks]
-      .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    // 2) 다른 sync 경로들과 동일한 공용 헬퍼로 병합 (id 기준 합집합 + 삭제 tombstone 필터링)
+    //    편집자/뷰어도 쓰게 되면서 로컬이 항상 정본이라는 가정이 깨지므로, 다른 협업자가
+    //    올린 cloud 전용 항목도 보존해야 함 — _deleteContentLink()가 이미 호출하는
+    //    _markIdDeleted('contentLink', id) tombstone으로 삭제 항목의 재생성을 방지
+    const mergedFinal = _mergeListById(proj.contentLinks, cloudLinks, { sortByTsDesc: true, type: 'contentLink' });
     // 3) 변경 없으면 스킵
     if (JSON.stringify(mergedFinal.map(x=>x.id)) === JSON.stringify(cloudLinks.map(x=>x.id))) return;
     // 4) Firestore에 쓰기
