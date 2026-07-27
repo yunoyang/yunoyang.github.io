@@ -6300,7 +6300,9 @@ function updateSummary() {
     p.details.forEach(d => { totalCost += d.cost || 0; });
     if (p.company) companies.add(p.company);
   });
-  const furnitureCost = (proj.furnitureItems || []).filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  // 소프트 삭제(_deleteFurnitureItem)된 항목은 제외 — 원시 배열을 그대로 쓰면 삭제한
+  // 가구의 가격이 총 비용에 영원히 남아있는 버그가 생김 (_getFurnitureItems가 필터링)
+  const furnitureCost = _getFurnitureItems().filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const excludeFurniture = !!proj.costExcludeFurniture;
   const totalAll = totalCost + (excludeFurniture ? 0 : furnitureCost);
   document.getElementById('sum-cost').textContent = totalAll > 0 ? '약 ' + formatNum(totalAll) + '원' : '0원';
@@ -10708,8 +10710,8 @@ function _loadInfoView() {
         const c = (p.details||[]).reduce((a,d) => a+(d.cost||0), 0);
         return { label: p.name || '공정', cost: c };
       });
-    // 가구&가전 비용
-    const furnitureItems = proj.furnitureItems || [];
+    // 가구&가전 비용 — 소프트 삭제된 항목은 _getFurnitureItems()가 걸러줌 (updateSummary와 동일)
+    const furnitureItems = _getFurnitureItems();
     const furnitureCost = furnitureItems.filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s,it) => s+(it.price||0)*(it.qty||1), 0);
     const excludeFurniture = !!proj.costExcludeFurniture;
     const total = procCost + (excludeFurniture ? 0 : furnitureCost);
@@ -14886,8 +14888,8 @@ function _mwOpenAddProduct() {
 
 function _mwOpenProductList() {
   _mwSaveRange();
-  const proj = getProject();
-  const items = proj?.furnitureItems || [];
+  // 소프트 삭제된 가구는 목록에서 제외 (_getFurnitureItems가 필터링)
+  const items = _getFurnitureItems();
   _mwProductSelected = new Set();
 
   const body = document.getElementById('mw-product-list-body');
