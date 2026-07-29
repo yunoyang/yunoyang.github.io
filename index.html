@@ -12187,13 +12187,15 @@ function _mergeLocalPreserve(cp, localProjs) {
     const cloudEdited = Array.isArray(cp.floorplanEditedImages) ? cp.floorplanEditedImages : [];
     merged.floorplanEditedImages = local.floorplanEditedImages.map((lImg, i) => lImg || cloudEdited[i] || null);
   }
-  const cloudHasImgs = Array.isArray(cp.floorplanImages) && cp.floorplanImages.some(Boolean);
-  if (cloudHasImgs) {
-    merged.floorplanImages = cp.floorplanImages;
-    merged.floorplanImage = cp.floorplanImages.find(Boolean) || null;
-  } else if (Array.isArray(local.floorplanImages) && local.floorplanImages.some(Boolean)) {
-    merged.floorplanImages = local.floorplanImages;
-    merged.floorplanImage = local.floorplanImages.find(Boolean) || null;
+  // floorplanImages: 슬롯별 로컬 우선 머지 (_syncProjToCloud/_startCollabListener와 동일 정책)
+  // 예전에는 "클라우드에 이미지가 하나라도 있으면 로컬 배열 전체를 버리는" all-or-nothing
+  // 방식이었는데, 이는 styleImages에서 겪었던 것과 동일한 버그 패턴 — 로컬에만 있는(아직
+  // 동기화 안 된) 다른 슬롯의 도면이 새로고침 시 통째로 사라질 수 있었음
+  {
+    const cloudFpImgs = Array.isArray(cp.floorplanImages) ? cp.floorplanImages : [null, null, null];
+    const localFpImgs = Array.isArray(local.floorplanImages) ? local.floorplanImages : [null, null, null];
+    merged.floorplanImages = localFpImgs.map((li, i) => li || cloudFpImgs[i] || null);
+    merged.floorplanImage = merged.floorplanImages.find(Boolean) || null;
   }
   return merged;
 }
