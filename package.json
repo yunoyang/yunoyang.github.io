@@ -1,0 +1,21 @@
+{
+  "name": "vibespace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "바이브스페이스 — 반셀프인테리어 플래닝 앱 (Capacitor 네이티브 래핑)",
+  "scripts": {
+    "build:www": "bash scripts/build-www.sh",
+    "cap:sync": "npm run build:www && cap sync",
+    "cap:ios": "npm run build:www && cap sync ios && cap open ios",
+    "cap:android": "npm run build:www && cap sync android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
