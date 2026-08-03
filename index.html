@@ -124,6 +124,22 @@
 <link rel="apple-touch-icon" href="favicon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
+<!-- ===== PWA ===== -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="바이브스페이스">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+
 <!-- ===== GOOGLE ANALYTICS 4 ===== -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y2TYTSSQNW"></script>
 <script>
@@ -12424,6 +12440,10 @@ function _syncProjToCloud(proj) {
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
+    // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
+    // 트리거로 호출될 때마다 아직 로컬에 fetch 안 된(협업자가 방금 추가한) 클라우드 기록이
+    // local-only proj.meetings로 통째로 덮어써져 사라짐 (_syncMeetingsToCloud와 동일 패턴)
+    projData.meetings = _mergeListById(proj.meetings, cloudData.meetings, { sortByTsDesc: true, type: 'meeting' });
     // floorplanImages: 슬롯별 로컬 우선 머지 (_startCollabListener와 동일 정책) — 그냥 덮어쓰면
     // 협업자가 다른 슬롯에 방금 올린 도면이 오너의 전체 sync로 통째로 사라질 수 있음
     {

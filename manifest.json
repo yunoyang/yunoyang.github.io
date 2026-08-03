@@ -1,0 +1,17 @@
+{
+  "name": "바이브스페이스 — 반셀프인테리어 플래닝",
+  "short_name": "바이브스페이스",
+  "description": "반셀프 인테리어 공정·예산·업체·일정을 한 곳에서 관리하는 플래닝 앱",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f5f5",
+  "theme_color": "#111111",
+  "lang": "ko",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
