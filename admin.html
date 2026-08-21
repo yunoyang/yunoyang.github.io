@@ -1273,9 +1273,14 @@ service cloud.firestore {
             <h1 class="section-title">업체 DB</h1>
             <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">앱에서 업체 입력 시 추천되는 시공 업체 데이터베이스</p>
           </div>
-          <button onclick="openAddContractorDialog()" style="padding:10px 18px;background:var(--primary);color:#fff;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <i data-lucide="plus" style="width:15px;height:15px;"></i> 업체 추가
-          </button>
+          <div style="display:flex;gap:8px;">
+            <button onclick="exportContractorsXLSX()" style="padding:10px 18px;background:#fff;color:var(--primary);border:1.5px solid var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <i data-lucide="download" style="width:15px;height:15px;"></i> 엑셀 다운로드
+            </button>
+            <button onclick="openAddContractorDialog()" style="padding:10px 18px;background:var(--primary);color:#fff;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <i data-lucide="plus" style="width:15px;height:15px;"></i> 업체 추가
+            </button>
+          </div>
         </div>
 
         <!-- 구글 시트 → CSV 업로드 -->
@@ -3077,6 +3082,42 @@ async function _adminSeedContractors() {
   await batch.commit();
   const snap = await _adminDb.collection('vb_contractors').orderBy('rating','desc').limit(200).get();
   _adminContractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// 현재 Firestore(vb_contractors)에 올라가 있는 업체 DB 전체를 엑셀로 다운로드
+// (구글 시트 가져오기에서 쓰는 헤더 포맷과 동일하게 맞춰서, 다시 업로드도 가능하게 함)
+async function exportContractorsXLSX() {
+  if (!_adminDb) initFirestoreAdmin();
+  if (!_adminDb) { alert('Firebase 초기화 실패. 페이지를 새로고침해주세요.'); return; }
+  try {
+    const snap = await _adminDb.collection('vb_contractors').orderBy('rating','desc').limit(1000).get();
+    const contractors = snap.docs.map(d => d.data());
+    if (!contractors.length) { alert('업체 DB가 비어있습니다.'); return; }
+    const rows = contractors.map(c => {
+      const links = c.reviewLinks || [];
+      return {
+        name: c.name || '',
+        category: c.category || '',
+        area: c.area || '',
+        phone: c.phone || '',
+        rating: c.rating ?? '',
+        reviews: c.reviews ?? '',
+        description: c.description || '',
+        sourceUrl: c.sourceUrl || '',
+        contactEmail: c.contactEmail || '',
+        isPremium: c.isPremium ? 'true' : '',
+        reviewLink1: links[0] || '', reviewLink2: links[1] || '',
+        reviewLink3: links[2] || '', reviewLink4: links[3] || '', reviewLink5: links[4] || ''
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '업체DB');
+    const dateStr = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `vibespace_업체DB_${dateStr}.xlsx`);
+  } catch (e) {
+    alert('내보내기 실패: ' + e.message);
+  }
 }
 
 function filterContractors(cat, btn) {
