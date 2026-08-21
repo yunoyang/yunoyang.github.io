@@ -11,8 +11,9 @@
   "plugins": {
     "GoogleAuth": {
       "scopes": ["profile", "email"],
-      "serverClientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
-      "forceCodeForRefreshToken": true
+      "iosClientId": "293342215882-qd47c4j8g9dq7l8bmc4382e5f2075ucg.apps.googleusercontent.com",
+      "serverClientId": "293342215882-efnjr4asconar1g6bkubaj7r5dv4j9ah.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
     }
   }
 }

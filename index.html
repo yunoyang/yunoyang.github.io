@@ -5500,10 +5500,16 @@ function _isNativeApp() {
 }
 // 네이티브 앱: GoogleAuth 플러그인으로 로그인 → idToken을 기존 handleGoogleResponse에 그대로 전달
 // (웹의 GSI credential과 같은 포맷이라 로그인 이후 로직 전부 재사용됨)
+let _nativeGoogleAuthInitialized = false;
 async function _nativeGoogleLogin() {
   try {
     const GoogleAuth = window.Capacitor.Plugins && window.Capacitor.Plugins.GoogleAuth;
     if (!GoogleAuth) { showToastMessage('Google 로그인 모듈을 불러오지 못했습니다.'); return; }
+    // signIn() 전에 반드시 initialize()를 먼저 호출해야 함 (안 하면 네이티브 쪽 설정이 nil이라 크래시)
+    if (!_nativeGoogleAuthInitialized) {
+      await GoogleAuth.initialize();
+      _nativeGoogleAuthInitialized = true;
+    }
     const result = await GoogleAuth.signIn();
     const idToken = result && result.authentication && result.authentication.idToken;
     if (!idToken) { showToastMessage('Google 로그인에 실패했습니다.'); return; }
