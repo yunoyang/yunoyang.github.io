@@ -719,7 +719,7 @@ tr:hover td { background:#fafbfe; }
           <i data-lucide="refresh-cw"></i> 새로고침
         </button>
         <button class="topbar-btn primary" onclick="exportData()">
-          <i data-lucide="download"></i> 내보내기
+          <i data-lucide="download"></i> 엑셀 다운받기
         </button>
       </div>
     </div>
@@ -1230,9 +1230,9 @@ service cloud.firestore {
             <div class="settings-body">
               <div style="background:#f8fafc;border-radius:10px;padding:14px;">
                 <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Analytics 데이터</div>
-                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">방문, 세션, 이벤트 등 수집된 데이터를 JSON으로 내보냅니다</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">방문, 세션, 이벤트 등 수집된 데이터를 엑셀로 다운받습니다</div>
                 <button class="topbar-btn primary" style="font-size:13px;" onclick="exportData()">
-                  <i data-lucide="download" style="width:13px;height:13px;"></i> Analytics JSON 내보내기
+                  <i data-lucide="download" style="width:13px;height:13px;"></i> 엑셀 다운받기
                 </button>
               </div>
               <div style="background:#f8fafc;border-radius:10px;padding:14px;">
@@ -2963,16 +2963,18 @@ function clearAnalytics() {
 }
 
 // ===== EXPORT =====
+// Analytics(방문/이벤트/사용자) 데이터를 시트 3개짜리 xls로 다운로드
 function exportData() {
   const store = getAnalytics();
-  const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `vibespace_analytics_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Analytics 데이터를 내보냈습니다');
+  const wb = XLSX.utils.book_new();
+  const visitsWs = XLSX.utils.json_to_sheet(store.visits || []);
+  const eventsWs = XLSX.utils.json_to_sheet(store.events || []);
+  const usersWs = XLSX.utils.json_to_sheet(store.users || []);
+  XLSX.utils.book_append_sheet(wb, visitsWs, '방문');
+  XLSX.utils.book_append_sheet(wb, eventsWs, '이벤트');
+  XLSX.utils.book_append_sheet(wb, usersWs, '사용자');
+  XLSX.writeFile(wb, `vibespace_analytics_${new Date().toISOString().slice(0,10)}.xls`, { bookType: 'xls' });
+  showToast('Analytics 데이터를 엑셀로 다운받았습니다');
 }
 
 function exportAppData() {
