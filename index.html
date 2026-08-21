@@ -17880,8 +17880,8 @@ async function fpShareLink() {
   <input type="file" id="style-file-input" accept="image/*" multiple style="display:none;" onchange="handleStyleFileSelect(event)">
 </div>
 
-<div id="style-more-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;" onclick="closeStyleImageMoreMenu()"></div>
-<div id="style-more-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:1101;max-width:540px;margin:0 auto;">
+<div id="style-more-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10100;" onclick="closeStyleImageMoreMenu()"></div>
+<div id="style-more-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;z-index:10101;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:20px;">이미지 관리</div>
   <button class="style-sheet-btn" onclick="closeStyleImageMoreMenu();downloadStyleImage()">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
