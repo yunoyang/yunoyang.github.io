@@ -3289,7 +3289,7 @@ button, input, textarea, select { font-family:var(--font); }
   </script>
 
   <!-- 프로필 아바타 (서비스 전체 메뉴) -->
-  <div style="position:absolute;top:20px;right:20px;z-index:2;">
+  <div style="position:absolute;top:max(env(safe-area-inset-top,0px),20px);right:20px;z-index:2;">
     <button id="landing-avatar-btn" class="profile-avatar-btn" onclick="toggleLandingMenu(event)" title="메뉴"></button>
   </div>
 
@@ -13826,7 +13826,7 @@ function _forceLogout(msg) {
   setTimeout(() => {
     // 네이티브 alert 대신 토스트 스타일 알림 표시
     const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-size:14px;font-weight:600;padding:14px 22px;border-radius:14px;z-index:9999;text-align:center;line-height:1.5;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    el.style.cssText = 'position:fixed;top:max(env(safe-area-inset-top,0px),60px);left:50%;transform:translateX(-50%);background:#111;color:#fff;font-size:14px;font-weight:600;padding:14px 22px;border-radius:14px;z-index:9999;text-align:center;line-height:1.5;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
     el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 4500);
@@ -16558,7 +16558,7 @@ function openPhotoModalFp(clickedSrc) {
   modal.id = 'fp-photo-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;';
   modal.innerHTML = `
-    <button id="fpm-close" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;">✕</button>
+    <button id="fpm-close" style="position:absolute;top:max(env(safe-area-inset-top,0px),16px);right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;">✕</button>
     <div id="fpm-wrap" style="position:relative;width:100%;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;">
       <img id="fpm-img" style="max-width:96vw;max-height:90vh;object-fit:contain;user-select:none;-webkit-user-drag:none;transition:opacity .15s;" />
     </div>
