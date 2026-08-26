@@ -4261,7 +4261,7 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- Meeting Detail Screen -->
 <div id="screen-meeting-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <!-- 상단 헤더: 뒤로 + 블로그 발행 + ··· -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 10px 0;flex-shrink:0;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 10px 0;padding-top:max(env(safe-area-inset-top,0px),10px);flex-shrink:0;">
     <button class="back-btn" onclick="closeMeetingDetail()">
       <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
     </button>
