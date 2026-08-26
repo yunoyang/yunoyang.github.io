@@ -5133,6 +5133,16 @@ button, input, textarea, select { font-family:var(--font); }
 // https://console.cloud.google.com/ → APIs & Services → Credentials → OAuth 2.0 Client IDs
 const GOOGLE_CLIENT_ID = '685508900620-08naghsqb4nfepjkse84tbg0b8nq1en8.apps.googleusercontent.com';
 
+// 다른 사람에게 보내는 링크(초대/공유)는 항상 이 실제 도메인을 써야 함.
+// 네이티브 앱(Capacitor)에서는 window.location.origin이 capacitor://localhost 같은
+// 값이 나와서, 그걸 그대로 쓰면 상대방이 열 수 없는 깨진 링크가 만들어짐.
+function _publicOrigin() {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    return 'https://vibespacekorea.com';
+  }
+  return window.location.origin;
+}
+
 // ===== PLACE SEARCH API KEYS =====
 // 카카오 REST API 키: https://developers.kakao.com → 내 애플리케이션 → REST API 키
 const KAKAO_REST_KEY = 'YOUR_KAKAO_REST_KEY';
@@ -9738,7 +9748,7 @@ async function _sendProcRecordMentionNotifications(record, proc, emails, proj) {
         to_name: email.split('@')[0],
         from_name: sender,
         project_name: projName,
-        invite_link: location.href,
+        invite_link: _publicOrigin() + "/",
         role: `[${procName}] 공정 기록에서 멘션됐습니다:\n${snippet}`,
       });
     } catch(e) { console.error('[prMentionNotify]', e); }
@@ -13158,7 +13168,7 @@ async function generateInviteLink() {
     proj.invites.push({ token, email, role, createdAt: new Date().toISOString(), expiresAt });
     save();
 
-    const link = `${window.location.origin}${window.location.pathname}?invite=${token}`;
+    const link = `${_publicOrigin()}/?invite=${token}`;
     _currentInviteLink = link;
     _currentInviteEmail = email;
     // EmailJS로 직접 발송 (실패 시 mailto fallback 내장)
@@ -15413,7 +15423,7 @@ async function _sendMentionNotifications(meeting, emails, proj) {
         to_name: email.split('@')[0],
         from_name: sender,
         project_name: projName,
-        invite_link: location.href,
+        invite_link: _publicOrigin() + "/",
         role: `회의록 "${meeting.title}"에서 멘션됐습니다:\n${(()=>{const d=document.createElement('div');d.innerHTML=meeting.content||'';return(d.textContent||'').slice(0,120)})()}`,
       });
     } catch(e) { console.error('[mentionNotify]', e); }
@@ -17257,7 +17267,7 @@ async function fpSendCommentMentionNotifications(commentText, proj) {
     try {
       await emailjs.send('service_elvk718', 'template_11ldrbw', {
         to_email: u.email, to_name: u.name, from_name: sender,
-        project_name: projName, invite_link: location.href,
+        project_name: projName, invite_link: _publicOrigin() + "/",
         role: `[도면 코멘트] ${sender}님이 멘션했습니다:\n"${snippet}"`,
       });
     } catch(e) { console.error('[fpMentionNotify]', e); }
@@ -17826,7 +17836,7 @@ function fpDownload() {
 }
 
 function fpCopyLink() {
-  const url = location.origin + location.pathname + location.search + '#floor-editor';
+  const url = _publicOrigin() + location.pathname + location.search + '#floor-editor';
   navigator.clipboard.writeText(url).then(() => {
     const btn = event.currentTarget;
     const orig = btn.innerHTML;
