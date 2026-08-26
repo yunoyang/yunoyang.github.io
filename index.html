@@ -2263,7 +2263,7 @@ button, input, textarea, select { font-family:var(--font); }
   position:fixed; top:0; left:0; right:0; bottom:0;
   background:rgba(0,0,0,.48); display:none; align-items:flex-end; justify-content:center;
   z-index:9000;
-  padding:0 max(10px, env(safe-area-inset-bottom,0px)) max(10px, env(safe-area-inset-bottom,0px));
+  padding:0 12px 12px;
   box-sizing:border-box;
 }
 .overlay.active { display:flex; animation:ovFadeIn .22s ease forwards; }
@@ -4482,7 +4482,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 <!-- ===== 기록 에디터: 링크 리스트 삽입 ===== -->
 <div id="mw-linkinsert-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9300;" onclick="if(event.target===this)_mwCloseLinkInsert()"></div>
-<div id="mw-linkinsert-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:max(10px,env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-bottom,0px));background:#fff;border-radius:32px;padding:22px 20px;z-index:9301;max-width:540px;margin:0 auto;">
+<div id="mw-linkinsert-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;background:#fff;border-radius:32px;padding:22px 20px max(20px,env(safe-area-inset-bottom,0px));z-index:9301;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:14px;">링크 삽입</div>
   <label style="font-size:12px;font-weight:600;color:#888;display:block;margin-bottom:6px;">표시할 텍스트</label>
   <input id="mw-linkinsert-label" placeholder="예: 구매하러가기" style="width:100%;height:46px;border:1.5px solid #e5e5ec;border-radius:12px;padding:0 14px;font-size:14px;font-family:var(--font);box-sizing:border-box;outline:none;margin-bottom:14px;">
@@ -4495,7 +4495,7 @@ button, input, textarea, select { font-family:var(--font); }
 </div>
 
 <div id="mw-linklist-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9300;" onclick="if(event.target===this)_mwCloseLinkList()"></div>
-<div id="mw-linklist-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:max(10px,env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-bottom,0px));background:#fff;border-radius:32px;padding:22px 20px;z-index:9301;max-width:540px;margin:0 auto;max-height:80vh;overflow-y:auto;">
+<div id="mw-linklist-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;background:#fff;border-radius:32px;padding:22px 20px max(20px,env(safe-area-inset-bottom,0px));z-index:9301;max-width:540px;margin:0 auto;max-height:80vh;overflow-y:auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px;">링크 리스트 삽입</div>
   <div style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.5;">한 줄에 "업체명, URL" 형식으로 입력하세요.<br>표를 복사해 그대로 붙여넣어도 자동으로 인식돼요.</div>
   <textarea id="mw-linklist-input" placeholder="대신특수목재, http://wood21.co.kr&#10;인우드, http://inwoodplus.com" style="width:100%;height:160px;border:1.5px solid #e5e5ec;border-radius:12px;padding:12px 14px;font-size:14px;font-family:var(--font);resize:vertical;box-sizing:border-box;outline:none;"></textarea>
@@ -17873,7 +17873,7 @@ async function fpShareLink() {
 
 <!-- Style sheets — body 직속 (screen-main transform 스택 컨텍스트 우회) -->
 <div id="style-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;" onclick="closeStyleAddMenu()"></div>
-<div id="style-add-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:max(10px,env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-bottom,0px));background:#fff;border-radius:32px;padding:24px 20px;z-index:1101;max-width:540px;margin:0 auto;">
+<div id="style-add-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;background:#fff;border-radius:32px;padding:24px 20px max(20px,env(safe-area-inset-bottom,0px));z-index:1101;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:20px;" id="style-add-sheet-title">이미지 추가</div>
   <button class="style-sheet-btn" onclick="triggerStyleFileUpload()">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -17883,7 +17883,7 @@ async function fpShareLink() {
 </div>
 
 <div id="style-more-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10100;" onclick="closeStyleImageMoreMenu()"></div>
-<div id="style-more-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:max(10px,env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-bottom,0px));background:#fff;border-radius:32px;padding:24px 20px;z-index:10101;max-width:540px;margin:0 auto;">
+<div id="style-more-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;background:#fff;border-radius:32px;padding:24px 20px max(20px,env(safe-area-inset-bottom,0px));z-index:10101;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:20px;">이미지 관리</div>
   <button class="style-sheet-btn" onclick="closeStyleImageMoreMenu();downloadStyleImage()">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -17896,7 +17896,7 @@ async function fpShareLink() {
 </div>
 
 <div id="style-newspace-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1200;" onclick="closeStyleNewSpace()"></div>
-<div id="style-newspace-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:max(10px,env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-bottom,0px));background:#fff;border-radius:32px;padding:24px 20px;z-index:1201;max-width:540px;margin:0 auto;">
+<div id="style-newspace-sheet" class="popup-sheet" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;background:#fff;border-radius:32px;padding:24px 20px max(20px,env(safe-area-inset-bottom,0px));z-index:1201;max-width:540px;margin:0 auto;">
   <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;">공간 추가</div>
   <input id="style-newspace-input" type="text" placeholder="공간 이름 (예: 드레스룸, 현관…)" maxlength="20"
     style="width:100%;border:1.5px solid #E1E5EF;border-radius:10px;padding:12px 14px;font-size:15px;color:#111;outline:none;box-sizing:border-box;"
