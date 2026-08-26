@@ -2,7 +2,17 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" id="vb-viewport-meta" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- 네이티브 앱(Capacitor)에서만 핀치줌 비활성화 — 웹은 접근성상 줌 유지, 앱은 웹뷰라
+     확대된 뒤 되돌릴 제스처가 없어서 화면이 갇히는 문제가 있어 애초에 줌 자체를 막음 -->
+<script>
+try {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    document.getElementById('vb-viewport-meta').setAttribute('content',
+      'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
+  }
+} catch(e) {}
+</script>
 <!-- 브랜드 로고 localStorage 캐시 제거 — 구(舊) HTML이 캐시에서 로드돼 flash가 나는 현상 방지 -->
 <script>try{localStorage.removeItem('vibespace_logo')}catch(e){}</script>
 
