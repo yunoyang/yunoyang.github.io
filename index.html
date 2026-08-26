@@ -6737,7 +6737,9 @@ function openContentViewer(id) {
   const channelEl = document.getElementById('cv-channel');
   if (type === 'youtube' && item.videoId) {
     playerWrap.style.display = '';
-    playerWrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${item.videoId}?playsinline=1&rel=0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+    // youtube-nocookie.com: 서드파티 쿠키/스토리지 접근이 막힌 WKWebView(iOS 앱)에서
+    // 일반 youtube.com 임베드가 "오류가 발생했습니다"로 실패하는 경우가 많아 이걸로 대체
+    playerWrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${item.videoId}?playsinline=1&rel=0" title="${esc(item.title || 'YouTube video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" webkit-playsinline allowfullscreen></iframe>`;
     channelEl.textContent = item.channel || '';
   } else {
     playerWrap.style.display = 'none';
