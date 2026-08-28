@@ -5251,6 +5251,34 @@ function _publicOrigin() {
   return window.location.origin;
 }
 
+// 승인된 전문가/업체 계정 옆에 붙이는 인스타그램 스타일 인증 뱃지
+function _verifiedBadgeHtml(size) {
+  size = size || 15;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 22 22" style="display:inline-block;vertical-align:-3px;margin-left:3px;flex-shrink:0;" title="바이브스페이스 인증 전문가">
+    <path fill="#3176ff" d="M10.396 2.216a1.75 1.75 0 0 1 1.208 0l1.65.6a1.75 1.75 0 0 0 .996.043l1.7-.397a1.75 1.75 0 0 1 2.033 1.09l.64 1.63a1.75 1.75 0 0 0 .683.79l1.485.918a1.75 1.75 0 0 1 .682 2.12l-.634 1.633a1.75 1.75 0 0 0 0 1.267l.634 1.633a1.75 1.75 0 0 1-.682 2.12l-1.485.918a1.75 1.75 0 0 0-.683.79l-.64 1.63a1.75 1.75 0 0 1-2.033 1.09l-1.7-.397a1.75 1.75 0 0 0-.996.043l-1.65.6a1.75 1.75 0 0 1-1.208 0l-1.65-.6a1.75 1.75 0 0 0-.996-.043l-1.7.397a1.75 1.75 0 0 1-2.033-1.09l-.64-1.63a1.75 1.75 0 0 0-.683-.79l-1.485-.918a1.75 1.75 0 0 1-.682-2.12l.634-1.633a1.75 1.75 0 0 0 0-1.267L.61 8.91a1.75 1.75 0 0 1 .682-2.12l1.485-.918a1.75 1.75 0 0 0 .683-.79l.64-1.63a1.75 1.75 0 0 1 2.033-1.09l1.7.397a1.75 1.75 0 0 0 .996-.043z"/>
+    <path fill="#fff" d="M9.5 12.94 7.56 11l-1.06 1.06 3 3 5.5-5.5-1.06-1.06z"/>
+  </svg>`;
+}
+
+// 이메일 목록의 accountType/expertProfile.status를 한 번에 조회해서
+// { email: true } 형태로 반환 (승인된 전문가만 true) — 협업자 목록 뱃지 표시용
+async function _fetchExpertBadgeMap(emails) {
+  const result = {};
+  const uniq = [...new Set((emails||[]).filter(Boolean))];
+  if (!uniq.length) return result;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return result; }
+    await Promise.all(uniq.map(async email => {
+      try {
+        const key = email.replace(/\./g,'_');
+        const doc = await _db.collection('vb_users').doc(key).get();
+        if (doc.data()?.expertProfile?.status === 'approved') result[email] = true;
+      } catch(e) {}
+    }));
+  } catch(e) { console.warn('expert badge map fetch failed:', e); }
+  return result;
+}
+
 // ===== PLACE SEARCH API KEYS =====
 // 카카오 REST API 키: https://developers.kakao.com → 내 애플리케이션 → REST API 키
 const KAKAO_REST_KEY = 'YOUR_KAKAO_REST_KEY';
@@ -6584,7 +6612,8 @@ function goTo(screen) {
         ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`
         : `<span style="color:#fff;">${_getUserInitial()}</span>`;
     }
-    document.getElementById('acct-name').textContent = name;
+    const isVerifiedExpert = state.user?.accountType === 'expert' && state.user?.expertProfile?.status === 'approved';
+    document.getElementById('acct-name').innerHTML = esc(name) + (isVerifiedExpert ? _verifiedBadgeHtml(18) : '');
     document.getElementById('acct-name-row').textContent = name;
     document.getElementById('acct-email-row').textContent = email;
     _loadAcctJoinDate();
@@ -13330,6 +13359,7 @@ async function renderCollabTab() {
   const isOwner = _isProjOwner(proj);
   const collaborators = proj.collaborators || [];
   const invites = proj.invites || [];
+  const expertBadges = await _fetchExpertBadgeMap([state.user.email, ...collaborators.map(m => m.email)]);
 
   const avatarColors = ['#8b5cf6','#10b981','#f59e0b','#ec4899','#3b82f6','#ef4444'];
   body.innerHTML = `
@@ -13375,7 +13405,7 @@ async function renderCollabTab() {
       <div class="collab-member-row">
         <div class="cm-avatar">${(state.user.name||state.user.email||'?').charAt(0).toUpperCase()}</div>
         <div class="cm-info">
-          <div class="cm-name">${esc(state.user.name||'나')} <span style="font-size:12px;color:#aaa;font-weight:400;">(나)</span></div>
+          <div class="cm-name">${esc(state.user.name||'나')}${expertBadges[state.user.email] ? _verifiedBadgeHtml(14) : ''} <span style="font-size:12px;color:#aaa;font-weight:400;">(나)</span></div>
           <div class="cm-email">${esc(state.user.email)}</div>
         </div>
         <span class="cm-role owner">오너</span>
@@ -13386,7 +13416,7 @@ async function renderCollabTab() {
             ${(m.name||m.email||'?').charAt(0).toUpperCase()}
           </div>
           <div class="cm-info">
-            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}</div>
+            <div class="cm-name">${esc(m.name||m.email.split('@')[0])}${expertBadges[m.email] ? _verifiedBadgeHtml(14) : ''}</div>
             <div class="cm-email">${esc(m.email)}</div>
           </div>
           ${isOwner
