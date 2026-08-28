@@ -3696,6 +3696,10 @@ button, input, textarea, select { font-family:var(--font); }
         <div style="font-size:14px;font-weight:600;color:#999;padding:16px 20px 8px;">함께하는 업체</div>
         <div id="iv-companies-list"></div>
       </div>
+      <div class="info-view-card" id="iv-workers-card" style="display:none;overflow:visible;">
+        <div style="font-size:14px;font-weight:600;color:#999;padding:16px 20px 8px;">함께하는 작업자</div>
+        <div id="iv-workers-list"></div>
+      </div>
     </div>
 
     <!-- ▶ EDIT MODE (기존 폼) -->
@@ -3864,6 +3868,30 @@ button, input, textarea, select { font-family:var(--font); }
           탈퇴하기
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 다른 사용자 계정 페이지 (읽기 전용) ===== -->
+<div class="screen" id="screen-user-profile">
+  <div class="form-screen-inner" style="background:#f7f8fa;">
+    <div class="form-header" style="background:#f7f8fa;border-bottom:none;">
+      <button class="back-btn" onclick="goTo(_prevScreen||'main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <h2>계정 정보</h2>
+    </div>
+    <div class="form-body" style="padding:0 20px 40px;">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:32px 0 24px;">
+        <div id="up-avatar" style="width:88px;height:88px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;margin-bottom:14px;"></div>
+        <div id="up-name" style="font-size:20px;font-weight:700;color:#111;"></div>
+        <div id="up-role" style="font-size:13px;color:#888;margin-top:4px;"></div>
+      </div>
+      <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:0 20px;margin-bottom:16px;">
+        <div class="work-field">
+          <span class="f-label">이메일</span>
+          <span class="f-value readonly" id="up-email" style="cursor:default;word-break:break-all;text-align:right;color:#222;text-decoration:none;"></span>
+        </div>
+      </div>
+      <div id="up-business-card" style="display:none;background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;"></div>
     </div>
   </div>
 </div>
@@ -5277,6 +5305,70 @@ async function _fetchExpertBadgeMap(emails) {
     }));
   } catch(e) { console.warn('expert badge map fetch failed:', e); }
   return result;
+}
+
+// 공사 정보 화면의 "함께하는 작업자" 카드 — 오너 + 협업자 목록, 클릭 시 계정 페이지로 이동
+async function _renderInfoViewWorkers(proj) {
+  const card = document.getElementById('iv-workers-card');
+  const list = document.getElementById('iv-workers-list');
+  if (!card || !list || !proj) return;
+  const isOwner = _isProjOwner(proj);
+  const owner = isOwner ? { email: state.user.email, name: state.user.name, role: '오너' } : { email: proj.owner?.email, name: proj.owner?.name, role: '오너' };
+  const collaborators = (proj.collaborators || []).map(m => ({ email: m.email, name: m.name, role: m.role === '뷰어' ? '뷰어' : '편집자' }));
+  const workers = [owner, ...collaborators].filter(w => w.email);
+  if (!workers.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const avatarColors = ['#111','#8b5cf6','#10b981','#f59e0b','#ec4899','#3b82f6','#ef4444'];
+  const badgeMap = await _fetchExpertBadgeMap(workers.map(w => w.email));
+  list.innerHTML = workers.map((w, i) => `
+    <div onclick="openUserProfile('${esc(w.email)}','${esc(w.name||'')}','${esc(w.role)}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;${i < workers.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
+      <div style="width:38px;height:38px;border-radius:50%;background:${avatarColors[i%avatarColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">${(w.name||w.email||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:600;color:#222;display:flex;align-items:center;">${esc(w.name||w.email.split('@')[0])}${badgeMap[w.email] ? _verifiedBadgeHtml(14) : ''}</div>
+        <div style="font-size:13px;color:#aaa;">${esc(w.role)}</div>
+      </div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('');
+}
+
+// ===== 다른 사용자 계정 페이지 (읽기 전용) =====
+async function openUserProfile(email, fallbackName, role) {
+  goTo('user-profile');
+  const av = document.getElementById('up-avatar');
+  const nameEl = document.getElementById('up-name');
+  const roleEl = document.getElementById('up-role');
+  const emailEl = document.getElementById('up-email');
+  const bizCard = document.getElementById('up-business-card');
+  av.style.background = '#000';
+  av.innerHTML = `<span style="color:#fff;">${(fallbackName||email||'?').charAt(0).toUpperCase()}</span>`;
+  nameEl.innerHTML = esc(fallbackName || email.split('@')[0]);
+  roleEl.textContent = role || '';
+  emailEl.textContent = email || '';
+  bizCard.style.display = 'none';
+  bizCard.innerHTML = '';
+  if (!email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    const d = doc.data() || {};
+    if (d.picture) av.innerHTML = `<img src="${d.picture}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer">`;
+    if (d.name) nameEl.innerHTML = esc(d.name);
+    const p = d.expertProfile;
+    if (p?.status === 'approved') {
+      nameEl.innerHTML = esc(d.name || fallbackName || email.split('@')[0]) + _verifiedBadgeHtml(18);
+      const kindLabel = p.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
+      bizCard.innerHTML = `
+        <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:8px;">${esc(p.businessName||'')}</div>
+        <div style="font-size:13px;color:#666;line-height:2;">
+          ${esc(kindLabel)}${p.categories?.length ? ' · ' + esc(p.categories.join(', ')) : ''}<br>
+          ${p.area ? `📍 ${esc(p.area)}<br>` : ''}
+          ${p.phone ? `📞 ${esc(p.phone)}<br>` : ''}
+          ${p.intro ? `💬 ${esc(p.intro)}` : ''}
+        </div>`;
+      bizCard.style.display = 'block';
+    }
+  } catch(e) { console.warn('openUserProfile fetch failed:', e); }
 }
 
 // ===== PLACE SEARCH API KEYS =====
@@ -11122,6 +11214,8 @@ function _loadInfoView() {
       companiesCard.style.display = 'none';
     }
   }
+  // 함께하는 작업자 (오너 + 협업자)
+  _renderInfoViewWorkers(proj);
   // 도면 (다중 이미지)
   const fpCard    = document.getElementById('iv-floorplan-card');
   const fpScroll  = document.getElementById('iv-floorplan-scroll');
