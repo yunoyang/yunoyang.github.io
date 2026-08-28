@@ -2297,6 +2297,21 @@ button, input, textarea, select { font-family:var(--font); }
 .dialog-actions.split button { flex:1; height:48px; border-radius:12px; }
 .btn-cancel { background:#f0f2f5; color:#111; }
 .btn-confirm { background:#222; color:#fff; }
+/* ===== 계정 유형 선택 ===== */
+.acct-type-card {
+  display:flex; align-items:center; gap:14px; width:100%;
+  padding:16px; border:1.5px solid #e8e8e8; border-radius:14px;
+  background:#fff; cursor:pointer; font-family:var(--font); text-align:left;
+  transition:border-color .15s, background .15s;
+}
+.acct-type-card:hover { border-color:#bbb; background:#fafafa; }
+.acct-type-card:active { transform:scale(.98); }
+.acct-cat-chip {
+  padding:8px 14px; border:1.5px solid #e8e8e8; border-radius:20px;
+  font-size:13px; font-weight:600; color:#555; background:#fff;
+  cursor:pointer; font-family:var(--font); transition:all .12s;
+}
+.acct-cat-chip.selected { background:#222; border-color:#222; color:#fff; }
 
 /* ===== SHARE REDESIGN ===== */
 .share-link-box {
@@ -5034,6 +5049,81 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- 계정 유형 선택 (신규 가입자 최초 1회) -->
+<div class="overlay" id="dlg-account-type">
+  <div class="dialog" style="gap:20px;">
+
+    <!-- STEP 1: 일반 / 전문가 -->
+    <div id="acct-step-role">
+      <h3 style="margin-bottom:4px;">어떤 목적으로 시작하시나요?</h3>
+      <p style="font-size:13px;color:#888;margin:0 0 16px;">나중에 언제든 변경할 수 있어요</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="acct-type-card" onclick="_acctSelectRole('general')">
+          <span style="font-size:22px;">🏠</span>
+          <span style="flex:1;text-align:left;">
+            <span style="display:block;font-size:15px;font-weight:700;color:#111;">일반 사용자</span>
+            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">내 인테리어 프로젝트를 관리해요</span>
+          </span>
+        </button>
+        <button class="acct-type-card" onclick="_acctSelectRole('expert')">
+          <span style="font-size:22px;">🛠️</span>
+          <span style="flex:1;text-align:left;">
+            <span style="display:block;font-size:15px;font-weight:700;color:#111;">전문가 / 업체</span>
+            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">시공·컨설팅 서비스를 제공해요</span>
+          </span>
+        </button>
+      </div>
+      <button onclick="_acctSkip()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:12.5px;padding:14px 0 0;cursor:pointer;font-family:var(--font);">나중에 정할게요</button>
+    </div>
+
+    <!-- STEP 2: 스튜디오 / 시공업체 -->
+    <div id="acct-step-kind" style="display:none;">
+      <h3 style="margin-bottom:4px;">어떤 전문가이신가요?</h3>
+      <p style="font-size:13px;color:#888;margin:0 0 16px;">가입 후에도 수정할 수 있어요</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="acct-type-card" onclick="_acctSelectKind('studio')">
+          <span style="font-size:22px;">🎨</span>
+          <span style="flex:1;text-align:left;">
+            <span style="display:block;font-size:15px;font-weight:700;color:#111;">인테리어 스튜디오</span>
+            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">종합 컨설팅·설계·시공관리</span>
+          </span>
+        </button>
+        <button class="acct-type-card" onclick="_acctSelectKind('contractor')">
+          <span style="font-size:22px;">🔨</span>
+          <span style="flex:1;text-align:left;">
+            <span style="display:block;font-size:15px;font-weight:700;color:#111;">시공 업체</span>
+            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">특정 공정을 전문으로 시공해요</span>
+          </span>
+        </button>
+      </div>
+      <button onclick="_acctBackToRole()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:12.5px;padding:14px 0 0;cursor:pointer;font-family:var(--font);">← 이전으로</button>
+    </div>
+
+    <!-- STEP 3: 상세 정보 입력 -->
+    <div id="acct-step-detail" style="display:none;">
+      <h3 style="margin-bottom:4px;" id="acct-detail-title">업체 정보</h3>
+      <p style="font-size:13px;color:#888;margin:0 0 16px;">심사 후 업체 목록에 노출돼요</p>
+
+      <div id="acct-category-wrap" style="display:none;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;">전문 분야 (복수 선택 가능)</div>
+        <div id="acct-category-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input id="acct-business-name" class="dialog-input" placeholder="업체명 / 상호">
+        <input id="acct-area" class="dialog-input" placeholder="활동 지역 (예: 분당·용인)">
+        <input id="acct-phone" class="dialog-input" placeholder="연락처">
+        <input id="acct-intro" class="dialog-input" placeholder="한 줄 소개">
+      </div>
+      <div class="dialog-actions split" style="margin-top:16px;">
+        <button class="btn-cancel" onclick="_acctBackToKind()">이전</button>
+        <button class="btn-confirm" onclick="_acctSubmitExpert()">가입 완료</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- 모바일 메뉴 백드롭 -->
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 
@@ -5158,6 +5248,9 @@ const PROCESS_CATEGORIES = [
   { id:'after',    label:'공사후',   items:['입주청소','이삿짐정리'] },
 ];
 const PROCESS_TYPES = PROCESS_CATEGORIES.flatMap(c => c.items);
+// 전문가 가입 시 "전문 분야" 선택 목록 — 어드민 업체 DB 카테고리와 동일하게 맞춰서
+// 승인 시 vb_contractors 연동이 그대로 매핑되도록 함
+const EXPERT_CATEGORIES = ['철거','샷시','목공','전기','타일','싱크','마루','도배','필름','동의서 및 보양','욕실','가구','설비','페인트','청소','입주청소','줄눈','탄성코트','시스템에어컨','단열','미장','기타'];
 const PROCESS_COLORS = {'실측':'c8','도면설계':'c9','레이아웃설계':'c9','3D도면':'c9','철거':'c0','샷시':'c1','목공':'c2','타일':'c3','욕실':'c4','도배':'c5','가구':'c6','전기':'c7','입주청소':'c10','이삿짐정리':'c11','싱크':'c12','마루':'c13','필름':'c11','동의서 및 보양':'c12'};
 const COLOR_HEX = {c0:'#38BDF8',c1:'#3EB6F8',c2:'#45AEF8',c3:'#4BA7F8',c4:'#529FF7',c5:'#5898F7',c6:'#5E90F7',c7:'#6589F7',c8:'#6B81F7',c9:'#717AF7',c10:'#7872F7',c11:'#7E6BF6',c12:'#8563F6',c13:'#8B5CF6'};
 
@@ -5760,6 +5853,110 @@ async function _notifyNewUserIfNeeded() {
   } catch(e) { console.warn('User notify failed:', e); }
 }
 
+// ===== 계정 유형 선택 (일반/전문가) — 신규 가입자에게만 1회 노출 =====
+let _acctSelectedRole = null, _acctSelectedKind = null;
+let _acctSelectedCategories = new Set();
+
+async function _checkAccountTypeOnLogin() {
+  if (!state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    if (doc.exists && doc.data().accountType) {
+      state.user.accountType = doc.data().accountType;
+      state.user.expertProfile = doc.data().expertProfile || null;
+      return; // 이미 선택 완료된 유저
+    }
+    _acctSelectedRole = null; _acctSelectedKind = null; _acctSelectedCategories = new Set();
+    document.getElementById('acct-step-role').style.display = '';
+    document.getElementById('acct-step-kind').style.display = 'none';
+    document.getElementById('acct-step-detail').style.display = 'none';
+    openDialog('dlg-account-type');
+  } catch(e) { console.warn('accountType check failed:', e); }
+}
+
+function _acctSkip() { closeDialog('dlg-account-type'); }
+
+async function _acctSelectRole(role) {
+  _acctSelectedRole = role;
+  if (role === 'general') {
+    await _acctSaveAccountType({ accountType: 'general' });
+    closeDialog('dlg-account-type');
+    return;
+  }
+  document.getElementById('acct-step-role').style.display = 'none';
+  document.getElementById('acct-step-kind').style.display = '';
+}
+
+function _acctBackToRole() {
+  document.getElementById('acct-step-kind').style.display = 'none';
+  document.getElementById('acct-step-role').style.display = '';
+}
+
+function _acctBackToKind() {
+  document.getElementById('acct-step-detail').style.display = 'none';
+  document.getElementById('acct-step-kind').style.display = '';
+}
+
+function _acctSelectKind(kind) {
+  _acctSelectedKind = kind;
+  document.getElementById('acct-step-kind').style.display = 'none';
+  document.getElementById('acct-step-detail').style.display = '';
+  document.getElementById('acct-detail-title').textContent = kind === 'studio' ? '스튜디오 정보' : '업체 정보';
+  const catWrap = document.getElementById('acct-category-wrap');
+  if (kind === 'contractor') {
+    catWrap.style.display = '';
+    const chipsEl = document.getElementById('acct-category-chips');
+    chipsEl.innerHTML = EXPERT_CATEGORIES.map(c =>
+      `<button type="button" class="acct-cat-chip" onclick="_acctToggleCategory('${c}', this)">${c}</button>`
+    ).join('');
+  } else {
+    catWrap.style.display = 'none';
+  }
+}
+
+function _acctToggleCategory(cat, el) {
+  if (_acctSelectedCategories.has(cat)) { _acctSelectedCategories.delete(cat); el.classList.remove('selected'); }
+  else { _acctSelectedCategories.add(cat); el.classList.add('selected'); }
+}
+
+async function _acctSubmitExpert() {
+  const businessName = document.getElementById('acct-business-name').value.trim();
+  const area = document.getElementById('acct-area').value.trim();
+  const phone = document.getElementById('acct-phone').value.trim();
+  const intro = document.getElementById('acct-intro').value.trim();
+  if (!businessName) { alert('업체명을 입력해주세요.'); return; }
+  if (_acctSelectedKind === 'contractor' && !_acctSelectedCategories.size) {
+    alert('전문 분야를 1개 이상 선택해주세요.'); return;
+  }
+  const expertProfile = {
+    businessName, area, phone, intro,
+    expertKind: _acctSelectedKind,
+    categories: _acctSelectedKind === 'contractor' ? [..._acctSelectedCategories] : [],
+    status: 'pending',
+    linkedContractorId: null,
+  };
+  await _acctSaveAccountType({ accountType: 'expert', expertProfile });
+  closeDialog('dlg-account-type');
+  showToastMessage('가입 신청이 접수됐습니다. 심사 후 업체 목록에 노출됩니다.');
+}
+
+async function _acctSaveAccountType({ accountType, expertProfile }) {
+  state.user.accountType = accountType;
+  state.user.expertProfile = expertProfile || null;
+  save();
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const payload = { accountType, expertProfile: expertProfile || null };
+    const key = state.user.email.replace(/\./g,'_');
+    await Promise.all([
+      _db.collection('vb_users').doc(key).set(payload, { merge: true }),
+      _db.collection('vb_users').doc(state.user.email).set(payload, { merge: true }),
+    ]);
+  } catch(e) { console.warn('accountType save failed:', e); }
+}
+
 async function _migrateFloorplansToCloud() {
   // 로컬 localStorage data URL 이미지 → Firebase Storage URL로 마이그레이션
   if (!_fbStorage || !state.loggedIn) return;
@@ -5830,6 +6027,7 @@ async function _autoUploadOnLogin() {
 
   // Auth 준비 완료 후 신규 가입자 알림 (Firestore 인증 필요)
   _notifyNewUserIfNeeded();
+  _checkAccountTypeOnLogin();
 
   // ── 클라우드 전체 프로젝트 조회 ──
   const allCloudProjs = await _fetchAllMyCloudProjects();
