@@ -4855,6 +4855,9 @@ button, input, textarea, select { font-family:var(--font); }
     <button class="mobile-sheet-item" id="mobile-menu-admin-btn" style="display:none;" onclick="openAdminDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Admin
     </button>
+    <button class="mobile-sheet-item" id="mobile-menu-accttest-btn" style="display:none;color:#5084ff;" onclick="closeAllMenus();_acctForceReopen();">
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> 계정유형 테스트 초기화
+    </button>
     <button class="mobile-sheet-item" id="mobile-menu-login-btn" onclick="openAccountDialog();closeAllMenus();">
       <svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 설정
     </button>
@@ -13855,6 +13858,31 @@ function _updateAdminMenuVisibility() {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin ? '' : 'none';
   });
+  // 계정유형 테스트 버튼은 어드민 이메일과 무관하게, 로그인만 하면 노출
+  // (정식 출시 전 제거할 임시 개발용 버튼이라 accountType 게이팅은 불필요)
+  const testBtn = document.getElementById('mobile-menu-accttest-btn');
+  if (testBtn) testBtn.style.display = state.loggedIn ? '' : 'none';
+}
+
+// 개발 중 계정유형 선택 다이얼로그를 반복 테스트하기 위한 초기화 버튼
+// (관리자 계정에만 노출 — 정식 출시 전 제거 예정)
+async function _acctForceReopen() {
+  state.user.accountType = null;
+  state.user.expertProfile = null;
+  save();
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('firebase init failed'); }
+    const key = state.user.email.replace(/\./g,'_');
+    await Promise.all([
+      _db.collection('vb_users').doc(key).update({ accountType: firebase.firestore.FieldValue.delete(), expertProfile: firebase.firestore.FieldValue.delete() }).catch(()=>{}),
+      _db.collection('vb_users').doc(state.user.email).update({ accountType: firebase.firestore.FieldValue.delete(), expertProfile: firebase.firestore.FieldValue.delete() }).catch(()=>{}),
+    ]);
+  } catch(e) { console.warn('acctForceReopen cloud reset failed:', e); }
+  _acctSelectedRole = null; _acctSelectedKind = null; _acctSelectedCategories = new Set();
+  document.getElementById('acct-step-role').style.display = '';
+  document.getElementById('acct-step-kind').style.display = 'none';
+  document.getElementById('acct-step-detail').style.display = 'none';
+  openDialog('dlg-account-type');
 }
 
 function _updateMenuAccountCard() {
