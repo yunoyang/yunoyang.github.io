@@ -915,19 +915,20 @@ tr:hover td { background:#fafbfe; }
 
       <!-- ====== COMPANIES PAGE ====== -->
       <div class="page" id="page-companies">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;">
-          <div style="width:80px;height:80px;border-radius:20px;background:#f4f6fb;display:flex;align-items:center;justify-content:center;">
-            <i data-lucide="building-2" style="width:36px;height:36px;color:#dde3ef;"></i>
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h1 class="section-title">업체 회원 관리</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">앱에서 전문가/업체로 가입 신청한 계정을 심사·승인합니다</p>
           </div>
-          <div style="text-align:center;">
-            <div style="font-size:18px;font-weight:700;margin-bottom:6px;">업체 회원 관리</div>
-            <div style="font-size:13.5px;color:var(--text-muted);max-width:360px;line-height:1.6;">
-              업체 가입 기능이 활성화되면 여기서 업체 신청 승인, 노출 관리, 검색 통계를 확인할 수 있습니다.
-            </div>
+          <div class="c-filter-row" style="display:flex;gap:8px;">
+            <button class="c-filter-btn active" onclick="filterCompanies('pending', this)" style="padding:8px 16px;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">심사중</button>
+            <button class="c-filter-btn" onclick="filterCompanies('approved', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">승인됨</button>
+            <button class="c-filter-btn" onclick="filterCompanies('rejected', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">거절됨</button>
+            <button class="c-filter-btn" onclick="filterCompanies('all', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">전체</button>
           </div>
-          <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:10px;padding:12px 20px;font-size:13px;color:var(--primary);font-weight:600;">
-            Phase 2에서 구현 예정
-          </div>
+        </div>
+        <div id="companies-list" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="color:#aaa;text-align:center;padding:40px 0;">불러오는 중...</div>
         </div>
       </div>
 
@@ -3006,7 +3007,7 @@ function refreshAll() {
 const pageTitles = {
   dashboard: ['대시보드', '실시간 서비스 현황'],
   users: ['사용자 관리', '가입자 및 방문 현황'],
-  companies: ['업체 회원', '업체 파트너 관리 (Phase 2)'],
+  companies: ['업체 회원', '전문가/업체 가입 신청 승인'],
   analytics: ['통계 분석', '트래픽 및 행동 분석'],
   settings: ['시스템 설정', 'API 키 및 앱 설정'],
   brand: ['브랜드 설정', '공사계획서 로고 관리'],
@@ -3026,6 +3027,7 @@ function showPage(name, navEl) {
   if (name === 'analytics') renderAnalytics();
   if (name === 'brand') loadBrandSection();
   if (name === 'contractors') loadContractorPage();
+  if (name === 'companies') loadCompaniesPage();
   if (name === 'tips') loadTipsPage();
   if (name === 'style-images') loadStyleImages();
   setTimeout(lucide.createIcons, 60);
@@ -3119,6 +3121,133 @@ async function exportContractorsXLSX() {
     XLSX.writeFile(wb, `vibespace_업체DB_${dateStr}.xlsx`);
   } catch (e) {
     alert('내보내기 실패: ' + e.message);
+  }
+}
+
+// ===== COMPANIES (전문가/업체 가입 승인) =====
+let _adminCompanies = [];
+let _companiesFilter = 'pending';
+
+async function loadCompaniesPage() {
+  const list = document.getElementById('companies-list');
+  if (!list) return;
+  list.innerHTML = '<div style="color:#aaa;text-align:center;padding:40px 0;">불러오는 중...</div>';
+  if (!_adminDb) initFirestoreAdmin();
+  if (!_adminDb) {
+    list.innerHTML = '<div style="color:#e05050;text-align:center;padding:40px 0;">Firebase 초기화 실패. 페이지를 새로고침해주세요.</div>';
+    return;
+  }
+  try {
+    const snap = await _adminDb.collection('vb_users').where('accountType', '==', 'expert').get();
+    // vb_users는 이메일 두 가지 키 형식(점 포함 원본 / 점→언더스코어 치환본)으로 중복 저장돼
+    // 있어서, 도메인에 '.'이 남아있는(=원본 이메일 키) 문서만 정본으로 취급해 중복 제거
+    _adminCompanies = snap.docs
+      .filter(d => d.id.includes('.'))
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(u => u.expertProfile);
+    _adminCompanies.sort((a, b) => (b.expertProfile?.appliedAt || 0) - (a.expertProfile?.appliedAt || 0));
+    renderCompaniesList();
+  } catch (e) {
+    list.innerHTML = `<div style="color:#e05050;text-align:center;padding:40px 0;">로드 실패: ${_esc(e.message)}</div>`;
+  }
+}
+
+function filterCompanies(status, btn) {
+  _companiesFilter = status;
+  document.querySelectorAll('.c-filter-btn').forEach(b => {
+    b.style.background = '#fff'; b.style.color = '#555'; b.style.borderColor = '#dde3ef';
+  });
+  btn.style.background = 'var(--primary)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--primary)';
+  renderCompaniesList();
+}
+
+function renderCompaniesList() {
+  const list = document.getElementById('companies-list');
+  if (!list) return;
+  const filtered = _companiesFilter === 'all'
+    ? _adminCompanies
+    : _adminCompanies.filter(u => (u.expertProfile?.status || 'pending') === _companiesFilter);
+  if (!filtered.length) {
+    list.innerHTML = `<div style="color:#aaa;text-align:center;padding:40px 0;">해당하는 신청 건이 없습니다</div>`;
+    return;
+  }
+  const statusBadge = { pending: ['심사중', '#f59e0b', '#fff8eb'], approved: ['승인됨', '#16a34a', '#eefdf3'], rejected: ['거절됨', '#e05050', '#fdeeee'] };
+  list.innerHTML = filtered.map(u => {
+    const p = u.expertProfile || {};
+    const [label, color, bg] = statusBadge[p.status || 'pending'];
+    const kindLabel = p.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
+    const cats = (p.categories || []).join(', ');
+    return `
+      <div style="background:#fff;border:1px solid #eef0f5;border-radius:14px;padding:18px 20px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;font-weight:700;color:#111;">${_esc(p.businessName || '(업체명 없음)')}</span>
+              <span style="font-size:11px;font-weight:700;color:${color};background:${bg};padding:3px 9px;border-radius:20px;">${label}</span>
+            </div>
+            <div style="font-size:12.5px;color:#888;margin-top:4px;">${_esc(kindLabel)}${cats ? ' · ' + _esc(cats) : ''}</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:#555;line-height:1.9;">
+          <div>📍 ${_esc(p.area || '-')} &nbsp;·&nbsp; 📞 ${_esc(p.phone || '-')}</div>
+          <div>💬 ${_esc(p.intro || '-')}</div>
+          <div style="color:#aaa;font-size:12px;margin-top:2px;">신청자: ${_esc(u.name || '')} (${_esc(u.id)})</div>
+        </div>
+        ${(p.status || 'pending') === 'pending' ? `
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button onclick="rejectExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;color:#555;font-size:13.5px;font-weight:600;cursor:pointer;">거절</button>
+          <button onclick="approveExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;">승인</button>
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function approveExpert(email) {
+  const user = _adminCompanies.find(u => u.id === email);
+  if (!user) return;
+  if (!confirm(`"${user.expertProfile?.businessName || email}" 업체를 승인하시겠습니까?\n승인 시 업체 DB에도 자동 등록됩니다.`)) return;
+  try {
+    const p = user.expertProfile;
+    // 업체 DB(vb_contractors)에도 자동 등록해서 앱 내 업체 검색에 노출되도록 함
+    const contractorRef = _adminDb.collection('vb_contractors').doc();
+    await contractorRef.set({
+      name: p.businessName || '',
+      category: (p.categories && p.categories[0]) || (p.expertKind === 'studio' ? '기타' : '기타'),
+      area: p.area || '',
+      phone: p.phone || '',
+      description: p.intro || '',
+      rating: 0, reviews: 0,
+      source: 'expert-signup',
+      contactEmail: email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const key = email.replace(/\./g, '_');
+    const payload = { 'expertProfile.status': 'approved', 'expertProfile.linkedContractorId': contractorRef.id };
+    await Promise.all([
+      _adminDb.collection('vb_users').doc(email).set(payload, { merge: true }),
+      _adminDb.collection('vb_users').doc(key).set(payload, { merge: true }),
+    ]);
+    showToast('승인 완료 — 업체 DB에 등록됐습니다');
+    loadCompaniesPage();
+  } catch (e) {
+    alert('승인 실패: ' + e.message);
+  }
+}
+
+async function rejectExpert(email) {
+  if (!confirm('이 신청을 거절하시겠습니까?')) return;
+  try {
+    const key = email.replace(/\./g, '_');
+    const payload = { 'expertProfile.status': 'rejected' };
+    await Promise.all([
+      _adminDb.collection('vb_users').doc(email).set(payload, { merge: true }),
+      _adminDb.collection('vb_users').doc(key).set(payload, { merge: true }),
+    ]);
+    showToast('거절 처리했습니다');
+    loadCompaniesPage();
+  } catch (e) {
+    alert('거절 처리 실패: ' + e.message);
   }
 }
 

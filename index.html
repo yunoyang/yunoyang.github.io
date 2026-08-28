@@ -5944,6 +5944,7 @@ async function _acctSubmitExpert() {
     categories: _acctSelectedKind === 'contractor' ? [..._acctSelectedCategories] : [],
     status: 'pending',
     linkedContractorId: null,
+    appliedAt: Date.now(),
   };
   await _acctSaveAccountType({ accountType: 'expert', expertProfile });
   _notifyExpertSignup(expertProfile);
