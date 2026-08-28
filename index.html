@@ -6008,9 +6008,10 @@ async function _renderExpertStatusCard() {
     state.user.expertProfile = p; // 최신값으로 로컬 캐시도 갱신
     const status = p.status || 'pending';
     const badge = {
-      pending:  ['심사중', '#f59e0b', '#fff8eb'],
-      approved: ['승인됨', '#16a34a', '#eefdf3'],
-      rejected: ['거절됨', '#e05050', '#fdeeee'],
+      pending:   ['심사중', '#f59e0b', '#fff8eb'],
+      approved:  ['승인됨', '#16a34a', '#eefdf3'],
+      rejected:  ['거절됨', '#e05050', '#fdeeee'],
+      withdrawn: ['탈퇴됨', '#888', '#f4f4f4'],
     }[status];
     const kindLabel = p.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
     card.innerHTML = `
@@ -6030,7 +6031,10 @@ async function _renderExpertStatusCard() {
         <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
           ${p.rejectReason ? `<div><b>거절 사유</b><br>${esc(p.rejectReason)}</div>` : ''}
           ${p.requestedInfo ? `<div style="margin-top:6px;"><b>보충 자료 요청</b><br>${esc(p.requestedInfo)}</div>` : ''}
-        </div>
+        </div>` : ''}
+        ${status === 'withdrawn' ? `
+        <div style="font-size:12.5px;color:#888;margin-top:8px;line-height:1.6;">업체 회원에서 탈퇴 처리되어 업체 목록 노출이 중단됐습니다.</div>` : ''}
+        ${status === 'rejected' || status === 'withdrawn' ? `
         <button onclick="_acctGoToStep('kind');goTo('account-setup');" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">다시 신청하기</button>` : ''}
       </div>
     `;

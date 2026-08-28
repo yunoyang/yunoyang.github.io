@@ -15,6 +15,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <!-- SheetJS — 엑셀/TSV/CSV 파싱 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- EmailJS — 업체 회원 승인/거절 결과 메일 발송 (index.html과 동일 계정 재사용) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
 <style>
 /* ===== ROOT ===== */
 :root {
@@ -924,6 +927,7 @@ tr:hover td { background:#fafbfe; }
             <button class="c-filter-btn active" onclick="filterCompanies('pending', this)" style="padding:8px 16px;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">심사중</button>
             <button class="c-filter-btn" onclick="filterCompanies('approved', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">승인됨</button>
             <button class="c-filter-btn" onclick="filterCompanies('rejected', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">거절됨</button>
+            <button class="c-filter-btn" onclick="filterCompanies('withdrawn', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">탈퇴됨</button>
             <button class="c-filter-btn" onclick="filterCompanies('all', this)" style="padding:8px 16px;border-radius:8px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:13px;font-weight:600;cursor:pointer;">전체</button>
           </div>
         </div>
@@ -3193,7 +3197,7 @@ function renderCompaniesList() {
     list.innerHTML = `<div style="color:#aaa;text-align:center;padding:40px 0;">해당하는 신청 건이 없습니다</div>`;
     return;
   }
-  const statusBadge = { pending: ['심사중', '#f59e0b', '#fff8eb'], approved: ['승인됨', '#16a34a', '#eefdf3'], rejected: ['거절됨', '#e05050', '#fdeeee'] };
+  const statusBadge = { pending: ['심사중', '#f59e0b', '#fff8eb'], approved: ['승인됨', '#16a34a', '#eefdf3'], rejected: ['거절됨', '#e05050', '#fdeeee'], withdrawn: ['탈퇴됨', '#888', '#f4f4f4'] };
   list.innerHTML = filtered.map(u => {
     const p = u.expertProfile || {};
     const [label, color, bg] = statusBadge[p.status || 'pending'];
@@ -3224,6 +3228,10 @@ function renderCompaniesList() {
         <div style="display:flex;gap:8px;margin-top:14px;">
           <button onclick="rejectExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;color:#555;font-size:13.5px;font-weight:600;cursor:pointer;">거절</button>
           <button onclick="approveExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;">승인</button>
+        </div>` : ''}
+        ${p.status === 'approved' ? `
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button onclick="withdrawExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:1px solid #f0c0c0;background:#fff;color:#e05050;font-size:13.5px;font-weight:600;cursor:pointer;">업체 회원 탈퇴</button>
         </div>` : ''}
       </div>
     `;
@@ -3261,11 +3269,61 @@ async function approveExpert(email) {
       _adminDb.collection('vb_users').doc(email).update(payload),
       _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
+    _sendExpertResultEmail(email, p.businessName, true);
     showToast('승인 완료 — 업체 DB에 등록됐습니다');
     loadCompaniesPage();
   } catch (e) {
     alert('승인 실패: ' + e.message);
   }
+}
+
+// 업체 회원 탈퇴 처리 — 계정은 유지하되 업체 DB 노출은 즉시 제거
+async function withdrawExpert(email) {
+  const user = _adminCompanies.find(u => u.id === email);
+  if (!user) return;
+  if (!confirm(`"${user.expertProfile?.businessName || email}" 업체를 탈퇴 처리하시겠습니까?\n업체 DB 노출이 즉시 중단됩니다.`)) return;
+  try {
+    const p = user.expertProfile;
+    if (p.linkedContractorId) {
+      await _adminDb.collection('vb_contractors').doc(p.linkedContractorId).delete().catch(() => {});
+    }
+    const key = email.replace(/\./g, '_');
+    const payload = {
+      'expertProfile.status': 'withdrawn',
+      'expertProfile.linkedContractorId': firebase.firestore.FieldValue.delete(),
+      'expertProfile.reviewedAt': Date.now(),
+    };
+    await Promise.all([
+      _adminDb.collection('vb_users').doc(email).update(payload),
+      _adminDb.collection('vb_users').doc(key).update(payload),
+    ]);
+    showToast('업체 회원 탈퇴 처리했습니다');
+    loadCompaniesPage();
+  } catch (e) {
+    alert('탈퇴 처리 실패: ' + e.message);
+  }
+}
+
+// 심사 결과 메일 발송 — index.html에서 초대/멘션 알림에 쓰던 것과 같은
+// EmailJS 서비스·템플릿 재사용 (role 필드를 자유 텍스트 메시지로 사용하는
+// 기존 관행을 그대로 따름)
+async function _sendExpertResultEmail(email, businessName, approved) {
+  try {
+    const subject = approved
+      ? `[바이브스페이스] "${businessName}" 업체 가입이 승인됐습니다`
+      : `[바이브스페이스] "${businessName}" 업체 가입 신청 결과 안내`;
+    const message = approved
+      ? `축하합니다! 신청하신 업체가 승인되어 바이브스페이스 업체 목록에 노출됩니다.`
+      : `아쉽지만 이번 신청은 승인되지 않았습니다. 자세한 사유는 앱 내 설정 화면에서 확인하실 수 있습니다.`;
+    await emailjs.send('service_elvk718', 'template_11ldrbw', {
+      to_email: email,
+      to_name: businessName || email.split('@')[0],
+      from_name: '바이브스페이스',
+      project_name: subject,
+      invite_link: 'https://vibespacekorea.com/',
+      role: message,
+    });
+  } catch (e) { console.warn('expert result email failed:', e); }
 }
 
 let _rejectTargetEmail = null;
@@ -3288,6 +3346,7 @@ function closeRejectExpertDialog() {
 async function confirmRejectExpert() {
   const email = _rejectTargetEmail;
   if (!email) return;
+  const user = _adminCompanies.find(u => u.id === email);
   const reason = document.getElementById('reject-reason').value.trim();
   const requestedInfo = document.getElementById('reject-request-info').value.trim();
   if (!reason) { alert('거절 사유를 입력해주세요.'); return; }
@@ -3303,6 +3362,7 @@ async function confirmRejectExpert() {
       _adminDb.collection('vb_users').doc(email).update(payload),
       _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
+    _sendExpertResultEmail(email, user?.expertProfile?.businessName, false);
     closeRejectExpertDialog();
     showToast('거절 처리했습니다');
     loadCompaniesPage();
