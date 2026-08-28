@@ -5132,6 +5132,16 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- 전문가/업체 심사 결과 알림 팝업 -->
+<div class="overlay" id="dlg-expert-result">
+  <div class="dialog" style="gap:0;text-align:center;padding:32px 24px 24px;">
+    <div id="expert-result-icon" style="font-size:40px;margin-bottom:12px;"></div>
+    <h3 id="expert-result-title" style="margin-bottom:8px;"></h3>
+    <div id="expert-result-body" style="font-size:13.5px;color:#666;line-height:1.7;text-align:left;"></div>
+    <button onclick="_ackExpertResult()" style="width:100%;height:48px;margin-top:20px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);">확인</button>
+  </div>
+</div>
+
 <!-- 모바일 메뉴 백드롭 -->
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 
@@ -5881,6 +5891,61 @@ async function _checkAccountTypeOnLogin() {
   } catch(e) { console.warn('accountType check failed:', e); }
 }
 
+// 어드민이 승인/거절/탈퇴 처리하면 expertProfile.resultAcknowledged가 false로
+// 세팅됨 — 로그인 시 그 상태를 발견하면 팝업으로 결과를 알려주고 즉시 true로 확인 처리
+async function _checkExpertResultPopup() {
+  if (!state.user?.email || state.user.accountType !== 'expert') return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    const p = doc.data()?.expertProfile;
+    if (!p || p.resultAcknowledged !== false) return;
+    state.user.expertProfile = p;
+    _showExpertResultPopup(p);
+  } catch(e) { console.warn('expert result check failed:', e); }
+}
+
+function _showExpertResultPopup(p) {
+  const status = p.status;
+  const cfg = {
+    approved:  { icon: '🎉', title: '업체 가입이 승인됐습니다', color: '#16a34a' },
+    rejected:  { icon: '📋', title: '가입 신청 결과 안내', color: '#e05050' },
+    withdrawn: { icon: 'ℹ️', title: '업체 회원 탈퇴 처리됐습니다', color: '#888' },
+  }[status];
+  if (!cfg) return;
+  document.getElementById('expert-result-icon').textContent = cfg.icon;
+  document.getElementById('expert-result-title').textContent = cfg.title;
+  let bodyHtml = `<div style="text-align:center;color:#111;font-weight:600;margin-bottom:10px;">${esc(p.businessName||'')}</div>`;
+  if (status === 'approved') {
+    bodyHtml += `<div>축하합니다! 신청하신 업체가 승인되어 바이브스페이스 업체 목록에 노출됩니다.</div>`;
+  } else if (status === 'rejected') {
+    bodyHtml += `<div>아쉽지만 이번 신청은 승인되지 않았습니다.</div>`;
+    if (p.rejectReason) bodyHtml += `<div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;color:#a03030;"><b>거절 사유</b><br>${esc(p.rejectReason)}</div>`;
+    if (p.requestedInfo) bodyHtml += `<div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:8px;color:#a03030;"><b>보충 자료 요청</b><br>${esc(p.requestedInfo)}</div>`;
+  } else if (status === 'withdrawn') {
+    bodyHtml += `<div>업체 목록 노출이 중단됐습니다. 필요하시면 설정 화면에서 다시 신청하실 수 있습니다.</div>`;
+  }
+  document.getElementById('expert-result-body').innerHTML = bodyHtml;
+  openDialog('dlg-expert-result');
+}
+
+async function _ackExpertResult() {
+  closeDialog('dlg-expert-result');
+  if (!state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const payload = { 'expertProfile.resultAcknowledged': true };
+    await Promise.all([
+      _db.collection('vb_users').doc(key).update(payload).catch(()=>{}),
+      _db.collection('vb_users').doc(state.user.email).update(payload).catch(()=>{}),
+    ]);
+    if (state.user.expertProfile) state.user.expertProfile.resultAcknowledged = true;
+    save();
+  } catch(e) { console.warn('ack expert result failed:', e); }
+}
+
 // 현재 보이는 스텝만 전환 (페이지 자체는 유지) — 뒤로가기 버튼 표시도 여기서 같이 관리
 function _acctGoToStep(step) {
   _acctSelectedRole = step === 'role' ? null : _acctSelectedRole;
@@ -6114,6 +6179,7 @@ async function _autoUploadOnLogin() {
   // Auth 준비 완료 후 신규 가입자 알림 (Firestore 인증 필요)
   _notifyNewUserIfNeeded();
   _checkAccountTypeOnLogin();
+  _checkExpertResultPopup();
 
   // ── 클라우드 전체 프로젝트 조회 ──
   const allCloudProjs = await _fetchAllMyCloudProjects();

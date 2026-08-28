@@ -15,9 +15,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <!-- SheetJS — 엑셀/TSV/CSV 파싱 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- EmailJS — 업체 회원 승인/거절 결과 메일 발송 (index.html과 동일 계정 재사용) -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
 <style>
 /* ===== ROOT ===== */
 :root {
@@ -3262,6 +3259,7 @@ async function approveExpert(email) {
       'expertProfile.status': 'approved',
       'expertProfile.linkedContractorId': contractorRef.id,
       'expertProfile.reviewedAt': Date.now(),
+      'expertProfile.resultAcknowledged': false,
       'expertProfile.rejectReason': firebase.firestore.FieldValue.delete(),
       'expertProfile.requestedInfo': firebase.firestore.FieldValue.delete(),
     };
@@ -3269,7 +3267,6 @@ async function approveExpert(email) {
       _adminDb.collection('vb_users').doc(email).update(payload),
       _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
-    _sendExpertResultEmail(email, p.businessName, true);
     showToast('승인 완료 — 업체 DB에 등록됐습니다');
     loadCompaniesPage();
   } catch (e) {
@@ -3292,6 +3289,7 @@ async function withdrawExpert(email) {
       'expertProfile.status': 'withdrawn',
       'expertProfile.linkedContractorId': firebase.firestore.FieldValue.delete(),
       'expertProfile.reviewedAt': Date.now(),
+      'expertProfile.resultAcknowledged': false,
     };
     await Promise.all([
       _adminDb.collection('vb_users').doc(email).update(payload),
@@ -3302,28 +3300,6 @@ async function withdrawExpert(email) {
   } catch (e) {
     alert('탈퇴 처리 실패: ' + e.message);
   }
-}
-
-// 심사 결과 메일 발송 — index.html에서 초대/멘션 알림에 쓰던 것과 같은
-// EmailJS 서비스·템플릿 재사용 (role 필드를 자유 텍스트 메시지로 사용하는
-// 기존 관행을 그대로 따름)
-async function _sendExpertResultEmail(email, businessName, approved) {
-  try {
-    const subject = approved
-      ? `[바이브스페이스] "${businessName}" 업체 가입이 승인됐습니다`
-      : `[바이브스페이스] "${businessName}" 업체 가입 신청 결과 안내`;
-    const message = approved
-      ? `축하합니다! 신청하신 업체가 승인되어 바이브스페이스 업체 목록에 노출됩니다.`
-      : `아쉽지만 이번 신청은 승인되지 않았습니다. 자세한 사유는 앱 내 설정 화면에서 확인하실 수 있습니다.`;
-    await emailjs.send('service_elvk718', 'template_11ldrbw', {
-      to_email: email,
-      to_name: businessName || email.split('@')[0],
-      from_name: '바이브스페이스',
-      project_name: subject,
-      invite_link: 'https://vibespacekorea.com/',
-      role: message,
-    });
-  } catch (e) { console.warn('expert result email failed:', e); }
 }
 
 let _rejectTargetEmail = null;
@@ -3346,7 +3322,6 @@ function closeRejectExpertDialog() {
 async function confirmRejectExpert() {
   const email = _rejectTargetEmail;
   if (!email) return;
-  const user = _adminCompanies.find(u => u.id === email);
   const reason = document.getElementById('reject-reason').value.trim();
   const requestedInfo = document.getElementById('reject-request-info').value.trim();
   if (!reason) { alert('거절 사유를 입력해주세요.'); return; }
@@ -3357,12 +3332,12 @@ async function confirmRejectExpert() {
       'expertProfile.rejectReason': reason,
       'expertProfile.requestedInfo': requestedInfo,
       'expertProfile.reviewedAt': Date.now(),
+      'expertProfile.resultAcknowledged': false,
     };
     await Promise.all([
       _adminDb.collection('vb_users').doc(email).update(payload),
       _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
-    _sendExpertResultEmail(email, user?.expertProfile?.businessName, false);
     closeRejectExpertDialog();
     showToast('거절 처리했습니다');
     loadCompaniesPage();
