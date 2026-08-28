@@ -3880,18 +3880,40 @@ button, input, textarea, select { font-family:var(--font); }
       <h2>계정 정보</h2>
     </div>
     <div class="form-body" style="padding:0 20px 40px;">
-      <div style="display:flex;flex-direction:column;align-items:center;padding:32px 0 24px;">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:32px 0 20px;">
         <div id="up-avatar" style="width:88px;height:88px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#fff;overflow:hidden;margin-bottom:14px;"></div>
         <div id="up-name" style="font-size:20px;font-weight:700;color:#111;"></div>
         <div id="up-role" style="font-size:13px;color:#888;margin-top:4px;"></div>
       </div>
-      <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:0 20px;margin-bottom:16px;">
-        <div class="work-field">
-          <span class="f-label">이메일</span>
-          <span class="f-value readonly" id="up-email" style="cursor:default;word-break:break-all;text-align:right;color:#222;text-decoration:none;"></span>
+
+      <!-- 전문가(승인됨) 계정에서만 노출되는 탭바 -->
+      <div id="up-tabs" style="display:none;justify-content:center;gap:0;border-bottom:1px solid #eee;margin-bottom:16px;">
+        <button class="up-tab-btn active" data-tab="profile" onclick="_switchProfileTab('profile')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:2px solid #111;font-size:14px;font-weight:700;color:#111;cursor:pointer;font-family:var(--font);">프로필</button>
+        <button class="up-tab-btn" data-tab="business" onclick="_switchProfileTab('business')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:2px solid transparent;font-size:14px;font-weight:600;color:#999;cursor:pointer;font-family:var(--font);">업체 정보</button>
+        <button class="up-tab-btn" data-tab="portfolio" onclick="_switchProfileTab('portfolio')" style="flex:1;padding:12px 0;background:none;border:none;border-bottom:2px solid transparent;font-size:14px;font-weight:600;color:#999;cursor:pointer;font-family:var(--font);">포트폴리오</button>
+      </div>
+
+      <!-- 프로필 탭 -->
+      <div id="up-pane-profile">
+        <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:0 20px;margin-bottom:16px;">
+          <div class="work-field">
+            <span class="f-label">이메일</span>
+            <span class="f-value readonly" id="up-email" style="cursor:default;word-break:break-all;text-align:right;color:#222;text-decoration:none;"></span>
+          </div>
         </div>
       </div>
-      <div id="up-business-card" style="display:none;background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;"></div>
+
+      <!-- 업체 정보 탭 -->
+      <div id="up-pane-business" style="display:none;">
+        <div id="up-business-card" style="background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;"></div>
+      </div>
+
+      <!-- 포트폴리오 탭 (인스타그램 그리드 스타일) -->
+      <div id="up-pane-portfolio" style="display:none;">
+        <input type="file" id="up-portfolio-input" accept="image/*" multiple style="display:none;" onchange="_uploadPortfolioPhotos(this)">
+        <div id="up-portfolio-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;"></div>
+        <div id="up-portfolio-empty" style="display:none;text-align:center;padding:40px 0;color:#bbb;font-size:13px;">아직 등록된 포트폴리오 사진이 없습니다</div>
+      </div>
     </div>
   </div>
 </div>
@@ -5332,20 +5354,28 @@ async function _renderInfoViewWorkers(proj) {
 }
 
 // ===== 다른 사용자 계정 페이지 (읽기 전용) =====
+let _upCurrentEmail = null, _upIsOwnProfile = false, _upPortfolio = [];
+
 async function openUserProfile(email, fallbackName, role) {
   goTo('user-profile');
+  _upCurrentEmail = email;
+  _upIsOwnProfile = !!(state.user?.email && email && state.user.email === email);
+  _upPortfolio = [];
   const av = document.getElementById('up-avatar');
   const nameEl = document.getElementById('up-name');
   const roleEl = document.getElementById('up-role');
   const emailEl = document.getElementById('up-email');
   const bizCard = document.getElementById('up-business-card');
+  const tabs = document.getElementById('up-tabs');
   av.style.background = '#000';
   av.innerHTML = `<span style="color:#fff;">${(fallbackName||email||'?').charAt(0).toUpperCase()}</span>`;
   nameEl.innerHTML = esc(fallbackName || email.split('@')[0]);
   roleEl.textContent = role || '';
   emailEl.textContent = email || '';
-  bizCard.style.display = 'none';
   bizCard.innerHTML = '';
+  tabs.style.display = 'none';
+  _switchProfileTab('profile');
+  _renderPortfolioGrid();
   if (!email) return;
   try {
     if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
@@ -5366,9 +5396,122 @@ async function openUserProfile(email, fallbackName, role) {
           ${p.phone ? `📞 ${esc(p.phone)}<br>` : ''}
           ${p.intro ? `💬 ${esc(p.intro)}` : ''}
         </div>`;
-      bizCard.style.display = 'block';
+      tabs.style.display = 'flex'; // 전문가(승인됨)만 프로필/업체정보/포트폴리오 탭 노출
+      _upPortfolio = p.portfolio || [];
+      _renderPortfolioGrid();
     }
   } catch(e) { console.warn('openUserProfile fetch failed:', e); }
+}
+
+function _switchProfileTab(tab) {
+  ['profile','business','portfolio'].forEach(t => {
+    const pane = document.getElementById('up-pane-' + t);
+    if (pane) pane.style.display = t === tab ? '' : 'none';
+    const btn = document.querySelector(`.up-tab-btn[data-tab="${t}"]`);
+    if (btn) {
+      btn.style.borderBottomColor = t === tab ? '#111' : 'transparent';
+      btn.style.color = t === tab ? '#111' : '#999';
+      btn.style.fontWeight = t === tab ? '700' : '600';
+    }
+  });
+}
+
+function _renderPortfolioGrid() {
+  const grid = document.getElementById('up-portfolio-grid');
+  const empty = document.getElementById('up-portfolio-empty');
+  if (!grid) return;
+  const items = _upPortfolio || [];
+  if (_upIsOwnProfile) {
+    grid.innerHTML = `
+      <div onclick="document.getElementById('up-portfolio-input').click()" style="aspect-ratio:1;background:#f5f5f5;border:1.5px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      ${items.map((it, i) => `
+        <div style="position:relative;aspect-ratio:1;">
+          <img src="${it.thumb||it.url}" onclick="_openPortfolioLightbox(${i})" style="width:100%;height:100%;object-fit:cover;border-radius:6px;cursor:pointer;">
+          <button onclick="event.stopPropagation();_removePortfolioPhoto(${i})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+        </div>`).join('')}
+    `;
+    empty.style.display = 'none';
+  } else {
+    grid.innerHTML = items.map((it, i) => `
+      <img src="${it.thumb||it.url}" onclick="_openPortfolioLightbox(${i})" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer;">`).join('');
+    empty.style.display = items.length ? 'none' : 'block';
+  }
+}
+
+async function _uploadPortfolioPhotos(input) {
+  const files = [...(input.files || [])];
+  if (!files.length) return;
+  input.value = '';
+  showToastMessage('업로드 중...');
+  for (const file of files) {
+    try {
+      const dataUrl = await _compressImage(file, 1200, 0.75);
+      const thumbUrl = await _compressImage(file, 320, 0.7);
+      if (!dataUrl) continue;
+      let url = dataUrl, thumb = thumbUrl || dataUrl;
+      if (_fbStorage && state.user?.email) {
+        const base = `portfolio/${state.user.email}/${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+        try {
+          const full = await _fbStorage.ref(`${base}.jpg`).put(_dataUrlToBlob(dataUrl), { contentType:'image/jpeg' });
+          url = await full.ref.getDownloadURL();
+          const th = await _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbUrl||dataUrl), { contentType:'image/jpeg' });
+          thumb = await th.ref.getDownloadURL();
+        } catch(e) { console.warn('portfolio storage upload failed, fallback to dataURL:', e); }
+      }
+      _upPortfolio.push({ url, thumb, createdAt: Date.now() });
+    } catch(e) { console.warn('portfolio compress/upload failed:', e); }
+  }
+  _renderPortfolioGrid();
+  await _savePortfolioToCloud();
+  showToastMessage('포트폴리오에 추가됐습니다');
+}
+
+async function _removePortfolioPhoto(idx) {
+  if (!confirm('이 사진을 삭제할까요?')) return;
+  _upPortfolio.splice(idx, 1);
+  _renderPortfolioGrid();
+  await _savePortfolioToCloud();
+}
+
+async function _savePortfolioToCloud() {
+  if (!_upIsOwnProfile || !state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const payload = { 'expertProfile.portfolio': _upPortfolio };
+    await Promise.all([
+      _db.collection('vb_users').doc(state.user.email).update(payload),
+      _db.collection('vb_users').doc(key).update(payload),
+    ]);
+    if (state.user.expertProfile) { state.user.expertProfile.portfolio = _upPortfolio; save(); }
+  } catch(e) { console.warn('portfolio save failed:', e); }
+}
+
+function _openPortfolioLightbox(idx) {
+  const items = _upPortfolio || [];
+  if (!items.length) return;
+  let cur = idx;
+  const old = document.getElementById('up-portfolio-lightbox');
+  if (old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'up-portfolio-lightbox';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <button id="upl-close" style="position:absolute;top:max(env(safe-area-inset-top,0px),16px);right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;z-index:2;">✕</button>
+    <img id="upl-img" style="max-width:96vw;max-height:90vh;object-fit:contain;" src="${items[cur].url}">
+    ${items.length > 1 ? `
+    <button id="upl-prev" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;">‹</button>
+    <button id="upl-next" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:22px;cursor:pointer;">›</button>` : ''}
+  `;
+  document.body.appendChild(modal);
+  const img = modal.querySelector('#upl-img');
+  modal.querySelector('#upl-close').onclick = () => modal.remove();
+  const prev = modal.querySelector('#upl-prev');
+  const next = modal.querySelector('#upl-next');
+  if (prev) prev.onclick = () => { cur = (cur-1+items.length)%items.length; img.src = items[cur].url; };
+  if (next) next.onclick = () => { cur = (cur+1)%items.length; img.src = items[cur].url; };
 }
 
 // ===== PLACE SEARCH API KEYS =====
@@ -6211,7 +6354,8 @@ async function _renderExpertStatusCard() {
         ${status === 'pending' ? `
         <div style="font-size:12.5px;color:#999;margin-top:8px;line-height:1.6;">심사 중입니다. 완료되면 결과를 알려드릴게요.</div>` : ''}
         ${status === 'approved' ? `
-        <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">승인되어 업체 목록에 노출되고 있습니다.</div>` : ''}
+        <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">승인되어 업체 목록에 노출되고 있습니다.</div>
+        <button onclick="openUserProfile(state.user.email,state.user.name,'오너')" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">내 전문가 페이지 보기</button>` : ''}
         ${status === 'rejected' ? `
         <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
           ${p.rejectReason ? `<div><b>거절 사유</b><br>${esc(p.rejectReason)}</div>` : ''}
