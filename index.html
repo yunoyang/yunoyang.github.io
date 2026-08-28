@@ -3852,6 +3852,8 @@ button, input, textarea, select { font-family:var(--font); }
           </div>
         </div>
       </div>
+      <!-- 전문가/업체 신청 현황 (accountType이 expert일 때만 표시) -->
+      <div id="acct-expert-status-card" style="display:none;margin-bottom:16px;"></div>
       <!-- 로그아웃 / 탈퇴하기 -->
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;overflow:hidden;">
         <button onclick="if(confirm('로그아웃 하시겠습니까?'))doLogout();" style="width:100%;display:flex;align-items:center;justify-content:center;padding:18px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#333;font-size:15px;font-weight:600;">
@@ -5990,6 +5992,53 @@ async function _acctSaveAccountType({ accountType, expertProfile }) {
   } catch(e) { console.warn('accountType save failed:', e); }
 }
 
+// 설정(계정) 화면에 전문가/업체 신청 심사 결과 표시 — 로그인 시점 캐시가
+// 아니라 매번 최신값을 Firestore에서 다시 읽어서 어드민 승인/거절 결과를 바로 반영
+async function _renderExpertStatusCard() {
+  const card = document.getElementById('acct-expert-status-card');
+  if (!card) return;
+  if (state.user?.accountType !== 'expert') { card.style.display = 'none'; return; }
+  card.style.display = '';
+  card.innerHTML = `<div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:16px 20px;color:#aaa;font-size:13px;">불러오는 중...</div>`;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('init failed'); }
+    const key = state.user.email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    const p = doc.data()?.expertProfile || state.user.expertProfile || {};
+    state.user.expertProfile = p; // 최신값으로 로컬 캐시도 갱신
+    const status = p.status || 'pending';
+    const badge = {
+      pending:  ['심사중', '#f59e0b', '#fff8eb'],
+      approved: ['승인됨', '#16a34a', '#eefdf3'],
+      rejected: ['거절됨', '#e05050', '#fdeeee'],
+    }[status];
+    const kindLabel = p.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
+    card.innerHTML = `
+      <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:15px;font-weight:700;color:#111;">전문가 가입 신청</span>
+          <span style="font-size:11px;font-weight:700;color:${badge[1]};background:${badge[2]};padding:3px 9px;border-radius:20px;">${badge[0]}</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.7;">
+          ${esc(p.businessName||'')} · ${esc(kindLabel)}
+        </div>
+        ${status === 'pending' ? `
+        <div style="font-size:12.5px;color:#999;margin-top:8px;line-height:1.6;">심사 중입니다. 완료되면 결과를 알려드릴게요.</div>` : ''}
+        ${status === 'approved' ? `
+        <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">승인되어 업체 목록에 노출되고 있습니다.</div>` : ''}
+        ${status === 'rejected' ? `
+        <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
+          ${p.rejectReason ? `<div><b>거절 사유</b><br>${esc(p.rejectReason)}</div>` : ''}
+          ${p.requestedInfo ? `<div style="margin-top:6px;"><b>보충 자료 요청</b><br>${esc(p.requestedInfo)}</div>` : ''}
+        </div>
+        <button onclick="_acctGoToStep('kind');goTo('account-setup');" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">다시 신청하기</button>` : ''}
+      </div>
+    `;
+  } catch(e) {
+    card.innerHTML = `<div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:16px 20px;color:#e05050;font-size:13px;">신청 현황을 불러오지 못했습니다.</div>`;
+  }
+}
+
 async function _migrateFloorplansToCloud() {
   // 로컬 localStorage data URL 이미지 → Firebase Storage URL로 마이그레이션
   if (!_fbStorage || !state.loggedIn) return;
@@ -6469,6 +6518,7 @@ function goTo(screen) {
     document.getElementById('acct-name-row').textContent = name;
     document.getElementById('acct-email-row').textContent = email;
     _loadAcctJoinDate();
+    _renderExpertStatusCard();
   }
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;

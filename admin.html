@@ -1372,6 +1372,28 @@ service cloud.firestore {
       </div>
 
       <!-- 업체 추가/수정 다이얼로그 -->
+      <!-- 업체 가입 거절 다이얼로그 -->
+      <div id="dlg-reject-expert" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;padding:24px;width:440px;max-width:90vw;">
+          <h3 style="font-size:17px;font-weight:700;margin-bottom:6px;">신청 거절</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;" id="reject-expert-target"></p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">거절 사유 *</label>
+              <textarea id="reject-reason" rows="3" placeholder="예) 사업자등록증 확인이 필요합니다" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:700;color:#888;display:block;margin-bottom:5px;">보충 자료 요청 (선택)</label>
+              <textarea id="reject-request-info" rows="2" placeholder="예) 사업자등록증 사본, 시공 포트폴리오 사진 3장 이상" style="width:100%;padding:10px 12px;border:1px solid #dde3ef;border-radius:8px;font-size:14px;font-family:var(--font);outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:20px;">
+            <button onclick="closeRejectExpertDialog()" style="flex:1;height:44px;border-radius:10px;border:1px solid #dde3ef;background:#fff;color:#555;font-size:14px;font-weight:600;cursor:pointer;">취소</button>
+            <button onclick="confirmRejectExpert()" style="flex:1;height:44px;border-radius:10px;border:none;background:#e05050;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">거절하기</button>
+          </div>
+        </div>
+      </div>
+
       <div id="dlg-add-contractor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;">
         <div style="background:#fff;border-radius:16px;padding:24px;width:460px;max-width:90vw;max-height:90vh;overflow-y:auto;">
           <h3 style="font-size:17px;font-weight:700;margin-bottom:16px;" id="add-contractor-title">업체 추가</h3>
@@ -3193,6 +3215,11 @@ function renderCompaniesList() {
           <div>💬 ${_esc(p.intro || '-')}</div>
           <div style="color:#aaa;font-size:12px;margin-top:2px;">신청자: ${_esc(u.name || '')} (${_esc(u.id)})</div>
         </div>
+        ${p.status === 'rejected' && (p.rejectReason || p.requestedInfo) ? `
+        <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
+          ${p.rejectReason ? `<div><b>거절 사유:</b> ${_esc(p.rejectReason)}</div>` : ''}
+          ${p.requestedInfo ? `<div><b>요청 자료:</b> ${_esc(p.requestedInfo)}</div>` : ''}
+        </div>` : ''}
         ${(p.status || 'pending') === 'pending' ? `
         <div style="display:flex;gap:8px;margin-top:14px;">
           <button onclick="rejectExpert('${u.id}')" style="flex:1;height:40px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;color:#555;font-size:13.5px;font-weight:600;cursor:pointer;">거절</button>
@@ -3223,10 +3250,16 @@ async function approveExpert(email) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     const key = email.replace(/\./g, '_');
-    const payload = { 'expertProfile.status': 'approved', 'expertProfile.linkedContractorId': contractorRef.id };
+    const payload = {
+      'expertProfile.status': 'approved',
+      'expertProfile.linkedContractorId': contractorRef.id,
+      'expertProfile.reviewedAt': Date.now(),
+      'expertProfile.rejectReason': firebase.firestore.FieldValue.delete(),
+      'expertProfile.requestedInfo': firebase.firestore.FieldValue.delete(),
+    };
     await Promise.all([
-      _adminDb.collection('vb_users').doc(email).set(payload, { merge: true }),
-      _adminDb.collection('vb_users').doc(key).set(payload, { merge: true }),
+      _adminDb.collection('vb_users').doc(email).update(payload),
+      _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
     showToast('승인 완료 — 업체 DB에 등록됐습니다');
     loadCompaniesPage();
@@ -3235,15 +3268,42 @@ async function approveExpert(email) {
   }
 }
 
-async function rejectExpert(email) {
-  if (!confirm('이 신청을 거절하시겠습니까?')) return;
+let _rejectTargetEmail = null;
+
+function rejectExpert(email) {
+  const user = _adminCompanies.find(u => u.id === email);
+  if (!user) return;
+  _rejectTargetEmail = email;
+  document.getElementById('reject-expert-target').textContent = `${user.expertProfile?.businessName || email} (${email})`;
+  document.getElementById('reject-reason').value = '';
+  document.getElementById('reject-request-info').value = '';
+  document.getElementById('dlg-reject-expert').style.display = 'flex';
+}
+
+function closeRejectExpertDialog() {
+  document.getElementById('dlg-reject-expert').style.display = 'none';
+  _rejectTargetEmail = null;
+}
+
+async function confirmRejectExpert() {
+  const email = _rejectTargetEmail;
+  if (!email) return;
+  const reason = document.getElementById('reject-reason').value.trim();
+  const requestedInfo = document.getElementById('reject-request-info').value.trim();
+  if (!reason) { alert('거절 사유를 입력해주세요.'); return; }
   try {
     const key = email.replace(/\./g, '_');
-    const payload = { 'expertProfile.status': 'rejected' };
+    const payload = {
+      'expertProfile.status': 'rejected',
+      'expertProfile.rejectReason': reason,
+      'expertProfile.requestedInfo': requestedInfo,
+      'expertProfile.reviewedAt': Date.now(),
+    };
     await Promise.all([
-      _adminDb.collection('vb_users').doc(email).set(payload, { merge: true }),
-      _adminDb.collection('vb_users').doc(key).set(payload, { merge: true }),
+      _adminDb.collection('vb_users').doc(email).update(payload),
+      _adminDb.collection('vb_users').doc(key).update(payload),
     ]);
+    closeRejectExpertDialog();
     showToast('거절 처리했습니다');
     loadCompaniesPage();
   } catch (e) {
