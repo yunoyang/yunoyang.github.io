@@ -5946,8 +5946,32 @@ async function _acctSubmitExpert() {
     linkedContractorId: null,
   };
   await _acctSaveAccountType({ accountType: 'expert', expertProfile });
+  _notifyExpertSignup(expertProfile);
   goTo('landing');
   showToastMessage('가입 신청이 접수됐습니다. 심사 후 업체 목록에 노출됩니다.');
+}
+
+// 전문가/업체 가입 신청 시 어드민에게 Telegram 실시간 알림
+// (기존 신규 가입자 알림/피드백 알림과 동일한 봇·채널 재사용)
+async function _notifyExpertSignup(expertProfile) {
+  try {
+    const kindLabel = expertProfile.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
+    const catLine = expertProfile.categories?.length ? `\n🔧 ${expertProfile.categories.join(', ')}` : '';
+    const tgText =
+      `🆕 *전문가/업체 가입 신청*\n\n` +
+      `🏢 ${expertProfile.businessName}\n` +
+      `📋 ${kindLabel}${catLine}\n` +
+      `📍 ${expertProfile.area || '-'}\n` +
+      `📞 ${expertProfile.phone || '-'}\n` +
+      `💬 ${expertProfile.intro || '-'}\n\n` +
+      `👤 ${state.user?.name||'-'} (${state.user?.email||'-'})\n\n` +
+      `어드민 → 업체 회원 관리에서 승인해주세요.`;
+    await fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: _TG_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
+    });
+  } catch(e) { console.warn('expert signup notify failed:', e); }
 }
 
 async function _acctSaveAccountType({ accountType, expertProfile }) {
