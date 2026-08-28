@@ -3365,6 +3365,84 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
+<!-- ===== 계정 유형 선택 (신규 가입자 최초 1회, 페이지) ===== -->
+<div class="screen" id="screen-account-setup" style="background:#fff;">
+  <div class="form-header" style="border-bottom:none;">
+    <button class="back-btn" id="acct-page-back-btn" style="visibility:hidden;" onclick="_acctPageBack()">
+      <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
+    </button>
+  </div>
+  <div class="screen-scroll">
+    <div style="padding:8px 24px 40px;max-width:480px;margin:0 auto;width:100%;box-sizing:border-box;">
+
+      <!-- STEP 1: 일반 / 전문가 -->
+      <div id="acct-step-role">
+        <h2 style="font-size:22px;font-weight:800;margin:12px 0 6px;">어떤 목적으로<br>시작하시나요?</h2>
+        <p style="font-size:14px;color:#888;margin:0 0 24px;">나중에 언제든 변경할 수 있어요</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button class="acct-type-card" onclick="_acctSelectRole('general')">
+            <span style="font-size:26px;">🏠</span>
+            <span style="flex:1;text-align:left;">
+              <span style="display:block;font-size:16px;font-weight:700;color:#111;">일반 사용자</span>
+              <span style="display:block;font-size:13px;color:#888;margin-top:2px;">내 인테리어 프로젝트를 관리해요</span>
+            </span>
+          </button>
+          <button class="acct-type-card" onclick="_acctSelectRole('expert')">
+            <span style="font-size:26px;">🛠️</span>
+            <span style="flex:1;text-align:left;">
+              <span style="display:block;font-size:16px;font-weight:700;color:#111;">전문가 / 업체</span>
+              <span style="display:block;font-size:13px;color:#888;margin-top:2px;">시공·컨설팅 서비스를 제공해요</span>
+            </span>
+          </button>
+        </div>
+        <button onclick="_acctSkip()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:13px;padding:20px 0 0;cursor:pointer;font-family:var(--font);">나중에 정할게요</button>
+      </div>
+
+      <!-- STEP 2: 스튜디오 / 시공업체 -->
+      <div id="acct-step-kind" style="display:none;">
+        <h2 style="font-size:22px;font-weight:800;margin:12px 0 6px;">어떤 전문가이신가요?</h2>
+        <p style="font-size:14px;color:#888;margin:0 0 24px;">가입 후에도 수정할 수 있어요</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button class="acct-type-card" onclick="_acctSelectKind('studio')">
+            <span style="font-size:26px;">🎨</span>
+            <span style="flex:1;text-align:left;">
+              <span style="display:block;font-size:16px;font-weight:700;color:#111;">인테리어 스튜디오</span>
+              <span style="display:block;font-size:13px;color:#888;margin-top:2px;">종합 컨설팅·설계·시공관리</span>
+            </span>
+          </button>
+          <button class="acct-type-card" onclick="_acctSelectKind('contractor')">
+            <span style="font-size:26px;">🔨</span>
+            <span style="flex:1;text-align:left;">
+              <span style="display:block;font-size:16px;font-weight:700;color:#111;">시공 업체</span>
+              <span style="display:block;font-size:13px;color:#888;margin-top:2px;">특정 공정을 전문으로 시공해요</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: 상세 정보 입력 -->
+      <div id="acct-step-detail" style="display:none;">
+        <h2 style="font-size:22px;font-weight:800;margin:12px 0 6px;" id="acct-detail-title">업체 정보</h2>
+        <p style="font-size:14px;color:#888;margin:0 0 20px;">심사 후 업체 목록에 노출돼요</p>
+
+        <div id="acct-category-wrap" style="display:none;margin-bottom:18px;">
+          <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:10px;">전문 분야 (복수 선택 가능)</div>
+          <div id="acct-category-chips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <input id="acct-business-name" class="dialog-input" placeholder="업체명 / 상호">
+          <input id="acct-area" class="dialog-input" placeholder="활동 지역 (예: 분당·용인)">
+          <input id="acct-phone" class="dialog-input" placeholder="연락처">
+          <input id="acct-intro" class="dialog-input" placeholder="한 줄 소개">
+        </div>
+        <button onclick="_acctSubmitExpert()" style="width:100%;height:52px;background:#222;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:24px;">가입 완료</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- ===== MAIN ===== -->
 <div class="screen" id="screen-main">
   <div class="screen-scroll" id="main-scroll">
@@ -5052,81 +5130,6 @@ button, input, textarea, select { font-family:var(--font); }
   </div>
 </div>
 
-<!-- 계정 유형 선택 (신규 가입자 최초 1회) -->
-<div class="overlay" id="dlg-account-type">
-  <div class="dialog" style="gap:20px;">
-
-    <!-- STEP 1: 일반 / 전문가 -->
-    <div id="acct-step-role">
-      <h3 style="margin-bottom:4px;">어떤 목적으로 시작하시나요?</h3>
-      <p style="font-size:13px;color:#888;margin:0 0 16px;">나중에 언제든 변경할 수 있어요</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="acct-type-card" onclick="_acctSelectRole('general')">
-          <span style="font-size:22px;">🏠</span>
-          <span style="flex:1;text-align:left;">
-            <span style="display:block;font-size:15px;font-weight:700;color:#111;">일반 사용자</span>
-            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">내 인테리어 프로젝트를 관리해요</span>
-          </span>
-        </button>
-        <button class="acct-type-card" onclick="_acctSelectRole('expert')">
-          <span style="font-size:22px;">🛠️</span>
-          <span style="flex:1;text-align:left;">
-            <span style="display:block;font-size:15px;font-weight:700;color:#111;">전문가 / 업체</span>
-            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">시공·컨설팅 서비스를 제공해요</span>
-          </span>
-        </button>
-      </div>
-      <button onclick="_acctSkip()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:12.5px;padding:14px 0 0;cursor:pointer;font-family:var(--font);">나중에 정할게요</button>
-    </div>
-
-    <!-- STEP 2: 스튜디오 / 시공업체 -->
-    <div id="acct-step-kind" style="display:none;">
-      <h3 style="margin-bottom:4px;">어떤 전문가이신가요?</h3>
-      <p style="font-size:13px;color:#888;margin:0 0 16px;">가입 후에도 수정할 수 있어요</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="acct-type-card" onclick="_acctSelectKind('studio')">
-          <span style="font-size:22px;">🎨</span>
-          <span style="flex:1;text-align:left;">
-            <span style="display:block;font-size:15px;font-weight:700;color:#111;">인테리어 스튜디오</span>
-            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">종합 컨설팅·설계·시공관리</span>
-          </span>
-        </button>
-        <button class="acct-type-card" onclick="_acctSelectKind('contractor')">
-          <span style="font-size:22px;">🔨</span>
-          <span style="flex:1;text-align:left;">
-            <span style="display:block;font-size:15px;font-weight:700;color:#111;">시공 업체</span>
-            <span style="display:block;font-size:12.5px;color:#888;margin-top:2px;">특정 공정을 전문으로 시공해요</span>
-          </span>
-        </button>
-      </div>
-      <button onclick="_acctBackToRole()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:12.5px;padding:14px 0 0;cursor:pointer;font-family:var(--font);">← 이전으로</button>
-    </div>
-
-    <!-- STEP 3: 상세 정보 입력 -->
-    <div id="acct-step-detail" style="display:none;">
-      <h3 style="margin-bottom:4px;" id="acct-detail-title">업체 정보</h3>
-      <p style="font-size:13px;color:#888;margin:0 0 16px;">심사 후 업체 목록에 노출돼요</p>
-
-      <div id="acct-category-wrap" style="display:none;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;">전문 분야 (복수 선택 가능)</div>
-        <div id="acct-category-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <input id="acct-business-name" class="dialog-input" placeholder="업체명 / 상호">
-        <input id="acct-area" class="dialog-input" placeholder="활동 지역 (예: 분당·용인)">
-        <input id="acct-phone" class="dialog-input" placeholder="연락처">
-        <input id="acct-intro" class="dialog-input" placeholder="한 줄 소개">
-      </div>
-      <div class="dialog-actions split" style="margin-top:16px;">
-        <button class="btn-cancel" onclick="_acctBackToKind()">이전</button>
-        <button class="btn-confirm" onclick="_acctSubmitExpert()">가입 완료</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
 <!-- 모바일 메뉴 백드롭 -->
 <div id="menu-backdrop" onclick="closeAllMenus()"></div>
 
@@ -5871,41 +5874,43 @@ async function _checkAccountTypeOnLogin() {
       state.user.expertProfile = doc.data().expertProfile || null;
       return; // 이미 선택 완료된 유저
     }
-    _acctSelectedRole = null; _acctSelectedKind = null; _acctSelectedCategories = new Set();
-    document.getElementById('acct-step-role').style.display = '';
-    document.getElementById('acct-step-kind').style.display = 'none';
-    document.getElementById('acct-step-detail').style.display = 'none';
-    openDialog('dlg-account-type');
+    _acctGoToStep('role');
+    goTo('account-setup');
   } catch(e) { console.warn('accountType check failed:', e); }
 }
 
-function _acctSkip() { closeDialog('dlg-account-type'); }
+// 현재 보이는 스텝만 전환 (페이지 자체는 유지) — 뒤로가기 버튼 표시도 여기서 같이 관리
+function _acctGoToStep(step) {
+  _acctSelectedRole = step === 'role' ? null : _acctSelectedRole;
+  if (step === 'role') { _acctSelectedKind = null; _acctSelectedCategories = new Set(); }
+  document.getElementById('acct-step-role').style.display = step === 'role' ? '' : 'none';
+  document.getElementById('acct-step-kind').style.display = step === 'kind' ? '' : 'none';
+  document.getElementById('acct-step-detail').style.display = step === 'detail' ? '' : 'none';
+  const backBtn = document.getElementById('acct-page-back-btn');
+  if (backBtn) backBtn.style.visibility = step === 'role' ? 'hidden' : 'visible';
+}
+
+function _acctPageBack() {
+  const kindVisible = document.getElementById('acct-step-kind').style.display !== 'none';
+  if (kindVisible) _acctGoToStep('role');
+  else _acctGoToStep('kind');
+}
+
+function _acctSkip() { goTo('landing'); }
 
 async function _acctSelectRole(role) {
   _acctSelectedRole = role;
   if (role === 'general') {
     await _acctSaveAccountType({ accountType: 'general' });
-    closeDialog('dlg-account-type');
+    goTo('landing');
     return;
   }
-  document.getElementById('acct-step-role').style.display = 'none';
-  document.getElementById('acct-step-kind').style.display = '';
-}
-
-function _acctBackToRole() {
-  document.getElementById('acct-step-kind').style.display = 'none';
-  document.getElementById('acct-step-role').style.display = '';
-}
-
-function _acctBackToKind() {
-  document.getElementById('acct-step-detail').style.display = 'none';
-  document.getElementById('acct-step-kind').style.display = '';
+  _acctGoToStep('kind');
 }
 
 function _acctSelectKind(kind) {
   _acctSelectedKind = kind;
-  document.getElementById('acct-step-kind').style.display = 'none';
-  document.getElementById('acct-step-detail').style.display = '';
+  _acctGoToStep('detail');
   document.getElementById('acct-detail-title').textContent = kind === 'studio' ? '스튜디오 정보' : '업체 정보';
   const catWrap = document.getElementById('acct-category-wrap');
   if (kind === 'contractor') {
@@ -5941,7 +5946,7 @@ async function _acctSubmitExpert() {
     linkedContractorId: null,
   };
   await _acctSaveAccountType({ accountType: 'expert', expertProfile });
-  closeDialog('dlg-account-type');
+  goTo('landing');
   showToastMessage('가입 신청이 접수됐습니다. 심사 후 업체 목록에 노출됩니다.');
 }
 
@@ -13878,11 +13883,8 @@ async function _acctForceReopen() {
       _db.collection('vb_users').doc(state.user.email).update({ accountType: firebase.firestore.FieldValue.delete(), expertProfile: firebase.firestore.FieldValue.delete() }).catch(()=>{}),
     ]);
   } catch(e) { console.warn('acctForceReopen cloud reset failed:', e); }
-  _acctSelectedRole = null; _acctSelectedKind = null; _acctSelectedCategories = new Set();
-  document.getElementById('acct-step-role').style.display = '';
-  document.getElementById('acct-step-kind').style.display = 'none';
-  document.getElementById('acct-step-detail').style.display = 'none';
-  openDialog('dlg-account-type');
+  _acctGoToStep('role');
+  goTo('account-setup');
 }
 
 function _updateMenuAccountCard() {
