@@ -14322,6 +14322,10 @@ async function _syncFromCloudOnStartup() {
   const ok = await _initFirebase();
   if (!ok) return;
 
+  // 이미 로그인된 세션으로 앱을 여는 경우(대부분) _autoUploadOnLogin이 아예 안 도는데,
+  // 심사 결과 팝업은 매번 앱을 열 때 확인해야 하므로 여기서도 별도로 체크
+  _checkExpertResultPopup();
+
   // Firebase Auth 준비 대기 (indexedDB에서 Google 세션 복원 포함, 최대 4초)
   await new Promise(resolve => {
     const auth = firebase.auth();
