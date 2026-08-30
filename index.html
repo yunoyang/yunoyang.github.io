@@ -3611,12 +3611,15 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
     <div id="form-view-panel" class="info-view-body" style="display:none;">
-      <!-- 프로젝트명 최상단 -->
-      <div class="info-view-hero">
+      <!-- 프로젝트명 최상단 (클릭 시 상세정보 접기/펴기) -->
+      <div class="info-view-hero" onclick="_toggleProjectInfoDetail()" style="cursor:pointer;-webkit-tap-highlight-color:transparent;">
         <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div class="info-view-project-name" id="iv-project-name">-</div>
-          <span id="iv-dday-badge" style="display:none;flex-shrink:0;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span id="iv-dday-badge" style="display:none;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
+            <svg id="iv-project-detail-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
       </div>
       <!-- 도면 카드 (항상 표시) -->
@@ -3658,46 +3661,54 @@ button, input, textarea, select { font-family:var(--font); }
           </div>
         </div>
       </div>
-      <div class="info-view-card">
-        <div class="info-view-row">
-          <span class="info-view-label">시공종류</span>
-          <span class="info-view-value" id="iv-type">-</span>
+      <div id="iv-project-detail-body" style="display:none;">
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">시공종류</span>
+            <span class="info-view-value" id="iv-type">-</span>
+          </div>
+          <div class="info-view-divider"></div>
+          <div class="info-view-row">
+            <span class="info-view-label">평형</span>
+            <span class="info-view-value" id="iv-size">-</span>
+          </div>
+          <div class="info-view-divider"></div>
+          <div class="info-view-row">
+            <span class="info-view-label">진행 방식</span>
+            <span class="info-view-value" id="iv-method">-</span>
+          </div>
         </div>
-        <div class="info-view-divider"></div>
-        <div class="info-view-row">
-          <span class="info-view-label">평형</span>
-          <span class="info-view-value" id="iv-size">-</span>
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">공사 기간</span>
+            <span class="info-view-value" id="iv-period">-</span>
+          </div>
         </div>
-        <div class="info-view-divider"></div>
-        <div class="info-view-row">
-          <span class="info-view-label">진행 방식</span>
-          <span class="info-view-value" id="iv-method">-</span>
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">시공 주소</span>
+            <span class="info-view-value" id="iv-address">-</span>
+          </div>
         </div>
-      </div>
-      <div class="info-view-card">
-        <div class="info-view-row">
-          <span class="info-view-label">공사 기간</span>
-          <span class="info-view-value" id="iv-period">-</span>
-        </div>
-      </div>
-      <div class="info-view-card">
-        <div class="info-view-row">
-          <span class="info-view-label">시공 주소</span>
-          <span class="info-view-value" id="iv-address">-</span>
-        </div>
-      </div>
-      <div class="info-view-card" id="iv-memo-card">
-        <div class="info-view-memo-wrap">
-          <div class="info-view-memo-label">메모</div>
-          <div class="info-view-memo-text" id="iv-memo"></div>
+        <div class="info-view-card" id="iv-memo-card">
+          <div class="info-view-memo-wrap">
+            <div class="info-view-memo-label">메모</div>
+            <div class="info-view-memo-text" id="iv-memo"></div>
+          </div>
         </div>
       </div>
       <div class="info-view-card" id="iv-companies-card" style="display:none;overflow:visible;">
-        <div style="font-size:14px;font-weight:600;color:#999;padding:16px 20px 8px;">함께하는 업체</div>
+        <div onclick="_toggleIvSection('companies')" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+          <span style="font-size:14px;font-weight:600;color:#999;">함께하는 업체</span>
+          <svg id="iv-companies-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
         <div id="iv-companies-list"></div>
       </div>
       <div class="info-view-card" id="iv-workers-card" style="display:none;overflow:visible;">
-        <div style="font-size:14px;font-weight:600;color:#999;padding:16px 20px 8px;">함께하는 작업자</div>
+        <div onclick="_toggleIvSection('workers')" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+          <span style="font-size:14px;font-weight:600;color:#999;">함께하는 작업자</span>
+          <svg id="iv-workers-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
         <div id="iv-workers-list"></div>
       </div>
     </div>
@@ -11474,6 +11485,25 @@ function _toggleCostDetail() {
   if (!detail) return;
   const open = detail.style.display === 'none';
   detail.style.display = open ? '' : 'none';
+  if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function _toggleProjectInfoDetail() {
+  const body = document.getElementById('iv-project-detail-body');
+  const arrow = document.getElementById('iv-project-detail-arrow');
+  if (!body) return;
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+// 함께하는 업체/작업자 카드 접기·펴기 ('companies' | 'workers')
+function _toggleIvSection(name) {
+  const list = document.getElementById(`iv-${name}-list`);
+  const arrow = document.getElementById(`iv-${name}-arrow`);
+  if (!list) return;
+  const open = list.style.display === 'none';
+  list.style.display = open ? '' : 'none';
   if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
