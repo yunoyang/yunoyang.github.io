@@ -5556,7 +5556,11 @@ function canEdit() {
   const proj = getProject();
   if (!proj) return false;
   const isOwner = _isProjOwner(proj);
-  return isOwner || isExpert();
+  // 편집자 권한 협업자도 편집 가능 — 이게 빠져있어서 오너 본인이 아니면
+  // (하드코딩된 isExpert() 이메일 제외) 가구/스타일/공정 추가 플로팅 버튼이
+  // 전부 숨겨지는 버그가 있었음. 뷰어(myRole==='뷰어')만 실제로 막아야 함.
+  const isEditorCollaborator = proj.myRole === '편집자';
+  return isOwner || isEditorCollaborator || isExpert();
 }
 
 let saveTimer = null;
