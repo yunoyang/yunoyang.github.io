@@ -3614,19 +3614,22 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
     <div id="form-view-panel" class="info-view-body" style="display:none;">
-      <!-- 프로젝트명 최상단 (클릭 시 상세정보 접기/펴기) -->
-      <div class="info-view-hero" onclick="_toggleProjectInfoDetail()" style="cursor:pointer;-webkit-tap-highlight-color:transparent;">
-        <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div class="info-view-project-name" id="iv-project-name">-</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <span id="iv-dday-badge" style="display:none;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
-            <svg id="iv-project-detail-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+      <!-- 프로젝트 정보 전체를 카드 하나로, 섹션 사이는 구분선만 -->
+      <div class="info-view-card" style="overflow:visible;">
+
+        <!-- 프로젝트명 (클릭 시 상세정보 접기/펴기) -->
+        <div onclick="_toggleProjectInfoDetail()" style="padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+          <div style="font-size:14px;font-weight:600;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div class="info-view-project-name" id="iv-project-name">-</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span id="iv-dday-badge" style="display:none;font-size:13px;font-weight:700;color:#5084ff;background:#eef2ff;padding:4px 10px;border-radius:999px;white-space:nowrap;"></span>
+              <svg id="iv-project-detail-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
           </div>
         </div>
-      </div>
-      <div id="iv-project-detail-body" style="display:none;">
-        <div class="info-view-card">
+        <div id="iv-project-detail-body" style="display:none;">
+          <div class="info-view-divider"></div>
           <div class="info-view-row">
             <span class="info-view-label">시공종류</span>
             <span class="info-view-value" id="iv-type">-</span>
@@ -3641,29 +3644,28 @@ button, input, textarea, select { font-family:var(--font); }
             <span class="info-view-label">진행 방식</span>
             <span class="info-view-value" id="iv-method">-</span>
           </div>
-        </div>
-        <div class="info-view-card">
+          <div class="info-view-divider"></div>
           <div class="info-view-row">
             <span class="info-view-label">공사 기간</span>
             <span class="info-view-value" id="iv-period">-</span>
           </div>
-        </div>
-        <div class="info-view-card">
+          <div class="info-view-divider"></div>
           <div class="info-view-row">
             <span class="info-view-label">시공 주소</span>
             <span class="info-view-value" id="iv-address">-</span>
           </div>
-        </div>
-        <div class="info-view-card" id="iv-memo-card">
-          <div class="info-view-memo-wrap">
-            <div class="info-view-memo-label">메모</div>
-            <div class="info-view-memo-text" id="iv-memo"></div>
+          <div id="iv-memo-card">
+            <div class="info-view-divider"></div>
+            <div style="padding:24px;">
+              <div class="info-view-memo-label">메모</div>
+              <div class="info-view-memo-text" id="iv-memo"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <!-- 도면 카드 (항상 표시) -->
-      <div class="info-view-card" id="iv-floorplan-card">
-        <div class="info-view-floorplan-wrap">
+
+        <!-- 도면 (항상 표시) -->
+        <div class="info-view-divider"></div>
+        <div id="iv-floorplan-card" style="padding:24px;">
           <div class="fp-edit-row">
             <div class="info-view-floorplan-label" style="margin-bottom:0;">도면</div>
             <div style="display:flex;gap:6px;align-items:center;">
@@ -3675,44 +3677,59 @@ button, input, textarea, select { font-family:var(--font); }
           </div>
           <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
         </div>
-      </div>
-      <!-- 비용 내역 카드 -->
-      <div class="info-view-card" id="iv-cost-card" style="display:none;">
-        <div class="info-view-card-inner" onclick="_toggleCostDetail()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-          <span style="font-size:14px;font-weight:600;color:#999;">총 예상 비용</span>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:16px;font-weight:400;color:#222;" id="iv-cost-total">-</span>
-            <svg id="iv-cost-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-        </div>
-        <div id="iv-cost-detail" style="display:none;overflow:hidden;">
+
+        <!-- 총 예상 비용 -->
+        <div id="iv-cost-section" style="display:none;">
           <div class="info-view-divider"></div>
-          <div class="info-view-card-inner" style="padding-top:10px;padding-bottom:14px;">
-            <div id="iv-cost-rows"></div>
-            <div id="iv-cost-exclude-row" style="display:none;align-items:center;justify-content:space-between;padding:10px 0 0;margin-top:6px;border-top:1px solid #f2f2f5;">
-              <span style="font-size:13px;color:#888;">총 비용에서 가구&amp;가전 제외</span>
-              <label style="position:relative;display:inline-block;width:40px;height:24px;flex-shrink:0;">
-                <input type="checkbox" id="iv-cost-exclude-toggle" onchange="_toggleCostExcludeFurniture(this.checked)" style="opacity:0;width:0;height:0;">
-                <span id="iv-cost-exclude-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:24px;transition:.2s;"></span>
-                <span id="iv-cost-exclude-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
-              </label>
+          <div id="iv-cost-card">
+            <div style="padding:24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="_toggleCostDetail()">
+              <span style="font-size:16px;font-weight:700;color:#111;">총 예상 비용</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;font-weight:400;color:#222;" id="iv-cost-total">-</span>
+                <svg id="iv-cost-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div id="iv-cost-detail" style="display:none;overflow:hidden;">
+              <div class="info-view-divider"></div>
+              <div style="padding:0 24px 24px;">
+                <div id="iv-cost-rows"></div>
+                <div id="iv-cost-exclude-row" style="display:none;align-items:center;justify-content:space-between;padding:10px 0 0;margin-top:6px;border-top:1px solid #f2f2f5;">
+                  <span style="font-size:13px;color:#888;">총 비용에서 가구&amp;가전 제외</span>
+                  <label style="position:relative;display:inline-block;width:40px;height:24px;flex-shrink:0;">
+                    <input type="checkbox" id="iv-cost-exclude-toggle" onchange="_toggleCostExcludeFurniture(this.checked)" style="opacity:0;width:0;height:0;">
+                    <span id="iv-cost-exclude-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:24px;transition:.2s;"></span>
+                    <span id="iv-cost-exclude-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="info-view-card" id="iv-companies-card" style="display:none;overflow:visible;">
-        <div onclick="_toggleIvSection('companies')" style="display:flex;align-items:center;justify-content:space-between;padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-          <span style="font-size:16px;font-weight:700;color:#111;">함께하는 업체</span>
-          <svg id="iv-companies-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+
+        <!-- 함께하는 업체 -->
+        <div id="iv-companies-section" style="display:none;">
+          <div class="info-view-divider"></div>
+          <div id="iv-companies-card">
+            <div onclick="_toggleIvSection('companies')" style="display:flex;align-items:center;justify-content:space-between;padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+              <span style="font-size:16px;font-weight:700;color:#111;">함께하는 업체</span>
+              <svg id="iv-companies-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="iv-companies-list"></div>
+          </div>
         </div>
-        <div id="iv-companies-list"></div>
-      </div>
-      <div class="info-view-card" id="iv-workers-card" style="display:none;overflow:visible;">
-        <div onclick="_toggleIvSection('workers')" style="display:flex;align-items:center;justify-content:space-between;padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-          <span style="font-size:16px;font-weight:700;color:#111;">함께하는 작업자</span>
-          <svg id="iv-workers-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+
+        <!-- 함께하는 작업자 -->
+        <div id="iv-workers-section" style="display:none;">
+          <div class="info-view-divider"></div>
+          <div id="iv-workers-card">
+            <div onclick="_toggleIvSection('workers')" style="display:flex;align-items:center;justify-content:space-between;padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+              <span style="font-size:16px;font-weight:700;color:#111;">함께하는 작업자</span>
+              <svg id="iv-workers-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s;transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="iv-workers-list"></div>
+          </div>
         </div>
-        <div id="iv-workers-list"></div>
+
       </div>
     </div>
 
@@ -5345,7 +5362,7 @@ async function _fetchExpertBadgeMap(emails) {
 
 // 공사 정보 화면의 "함께하는 작업자" 카드 — 오너 + 협업자 목록, 클릭 시 계정 페이지로 이동
 async function _renderInfoViewWorkers(proj) {
-  const card = document.getElementById('iv-workers-card');
+  const card = document.getElementById('iv-workers-section');
   const list = document.getElementById('iv-workers-list');
   if (!card || !list || !proj) return;
   const isOwner = _isProjOwner(proj);
@@ -11349,7 +11366,7 @@ function _loadInfoView() {
   const memoCard = document.getElementById('iv-memo-card');
   if (memoCard) memoCard.style.display = f.memo ? 'block' : 'none';
   // 함께하는 업체
-  const companiesCard = document.getElementById('iv-companies-card');
+  const companiesCard = document.getElementById('iv-companies-section');
   const companiesList = document.getElementById('iv-companies-list');
   if (companiesCard && companiesList) {
     const compMap = new Map();
@@ -11414,7 +11431,7 @@ function _loadInfoView() {
   }
 
   // 비용 내역 카드
-  const costCard = document.getElementById('iv-cost-card');
+  const costCard = document.getElementById('iv-cost-section');
   const costRows = document.getElementById('iv-cost-rows');
   const costTotal = document.getElementById('iv-cost-total');
   if (costCard && costRows && costTotal) {
