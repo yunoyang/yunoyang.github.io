@@ -11376,9 +11376,8 @@ function _loadInfoView() {
     });
     if (compMap.size > 0) {
       companiesList.innerHTML = [...compMap.entries()].map(([name, { procs, cId }], i, arr) => {
-        const targetId = cId || name;
         return `
-        <div onclick="_openContractorDetail('${esc(targetId)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
+        <div onclick="_openCompanyDetail('${esc(cId)}','${esc(name)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
           <div>
             <div style="font-size:15px;font-weight:600;color:#222;margin-bottom:2px;">${esc(name)}</div>
             <div style="font-size:13px;color:#aaa;">${procs.map(esc).join(', ')}</div>
@@ -12456,6 +12455,26 @@ function _hideMenuBackdrop() {
 // ===== 업체 상세 =====
 let _currentContractorDetail = null;
 let _contractorDetailFromSearch = false;
+
+// 함께하는 업체 클릭 시: 전문가(승인) 계정과 연동되어 있으면 전문가 프로필 페이지로,
+// 아니면 기존 업체 상세 시트로 이동
+async function _openCompanyDetail(cId, name) {
+  if (cId) {
+    try {
+      if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('no db'); }
+      const snap = await _db.collection('vb_users')
+        .where('expertProfile.linkedContractorId', '==', cId)
+        .where('expertProfile.status', '==', 'approved')
+        .limit(1).get();
+      if (!snap.empty) {
+        const d = snap.docs[0].data();
+        openUserProfile(d.email || snap.docs[0].id.replace(/_/g,'.'), d.name || name, '업체');
+        return;
+      }
+    } catch(e) { console.warn('_openCompanyDetail lookup failed:', e); }
+  }
+  _openContractorDetail(cId || name);
+}
 
 function _openContractorDetail(cId) {
   const c = _contractors.find(cd => (cd.id||cd.name) === cId);
