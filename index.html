@@ -2053,14 +2053,17 @@ button, input, textarea, select { font-family:var(--font); }
 .info-view-body > * + * { margin-top:10px; }
 
 .info-view-hero {
-  background:#fff; border-radius:16px;
+  background:#FDFCFB; border:1px solid #eee; border-radius:24px;
+  box-shadow:0 2px 8px 0 rgba(0,0,0,0.03);
   padding:22px 18px 20px; flex-shrink:0;
 }
 .info-view-project-name {
   font-size:18px; font-weight:700; color:#111; line-height:1.3;
 }
 .info-view-card {
-  background:#fff; border-radius:16px; overflow:hidden; flex-shrink:0;
+  background:#FDFCFB; border:1px solid #eee; border-radius:24px;
+  box-shadow:0 2px 8px 0 rgba(0,0,0,0.03);
+  overflow:hidden; flex-shrink:0;
 }
 /* 공통 카드 패딩 */
 .info-view-card-inner { padding:17px 18px; }
@@ -3622,6 +3625,42 @@ button, input, textarea, select { font-family:var(--font); }
           </div>
         </div>
       </div>
+      <div id="iv-project-detail-body" style="display:none;">
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">시공종류</span>
+            <span class="info-view-value" id="iv-type">-</span>
+          </div>
+          <div class="info-view-divider"></div>
+          <div class="info-view-row">
+            <span class="info-view-label">평형</span>
+            <span class="info-view-value" id="iv-size">-</span>
+          </div>
+          <div class="info-view-divider"></div>
+          <div class="info-view-row">
+            <span class="info-view-label">진행 방식</span>
+            <span class="info-view-value" id="iv-method">-</span>
+          </div>
+        </div>
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">공사 기간</span>
+            <span class="info-view-value" id="iv-period">-</span>
+          </div>
+        </div>
+        <div class="info-view-card">
+          <div class="info-view-row">
+            <span class="info-view-label">시공 주소</span>
+            <span class="info-view-value" id="iv-address">-</span>
+          </div>
+        </div>
+        <div class="info-view-card" id="iv-memo-card">
+          <div class="info-view-memo-wrap">
+            <div class="info-view-memo-label">메모</div>
+            <div class="info-view-memo-text" id="iv-memo"></div>
+          </div>
+        </div>
+      </div>
       <!-- 도면 카드 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card">
         <div class="info-view-floorplan-wrap">
@@ -3658,42 +3697,6 @@ button, input, textarea, select { font-family:var(--font); }
                 <span id="iv-cost-exclude-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
               </label>
             </div>
-          </div>
-        </div>
-      </div>
-      <div id="iv-project-detail-body" style="display:none;">
-        <div class="info-view-card">
-          <div class="info-view-row">
-            <span class="info-view-label">시공종류</span>
-            <span class="info-view-value" id="iv-type">-</span>
-          </div>
-          <div class="info-view-divider"></div>
-          <div class="info-view-row">
-            <span class="info-view-label">평형</span>
-            <span class="info-view-value" id="iv-size">-</span>
-          </div>
-          <div class="info-view-divider"></div>
-          <div class="info-view-row">
-            <span class="info-view-label">진행 방식</span>
-            <span class="info-view-value" id="iv-method">-</span>
-          </div>
-        </div>
-        <div class="info-view-card">
-          <div class="info-view-row">
-            <span class="info-view-label">공사 기간</span>
-            <span class="info-view-value" id="iv-period">-</span>
-          </div>
-        </div>
-        <div class="info-view-card">
-          <div class="info-view-row">
-            <span class="info-view-label">시공 주소</span>
-            <span class="info-view-value" id="iv-address">-</span>
-          </div>
-        </div>
-        <div class="info-view-card" id="iv-memo-card">
-          <div class="info-view-memo-wrap">
-            <div class="info-view-memo-label">메모</div>
-            <div class="info-view-memo-text" id="iv-memo"></div>
           </div>
         </div>
       </div>
