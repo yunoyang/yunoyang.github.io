@@ -3304,19 +3304,9 @@ button, input, textarea, select { font-family:var(--font); }
 <!-- ===== LANDING ===== -->
 <div class="screen landing-screen" id="screen-landing">
 
-  <!-- 배경 이미지 (랜덤) -->
+  <!-- 배경 이미지 (고정) -->
   <img class="landing-bg-img" id="landing-bg-img" src="landing-bg.jpg" alt=""
     onerror="this.onerror=null;this.src='landing-bg.jpg';">
-  <script>
-    // 랜딩 배경 랜덤 적용 — 페이지 다른 스크립트 오류와 무관하게 즉시 실행
-    (function() {
-      try {
-        var bgs = ['landing-bg.jpg', 'landing-bg-2.jpg', 'landing-bg-3.jpg', 'landing-bg-4.jpg', 'landing-bg-5.jpg', 'landing-bg-6.jpg'];
-        var img = document.getElementById('landing-bg-img');
-        if (img) img.src = bgs[Math.floor(Math.random() * bgs.length)];
-      } catch(e) {}
-    })();
-  </script>
 
   <!-- 프로필 아바타 (서비스 전체 메뉴) -->
   <div style="position:absolute;top:max(env(safe-area-inset-top,0px),20px);right:20px;z-index:2;">
