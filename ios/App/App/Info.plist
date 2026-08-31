@@ -13,12 +13,10 @@
 			<string></string>
 		</dict>
 	</array>
-	<key>CFBundleGetInfoString</key>
-	<string></string>
 	<key>LSApplicationCategoryType</key>
-	<string></string>
+	<string>public.app-category.lifestyle</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>ko</string>
 	<key>CFBundleDisplayName</key>
 	<string>바이브스페이스</string>
 	<key>CFBundleExecutable</key>
@@ -60,5 +58,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>도면, 시공 현장, 포트폴리오 사진을 촬영해서 업로드하기 위해 카메라 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>도면, 시공 현장, 포트폴리오 사진을 앨범에서 선택해 업로드하기 위해 사진 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>공유받은 도면이나 이미지를 사진 앨범에 저장하기 위해 접근 권한이 필요합니다.</string>
 </dict>
 </plist>
