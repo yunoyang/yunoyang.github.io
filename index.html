@@ -11369,15 +11369,17 @@ function _loadInfoView() {
       if (p.company) {
         if (!compMap.has(p.company)) {
           const cId = p.companyData?.contractorId || p.companyData?.id || '';
-          compMap.set(p.company, { procs: [], cId });
+          const phone = p.companyData?.phone || '';
+          const area = p.companyData?.area || '';
+          compMap.set(p.company, { procs: [], cId, phone, area });
         }
         compMap.get(p.company).procs.push(p.name || '');
       }
     });
     if (compMap.size > 0) {
-      companiesList.innerHTML = [...compMap.entries()].map(([name, { procs, cId }], i, arr) => {
+      companiesList.innerHTML = [...compMap.entries()].map(([name, { procs, cId, phone, area }], i, arr) => {
         return `
-        <div onclick="_openCompanyDetail('${esc(cId)}','${esc(name)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
+        <div onclick="_openCompanyDetail('${esc(cId)}','${esc(name)}','${esc(phone)}','${esc(area)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
           <div>
             <div style="font-size:15px;font-weight:600;color:#222;margin-bottom:2px;">${esc(name)}</div>
             <div style="font-size:13px;color:#aaa;">${procs.map(esc).join(', ')}</div>
@@ -12458,7 +12460,7 @@ let _contractorDetailFromSearch = false;
 
 // 함께하는 업체 클릭 시: 전문가(승인) 계정과 연동되어 있으면 전문가 프로필 페이지로,
 // 아니면 기존 업체 상세 시트로 이동
-async function _openCompanyDetail(cId, name) {
+async function _openCompanyDetail(cId, name, phone, area) {
   if (cId) {
     try {
       if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('no db'); }
@@ -12473,12 +12475,16 @@ async function _openCompanyDetail(cId, name) {
       }
     } catch(e) { console.warn('_openCompanyDetail lookup failed:', e); }
   }
-  _openContractorDetail(cId || name);
+  _openContractorDetail(cId || name, { name, phone, area });
 }
 
-function _openContractorDetail(cId) {
-  const c = _contractors.find(cd => (cd.id||cd.name) === cId);
-  if (!c) return;
+// fallback: DB/전문가 계정 어디에도 없는 업체(직접 입력)는 저장된 정보만으로 시트를 채운다
+function _openContractorDetail(cId, fallback) {
+  let c = _contractors.find(cd => (cd.id||cd.name) === cId);
+  if (!c) {
+    if (!fallback || !fallback.name) return;
+    c = { id: cId, name: fallback.name, phone: fallback.phone || '', area: fallback.area || '' };
+  }
   _currentContractorDetail = c;
 
   // 업체명
