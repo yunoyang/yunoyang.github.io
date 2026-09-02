@@ -3869,11 +3869,10 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="work-field">
           <span class="f-label">프로젝트 공개</span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:12px;color:#bbb;">추후 업데이트</span>
-            <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;opacity:.5;">
-              <input type="checkbox" id="acct-project-public" disabled style="opacity:0;width:0;height:0;">
-              <span style="position:absolute;cursor:not-allowed;inset:0;background:#e0e0e0;border-radius:26px;"></span>
-              <span style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);"></span>
+            <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
+              <input type="checkbox" id="acct-project-public" onchange="_onProjectPublicToggle(this.checked)" style="opacity:0;width:0;height:0;">
+              <span id="acct-project-public-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:26px;transition:.2s;"></span>
+              <span id="acct-project-public-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s;"></span>
             </label>
           </div>
         </div>
@@ -5210,7 +5209,7 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="expert-result-icon" style="font-size:40px;margin-bottom:12px;"></div>
     <h3 id="expert-result-title" style="margin-bottom:8px;"></h3>
     <div id="expert-result-body" style="font-size:13.5px;color:#666;line-height:1.7;text-align:left;"></div>
-    <button onclick="_ackExpertResult()" style="width:100%;height:48px;margin-top:20px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);">확인</button>
+    <button onclick="_ackResultPopup()" style="width:100%;height:48px;margin-top:20px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);">확인</button>
   </div>
 </div>
 
@@ -6188,14 +6187,18 @@ async function _checkExpertResultPopup() {
     if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
     const key = state.user.email.replace(/\./g,'_');
     const doc = await _db.collection('vb_users').doc(key).get();
-    const p = doc.data()?.expertProfile;
+    let p = doc.data()?.expertProfile;
+    p = await _migrateLegacyExpertStatus(p, key);
     if (!p || p.resultAcknowledged !== false) return;
     state.user.expertProfile = p;
     _showExpertResultPopup(p);
   } catch(e) { console.warn('expert result check failed:', e); }
 }
 
+let _resultPopupKind = 'expert';
+
 function _showExpertResultPopup(p) {
+  _resultPopupKind = 'expert';
   const status = p.status;
   const cfg = {
     approved:  { icon: '🎉', title: '업체 가입이 승인됐습니다', color: '#16a34a' },
@@ -6219,6 +6222,11 @@ function _showExpertResultPopup(p) {
   openDialog('dlg-expert-result');
 }
 
+function _ackResultPopup() {
+  if (_resultPopupKind === 'consulting') return _ackConsultingResult();
+  return _ackExpertResult();
+}
+
 async function _ackExpertResult() {
   closeDialog('dlg-expert-result');
   if (!state.user?.email) return;
@@ -6233,6 +6241,159 @@ async function _ackExpertResult() {
     if (state.user.expertProfile) state.user.expertProfile.resultAcknowledged = true;
     save();
   } catch(e) { console.warn('ack expert result failed:', e); }
+}
+
+// 레거시 마이그레이션: 예전 심사제 하에서 status:'pending'이던 업체 계정을
+// 자동으로 가입승인(approved) + 컨설팅 미신청(none) 상태로 전환한다.
+// consultingStatus 필드가 이미 있으면 이미 마이그레이션된 것으로 보고 건드리지 않는다.
+async function _migrateLegacyExpertStatus(p, key) {
+  if (!p || p.status !== 'pending' || p.consultingStatus !== undefined) return p;
+  const migrated = { ...p, status: 'approved', consultingStatus: 'none' };
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return migrated; }
+    const payload = { 'expertProfile.status': 'approved', 'expertProfile.consultingStatus': 'none' };
+    // 예전엔 승인 시에만 업체 DB에 등록됐으므로, 심사중이었던 계정은 등록이 안 돼있을 수 있음
+    if (!p.linkedContractorId) {
+      try {
+        const contractorRef = _db.collection('vb_contractors').doc();
+        await contractorRef.set({
+          name: p.businessName || '', category: (p.categories && p.categories[0]) || '기타',
+          area: p.area || '', phone: p.phone || '', description: p.intro || '',
+          rating: 0, reviews: 0, source: 'expert-signup', contactEmail: state.user.email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        payload['expertProfile.linkedContractorId'] = contractorRef.id;
+        migrated.linkedContractorId = contractorRef.id;
+      } catch(e) { console.warn('legacy contractor auto-register failed:', e); }
+    }
+    await Promise.all([
+      _db.collection('vb_users').doc(key).update(payload).catch(()=>{}),
+      _db.collection('vb_users').doc(state.user.email).update(payload).catch(()=>{}),
+    ]);
+  } catch(e) { console.warn('legacy expert migration failed:', e); }
+  return migrated;
+}
+
+// 컨설팅 자격 신청 — 업체 가입과 별개로 관리자 승인이 필요
+async function _acctRequestConsulting() {
+  if (!state.user?.email || !state.user.expertProfile) return;
+  const p = { ...state.user.expertProfile, consultingStatus: 'pending', consultingRequestedAt: Date.now(), consultingResultAcknowledged: true };
+  state.user.expertProfile = p;
+  save();
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const payload = { 'expertProfile.consultingStatus': 'pending', 'expertProfile.consultingRequestedAt': p.consultingRequestedAt };
+    await Promise.all([
+      _db.collection('vb_users').doc(key).update(payload).catch(()=>{}),
+      _db.collection('vb_users').doc(state.user.email).update(payload).catch(()=>{}),
+    ]);
+    _notifyConsultingRequest(p);
+  } catch(e) { console.warn('consulting request failed:', e); }
+  _renderExpertStatusCard();
+  showToastMessage('컨설팅 자격 신청이 접수됐습니다.');
+}
+
+async function _notifyConsultingRequest(p) {
+  try {
+    const tgText =
+      `🎓 *컨설팅 자격 신청*\n\n` +
+      `🏢 ${p.businessName}\n` +
+      `👤 ${state.user?.name||'-'} (${state.user?.email||'-'})\n\n` +
+      `어드민 → 업체 회원 관리에서 컨설팅 자격을 승인해주세요.`;
+    await fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: _TG_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
+    });
+  } catch(e) { console.warn('consulting request notify failed:', e); }
+}
+
+// 어드민이 컨설팅 자격을 승인/거절하면 consultingResultAcknowledged가 false로 세팅됨
+async function _checkConsultingResultPopup() {
+  if (!state.user?.email || state.user.accountType !== 'expert') return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    const p = doc.data()?.expertProfile;
+    if (!p || p.consultingResultAcknowledged !== false) return;
+    state.user.expertProfile = p;
+    _showConsultingResultPopup(p);
+  } catch(e) { console.warn('consulting result check failed:', e); }
+}
+
+function _showConsultingResultPopup(p) {
+  _resultPopupKind = 'consulting';
+  const status = p.consultingStatus;
+  const cfg = {
+    approved: { icon: '🎓', title: '컨설팅 자격이 승인됐습니다' },
+    rejected: { icon: '📋', title: '컨설팅 신청 결과 안내' },
+  }[status];
+  if (!cfg) return;
+  document.getElementById('expert-result-icon').textContent = cfg.icon;
+  document.getElementById('expert-result-title').textContent = cfg.title;
+  let bodyHtml = `<div style="text-align:center;color:#111;font-weight:600;margin-bottom:10px;">${esc(p.businessName||'')}</div>`;
+  if (status === 'approved') {
+    bodyHtml += `<div>축하합니다! 이제 공개된 다른 프로젝트를 열람하고 컨설팅을 진행하실 수 있습니다.</div>`;
+  } else if (status === 'rejected') {
+    bodyHtml += `<div>아쉽지만 이번 컨설팅 자격 신청은 승인되지 않았습니다.</div>`;
+    if (p.consultingRejectReason) bodyHtml += `<div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;color:#a03030;"><b>거절 사유</b><br>${esc(p.consultingRejectReason)}</div>`;
+  }
+  document.getElementById('expert-result-body').innerHTML = bodyHtml;
+  openDialog('dlg-expert-result');
+}
+
+async function _ackConsultingResult() {
+  closeDialog('dlg-expert-result');
+  if (!state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const payload = { 'expertProfile.consultingResultAcknowledged': true };
+    await Promise.all([
+      _db.collection('vb_users').doc(key).update(payload).catch(()=>{}),
+      _db.collection('vb_users').doc(state.user.email).update(payload).catch(()=>{}),
+    ]);
+    if (state.user.expertProfile) state.user.expertProfile.consultingResultAcknowledged = true;
+    save();
+  } catch(e) { console.warn('ack consulting result failed:', e); }
+}
+
+// 프로젝트 공개 토글 — 계정 단위로 내 프로젝트를 컨설팅 승인된 전문가에게 공개할지 여부
+function _setProjectPublicToggleUI(checked) {
+  const slider = document.getElementById('acct-project-public-slider');
+  const knob = document.getElementById('acct-project-public-knob');
+  if (slider) slider.style.background = checked ? '#111' : '#e0e0e0';
+  if (knob) knob.style.transform = checked ? 'translateX(18px)' : 'none';
+}
+
+async function _renderProjectPublicToggle() {
+  const toggle = document.getElementById('acct-project-public');
+  if (!toggle || !state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const doc = await _db.collection('vb_users').doc(key).get();
+    const checked = !!doc.data()?.projectsPublic;
+    toggle.checked = checked;
+    _setProjectPublicToggleUI(checked);
+  } catch(e) { console.warn('project public toggle load failed:', e); }
+}
+
+async function _onProjectPublicToggle(checked) {
+  _setProjectPublicToggleUI(checked);
+  if (!state.user?.email) return;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const key = state.user.email.replace(/\./g,'_');
+    const payload = { projectsPublic: checked };
+    await Promise.all([
+      _db.collection('vb_users').doc(key).set(payload, { merge: true }),
+      _db.collection('vb_users').doc(state.user.email).set(payload, { merge: true }),
+    ]);
+    showToastMessage(checked ? '프로젝트가 승인된 전문가에게 공개됩니다.' : '프로젝트 공개가 해제됐습니다.');
+  } catch(e) { console.warn('toggle projects public failed:', e); }
 }
 
 // 현재 보이는 스텝만 전환 (페이지 자체는 유지) — 뒤로가기 버튼 표시도 여기서 같이 관리
@@ -6298,14 +6459,33 @@ async function _acctSubmitExpert() {
     businessName, area, phone, intro,
     expertKind: _acctSelectedKind,
     categories: _acctSelectedKind === 'contractor' ? [..._acctSelectedCategories] : [],
-    status: 'pending',
+    status: 'approved', // 업체 가입 자체는 무료·즉시 승인
+    consultingStatus: 'none', // 컨설팅 자격은 별도 관리자 승인 필요: none/pending/approved/rejected
     linkedContractorId: null,
     appliedAt: Date.now(),
   };
+  // 즉시 승인이므로 업체 DB(vb_contractors)에도 바로 등록해 앱 내 업체 검색에 노출
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (ok && _db) {} }
+    if (_db) {
+      const contractorRef = _db.collection('vb_contractors').doc();
+      await contractorRef.set({
+        name: businessName,
+        category: (expertProfile.categories[0]) || '기타',
+        area, phone,
+        description: intro,
+        rating: 0, reviews: 0,
+        source: 'expert-signup',
+        contactEmail: state.user.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      expertProfile.linkedContractorId = contractorRef.id;
+    }
+  } catch(e) { console.warn('contractor auto-register failed:', e); }
   await _acctSaveAccountType({ accountType: 'expert', expertProfile });
   _notifyExpertSignup(expertProfile);
   goTo('landing');
-  showToastMessage('가입 신청이 접수됐습니다. 심사 후 업체 목록에 노출됩니다.');
+  showToastMessage('업체 가입이 완료됐습니다!');
 }
 
 // 전문가/업체 가입 신청 시 어드민에게 Telegram 실시간 알림
@@ -6315,14 +6495,14 @@ async function _notifyExpertSignup(expertProfile) {
     const kindLabel = expertProfile.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
     const catLine = expertProfile.categories?.length ? `\n🔧 ${expertProfile.categories.join(', ')}` : '';
     const tgText =
-      `🆕 *전문가/업체 가입 신청*\n\n` +
+      `🆕 *신규 업체 가입 (자동승인)*\n\n` +
       `🏢 ${expertProfile.businessName}\n` +
       `📋 ${kindLabel}${catLine}\n` +
       `📍 ${expertProfile.area || '-'}\n` +
       `📞 ${expertProfile.phone || '-'}\n` +
       `💬 ${expertProfile.intro || '-'}\n\n` +
       `👤 ${state.user?.name||'-'} (${state.user?.email||'-'})\n\n` +
-      `어드민 → 업체 회원 관리에서 승인해주세요.`;
+      `별도 승인 없이 바로 업체 목록에 노출됩니다.`;
     await fetch(`https://api.telegram.org/bot${_TG_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -6358,40 +6538,56 @@ async function _renderExpertStatusCard() {
     if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('init failed'); }
     const key = state.user.email.replace(/\./g,'_');
     const doc = await _db.collection('vb_users').doc(key).get();
-    const p = doc.data()?.expertProfile || state.user.expertProfile || {};
+    let p = doc.data()?.expertProfile || state.user.expertProfile || {};
+    p = await _migrateLegacyExpertStatus(p, key);
     state.user.expertProfile = p; // 최신값으로 로컬 캐시도 갱신
-    const status = p.status || 'pending';
+    const status = p.status || 'approved';
     const badge = {
       pending:   ['심사중', '#f59e0b', '#fff8eb'],
-      approved:  ['승인됨', '#16a34a', '#eefdf3'],
+      approved:  ['가입됨', '#16a34a', '#eefdf3'],
       rejected:  ['거절됨', '#e05050', '#fdeeee'],
       withdrawn: ['탈퇴됨', '#888', '#f4f4f4'],
     }[status];
     const kindLabel = p.expertKind === 'studio' ? '인테리어 스튜디오' : '시공 업체';
+    const consultingStatus = p.consultingStatus || 'none';
+    const consultingBadge = {
+      none:     ['미신청', '#999', '#f4f4f4'],
+      pending:  ['심사중', '#f59e0b', '#fff8eb'],
+      approved: ['승인됨', '#16a34a', '#eefdf3'],
+      rejected: ['거절됨', '#e05050', '#fdeeee'],
+    }[consultingStatus];
     card.innerHTML = `
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-size:15px;font-weight:700;color:#111;">전문가 가입 신청</span>
+          <span style="font-size:15px;font-weight:700;color:#111;">업체 계정</span>
           <span style="font-size:11px;font-weight:700;color:${badge[1]};background:${badge[2]};padding:3px 9px;border-radius:20px;">${badge[0]}</span>
         </div>
         <div style="font-size:13px;color:#666;line-height:1.7;">
           ${esc(p.businessName||'')} · ${esc(kindLabel)}
         </div>
-        ${status === 'pending' ? `
-        <div style="font-size:12.5px;color:#999;margin-top:8px;line-height:1.6;">심사 중입니다. 완료되면 결과를 알려드릴게요.</div>` : ''}
         ${status === 'approved' ? `
-        <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">승인되어 업체 목록에 노출되고 있습니다.</div>
+        <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">업체 목록에 노출되고 있습니다.</div>
         <button onclick="openUserProfile(state.user.email,state.user.name,'오너')" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">내 전문가 페이지 보기</button>` : ''}
-        ${status === 'rejected' ? `
-        <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
-          ${p.rejectReason ? `<div><b>거절 사유</b><br>${esc(p.rejectReason)}</div>` : ''}
-          ${p.requestedInfo ? `<div style="margin-top:6px;"><b>보충 자료 요청</b><br>${esc(p.requestedInfo)}</div>` : ''}
-        </div>` : ''}
         ${status === 'withdrawn' ? `
-        <div style="font-size:12.5px;color:#888;margin-top:8px;line-height:1.6;">업체 회원에서 탈퇴 처리되어 업체 목록 노출이 중단됐습니다.</div>` : ''}
-        ${status === 'rejected' || status === 'withdrawn' ? `
+        <div style="font-size:12.5px;color:#888;margin-top:8px;line-height:1.6;">업체 회원에서 탈퇴 처리되어 업체 목록 노출이 중단됐습니다.</div>
         <button onclick="_acctGoToStep('kind');goTo('account-setup');" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">다시 신청하기</button>` : ''}
       </div>
+      ${status === 'approved' ? `
+      <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:15px;font-weight:700;color:#111;">컨설팅 자격</span>
+          <span style="font-size:11px;font-weight:700;color:${consultingBadge[1]};background:${consultingBadge[2]};padding:3px 9px;border-radius:20px;">${consultingBadge[0]}</span>
+        </div>
+        <div style="font-size:12.5px;color:#999;line-height:1.6;">승인되면 공개된 다른 사용자의 프로젝트를 열람하고 컨설팅을 진행할 수 있어요.</div>
+        ${consultingStatus === 'pending' ? `
+        <div style="font-size:12.5px;color:#999;margin-top:8px;">심사 중입니다. 완료되면 결과를 알려드릴게요.</div>` : ''}
+        ${consultingStatus === 'rejected' ? `
+        <div style="background:#fdeeee;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:#a03030;line-height:1.7;">
+          ${p.consultingRejectReason ? `<div><b>거절 사유</b><br>${esc(p.consultingRejectReason)}</div>` : ''}
+        </div>` : ''}
+        ${consultingStatus === 'none' || consultingStatus === 'rejected' ? `
+        <button onclick="_acctRequestConsulting()" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">컨설팅 자격 신청하기</button>` : ''}
+      </div>` : ''}
     `;
   } catch(e) {
     card.innerHTML = `<div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:16px 20px;color:#e05050;font-size:13px;">신청 현황을 불러오지 못했습니다.</div>`;
@@ -6470,6 +6666,7 @@ async function _autoUploadOnLogin() {
   _notifyNewUserIfNeeded();
   _checkAccountTypeOnLogin();
   _checkExpertResultPopup();
+  _checkConsultingResultPopup();
 
   // ── 클라우드 전체 프로젝트 조회 ──
   const allCloudProjs = await _fetchAllMyCloudProjects();
@@ -6880,6 +7077,7 @@ function goTo(screen) {
     document.getElementById('acct-email-row').textContent = email;
     _loadAcctJoinDate();
     _renderExpertStatusCard();
+    _renderProjectPublicToggle();
   }
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;
@@ -14666,6 +14864,7 @@ async function _syncFromCloudOnStartup() {
   // 이미 로그인된 세션으로 앱을 여는 경우(대부분) _autoUploadOnLogin이 아예 안 도는데,
   // 심사 결과 팝업은 매번 앱을 열 때 확인해야 하므로 여기서도 별도로 체크
   _checkExpertResultPopup();
+  _checkConsultingResultPopup();
 
   // Firebase Auth 준비 대기 (indexedDB에서 Google 세션 복원 포함, 최대 4초)
   await new Promise(resolve => {
