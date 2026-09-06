@@ -11064,7 +11064,10 @@ function confirmAddProcess() {
   const _newProcId = 'proc_'+Date.now();
   const _defaultDate = _addProcessDefaultDate || '';
   _addProcessDefaultDate = null;
-  getProject().processes.push({ id:_newProcId, name, type:selectedProcessType||name, phase:_activeProcessTab, scheduleStart:_defaultDate, scheduleEnd:_defaultDate, company:'', details:[] });
+  const _procType = selectedProcessType || name;
+  const _matchedCategory = PROCESS_CATEGORIES.find(c => c.items.includes(_procType));
+  const _procPhase = _matchedCategory ? _matchedCategory.id : _activeProcessTab;
+  getProject().processes.push({ id:_newProcId, name, type:_procType, phase:_procPhase, scheduleStart:_defaultDate, scheduleEnd:_defaultDate, company:'', details:[] });
   gtag('event', 'add_process', { process_type: name, is_custom: !!custom });
   trackEvent('process', 'add_process', name);
   _pendingNewProcId = _newProcId;
