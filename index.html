@@ -1230,6 +1230,13 @@ button, input, textarea, select { font-family:var(--font); }
 @media (min-width: 660px) {
   #style-rooms-container { grid-template-columns: 1fr 1fr; }
 }
+/* 커뮤니티: 항상 2단 그리드 (스타일 카드와 동일한 카드 구조 재사용) */
+#community-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px 14px 80px;
+}
 /* Pinterest-style room card */
 .style-room-card {
   background: #fff;
@@ -3877,6 +3884,13 @@ button, input, textarea, select { font-family:var(--font); }
           </div>
         </div>
       </div>
+      <!-- 커뮤니티 -->
+      <div style="background:#fff;border-radius:16px;border:1px solid #eee;overflow:hidden;margin-bottom:16px;">
+        <button onclick="goTo('community')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;background:none;border:none;cursor:pointer;font-family:var(--font);color:#333;font-size:15px;font-weight:600;">
+          <span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 커뮤니티</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
       <!-- 전문가/업체 신청 현황 (accountType이 expert일 때만 표시) -->
       <div id="acct-expert-status-card" style="display:none;margin-bottom:16px;"></div>
       <!-- 로그아웃 / 탈퇴하기 -->
@@ -4137,6 +4151,27 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
 
     </div>
+  </div>
+</div>
+
+<!-- ===== COMMUNITY PAGE ===== -->
+<div class="screen" id="screen-community">
+  <div class="form-screen-inner" style="background:#f7f8fa;">
+    <div class="form-header" style="background:#f7f8fa;border-bottom:none;">
+      <button class="back-btn" onclick="goTo(_prevScreen||'account')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <h2>커뮤니티</h2>
+    </div>
+    <div style="flex:1;overflow-y:auto;">
+      <div id="community-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 커뮤니티 프로젝트 상세 (읽기전용) -->
+<div class="overlay" id="dlg-community-detail">
+  <div class="dialog" style="max-width:420px;width:92vw;max-height:80vh;overflow-y:auto;">
+    <div id="community-detail-body">불러오는 중...</div>
+    <div class="dialog-actions"><button class="btn-cancel" onclick="closeDialog('dlg-community-detail')">닫기</button></div>
   </div>
 </div>
 
@@ -6178,6 +6213,7 @@ async function _checkAccountTypeOnLogin() {
     if (doc.exists && doc.data().accountType) {
       state.user.accountType = doc.data().accountType;
       state.user.expertProfile = doc.data().expertProfile || null;
+      state.user.projectsPublic = !!doc.data().projectsPublic;
       return; // 이미 선택 완료된 유저
     }
     _acctGoToStep('role');
@@ -6390,6 +6426,7 @@ async function _renderProjectPublicToggle() {
 
 async function _onProjectPublicToggle(checked) {
   _setProjectPublicToggleUI(checked);
+  state.user.projectsPublic = checked;
   if (!state.user?.email) return;
   try {
     if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
@@ -6399,8 +6436,89 @@ async function _onProjectPublicToggle(checked) {
       _db.collection('vb_users').doc(key).set(payload, { merge: true }),
       _db.collection('vb_users').doc(state.user.email).set(payload, { merge: true }),
     ]);
-    showToastMessage(checked ? '프로젝트가 승인된 전문가에게 공개됩니다.' : '프로젝트 공개가 해제됐습니다.');
+    // 내가 소유한 프로젝트 문서에도 isPublic을 즉시 반영 (커뮤니티 목록 쿼리용)
+    const myProjs = (state.projects || []).filter(p => p.cloudId && (!p.myRole || p.myRole === 'owner'));
+    await Promise.all(myProjs.map(p =>
+      _db.collection('vb_projects').doc(p.cloudId).set({ isPublic: checked }, { merge: true }).catch(()=>{})
+    ));
+    showToastMessage(checked ? '프로젝트가 커뮤니티에 공개됩니다.' : '프로젝트 공개가 해제됐습니다.');
   } catch(e) { console.warn('toggle projects public failed:', e); }
+}
+
+// ===== 커뮤니티: 공개된 다른 사용자 프로젝트 =====
+async function _loadCommunityProjects() {
+  const grid = document.getElementById('community-grid');
+  if (!grid) return;
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#aaa;font-size:14px;">불러오는 중...</div>`;
+  try {
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) throw new Error('init failed'); }
+    const snap = await _db.collection('vb_projects')
+      .where('isPublic', '==', true)
+      .orderBy('meta.updatedAt', 'desc')
+      .limit(40)
+      .get();
+    if (snap.empty) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#aaa;font-size:14px;">아직 공개된 프로젝트가 없습니다.<br>설정에서 '프로젝트 공개'를 켜면 여기에 가장 먼저 노출돼요.</div>`;
+      return;
+    }
+    const cards = snap.docs.map(doc => {
+      const d = doc.data();
+      const pd = d.projectData || {};
+      const name = pd.name || d.meta?.owner?.name + '님의 프로젝트' || '프로젝트';
+      const ownerName = d.meta?.owner?.name || pd.owner?.name || '익명';
+      const floorplanImgs = (pd.floorplanImages || []).map(f => f.url || f).filter(u => u && !String(u).startsWith('data:'));
+      const styleImgs = Object.values(pd.styleImages || {}).flat().map(s => s.url).filter(u => u && !String(u).startsWith('data:'));
+      const imgs = [...floorplanImgs, ...styleImgs].slice(0, 3);
+      const thumb = (i) => imgs[i] ? `<img src="${esc(imgs[i])}" loading="lazy" alt="" onerror="this.style.opacity=0">` : '';
+      let collage = '<div class="style-card-collage style-card-collage-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+      if (imgs.length === 1) collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(0)}</div></div>`;
+      else if (imgs.length === 2) collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div></div></div>`;
+      else if (imgs.length >= 3) collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div><div class="style-card-col-side-item">${thumb(2)}</div></div></div>`;
+      const f = pd.form || {};
+      const metaLine = [f.type?.[0], f.size?.[0]].filter(Boolean).join(' · ') || ownerName;
+      return `<div class="style-room-card" onclick="_openCommunityProjectDetail('${esc(doc.id)}')">
+        ${collage}
+        <div class="style-card-info">
+          <div class="style-card-top-row"><span class="style-card-title" style="font-size:15px;">${esc(name)}</span></div>
+          <div class="style-card-meta">${esc(metaLine)}</div>
+        </div>
+      </div>`;
+    });
+    grid.innerHTML = cards.join('');
+  } catch(e) {
+    console.error('community load failed:', e);
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#e05050;font-size:14px;">불러오지 못했습니다.<br>${e.code === 'failed-precondition' ? '(색인 생성이 필요할 수 있습니다 — 콘솔의 링크를 확인하세요)' : '잠시 후 다시 시도해주세요.'}</div>`;
+  }
+}
+
+async function _openCommunityProjectDetail(cloudId) {
+  openDialog('dlg-community-detail');
+  const body = document.getElementById('community-detail-body');
+  body.innerHTML = '불러오는 중...';
+  try {
+    const doc = await _db.collection('vb_projects').doc(cloudId).get();
+    if (!doc.exists) { body.innerHTML = '프로젝트를 찾을 수 없습니다.'; return; }
+    const d = doc.data();
+    const pd = d.projectData || {};
+    const f = pd.form || {};
+    const ownerName = d.meta?.owner?.name || '익명';
+    const floorplanImgs = (pd.floorplanImages || []).map(fp => fp.url || fp).filter(u => u && !String(u).startsWith('data:'));
+    const styleImgs = Object.values(pd.styleImages || {}).flat().map(s => s.url).filter(u => u && !String(u).startsWith('data:')).slice(0, 6);
+    body.innerHTML = `
+      <h3 style="margin-bottom:2px;">${esc(pd.name || '프로젝트')}</h3>
+      <div style="font-size:13px;color:#999;margin-bottom:14px;">${esc(ownerName)}님의 프로젝트</div>
+      ${floorplanImgs[0] ? `<img src="${esc(floorplanImgs[0])}" style="width:100%;border-radius:12px;margin-bottom:12px;object-fit:cover;max-height:220px;">` : ''}
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:#333;margin-bottom:12px;">
+        ${f.type?.length ? `<div><b style="color:#999;font-weight:600;">시공종류</b> &nbsp;${esc(f.type.join(', '))}</div>` : ''}
+        ${f.size?.length ? `<div><b style="color:#999;font-weight:600;">평형</b> &nbsp;${esc(f.size.join(', '))}</div>` : ''}
+        ${f.method?.length ? `<div><b style="color:#999;font-weight:600;">진행 방식</b> &nbsp;${esc(f.method.join(', '))}</div>` : ''}
+      </div>
+      ${styleImgs.length ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">${styleImgs.map(u=>`<img src="${esc(u)}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">`).join('')}</div>` : ''}
+    `;
+  } catch(e) {
+    body.innerHTML = '불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+    console.error('community detail failed:', e);
+  }
 }
 
 // 현재 보이는 스텝만 전환 (페이지 자체는 유지) — 뒤로가기 버튼 표시도 여기서 같이 관리
@@ -7090,6 +7208,9 @@ function goTo(screen) {
     _loadAcctJoinDate();
     _renderExpertStatusCard();
     _renderProjectPublicToggle();
+  }
+  if (screen === 'community') {
+    _loadCommunityProjects();
   }
   if (screen === 'tip') {
     document.getElementById('tip-page-content').scrollTop = 0;
@@ -13390,6 +13511,7 @@ async function _pushProjToCloud(proj) {
   const payload = {
     projectData: projData,
     ownerEmail: state.user.email,          // top-level: 인덱스 없이 쿼리 가능
+    isPublic: !!state.user.projectsPublic, // 커뮤니티 목록 쿼리용 (계정 단위 공개 설정을 프로젝트 문서에 비정규화)
     'meta.owner': { email: state.user.email, name: state.user.name },
     'meta.collaborators': proj.collaborators || [],
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
