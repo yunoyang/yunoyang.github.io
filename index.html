@@ -3769,6 +3769,16 @@ button, input, textarea, select { font-family:var(--font); }
         <input class="addr-input" id="f-project-name" placeholder="예: 서울 마포 34평 리모델링" oninput="saveFormData()">
       </div>
       <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="form-label" style="margin:0;">프로젝트 공개 <span style="font-weight:400;color:#aaa;font-size:13px;">(커뮤니티에 노출)</span></span>
+          <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
+            <input type="checkbox" id="f-project-public" onchange="_onFormProjectPublicToggle(this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="f-project-public-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:26px;transition:.2s;"></span>
+            <span id="f-project-public-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s;"></span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
         <span class="form-label">시공종류 (1개 선택)</span>
         <div class="checkbox-row">
           <div class="chk-item"><input type="radio" name="f-type" id="f-apt" value="아파트" checked onchange="saveFormData()"><label for="f-apt">아파트</label></div>
@@ -11569,6 +11579,8 @@ function loadFormData() {
   const proj = getProject(); if (!proj) return;
   const f = proj.form;
   document.getElementById('f-project-name').value = proj.name || '';
+  const pubToggle = document.getElementById('f-project-public');
+  if (pubToggle) { pubToggle.checked = !!proj.isPublic; _setFormProjectPublicToggleUI(!!proj.isPublic); }
   const typeVal = f.type?.[0] || '아파트';
   document.getElementById('f-apt').checked = typeVal === '아파트';
   document.getElementById('f-house').checked = typeVal === '단독주택';
@@ -11627,6 +11639,28 @@ function saveFormData() {
   const fpLink = document.getElementById('f-floorplan-link')?.value.trim();
   proj.floorplanLink = fpLink || '';
   save();
+}
+
+function _setFormProjectPublicToggleUI(checked) {
+  const slider = document.getElementById('f-project-public-slider');
+  const knob = document.getElementById('f-project-public-knob');
+  if (slider) slider.style.background = checked ? '#111' : '#e0e0e0';
+  if (knob) knob.style.transform = checked ? 'translateX(18px)' : 'none';
+}
+
+// 프로젝트 단위 공개 스위치 — 커뮤니티 목록(vb_projects.isPublic) 노출 여부를 프로젝트별로 직접 제어
+async function _onFormProjectPublicToggle(checked) {
+  _setFormProjectPublicToggleUI(checked);
+  const proj = getProject(); if (!proj) return;
+  proj.isPublic = checked;
+  save();
+  try {
+    if (proj.cloudId) {
+      if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+      await _db.collection('vb_projects').doc(proj.cloudId).set({ isPublic: checked }, { merge: true });
+    }
+    showToastMessage(checked ? '이 프로젝트가 커뮤니티에 공개됩니다.' : '이 프로젝트 공개가 해제됐습니다.');
+  } catch(e) { console.warn('project public toggle failed:', e); }
 }
 // ===== INFO VIEW / EDIT TOGGLE =====
 function _showInfoViewPanel(visible) {
@@ -13511,7 +13545,7 @@ async function _pushProjToCloud(proj) {
   const payload = {
     projectData: projData,
     ownerEmail: state.user.email,          // top-level: 인덱스 없이 쿼리 가능
-    isPublic: !!state.user.projectsPublic, // 커뮤니티 목록 쿼리용 (계정 단위 공개 설정을 프로젝트 문서에 비정규화)
+    isPublic: !!proj.isPublic, // 커뮤니티 목록 쿼리용 — 프로젝트별로 직접 설정 (공사정보 편집 화면의 '프로젝트 공개' 스위치)
     'meta.owner': { email: state.user.email, name: state.user.name },
     'meta.collaborators': proj.collaborators || [],
     'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
