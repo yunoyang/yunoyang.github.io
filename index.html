@@ -7957,6 +7957,14 @@ function triggerStyleFileUpload() {
 }
 
 function _compressImage(file, maxW = 1200, quality = 0.75) {
+  // 캔버스 디코딩 실패 시(스크린샷 등 일부 포맷/손상 이미지) 원본을 그대로 읽어
+  // 업로드하는 폴백 — 압축은 안 되지만 "업로드 자체가 조용히 실패"하는 것보다 낫다.
+  const _readRawAsDataUrl = () => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result || null);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
   return new Promise(resolve => {
     const img = new Image();
     const blobUrl = URL.createObjectURL(file);
@@ -7975,7 +7983,7 @@ function _compressImage(file, maxW = 1200, quality = 0.75) {
       const webp = canvas.toDataURL('image/webp', quality);
       resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', quality));
     };
-    img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(null); };
+    img.onerror = () => { URL.revokeObjectURL(blobUrl); _readRawAsDataUrl().then(resolve); };
     img.src = blobUrl;
   });
 }
@@ -15538,6 +15546,7 @@ function _onFurnitureImageFile(input) {
     if (labelEl) labelEl.textContent = '업로드 중...';
     try {
       const dataUrl = await _compressImage(file, 1200, 0.85);
+      if (!dataUrl) { showToastMessage('이미지를 읽지 못했어요. 다른 사진으로 시도해주세요'); return; }
       // 모바일에서는 auth 세션 복원이 느릴 수 있어 _prImgPreview/handleStyleFileSelect와
       // 동일하게 대기 — 안 기다리면 permission-denied로 조용히 base64 폴백되어 다른
       // 기기/협업자 화면에는 사진이 반영되지 않는 문제가 있었음
