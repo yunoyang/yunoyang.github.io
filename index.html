@@ -4336,6 +4336,11 @@ button, input, textarea, select { font-family:var(--font); }
     <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 제품 추가
   </button>
 </div>
+<div class="floating-group" id="floating-add-sitephotos" style="display:none;">
+  <button class="floating-btn" onclick="openAddSitePhoto()">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 현장사진 추가
+  </button>
+</div>
 
 <!-- Furniture Add Dialog -->
 <div class="overlay" id="dlg-furniture" onclick="if(event.target===this)_closeFurnitureDlg()" style="display:none;z-index:9300;">
@@ -4872,6 +4877,40 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
 </div>
+
+<!-- Add Site Photo (공정 선택 바텀시트) -->
+<div class="overlay" id="dlg-add-sitephoto" onclick="if(event.target===this)closeDialog('dlg-add-sitephoto')">
+  <div class="dialog" style="gap:0;padding:0;">
+    <!-- 핸들 + 헤더 -->
+    <div style="padding:14px 20px 0;display:flex;flex-direction:column;gap:0;">
+      <div style="width:36px;height:4px;border-radius:4px;background:#e0e0e0;margin:0 auto 14px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <span style="font-size:17px;font-weight:700;color:#222;">현장사진 추가</span>
+        <button onclick="closeDialog('dlg-add-sitephoto')" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;line-height:1;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <!-- 탭 -->
+      <div class="process-tabs" id="process-tabs-sp"></div>
+    </div>
+    <!-- 탭 콘텐츠 -->
+    <div style="padding:16px 20px;overflow-y:auto;max-height:44vh;">
+      <div class="process-grid" id="process-grid-sp"></div>
+    </div>
+    <!-- 직접 입력 + 액션 -->
+    <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;border-top:1px solid #f1f1f5;padding-top:14px;">
+      <div>
+        <div style="font-size:13px;color:#aaa;font-weight:700;margin-bottom:6px;">직접 입력</div>
+        <input class="dialog-input" id="custom-process-input-sp" placeholder="커스텀 공정 이름">
+      </div>
+      <div class="dialog-actions split" style="margin:0;">
+        <button class="btn-cancel" onclick="closeDialog('dlg-add-sitephoto')">취소</button>
+        <button class="btn-confirm" onclick="confirmAddSitePhoto()">추가</button>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" accept="image/*" multiple style="display:none;" id="sitephoto-add-file-input" onchange="_onSitePhotoAddPick(this)">
 
 <!-- Single Date Picker -->
 <div class="overlay" id="dlg-single-date" style="z-index:9500;" onclick="if(event.target===this)_closeSingleDate()">
@@ -7230,7 +7269,7 @@ function goTo(screen) {
   const fab = document.getElementById('floating-add-process');
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
   if (screen !== 'main') {
-    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-furniture'].forEach(id => {
+    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-furniture','floating-add-sitephotos'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -7504,6 +7543,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
+  document.getElementById('floating-add-sitephotos').style.display = (tab === 'sitephotos' && canEdit()) ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); _fetchContentLinksFromCloud(); }
@@ -15631,6 +15671,76 @@ function _onSitePhotoFile(input, key) {
     if (_sitePhotosDetailKey === key) _openSitePhotoGroupDetail(key);
   })();
   input.value = '';
+}
+
+// ===== 현장사진 추가 (플로팅 버튼 → 공정 선택 바텀시트 → 사진 선택) =====
+// "공정 추가" 바텀시트와 동일한 구조(공정 카테고리 탭 + 그리드 + 직접 입력)를 재사용
+let _activeSitePhotoTab = 'planning';
+let _spSelectedProcessType = null;
+let _pendingSitePhotoKey = null;
+
+function openAddSitePhoto() { requireLogin(_openAddSitePhoto); }
+
+function _openAddSitePhoto() {
+  _spSelectedProcessType = null;
+  _activeSitePhotoTab = 'planning';
+  document.getElementById('custom-process-input-sp').value = '';
+  document.getElementById('process-tabs-sp').innerHTML = PROCESS_CATEGORIES.map(c =>
+    '<button class="process-tab' + (c.id === _activeSitePhotoTab ? ' active' : '') + '" onclick="switchSitePhotoTab(\'' + c.id + '\',this)">' + c.label + '</button>'
+  ).join('');
+  _renderSitePhotoProcessGrid();
+  openDialog('dlg-add-sitephoto');
+}
+
+function switchSitePhotoTab(catId, el) {
+  _activeSitePhotoTab = catId;
+  document.querySelectorAll('#process-tabs-sp .process-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  _spSelectedProcessType = null;
+  document.getElementById('custom-process-input-sp').value = '';
+  _renderSitePhotoProcessGrid();
+}
+
+function _renderSitePhotoProcessGrid() {
+  const cat = PROCESS_CATEGORIES.find(c => c.id === _activeSitePhotoTab);
+  if (!cat) return;
+  document.getElementById('process-grid-sp').innerHTML = cat.items.map(t =>
+    '<div class="process-option" onclick="_selectSitePhotoProcessType(this,\'' + t + '\')">' + t + '</div>'
+  ).join('');
+}
+
+function _selectSitePhotoProcessType(el, type) {
+  document.querySelectorAll('#process-grid-sp .process-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  _spSelectedProcessType = type;
+  document.getElementById('custom-process-input-sp').value = '';
+}
+
+function confirmAddSitePhoto() {
+  const custom = document.getElementById('custom-process-input-sp').value.trim();
+  const key = custom || _spSelectedProcessType;
+  if (!key) { alert('공정 유형을 선택하거나 이름을 입력하세요.'); return; }
+  closeDialog('dlg-add-sitephoto');
+  _pendingSitePhotoKey = key;
+  document.getElementById('sitephoto-add-file-input').click();
+}
+
+// 선택한 공정 유형에 해당하는 process가 아직 없으면(예: 아직 공정 탭에 추가 안 한 유형) 생성 후 업로드
+function _onSitePhotoAddPick(input) {
+  const key = _pendingSitePhotoKey;
+  _pendingSitePhotoKey = null;
+  if (!key) { input.value = ''; return; }
+  const proj = getProject();
+  if (proj) {
+    let proc = proj.processes.find(p => !p.deleted && (p.type || p.name) === key);
+    if (!proc) {
+      const _matchedCategory = PROCESS_CATEGORIES.find(c => c.items.includes(key));
+      proc = { id: 'proc_' + Date.now(), name: key, type: key, phase: _matchedCategory ? _matchedCategory.id : 'planning', scheduleStart: '', scheduleEnd: '', company: '', details: [] };
+      proj.processes.push(proc);
+      save();
+    }
+  }
+  _onSitePhotoFile(input, key);
 }
 
 function _toggleFurniturePending(id) {
