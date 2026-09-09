@@ -1237,6 +1237,16 @@ button, input, textarea, select { font-family:var(--font); }
   gap: 10px;
   padding: 14px 14px 80px;
 }
+/* 현장사진: 스타일 탭과 동일한 그리드 구성 (스타일 카드 구조 재사용) */
+#sitephotos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 14px 14px 80px;
+}
+@media (min-width: 660px) {
+  #sitephotos-grid { grid-template-columns: 1fr 1fr; }
+}
 /* Pinterest-style room card */
 .style-room-card {
   background: #fff;
@@ -3605,7 +3615,9 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- Site Photos Tab -->
     <div id="tab-sitephotos" style="display:none; background:#fff;">
-      <div id="sitephotos-list" style="padding:14px 16px 100px;"></div>
+      <div class="style-tab-inner">
+        <div id="sitephotos-grid"></div>
+      </div>
     </div>
 
   </div>
@@ -15468,50 +15480,68 @@ function _renderFurnitureCategoryDetail(cat) {
 }
 
 // ===== 현장사진 탭 =====
-// 실측/3D도면 등 공정의 체크리스트에 첨부된 사진들을 공정 타입별로 모아서 보여줌
+// 실측/3D도면 등 공정의 체크리스트 사진 + 공정기록에 첨부된 사진들을 공정 타입별로 모아서 보여줌
 function _collectSitePhotoGroups() {
   const proj = getProject();
   const groups = {};
   if (!proj) return groups;
+  const push = (key, url, ts) => {
+    if (!key || !url) return;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push({ url, ts: ts || 0 });
+  };
   (proj.processes || []).forEach(proc => {
     if (proc.deleted) return;
     const key = proc.type || proc.name;
     if (!key) return;
     (proc.checklist || []).forEach(sec => {
       (sec.items || []).forEach(it => {
-        (it.images || []).forEach(url => {
-          if (!url) return;
-          if (!groups[key]) groups[key] = [];
-          groups[key].push({ url, procName: proc.name, itemText: it.text });
-        });
+        (it.images || []).forEach(url => push(key, url, proc.updatedAt));
       });
     });
+    (proc.records || []).forEach(rec => {
+      (rec.images || []).forEach(url => push(key, url, rec.createdAt));
+    });
   });
+  // 최신순 정렬 (콜라주 썸네일이 스타일 탭과 동일하게 최근 사진 우선 노출)
+  Object.keys(groups).forEach(key => groups[key].sort((a, b) => (b.ts||0) - (a.ts||0)));
   return groups;
 }
 
 function _renderSitePhotosTab() {
-  const el = document.getElementById('sitephotos-list');
+  const el = document.getElementById('sitephotos-grid');
   if (!el) return;
   const groups = _collectSitePhotoGroups();
   const keys = Object.keys(groups);
 
+  // collage: 스타일 탭(renderStyleTab)과 동일한 카드 구조 재사용
+  const thumb = (imgs, i) => imgs[i]
+    ? `<img src="${imgs[i].url}" loading="eager" fetchpriority="high" decoding="sync" alt="" onerror="this.style.opacity=0">`
+    : '';
   const cardHtml = (key) => {
     const imgs = groups[key];
-    const collage = `<div style="display:flex;aspect-ratio:4/3;background:#e8e8ec;overflow:hidden;border-radius:12px;margin:8px 8px 0;"><div style="flex:1;min-width:0;overflow:hidden;"><img src="${imgs[imgs.length-1].url}" alt="${esc(key)}" style="width:100%;height:100%;object-fit:cover;display:block;background:#e8e8ec;"></div></div>`;
-    return `
-      <div onclick="_openSitePhotoGroupDetail('${esc(key)}')" style="background:#fff;border-radius:14px;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-        ${collage}
-        <div style="padding:10px 8px 14px;">
-          <div style="font-size:18px;font-weight:500;color:#1a1a1a;line-height:1.2;">${esc(key)}</div>
-          <div style="font-size:13px;color:#555;margin-top:2px;">사진 ${imgs.length}장</div>
+    let collage = '';
+    if (imgs.length === 1) {
+      collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(imgs,0)}</div></div>`;
+    } else if (imgs.length === 2) {
+      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs,0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs,1)}</div></div></div>`;
+    } else {
+      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs,0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs,1)}</div><div class="style-card-col-side-item">${thumb(imgs,2)}</div></div></div>`;
+    }
+    return `<div class="style-room-card" onclick="_openSitePhotoGroupDetail('${esc(key)}')">
+      ${collage}
+      <div class="style-card-info">
+        <div class="style-card-top-row">
+          <span class="style-card-title">${esc(key)}</span>
         </div>
-      </div>`;
+        <div class="style-card-meta"><span>사진 ${imgs.length}장</span></div>
+      </div>
+    </div>`;
   };
 
   el.innerHTML = keys.length === 0
-    ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 현장 사진이 없습니다<br><span style="font-size:13px;color:#ccc;">공정의 체크리스트 항목에 사진을 첨부하면 여기에 모아서 보여드려요</span></div>`
-    : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${keys.map(k => cardHtml(k)).join('')}</div>`;
+    ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;grid-column:1/-1;">아직 등록된 현장 사진이 없습니다<br><span style="font-size:13px;color:#ccc;">공정 체크리스트나 공정기록에 사진을 첨부하면 여기에 모아서 보여드려요</span></div>`
+    : keys.map(k => cardHtml(k)).join('');
 }
 
 function _openSitePhotoGroupDetail(key) {
