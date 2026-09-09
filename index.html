@@ -4915,6 +4915,10 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
     <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
     <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;"></span>
+    <label style="width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,_sitePhotosDetailKey)">
+    </label>
   </div>
   <div id="sitephotos-detail-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px;"></div>
 </div>
@@ -15528,14 +15532,20 @@ function _renderSitePhotosTab() {
     } else {
       collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs,0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs,1)}</div><div class="style-card-col-side-item">${thumb(imgs,2)}</div></div></div>`;
     }
-    return `<div class="style-room-card" onclick="_openSitePhotoGroupDetail('${esc(key)}')">
-      ${collage}
-      <div class="style-card-info">
-        <div class="style-card-top-row">
-          <span class="style-card-title">${esc(key)}</span>
+    return `<div class="style-room-card" style="position:relative;">
+      <div onclick="_openSitePhotoGroupDetail('${esc(key)}')">
+        ${collage}
+        <div class="style-card-info">
+          <div class="style-card-top-row">
+            <span class="style-card-title">${esc(key)}</span>
+          </div>
+          <div class="style-card-meta"><span>사진 ${imgs.length}장</span></div>
         </div>
-        <div class="style-card-meta"><span>사진 ${imgs.length}장</span></div>
       </div>
+      <label onclick="event.stopPropagation()" style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,'${esc(key)}')">
+      </label>
     </div>`;
   };
 
@@ -15544,7 +15554,10 @@ function _renderSitePhotosTab() {
     : keys.map(k => cardHtml(k)).join('');
 }
 
+let _sitePhotosDetailKey = null;
+
 function _openSitePhotoGroupDetail(key) {
+  _sitePhotosDetailKey = key;
   const groups = _collectSitePhotoGroups();
   const imgs = groups[key] || [];
   const titleEl = document.getElementById('sitephotos-detail-title');
@@ -15568,6 +15581,56 @@ function _openSitePhotoGroupDetail(key) {
 function _closeSitePhotoGroupDetail() {
   const scr = document.getElementById('screen-sitephotos-detail');
   if (scr) { scr.style.transform = 'translateY(100%)'; scr.style.pointerEvents = 'none'; }
+}
+
+// 카드/상세화면에서 공정별로 사진 업로드 — 해당 공정(type||name === key)의 records에 새 기록으로 추가
+function _onSitePhotoFile(input, key) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  (async () => {
+    const proj = getProject();
+    const proc = proj?.processes.find(p => !p.deleted && (p.type || p.name) === key);
+    if (!proc) { showToastMessage('⚠️ 해당 공정을 찾을 수 없어요'); input.value = ''; return; }
+    if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); }
+    const uploaded = [];
+    for (const file of files) {
+      try {
+        const raw = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+        const compressed = await _compressMeetingImg(raw, 900, 0.75) || raw;
+        let finalSrc = compressed;
+        const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
+        if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
+          try {
+            const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const ref = _fbStorage.ref(`styleImages/${projId}/prec_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`);
+            await ref.put(_dataUrlToBlob(compressed), { contentType: 'image/jpeg' });
+            finalSrc = await ref.getDownloadURL();
+          } catch(err) {
+            console.warn('site photo upload failed, using local data URL:', err);
+            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
+          }
+        }
+        uploaded.push(finalSrc);
+      } catch(e) { console.warn('site photo processing failed:', e); }
+    }
+    if (uploaded.length) {
+      if (!proc.records) proc.records = [];
+      proc.records.push({
+        id: 'prec_' + Date.now() + Math.random().toString(36).slice(2,5),
+        content: '', images: uploaded, mentions: [],
+        createdAt: Date.now(),
+        createdBy: state.user?.email || '',
+        createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
+      });
+      proc.updatedAt = Date.now();
+      save();
+      _syncProcessesToCloud(proj);
+      showToastMessage(`✅ 사진 ${uploaded.length > 1 ? uploaded.length + '장' : ''}추가됐습니다`);
+    }
+    _renderSitePhotosTab();
+    if (_sitePhotosDetailKey === key) _openSitePhotoGroupDetail(key);
+  })();
+  input.value = '';
 }
 
 function _toggleFurniturePending(id) {
