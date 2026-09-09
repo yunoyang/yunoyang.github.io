@@ -3555,6 +3555,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
         <button class="tab-btn" id="tab-btn-furniture" onclick="switchMainTab('furniture',this)"><span class="tab-label">가구&가전</span></button>
+        <button class="tab-btn" id="tab-btn-sitephotos" onclick="switchMainTab('sitephotos',this)"><span class="tab-label">현장사진</span></button>
         <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">기록</span></button>
       </div>
     </div>
@@ -3602,6 +3603,10 @@ button, input, textarea, select { font-family:var(--font); }
       <div id="furniture-list" style="padding:14px 16px 100px;"></div>
     </div>
 
+    <!-- Site Photos Tab -->
+    <div id="tab-sitephotos" style="display:none; background:#fff;">
+      <div id="sitephotos-list" style="padding:14px 16px 100px;"></div>
+    </div>
 
   </div>
 
@@ -4888,6 +4893,18 @@ button, input, textarea, select { font-family:var(--font); }
     </div>
   </div>
   <div id="furniture-detail-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px;"></div>
+</div>
+
+<!-- Site Photos Group Detail -->
+<div id="screen-sitephotos-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+  <div style="display:flex;align-items:center;gap:8px;padding:16px 16px 14px;background:#fff;border-bottom:1px solid #eef0f5;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top));">
+    <button onclick="_closeSitePhotoGroupDetail()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-left:-4px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
+    <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;"></span>
+  </div>
+  <div id="sitephotos-detail-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px;"></div>
 </div>
 
 <!-- Add Detail -->
@@ -7465,7 +7482,8 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('tab-furniture').style.display = tab === 'furniture' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture') ? 'none' : (!canEdit() ? 'none' : '');
+  document.getElementById('tab-sitephotos').style.display = tab === 'sitephotos' ? '' : 'none';
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = (tab === 'style' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
@@ -7475,6 +7493,7 @@ function switchMainTab(tab, btn) {
   if (tab === 'content') { renderContentTab(); _fetchContentLinksFromCloud(); }
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
   if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); _fetchFurnitureFromCloud(); }
+  if (tab === 'sitephotos') { _renderSitePhotosTab(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -15446,6 +15465,79 @@ function _renderFurnitureCategoryDetail(cat) {
   el.innerHTML = items.length === 0
     ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">이 카테고리에 제품이 없습니다</div>`
     : `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(it => rowHtml(it)).join('')}</div>`;
+}
+
+// ===== 현장사진 탭 =====
+// 실측/3D도면 등 공정의 체크리스트에 첨부된 사진들을 공정 타입별로 모아서 보여줌
+function _collectSitePhotoGroups() {
+  const proj = getProject();
+  const groups = {};
+  if (!proj) return groups;
+  (proj.processes || []).forEach(proc => {
+    if (proc.deleted) return;
+    const key = proc.type || proc.name;
+    if (!key) return;
+    (proc.checklist || []).forEach(sec => {
+      (sec.items || []).forEach(it => {
+        (it.images || []).forEach(url => {
+          if (!url) return;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push({ url, procName: proc.name, itemText: it.text });
+        });
+      });
+    });
+  });
+  return groups;
+}
+
+function _renderSitePhotosTab() {
+  const el = document.getElementById('sitephotos-list');
+  if (!el) return;
+  const groups = _collectSitePhotoGroups();
+  const keys = Object.keys(groups);
+
+  const cardHtml = (key) => {
+    const imgs = groups[key];
+    const collage = `<div style="display:flex;aspect-ratio:4/3;background:#e8e8ec;overflow:hidden;border-radius:12px;margin:8px 8px 0;"><div style="flex:1;min-width:0;overflow:hidden;"><img src="${imgs[imgs.length-1].url}" alt="${esc(key)}" style="width:100%;height:100%;object-fit:cover;display:block;background:#e8e8ec;"></div></div>`;
+    return `
+      <div onclick="_openSitePhotoGroupDetail('${esc(key)}')" style="background:#fff;border-radius:14px;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        ${collage}
+        <div style="padding:10px 8px 14px;">
+          <div style="font-size:18px;font-weight:500;color:#1a1a1a;line-height:1.2;">${esc(key)}</div>
+          <div style="font-size:13px;color:#555;margin-top:2px;">사진 ${imgs.length}장</div>
+        </div>
+      </div>`;
+  };
+
+  el.innerHTML = keys.length === 0
+    ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 현장 사진이 없습니다<br><span style="font-size:13px;color:#ccc;">공정의 체크리스트 항목에 사진을 첨부하면 여기에 모아서 보여드려요</span></div>`
+    : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${keys.map(k => cardHtml(k)).join('')}</div>`;
+}
+
+function _openSitePhotoGroupDetail(key) {
+  const groups = _collectSitePhotoGroups();
+  const imgs = groups[key] || [];
+  const titleEl = document.getElementById('sitephotos-detail-title');
+  const countEl = document.getElementById('sitephotos-detail-count');
+  if (titleEl) titleEl.textContent = key;
+  if (countEl) countEl.textContent = imgs.length + '장';
+  const contentEl = document.getElementById('sitephotos-detail-content');
+  if (contentEl) {
+    contentEl.innerHTML = imgs.length === 0
+      ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">사진이 없습니다</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">${imgs.map(img => `
+          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#e8e8ec;cursor:pointer;" onclick="window.open('${img.url}','_blank')">
+            <img src="${img.url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+          </div>
+        `).join('')}</div>`;
+  }
+  const scr = document.getElementById('screen-sitephotos-detail');
+  if (scr) { scr.style.transform = 'translateY(0)'; scr.style.pointerEvents = 'auto'; }
+}
+
+function _closeSitePhotoGroupDetail() {
+  const scr = document.getElementById('screen-sitephotos-detail');
+  if (scr) { scr.style.transform = 'translateY(100%)'; scr.style.pointerEvents = 'none'; }
 }
 
 function _toggleFurniturePending(id) {
