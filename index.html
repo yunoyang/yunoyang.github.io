@@ -4954,8 +4954,9 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
     <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
     <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;"></span>
-    <label style="width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
+    <label style="height:32px;padding:0 4px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;flex-shrink:0;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span style="font-size:14px;font-weight:600;color:#111;">추가</span>
       <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,_sitePhotosDetailKey)">
     </label>
   </div>
@@ -15560,6 +15561,8 @@ function _collectSitePhotoGroups() {
     if (proc.deleted) return;
     const key = proc.type || proc.name;
     if (!key) return;
+    // 현장사진 추가 플로우로 등록된 공정은 사진이 아직 없어도 빈 카드로 노출
+    if (proc.sitePhotosEnabled && !groups[key]) groups[key] = [];
     (proc.checklist || []).forEach(sec => {
       (sec.items || []).forEach(it => {
         (it.images || []).forEach(url => push(key, url, proc.updatedAt));
@@ -15587,7 +15590,9 @@ function _renderSitePhotosTab() {
   const cardHtml = (key) => {
     const imgs = groups[key];
     let collage = '';
-    if (imgs.length === 1) {
+    if (imgs.length === 0) {
+      collage = `<div class="style-card-collage" style="align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c8cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    } else if (imgs.length === 1) {
       collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(imgs,0)}</div></div>`;
     } else if (imgs.length === 2) {
       collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs,0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs,1)}</div></div></div>`;
@@ -15601,7 +15606,7 @@ function _renderSitePhotosTab() {
           <div class="style-card-top-row">
             <span class="style-card-title">${esc(key)}</span>
           </div>
-          <div class="style-card-meta"><span>사진 ${imgs.length}장</span></div>
+          <div class="style-card-meta"><span>${imgs.length === 0 ? '사진을 추가해보세요' : `사진 ${imgs.length}장`}</span></div>
         </div>
       </div>
       <label onclick="event.stopPropagation()" style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;cursor:pointer;">
@@ -15738,30 +15743,40 @@ function _selectSitePhotoProcessType(el, type) {
   document.getElementById('custom-process-input-sp').value = '';
 }
 
+// 공정 유형에 해당하는 process가 없으면 생성하고, 현장사진 카드로 노출되도록 플래그를 세움
+// (사진을 아직 안 올렸어도 카드는 바로 추가되어야 하므로 여기서 즉시 처리)
+function _ensureSitePhotoProcess(key) {
+  const proj = getProject();
+  if (!proj) return null;
+  let proc = proj.processes.find(p => !p.deleted && (p.type || p.name) === key);
+  if (!proc) {
+    const _matchedCategory = PROCESS_CATEGORIES.find(c => c.items.includes(key));
+    proc = { id: 'proc_' + Date.now(), name: key, type: key, phase: _matchedCategory ? _matchedCategory.id : 'planning', scheduleStart: '', scheduleEnd: '', company: '', details: [] };
+    proj.processes.push(proc);
+  }
+  if (!proc.sitePhotosEnabled) { proc.sitePhotosEnabled = true; proc.updatedAt = Date.now(); }
+  save();
+  _syncProcessesToCloud(proj);
+  return proc;
+}
+
 function confirmAddSitePhoto() {
   const custom = document.getElementById('custom-process-input-sp').value.trim();
   const key = custom || _spSelectedProcessType;
   if (!key) { alert('공정 유형을 선택하거나 이름을 입력하세요.'); return; }
   closeDialog('dlg-add-sitephoto');
+  _ensureSitePhotoProcess(key);
+  _renderSitePhotosTab();
+  // 카드는 바로 추가하고, 편의상 이어서 사진 선택도 열어줌 (취소해도 카드는 이미 생성된 상태로 남음)
   _pendingSitePhotoKey = key;
   document.getElementById('sitephoto-add-file-input').click();
 }
 
-// 선택한 공정 유형에 해당하는 process가 아직 없으면(예: 아직 공정 탭에 추가 안 한 유형) 생성 후 업로드
 function _onSitePhotoAddPick(input) {
   const key = _pendingSitePhotoKey;
   _pendingSitePhotoKey = null;
   if (!key) { input.value = ''; return; }
-  const proj = getProject();
-  if (proj) {
-    let proc = proj.processes.find(p => !p.deleted && (p.type || p.name) === key);
-    if (!proc) {
-      const _matchedCategory = PROCESS_CATEGORIES.find(c => c.items.includes(key));
-      proc = { id: 'proc_' + Date.now(), name: key, type: key, phase: _matchedCategory ? _matchedCategory.id : 'planning', scheduleStart: '', scheduleEnd: '', company: '', details: [] };
-      proj.processes.push(proc);
-      save();
-    }
-  }
+  _ensureSitePhotoProcess(key);
   _onSitePhotoFile(input, key);
 }
 
