@@ -13308,15 +13308,37 @@ function _mergeListById(localArr, cloudArr, opts) {
 // 되살아나는 것을 막는 범용 tombstone — styleImages에서 겪었던 것과 동일한 원인
 // (save()가 유발하는 owner 전체 sync가 삭제 직전 클라우드 스냅샷과 local을 union해버림)이
 // processes/contentLinks 등 id 기반 리스트 전반에도 구조적으로 동일하게 존재해서 공용으로 뺐다.
+// _deletedIds는 기존엔 메모리(Map)에만 있어서, 삭제 직후 사용자가 바로 새로고침하면
+// (자신의 삭제를 클라우드에 반영하는 fire-and-forget sync가 아직 안 끝났는데 새로고침으로
+// 이 Map이 초기화됨) 다음 로드 시 병합이 클라우드에 남아있던 삭제 직전 스냅샷을 되살리는
+// 문제가 있었음 — "공정을 지웠는데 새로고침하면 다시 나타남" 버그의 원인. localStorage에도
+// 같이 저장해 새로고침 후에도 tombstone이 유지되도록 한다.
 const _deletedIds = new Map(); // "type:id" -> deletedAt(ms)
+function _persistDeletedIds() {
+  try {
+    const arr = [..._deletedIds.entries()].filter(([,t]) => Date.now() - t <= 60000);
+    localStorage.setItem('vb_deletedIds', JSON.stringify(arr));
+  } catch(e) {}
+}
+function _restoreDeletedIds() {
+  try {
+    const raw = localStorage.getItem('vb_deletedIds');
+    if (!raw) return;
+    const now = Date.now();
+    JSON.parse(raw).forEach(([k, t]) => { if (now - t <= 60000) _deletedIds.set(k, t); });
+  } catch(e) {}
+}
+_restoreDeletedIds();
 function _markIdDeleted(type, id) {
-  if (id) _deletedIds.set(type + ':' + id, Date.now());
+  if (!id) return;
+  _deletedIds.set(type + ':' + id, Date.now());
+  _persistDeletedIds();
 }
 function _isRecentlyDeletedId(type, id) {
   const key = type + ':' + id;
   const t = _deletedIds.get(key);
   if (!t) return false;
-  if (Date.now() - t > 60000) { _deletedIds.delete(key); return false; } // 60초면 클라우드에 실제 반영되고도 남을 시간
+  if (Date.now() - t > 60000) { _deletedIds.delete(key); _persistDeletedIds(); return false; } // 60초면 클라우드에 실제 반영되고도 남을 시간
   return true;
 }
 
