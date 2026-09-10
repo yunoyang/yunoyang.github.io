@@ -15698,12 +15698,16 @@ function _getMaterialSupplierComplete(it) {
 }
 
 let _sbEditingId = null;
+let _sbActiveCategory = '전체';
+let _sbSearchQuery = '';
 
+// ===== 화면2: 관리 리스트 (요약 카운트 + 카테고리 탭 + 검색 + 편집/삭제) =====
 function _renderSpecbookTab() {
   const el = document.getElementById('specbook-list');
   if (!el) return;
-  const items = _getMaterialItems();
-  if (items.length === 0) {
+  const allItems = _getMaterialItems();
+
+  if (allItems.length === 0) {
     el.innerHTML = `
       <div style="text-align:center;padding:80px 20px;">
         <div style="font-size:40px;margin-bottom:14px;">📋</div>
@@ -15713,6 +15717,17 @@ function _renderSpecbookTab() {
     `;
     return;
   }
+
+  const completeCount = allItems.filter(_getMaterialSupplierComplete).length;
+  const missingCount = allItems.length - completeCount;
+
+  const q = _sbSearchQuery.trim().toLowerCase();
+  const items = allItems
+    .filter(it => _sbActiveCategory === '전체' || it.category === _sbActiveCategory)
+    .filter(it => !q || [it.itemName, it.location, it.modelName].some(v => (v||'').toLowerCase().includes(q)));
+
+  const catTabHtml = (cat) => `<button onclick="_setSbCategory('${esc(cat)}')" style="flex-shrink:0;padding:8px 14px;border-radius:999px;border:1.5px solid ${_sbActiveCategory===cat?'#111':'#e5e5ec'};background:${_sbActiveCategory===cat?'#111':'#fff'};color:${_sbActiveCategory===cat?'#fff':'#666'};font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;">${esc(cat)}</button>`;
+
   const rowHtml = (it) => {
     const complete = _getMaterialSupplierComplete(it);
     const imgBlock = it.imageUrl
@@ -15727,12 +15742,64 @@ function _renderSpecbookTab() {
             <span style="font-size:13px;color:#999;">${esc(it.category)}</span>
           </div>
           <div style="font-size:15px;font-weight:600;color:#111;line-height:1.3;margin-top:2px;">${esc(it.itemName)}</div>
-          <div style="font-size:13px;color:#888;margin-top:2px;">${esc(it.location || '')}</div>
+          <div style="font-size:13px;color:#888;margin-top:2px;">${esc(it.location || '')}${it.modelName ? ' · ' + esc(it.modelName) : ''}</div>
+          ${it.supplierCompany || it.supplierPhone ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">${esc(it.supplierCompany||'')}${it.supplierCompany && it.supplierPhone ? ' · ' : ''}${esc(it.supplierPhone||'')}</div>` : ''}
         </div>
-        <span style="flex-shrink:0;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:${complete?'#eafaf0':'#fff5ea'};color:${complete?'#2e7d32':'#c77c1f'};">${complete?'완료':'정보 필요'}</span>
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:${complete?'#eafaf0':'#fff5ea'};color:${complete?'#2e7d32':'#c77c1f'};">${complete?'완료':'정보 필요'}</span>
+          ${canEdit() ? `<button onclick="event.stopPropagation();_deleteMaterialItem('${it.id}')" style="background:none;border:none;padding:2px;cursor:pointer;color:#ccc;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ''}
+        </div>
       </div>`;
   };
-  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(rowHtml).join('')}</div>`;
+
+  el.innerHTML = `
+    <div style="display:flex;gap:8px;background:#fff;border:1px solid #eef0f5;border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:#111;">${allItems.length}</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">전체</div>
+      </div>
+      <div style="width:1px;background:#f0f0f3;"></div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:#2e7d32;">${completeCount}</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">정보 완료</div>
+      </div>
+      <div style="width:1px;background:#f0f0f3;"></div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:#c77c1f;">${missingCount}</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">정보 필요</div>
+      </div>
+    </div>
+    <div style="position:relative;margin-bottom:10px;">
+      <input type="text" value="${esc(_sbSearchQuery)}" oninput="_setSbSearch(this.value)" placeholder="아이템명·위치·모델명 검색" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:4px;">
+      ${['전체', ...MATERIAL_CATEGORIES].map(catTabHtml).join('')}
+    </div>
+    ${items.length === 0
+      ? `<div style="text-align:center;padding:40px 20px;font-size:14px;color:#aaa;">조건에 맞는 자재가 없습니다</div>`
+      : `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(rowHtml).join('')}</div>`
+    }
+  `;
+}
+
+function _setSbCategory(cat) { _sbActiveCategory = cat; _renderSpecbookTab(); }
+function _setSbSearch(v) {
+  _sbSearchQuery = v;
+  const active = document.activeElement;
+  const cursorPos = active?.selectionStart;
+  _renderSpecbookTab();
+  const input = document.querySelector('#specbook-list input[type="text"]');
+  if (input) { input.focus(); if (cursorPos != null) input.setSelectionRange(cursorPos, cursorPos); }
+}
+
+function _deleteMaterialItem(id) {
+  if (!confirm('이 자재를 삭제하시겠습니까?')) return;
+  const proj = getProject();
+  const it = proj?.materialItems.find(i => i.id === id);
+  if (it) { it.deleted = true; it.updatedAt = Date.now(); }
+  save();
+  _syncMaterialItemsToCloud(proj);
+  _renderSpecbookTab();
 }
 
 function openAddSpecbookItem(id) {
