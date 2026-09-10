@@ -13350,28 +13350,65 @@ function _isRecentlyDeletedId(type, id) {
 // _mergeStyleImagesObj를 호출하는 모든 경로(_syncProjToCloud/_syncStyleImagesToCloud/
 // _mergeLocalPreserve/_startCollabListener)가 이 헬퍼 하나를 공유하므로, 여기서 한 번만
 // 걸러주면 어떤 경로가 레이스에서 이기든 삭제가 항상 반영된다.
+// _deletedIds와 동일한 이유로 localStorage에도 저장 — 메모리에만 있으면 삭제 직후
+// (fire-and-forget sync가 끝나기 전) 새로고침 시 tombstone이 사라져 삭제가 되살아날 수 있음.
 const _deletedStyleImgUrls = new Map(); // url -> deletedAt(ms)
+function _persistDeletedStyleImgUrls() {
+  try {
+    const arr = [..._deletedStyleImgUrls.entries()].filter(([,t]) => Date.now() - t <= 60000);
+    localStorage.setItem('vb_deletedStyleImgUrls', JSON.stringify(arr));
+  } catch(e) {}
+}
+function _restoreDeletedStyleImgUrls() {
+  try {
+    const raw = localStorage.getItem('vb_deletedStyleImgUrls');
+    if (!raw) return;
+    const now = Date.now();
+    JSON.parse(raw).forEach(([u, t]) => { if (now - t <= 60000) _deletedStyleImgUrls.set(u, t); });
+  } catch(e) {}
+}
+_restoreDeletedStyleImgUrls();
 function _markStyleImgDeleted(url) {
-  if (url) _deletedStyleImgUrls.set(url, Date.now());
+  if (!url) return;
+  _deletedStyleImgUrls.set(url, Date.now());
+  _persistDeletedStyleImgUrls();
 }
 function _isRecentlyDeletedStyleImg(url) {
   const t = _deletedStyleImgUrls.get(url);
   if (!t) return false;
-  if (Date.now() - t > 60000) { _deletedStyleImgUrls.delete(url); return false; } // 60초면 클라우드에 실제 반영되고도 남을 시간
+  if (Date.now() - t > 60000) { _deletedStyleImgUrls.delete(url); _persistDeletedStyleImgUrls(); return false; } // 60초면 클라우드에 실제 반영되고도 남을 시간
   return true;
 }
 
 // floorplanImages(도면): 슬롯 배열이라 id가 없어 URL 기준 tombstone — styleImages와 동일한 원인.
 // 병합 로직이 "로컬 슬롯(null이면) → 클라우드 슬롯" 순서라, 삭제로 로컬이 null이 되면
 // 곧바로 클라우드의 삭제 직전 URL로 되돌아가 버림. 삭제 직후 그 URL을 잠깐 기억해 걸러낸다.
+// styleImages와 동일하게 새로고침에도 살아남도록 localStorage에 함께 저장.
 const _deletedFloorplanUrls = new Map(); // url -> deletedAt(ms)
+function _persistDeletedFloorplanUrls() {
+  try {
+    const arr = [..._deletedFloorplanUrls.entries()].filter(([,t]) => Date.now() - t <= 60000);
+    localStorage.setItem('vb_deletedFloorplanUrls', JSON.stringify(arr));
+  } catch(e) {}
+}
+function _restoreDeletedFloorplanUrls() {
+  try {
+    const raw = localStorage.getItem('vb_deletedFloorplanUrls');
+    if (!raw) return;
+    const now = Date.now();
+    JSON.parse(raw).forEach(([u, t]) => { if (now - t <= 60000) _deletedFloorplanUrls.set(u, t); });
+  } catch(e) {}
+}
+_restoreDeletedFloorplanUrls();
 function _markFloorplanUrlDeleted(url) {
-  if (url) _deletedFloorplanUrls.set(url, Date.now());
+  if (!url) return;
+  _deletedFloorplanUrls.set(url, Date.now());
+  _persistDeletedFloorplanUrls();
 }
 function _isRecentlyDeletedFloorplanUrl(url) {
   const t = _deletedFloorplanUrls.get(url);
   if (!t) return false;
-  if (Date.now() - t > 60000) { _deletedFloorplanUrls.delete(url); return false; }
+  if (Date.now() - t > 60000) { _deletedFloorplanUrls.delete(url); _persistDeletedFloorplanUrls(); return false; }
   return true;
 }
 
@@ -13500,8 +13537,13 @@ async function _fetchStyleFromCloud() {
       const merged = _mergeStyleImagesObj(local, remote.styleImages);
       if (JSON.stringify(merged) !== JSON.stringify(local)) { proj.styleImages = merged; changed = true; }
     }
-    // styleRooms도 동기화
-    if (remote.styleRooms?.length) { proj.styleRooms = remote.styleRooms; changed = true; }
+    // styleRooms도 동기화 — 통째로 덮어쓰면 로컬에서 방금 만들었지만 아직 클라우드에
+    // 반영 안 된 커스텀 공간이 스타일 탭 재진입만으로 사라질 수 있어, 다른 경로들과
+    // 동일한 합집합 헬퍼로 병합
+    if (remote.styleRooms?.length) {
+      const mergedRooms = _mergeStyleRoomsArr(proj.styleRooms, remote.styleRooms);
+      if (JSON.stringify(mergedRooms) !== JSON.stringify(proj.styleRooms || [])) { proj.styleRooms = mergedRooms; changed = true; }
+    }
     if (changed) {
       localStorage.setItem('vibespace', JSON.stringify(state));
       renderStyleTab();
@@ -13831,6 +13873,7 @@ async function _syncFurnitureToCloud(proj) {
     console.log('[furnitureSync] ✅', merged.length, 'items');
   } catch(e) {
     console.error('[furnitureSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 가구·가전 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   }
 }
 
@@ -13892,6 +13935,7 @@ async function _syncFloorplanToCloud(proj) {
     });
   } catch(e) {
     console.error('[floorplanSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 도면 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   }
 }
 
@@ -13930,6 +13974,7 @@ async function _syncContentLinksToCloud(proj) {
     _lastSaveTime = Date.now();
   } catch(e) {
     console.error('[contentSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 컨텐츠 링크 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   }
 }
 
