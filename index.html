@@ -3566,6 +3566,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
         <button class="tab-btn" id="tab-btn-furniture" onclick="switchMainTab('furniture',this)"><span class="tab-label">가구&가전</span></button>
         <button class="tab-btn" id="tab-btn-sitephotos" onclick="switchMainTab('sitephotos',this)"><span class="tab-label">현장사진</span></button>
+        <button class="tab-btn" id="tab-btn-specbook" onclick="switchMainTab('specbook',this)"><span class="tab-label">스펙북</span></button>
         <button class="tab-btn" id="tab-btn-meeting" onclick="switchMainTab('meeting',this)"><span class="tab-label">기록</span></button>
       </div>
     </div>
@@ -3618,6 +3619,11 @@ button, input, textarea, select { font-family:var(--font); }
       <div class="style-tab-inner">
         <div id="sitephotos-grid"></div>
       </div>
+    </div>
+
+    <!-- Specbook Tab -->
+    <div id="tab-specbook" style="display:none; background:#fff;">
+      <div id="specbook-list" style="padding:14px 16px 100px;"></div>
     </div>
 
   </div>
@@ -7539,13 +7545,15 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('tab-furniture').style.display = tab === 'furniture' ? '' : 'none';
   document.getElementById('tab-sitephotos').style.display = tab === 'sitephotos' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos') ? 'none' : (!canEdit() ? 'none' : '');
+  document.getElementById('tab-specbook').style.display = tab === 'specbook' ? '' : 'none';
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = (tab === 'style' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-sitephotos').style.display = (tab === 'sitephotos' && canEdit()) ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
+  if (tab === 'specbook') { _renderSpecbookTab(); }
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); _fetchContentLinksFromCloud(); }
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
@@ -15620,6 +15628,21 @@ function _collectSitePhotoGroups() {
   // 최신순 정렬 (콜라주 썸네일이 스타일 탭과 동일하게 최근 사진 우선 노출)
   Object.keys(groups).forEach(key => groups[key].sort((a, b) => (b.ts||0) - (a.ts||0)));
   return groups;
+}
+
+// ===== 스펙북 탭 (준비 중) =====
+// 자재 스펙북(외부마감재/외부조명/내부마감재/위생기구/실내조명/전기설비/몰딩/하드웨어세트) 등록·관리·조회 기능은
+// 별도 브리프로 설계됨 — 우선 메뉴 탭만 추가하고, 데이터 모델/등록 폼/관리 화면은 후속 작업으로 구현 예정
+function _renderSpecbookTab() {
+  const el = document.getElementById('specbook-list');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="text-align:center;padding:80px 20px;">
+      <div style="font-size:40px;margin-bottom:14px;">📋</div>
+      <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">스펙북 준비 중입니다</div>
+      <div style="font-size:14px;color:#aaa;line-height:1.6;">자재·제품 스펙 등록 및 조회 기능이<br>곧 추가될 예정입니다</div>
+    </div>
+  `;
 }
 
 function _renderSitePhotosTab() {
