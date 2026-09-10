@@ -4347,6 +4347,53 @@ button, input, textarea, select { font-family:var(--font); }
     <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 현장사진 추가
   </button>
 </div>
+<div class="floating-group" id="floating-add-specbook" style="display:none;">
+  <button class="floating-btn" onclick="openAddSpecbookItem()">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 자재 추가
+  </button>
+</div>
+
+<!-- Specbook Add/Edit Dialog -->
+<div class="overlay" id="dlg-specbook" onclick="if(event.target===this)_closeSpecbookDlg()" style="display:none;z-index:9300;">
+  <div class="bottom-sheet fi-sheet" style="padding:0 0 env(safe-area-inset-bottom,0);display:flex;flex-direction:column;">
+    <div class="fi-sheet-handle"></div>
+    <div style="padding:14px 18px 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <span id="sb-title" style="font-size:17px;font-weight:700;color:#111;">자재 추가</span>
+      <button onclick="_closeSpecbookDlg()" style="background:none;border:none;padding:4px;cursor:pointer;"><svg class="icon" width="20" height="20"><use href="#icon-x"/></svg></button>
+    </div>
+    <div style="padding:6px 18px 4px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;">
+      <select id="sb-category" style="padding:11px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);background:#fff;color:#222;"></select>
+      <div style="display:flex;gap:8px;">
+        <input id="sb-code" type="text" placeholder="코드 (예: EX.ST-01)" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+        <input id="sb-location" type="text" placeholder="위치/공간 *" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      </div>
+      <input id="sb-name" type="text" placeholder="아이템명 *" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="sb-model" type="text" placeholder="모델명" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="sb-size" type="text" placeholder="크기/마감 (예: L680×W400×H580)" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <input id="sb-manufacturer" type="text" placeholder="제조사" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <div style="font-size:13px;color:#aaa;font-weight:700;margin-top:4px;">공급사 정보</div>
+      <input id="sb-supplier-company" type="text" placeholder="공급사 회사명" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      <div style="display:flex;gap:8px;">
+        <input id="sb-supplier-contact" type="text" placeholder="담당자" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+        <input id="sb-supplier-phone" type="tel" placeholder="전화번호" style="flex:1;padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);">
+      </div>
+      <textarea id="sb-note" placeholder="기타/비고" rows="2" style="padding:12px 14px;border:1.5px solid #e5e5ec;border-radius:12px;font-size:14px;font-family:var(--font);resize:vertical;"></textarea>
+      <input id="sb-image" type="hidden">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="sb-image-preview" style="width:56px;height:56px;border-radius:10px;overflow:hidden;background:#f2f3f5;flex-shrink:0;display:none;"></div>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 14px;border:1.5px dashed #d0d5e0;border-radius:12px;font-size:14px;color:#888;cursor:pointer;font-family:var(--font);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span id="sb-image-upload-label">샘플 이미지 업로드</span>
+          <input type="file" accept="image/*" id="sb-image-file" style="display:none;" onchange="_onSpecbookImageFile(this)">
+        </label>
+      </div>
+    </div>
+    <div style="padding:12px 18px 18px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+      <button class="btn-confirm" onclick="confirmSaveSpecbookItem(false)" style="width:100%;">저장</button>
+      <button id="sb-continue-btn" onclick="confirmSaveSpecbookItem(true)" style="width:100%;padding:12px;background:#f7f8fa;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#555;cursor:pointer;font-family:var(--font);">저장하고 계속 입력</button>
+    </div>
+  </div>
+</div>
 
 <!-- Furniture Add Dialog -->
 <div class="overlay" id="dlg-furniture" onclick="if(event.target===this)_closeFurnitureDlg()" style="display:none;z-index:9300;">
@@ -7276,7 +7323,7 @@ function goTo(screen) {
   const fab = document.getElementById('floating-add-process');
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
   if (screen !== 'main') {
-    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-furniture','floating-add-sitephotos'].forEach(id => {
+    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-furniture','floating-add-sitephotos','floating-add-specbook'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -7552,6 +7599,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-sitephotos').style.display = (tab === 'sitephotos' && canEdit()) ? '' : 'none';
+  document.getElementById('floating-add-specbook').style.display = (tab === 'specbook' && canEdit()) ? '' : 'none';
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'specbook') { _renderSpecbookTab(); }
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
@@ -15446,6 +15494,9 @@ function renderMeetingTab() {
 // ===== 가구&가전 탭 =====
 const FURNITURE_CATEGORIES = ['소파', '라운지체어', '침대/매트리스', '식탁/의자', '책상', '수납장/옷장', '조명', '손잡이', '욕실', '냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐', '기타'];
 
+// ===== 스펙북(자재 스펙) =====
+const MATERIAL_CATEGORIES = ['외부마감재', '외부조명', '내부마감재', '위생기구', '실내조명', '전기설비', '몰딩', '하드웨어세트'];
+
 function _getFurnitureItems() {
   const proj = getProject();
   if (!proj) return [];
@@ -15630,19 +15681,214 @@ function _collectSitePhotoGroups() {
   return groups;
 }
 
-// ===== 스펙북 탭 (준비 중) =====
-// 자재 스펙북(외부마감재/외부조명/내부마감재/위생기구/실내조명/전기설비/몰딩/하드웨어세트) 등록·관리·조회 기능은
-// 별도 브리프로 설계됨 — 우선 메뉴 탭만 추가하고, 데이터 모델/등록 폼/관리 화면은 후속 작업으로 구현 예정
+// ===== 스펙북 탭 =====
+// 화면1(등록/편집) 구현 — 화면2(관리 리스트)·화면3(집주인 조회)는 후속 단계에서 이어서 구현 예정.
+// 지금은 등록된 항목을 확인할 수 있도록 간단한 리스트만 보여줌 (화면2에서 카테고리/검색 UI로 교체됨)
+function _getMaterialItems() {
+  const proj = getProject();
+  if (!proj) return [];
+  if (!proj.materialItems) proj.materialItems = [];
+  return proj.materialItems
+    .filter(it => !it.deleted)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+function _getMaterialSupplierComplete(it) {
+  return !!(it.supplierCompany && it.supplierContact && it.supplierPhone);
+}
+
+let _sbEditingId = null;
+
 function _renderSpecbookTab() {
   const el = document.getElementById('specbook-list');
   if (!el) return;
-  el.innerHTML = `
-    <div style="text-align:center;padding:80px 20px;">
-      <div style="font-size:40px;margin-bottom:14px;">📋</div>
-      <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">스펙북 준비 중입니다</div>
-      <div style="font-size:14px;color:#aaa;line-height:1.6;">자재·제품 스펙 등록 및 조회 기능이<br>곧 추가될 예정입니다</div>
-    </div>
-  `;
+  const items = _getMaterialItems();
+  if (items.length === 0) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:40px;margin-bottom:14px;">📋</div>
+        <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">등록된 자재가 없습니다</div>
+        <div style="font-size:14px;color:#aaa;line-height:1.6;">우측 하단 "자재 추가"로<br>첫 자재를 등록해보세요</div>
+      </div>
+    `;
+    return;
+  }
+  const rowHtml = (it) => {
+    const complete = _getMaterialSupplierComplete(it);
+    const imgBlock = it.imageUrl
+      ? `<img src="${it.imageUrl}" alt="${esc(it.itemName)}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #eef0f5;flex-shrink:0;">`
+      : `<div style="width:56px;height:56px;border-radius:10px;border:1px solid #eef0f5;background:#f2f3f5;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d0d5e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    return `
+      <div onclick="${canEdit() ? `openAddSpecbookItem('${it.id}')` : ''}" style="background:#fff;border-radius:14px;border:1px solid #eef0f5;padding:12px;display:flex;gap:12px;align-items:center;${canEdit()?'cursor:pointer;':''}">
+        ${imgBlock}
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${it.itemCode ? `<span style="font-size:12px;color:#aaa;">${esc(it.itemCode)}</span>` : ''}
+            <span style="font-size:13px;color:#999;">${esc(it.category)}</span>
+          </div>
+          <div style="font-size:15px;font-weight:600;color:#111;line-height:1.3;margin-top:2px;">${esc(it.itemName)}</div>
+          <div style="font-size:13px;color:#888;margin-top:2px;">${esc(it.location || '')}</div>
+        </div>
+        <span style="flex-shrink:0;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:${complete?'#eafaf0':'#fff5ea'};color:${complete?'#2e7d32':'#c77c1f'};">${complete?'완료':'정보 필요'}</span>
+      </div>`;
+  };
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(rowHtml).join('')}</div>`;
+}
+
+function openAddSpecbookItem(id) {
+  requireLogin(() => _openAddSpecbookItem(id));
+}
+
+function _openAddSpecbookItem(id) {
+  _sbEditingId = id || null;
+  const it = id ? _getMaterialItems().find(i => i.id === id) : null;
+  const dlg = document.getElementById('dlg-specbook');
+  const sel = dlg.querySelector('#sb-category');
+  sel.innerHTML = MATERIAL_CATEGORIES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.value = it?.category || MATERIAL_CATEGORIES[0];
+  dlg.querySelector('#sb-code').value = it?.itemCode || '';
+  dlg.querySelector('#sb-location').value = it?.location || '';
+  dlg.querySelector('#sb-name').value = it?.itemName || '';
+  dlg.querySelector('#sb-model').value = it?.modelName || '';
+  dlg.querySelector('#sb-size').value = it?.specSize || '';
+  dlg.querySelector('#sb-manufacturer').value = it?.manufacturer || '';
+  dlg.querySelector('#sb-supplier-company').value = it?.supplierCompany || '';
+  dlg.querySelector('#sb-supplier-contact').value = it?.supplierContact || '';
+  dlg.querySelector('#sb-supplier-phone').value = it?.supplierPhone || '';
+  dlg.querySelector('#sb-note').value = it?.note || '';
+  dlg.querySelector('#sb-image').value = it?.imageUrl || '';
+  _renderSbImagePreview();
+  dlg.querySelector('#sb-title').textContent = id ? '자재 수정' : '자재 추가';
+  document.getElementById('sb-continue-btn').style.display = id ? 'none' : '';
+  dlg.style.display = 'flex';
+}
+
+function _closeSpecbookDlg() {
+  document.getElementById('dlg-specbook').style.display = 'none';
+  _sbEditingId = null;
+}
+
+function _renderSbImagePreview() {
+  const url = document.getElementById('sb-image')?.value.trim();
+  const preview = document.getElementById('sb-image-preview');
+  const label = document.getElementById('sb-image-upload-label');
+  if (url) {
+    preview.style.display = '';
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+    if (label) label.textContent = '이미지 변경';
+  } else {
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+    if (label) label.textContent = '샘플 이미지 업로드';
+  }
+}
+
+async function _onSpecbookImageFile(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const dataUrl = await _compressImage(file, 1200, 0.8);
+  if (!dataUrl) { showToastMessage('이미지를 읽지 못했어요. 다른 사진으로 시도해주세요'); return; }
+  document.getElementById('sb-image').value = dataUrl;
+  _renderSbImagePreview();
+  input.value = '';
+}
+
+async function confirmSaveSpecbookItem(continueAdding) {
+  const dlg = document.getElementById('dlg-specbook');
+  const category = dlg.querySelector('#sb-category').value;
+  const location = dlg.querySelector('#sb-location').value.trim();
+  const itemName = dlg.querySelector('#sb-name').value.trim();
+  if (!category || !location || !itemName) { alert('카테고리·위치/공간·아이템명은 필수입니다.'); return; }
+  const proj = getProject();
+  if (!proj) return;
+  if (!proj.materialItems) proj.materialItems = [];
+
+  let imageUrl = dlg.querySelector('#sb-image').value.trim();
+  // base64로 편집된 이미지는 업로드 시도 (furniture 업로드와 동일한 방식으로 Storage에 저장)
+  if (imageUrl.startsWith('data:') && state.loggedIn) {
+    try {
+      await _initFirebase(); await _waitForFirebaseUser(4000);
+      const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
+      if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
+        const projId = (proj?.cloudId || proj?.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const ref = _fbStorage.ref(`materials/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`);
+        await ref.put(_dataUrlToBlob(imageUrl), { contentType: 'image/jpeg' });
+        imageUrl = await ref.getDownloadURL();
+      }
+    } catch(e) { console.warn('specbook image upload failed, keeping local data URL:', e); }
+  }
+
+  const fields = {
+    category,
+    location,
+    itemCode: dlg.querySelector('#sb-code').value.trim(),
+    itemName,
+    modelName: dlg.querySelector('#sb-model').value.trim(),
+    specSize: dlg.querySelector('#sb-size').value.trim(),
+    manufacturer: dlg.querySelector('#sb-manufacturer').value.trim(),
+    supplierCompany: dlg.querySelector('#sb-supplier-company').value.trim(),
+    supplierContact: dlg.querySelector('#sb-supplier-contact').value.trim(),
+    supplierPhone: dlg.querySelector('#sb-supplier-phone').value.trim(),
+    note: dlg.querySelector('#sb-note').value.trim(),
+    imageUrl,
+  };
+
+  if (_sbEditingId) {
+    const it = proj.materialItems.find(i => i.id === _sbEditingId);
+    if (it) Object.assign(it, fields, { updatedAt: Date.now() });
+  } else {
+    proj.materialItems.unshift({
+      id: 'mat_' + Date.now() + Math.random().toString(36).slice(2,5),
+      ...fields,
+      orderStatus: null,
+      createdAt: Date.now(),
+      createdBy: state.user?.email || '',
+    });
+  }
+  save();
+  _syncMaterialItemsToCloud(proj);
+  showToastMessage('✅ 저장됐습니다');
+  _renderSpecbookTab();
+
+  if (continueAdding && !_sbEditingId) {
+    // 코드·위치·아이템명만 비우고 카테고리/공급사 등 나머지는 유지 (같은 카테고리 연속 입력 흐름)
+    dlg.querySelector('#sb-code').value = '';
+    dlg.querySelector('#sb-location').value = '';
+    dlg.querySelector('#sb-name').value = '';
+    dlg.querySelector('#sb-model').value = '';
+    dlg.querySelector('#sb-size').value = '';
+    dlg.querySelector('#sb-image').value = '';
+    _renderSbImagePreview();
+    dlg.querySelector('#sb-location').focus();
+  } else {
+    _closeSpecbookDlg();
+  }
+}
+
+async function _syncMaterialItemsToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const canWrite = !proj.myRole || proj.myRole === 'owner' || proj.myRole === '편집자' || proj.owner?.email === state.user?.email;
+  if (!canWrite) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudItems = snap.data()?.projectData?.materialItems || [];
+    const merged = _mergeListById(proj.materialItems, cloudItems, { newFirst: true, type: 'materialItem' });
+    const mergedForCloud = merged.map(it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it);
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.materialItems': mergedForCloud,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+    proj.materialItems = merged;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+    console.log('[materialSync] ✅', merged.length, 'items');
+  } catch(e) {
+    console.error('[materialSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 자재 스펙북 동기화 실패 — 다른 기기에 반영되지 않았습니다');
+  }
 }
 
 function _renderSitePhotosTab() {
