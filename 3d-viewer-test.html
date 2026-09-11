@@ -20,8 +20,12 @@
   #fp-overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.55); color: #fff; text-align: center; cursor: pointer; }
   #fp-overlay .big { font-size: 16px; font-weight: 700; }
   #fp-overlay .small { font-size: 13px; color: #ddd; }
-  #fp-hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(17,17,17,0.7); color: #fff; font-size: 12px; padding: 7px 14px; border-radius: 999px; pointer-events: none; display: none; }
   #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,0.85); pointer-events: none; display: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.4); }
+  #controls-guide { position: absolute; right: 14px; bottom: 158px; background: rgba(17,17,17,0.72); color: #fff; font-size: 11.5px; line-height: 1.7; padding: 10px 12px; border-radius: 12px; pointer-events: none; text-align: right; }
+  #controls-guide b { color: #8fb4ff; font-weight: 700; }
+  #minimap-frame { position: absolute; right: 14px; bottom: 14px; width: 130px; height: 130px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 10px rgba(0,0,0,0.25); pointer-events: none; overflow: hidden; }
+  #minimap-frame::after { content: ''; position: absolute; inset: 0; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); }
+  #minimap-label { position: absolute; left: 8px; top: 6px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none; }
   #panel { width: 300px; height: 100%; overflow-y: auto; background: #fff; border-left: 1px solid #e5e5ec; padding: 14px; flex-shrink: 0; }
   #panel h3 { font-size: 13px; margin: 0 0 4px; color: #999; font-weight: 700; }
   #panel .hint { font-size: 12px; color: #bbb; margin-bottom: 14px; line-height: 1.5; }
@@ -52,10 +56,13 @@
       <button id="btn-firstperson">1인칭 시점</button>
     </div>
     <div id="crosshair"></div>
-    <div id="fp-hint">W A S D 이동 · 마우스로 시점 · ESC로 나가기</div>
     <div id="fp-overlay">
       <div class="big">클릭해서 1인칭 시점 시작</div>
       <div class="small">W A S D로 이동, 마우스로 둘러보고, ESC로 나갈 수 있어요</div>
+    </div>
+    <div id="controls-guide"></div>
+    <div id="minimap-frame">
+      <div id="minimap-label">현재 위치</div>
     </div>
   </div>
   <div id="panel">
@@ -134,26 +141,35 @@ function exitFirstPerson() {
   document.exitPointerLock();
 }
 
+// 우측 하단 조작 안내 — 모드에 따라 내용이 바뀜
+function updateControlsGuide() {
+  const el = document.getElementById('controls-guide');
+  el.innerHTML = fpActive
+    ? `<b>W A S D</b> 이동<br><b>마우스</b> 시점 회전<br><b>ESC</b> 나가기`
+    : `<b>드래그</b> 회전<br><b>휠</b> 확대/축소<br><b>우클릭 드래그</b> 화면 이동`;
+}
+
 plControls.addEventListener('lock', () => {
   fpActive = true;
   document.getElementById('fp-overlay').style.display = 'none';
   document.getElementById('crosshair').style.display = 'block';
-  document.getElementById('fp-hint').style.display = 'block';
   document.getElementById('btn-firstperson').classList.add('active');
   document.getElementById('btn-orbit').classList.remove('active');
   document.getElementById('click-hint').style.display = 'none';
+  updateControlsGuide();
 });
 plControls.addEventListener('unlock', () => {
   fpActive = false;
   document.getElementById('fp-overlay').style.display = 'none';
   document.getElementById('crosshair').style.display = 'none';
-  document.getElementById('fp-hint').style.display = 'none';
   document.getElementById('btn-firstperson').classList.remove('active');
   document.getElementById('btn-orbit').classList.add('active');
   document.getElementById('click-hint').style.display = '';
   controls.target.set(camera.position.x, fpFloorY + 900, camera.position.z - 1);
   controls.update();
+  updateControlsGuide();
 });
+updateControlsGuide();
 
 document.getElementById('btn-firstperson').addEventListener('click', () => {
   document.getElementById('fp-overlay').style.display = 'flex';
@@ -183,6 +199,66 @@ function updateFirstPersonMovement(dt) {
   }
 }
 
+// ---- 미니맵: 화면 우측 하단에 현재 위치·시점 방향을 위에서 내려다본 뷰로 표시 ----
+// 별도 캔버스 없이, 같은 WebGL 렌더러의 구석(viewport+scissor)에 탑뷰 카메라로 덧그리는 방식
+let minimapCamera = null;
+let minimapMarker = null;
+const MINIMAP_LAYER = 1;
+
+function setupMinimap(box, center, size, maxDim) {
+  const halfSize = Math.max(size.x, size.z) / 2 * 1.05; // 살짝 여유
+  minimapCamera = new THREE.OrthographicCamera(-halfSize, halfSize, halfSize, -halfSize, 1, maxDim * 3);
+  minimapCamera.position.set(center.x, box.max.y + maxDim, center.z);
+  minimapCamera.up.set(0, 0, -1); // 위에서 내려다볼 때 "위쪽"을 -Z로 고정 (일관된 지도 방향)
+  minimapCamera.lookAt(center.x, 0, center.z);
+  minimapCamera.layers.enable(MINIMAP_LAYER);
+
+  // 현재 위치·방향을 나타내는 화살표 마커 — 미니맵 카메라에만 보이도록 별도 레이어에 둠
+  const markerSize = maxDim * 0.03;
+  const shape = new THREE.Shape();
+  shape.moveTo(0, markerSize);
+  shape.lineTo(-markerSize * 0.6, -markerSize * 0.6);
+  shape.lineTo(markerSize * 0.6, -markerSize * 0.6);
+  shape.closePath();
+  const markerGeo = new THREE.ShapeGeometry(shape);
+  minimapMarker = new THREE.Mesh(markerGeo, new THREE.MeshBasicMaterial({ color: 0x5084ff, side: THREE.DoubleSide, depthTest: false }));
+  minimapMarker.rotation.x = -Math.PI / 2; // XY 평면 도형을 XZ 평면에 눕힘
+  minimapMarker.renderOrder = 999;
+  minimapMarker.layers.set(MINIMAP_LAYER);
+  minimapMarker.position.set(center.x, box.min.y + markerSize, center.z);
+  scene.add(minimapMarker);
+}
+
+function updateMinimapMarker() {
+  if (!minimapMarker) return;
+  minimapMarker.position.x = camera.position.x;
+  minimapMarker.position.z = camera.position.z;
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  // minimapCamera.up = (0,0,-1) 기준 화살표가 카메라 진행 방향을 가리키도록 각도 계산
+  minimapMarker.rotation.z = Math.atan2(dir.x, -dir.z);
+}
+
+function renderMinimap() {
+  if (!minimapCamera) return;
+  updateMinimapMarker();
+  // three.js의 setViewport/setScissor는 CSS 픽셀 단위를 받아 내부적으로 pixelRatio를 곱함 —
+  // 여기서 domElement.width(이미 pixelRatio가 곱해진 디바이스 픽셀 값)를 넘기면 두 번 곱해져서
+  // 뷰포트가 실제 캔버스보다 커지고, 프레임마다 복구되는 "전체화면 뷰포트"가 어긋나며 메인 화면이
+  // 확대되어 보이는 버그가 있었음 — wrap.clientWidth/Height(CSS 픽셀)를 그대로 써야 함
+  const size = 130;
+  const margin = 14;
+  const x = wrap.clientWidth - size - margin;
+  const y = margin; // WebGL viewport y는 하단이 0 — 화면 하단 여백과 그대로 대응
+  renderer.setScissorTest(true);
+  renderer.setViewport(x, y, size, size);
+  renderer.setScissor(x, y, size, size);
+  renderer.clear();
+  renderer.render(scene, minimapCamera);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, wrap.clientWidth, wrap.clientHeight);
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now();
@@ -194,6 +270,7 @@ function animate() {
     controls.update();
   }
   renderer.render(scene, camera);
+  renderMinimap();
 }
 animate();
 
@@ -334,6 +411,8 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   fpFloorY = box.min.y;
   const margin = maxDim * 0.01;
   fpBounds = { minX: box.min.x + margin, maxX: box.max.x - margin, minZ: box.min.z + margin, maxZ: box.max.z - margin };
+
+  setupMinimap(box, center, size, maxDim);
 
   document.getElementById('loading').style.display = 'none';
 });
