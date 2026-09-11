@@ -34,6 +34,16 @@
   #panel { width: 300px; height: 100%; overflow-y: auto; background: #fff; border-left: 1px solid #e5e5ec; padding: 14px; flex-shrink: 0; }
   #panel h3 { font-size: 13px; margin: 0 0 4px; color: #999; font-weight: 700; }
   #panel .hint { font-size: 12px; color: #bbb; margin-bottom: 14px; line-height: 1.5; }
+  #panel-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .panel-tab { flex: 1; padding: 9px; border-radius: 10px; border: none; background: #f2f2f5; color: #888; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .panel-tab.active { background: #111; color: #fff; }
+  #furniture-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .furniture-btn { width: 100%; aspect-ratio: 1; border-radius: 10px; border: 2px solid transparent; cursor: pointer; padding: 0; background-size: cover; background-position: center; background-color: #f2f3f5; position: relative; }
+  .furniture-btn:hover { border-color: #aaa; }
+  .furniture-btn:disabled { opacity: .5; cursor: wait; }
+  .furniture-label { font-size: 10px; text-align: center; color: #999; margin-top: 3px; }
+  #furniture-selected-info { font-size: 13px; font-weight: 700; color: #111; padding: 10px 12px; background: #fff5ea; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  #furniture-delete-btn { padding: 6px 12px; border-radius: 8px; border: none; background: #e33; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
   #selected-info { font-size: 13px; font-weight: 700; color: #111; padding: 10px 12px; background: #f7f8fa; border-radius: 10px; margin-bottom: 12px; min-height: 20px; }
   .preset-category { margin-bottom: 16px; }
   .preset-category-title { font-size: 12px; font-weight: 700; color: #5084ff; margin-bottom: 8px; }
@@ -77,10 +87,20 @@
     </div>
   </div>
   <div id="panel">
-    <h3>재질 편집</h3>
-    <div class="hint">영역을 클릭하면 그 부분만 독립적으로 재질을 바꿀 수 있어요</div>
-    <div id="selected-info">영역을 먼저 선택해주세요</div>
-    <div id="preset-panel"></div>
+    <div id="panel-tabs">
+      <button id="panel-tab-material" class="panel-tab active">재질 편집</button>
+      <button id="panel-tab-furniture" class="panel-tab">가구 배치</button>
+    </div>
+    <div id="panel-material">
+      <div class="hint">영역을 클릭하면 그 부분만 독립적으로 재질을 바꿀 수 있어요</div>
+      <div id="selected-info">영역을 먼저 선택해주세요</div>
+      <div id="preset-panel"></div>
+    </div>
+    <div id="panel-furniture" style="display:none;">
+      <div class="hint">가구를 클릭하면 방 가운데에 놓여요. 놓인 가구를 클릭한 채로 드래그하면 옮길 수 있고, 선택 후 삭제 버튼으로 없앨 수 있어요.</div>
+      <div id="furniture-selected-info" style="display:none;"></div>
+      <div id="furniture-grid"></div>
+    </div>
   </div>
 </div>
 
@@ -397,6 +417,198 @@ document.getElementById('time-slider').addEventListener('input', (e) => updateSu
 document.getElementById('downlight-btn').addEventListener('click', () => setDownlights(!downlightsOn));
 document.getElementById('door-btn').addEventListener('click', () => setDoorsOpen(!doorsOpen));
 updateSunForTime(dayHour);
+
+// ---- 가구 배치: Poly Haven(CC0) 오픈소스 3D 가구를 방에 놓아볼 수 있음 ----
+// Poly Haven 모델은 gltf가 참조하는 텍스처/bin 경로가 실제 CDN 경로와 다르게(예: 텍스처는 jpg/ 폴더,
+// bin은 4k/ 폴더 등) 흩어져 있어서, GLTFLoader의 기본 상대경로 방식으로는 못 불러옴 —
+// LoadingManager.setURLModifier로 요청 경로를 실제 CDN 절대경로로 바꿔치기해서 불러온다.
+const FURNITURE_CATALOG = [
+  { slug: 'Sofa_01', label: '소파' },
+  { slug: 'sofa_02', label: '소파 2' },
+  { slug: 'chinese_sofa', label: '차이니즈 소파' },
+  { slug: 'ArmChair_01', label: '암체어' },
+  { slug: 'modern_arm_chair_01', label: '모던 암체어' },
+  { slug: 'mid_century_lounge_chair', label: '라운지체어' },
+  { slug: 'dining_chair_02', label: '다이닝체어' },
+  { slug: 'WoodenChair_01', label: '우드체어' },
+  { slug: 'Ottoman_01', label: '오토만' },
+  { slug: 'bar_chair_round_01', label: '바체어' },
+];
+const _polyhavenFilesCache = {};
+async function fetchPolyhavenFiles(slug) {
+  if (_polyhavenFilesCache[slug]) return _polyhavenFilesCache[slug];
+  const res = await fetch(`https://api.polyhaven.com/files/${slug}`);
+  const data = await res.json();
+  _polyhavenFilesCache[slug] = data;
+  return data;
+}
+
+async function loadPolyhavenModel(slug) {
+  const data = await fetchPolyhavenFiles(slug);
+  const resKey = data.gltf['1k'] ? '1k' : Object.keys(data.gltf)[0];
+  const entry = data.gltf[resKey].gltf;
+  const gltfUrl = entry.url;
+  const baseUrl = gltfUrl.substring(0, gltfUrl.lastIndexOf('/') + 1);
+  const includeMap = {};
+  Object.entries(entry.include || {}).forEach(([relPath, info]) => { includeMap[relPath] = info.url; });
+
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier((url) => {
+    if (url.startsWith(baseUrl)) {
+      const rel = url.substring(baseUrl.length);
+      if (includeMap[rel]) return includeMap[rel];
+    }
+    return url;
+  });
+  const loader = new THREE.GLTFLoader(manager);
+  return new Promise((resolve, reject) => {
+    loader.load(gltfUrl, (gltf) => resolve(gltf.scene), undefined, reject);
+  });
+}
+
+const placedFurniture = [];
+let selectedFurniture = null;
+let draggingFurniture = null;
+const _furnitureIdCounter = { n: 1 };
+
+function renderFurnitureGrid() {
+  const el = document.getElementById('furniture-grid');
+  el.innerHTML = FURNITURE_CATALOG.map((f) => `
+    <div>
+      <button class="furniture-btn" data-slug="${f.slug}" style="background-image:url(https://cdn.polyhaven.com/asset_img/thumbs/${f.slug}.png?width=256&height=256)"></button>
+      <div class="furniture-label">${f.label}</div>
+    </div>
+  `).join('');
+  el.querySelectorAll('.furniture-btn').forEach((btn) => {
+    btn.addEventListener('click', () => addFurniture(btn.dataset.slug, btn));
+  });
+}
+
+async function addFurniture(slug, btnEl) {
+  if (btnEl) { btnEl.disabled = true; }
+  try {
+    const obj = await loadPolyhavenModel(slug);
+    // Poly Haven 모델은 미터 단위, 이 건물 모델은 밀리미터 단위라 1000배 스케일
+    obj.scale.setScalar(1000);
+    obj.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (o.material) { o.material.side = THREE.DoubleSide; }
+      }
+    });
+    const wrapper = new THREE.Group();
+    wrapper.add(obj);
+    wrapper.userData.isFurniture = true;
+    wrapper.userData.furnitureId = _furnitureIdCounter.n++;
+    wrapper.userData.label = FURNITURE_CATALOG.find((f) => f.slug === slug)?.label || slug;
+    scene.add(wrapper);
+
+    // 바닥 높이 보정: 모델 자체의 바닥이 y=0이 아닐 수 있어 바운딩박스로 다시 맞춤
+    const box = new THREE.Box3().setFromObject(wrapper);
+    const floorOffset = box.min.y - fpFloorY;
+    wrapper.position.set(modelCenter.x, wrapper.position.y - floorOffset, modelCenter.z);
+
+    placedFurniture.push(wrapper);
+    selectFurniture(wrapper);
+  } catch (e) {
+    console.error('가구 로드 실패:', slug, e);
+    const label = FURNITURE_CATALOG.find((f) => f.slug === slug)?.label || slug;
+    showFurnitureError('가구를 불러오지 못했어요: ' + label);
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
+function showFurnitureError(msg) {
+  const hint = document.querySelector('#panel-furniture .hint');
+  if (hint) { const old = hint.textContent; hint.textContent = '⚠️ ' + msg; setTimeout(() => { hint.textContent = old; }, 3000); }
+}
+
+function selectFurniture(wrapper) {
+  selectedFurniture = wrapper;
+  const info = document.getElementById('furniture-selected-info');
+  if (wrapper) {
+    info.style.display = 'flex';
+    info.innerHTML = `<span>선택됨: ${wrapper.userData.label}</span><button id="furniture-delete-btn">삭제</button>`;
+    document.getElementById('furniture-delete-btn').addEventListener('click', () => deleteSelectedFurniture());
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function deleteSelectedFurniture() {
+  if (!selectedFurniture) return;
+  scene.remove(selectedFurniture);
+  const idx = placedFurniture.indexOf(selectedFurniture);
+  if (idx !== -1) placedFurniture.splice(idx, 1);
+  selectFurniture(null);
+}
+
+// 배치된 가구 클릭 → 선택 / 선택 후 드래그 → 바닥면(y=fpFloorY)을 따라 이동
+const furnitureRaycaster = new THREE.Raycaster();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const dragPoint = new THREE.Vector3();
+
+function getFurnitureHit(ev) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseNdc = new THREE.Vector2(
+    ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+    -((ev.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  furnitureRaycaster.setFromCamera(mouseNdc, camera);
+  const targets = [];
+  placedFurniture.forEach((w) => targets.push(w));
+  const intersects = furnitureRaycaster.intersectObjects(targets, true);
+  if (!intersects.length) return null;
+  let obj = intersects[0].object;
+  while (obj.parent && !obj.userData.isFurniture) obj = obj.parent;
+  return obj.userData.isFurniture ? obj : null;
+}
+
+renderer.domElement.addEventListener('pointerdown', (ev) => {
+  if (fpActive) return;
+  const hit = getFurnitureHit(ev);
+  if (!hit) return;
+  selectFurniture(hit);
+  draggingFurniture = hit;
+  controls.enabled = false;
+  dragPlane.constant = -fpFloorY;
+  furnitureRaycaster.setFromCamera(new THREE.Vector2(
+    ((ev.clientX - renderer.domElement.getBoundingClientRect().left) / renderer.domElement.getBoundingClientRect().width) * 2 - 1,
+    -((ev.clientY - renderer.domElement.getBoundingClientRect().top) / renderer.domElement.getBoundingClientRect().height) * 2 + 1
+  ), camera);
+});
+window.addEventListener('pointermove', (ev) => {
+  if (!draggingFurniture) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseNdc = new THREE.Vector2(
+    ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+    -((ev.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  furnitureRaycaster.setFromCamera(mouseNdc, camera);
+  if (furnitureRaycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+    draggingFurniture.position.x = dragPoint.x;
+    draggingFurniture.position.z = dragPoint.z;
+  }
+});
+window.addEventListener('pointerup', () => {
+  if (draggingFurniture) { draggingFurniture = null; controls.enabled = true; }
+});
+
+document.getElementById('panel-tab-material').addEventListener('click', () => {
+  document.getElementById('panel-tab-material').classList.add('active');
+  document.getElementById('panel-tab-furniture').classList.remove('active');
+  document.getElementById('panel-material').style.display = '';
+  document.getElementById('panel-furniture').style.display = 'none';
+});
+document.getElementById('panel-tab-furniture').addEventListener('click', () => {
+  document.getElementById('panel-tab-furniture').classList.add('active');
+  document.getElementById('panel-tab-material').classList.remove('active');
+  document.getElementById('panel-furniture').style.display = '';
+  document.getElementById('panel-material').style.display = 'none';
+});
+renderFurnitureGrid();
 
 window.addEventListener('resize', () => {
   camera.aspect = wrap.clientWidth / wrap.clientHeight;
@@ -808,6 +1020,7 @@ function selectFromClick(mesh) {
 
 renderer.domElement.addEventListener('click', (ev) => {
   if (fpActive) return; // 1인칭 모드에서는 클릭이 이동/시점 조작용이라 재질 선택은 하지 않음
+  if (typeof getFurnitureHit === 'function' && getFurnitureHit(ev)) return; // 배치된 가구 클릭은 가구 선택으로만 처리
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
