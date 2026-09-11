@@ -18,6 +18,8 @@
   #panel h3 { font-size: 13px; margin: 0 0 4px; color: #999; font-weight: 700; }
   #panel .hint { font-size: 12px; color: #bbb; margin-bottom: 14px; line-height: 1.5; }
   #selected-info { font-size: 13px; font-weight: 700; color: #111; padding: 10px 12px; background: #f7f8fa; border-radius: 10px; margin-bottom: 12px; min-height: 20px; }
+  .preset-category { margin-bottom: 16px; }
+  .preset-category-title { font-size: 12px; font-weight: 700; color: #5084ff; margin-bottom: 8px; }
   .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .preset-btn { width: 100%; aspect-ratio: 1; border-radius: 8px; border: 2px solid transparent; cursor: pointer; padding: 0; background-size: cover; position: relative; }
   .preset-btn.active { border-color: #5084ff; }
@@ -86,111 +88,62 @@ function animate() {
 }
 animate();
 
-// ---- 프리셋: canvas로 생성한 유사 재질 텍스처 ----
-function makeTexture(draw) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
-  const ctx = c.getContext('2d');
-  draw(ctx, c.width, c.height);
-  const tex = new THREE.CanvasTexture(c);
-  tex.encoding = THREE.sRGBEncoding;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  return tex;
-}
-function woodTexture(base, dark, streaks) {
-  return makeTexture((ctx, w, h) => {
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < streaks; i++) {
-      const x = (i / streaks) * w + (Math.random() - 0.5) * 10;
-      ctx.strokeStyle = dark;
-      ctx.globalAlpha = 0.15 + Math.random() * 0.2;
-      ctx.lineWidth = 2 + Math.random() * 4;
-      ctx.beginPath(); ctx.moveTo(x, 0);
-      let cx = x;
-      for (let y = 0; y <= h; y += 20) { cx += (Math.random() - 0.5) * 14; ctx.lineTo(cx, y); }
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  });
-}
-function plankFloorTexture(base, dark) {
-  return makeTexture((ctx, w, h) => {
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    const plankH = 64;
-    for (let y = 0; y < h; y += plankH) {
-      const offset = (y / plankH) % 2 === 0 ? 0 : w / 2;
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      for (let x = -offset; x < w; x += w / 3) {
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + plankH); ctx.stroke();
-      }
-      for (let i = 0; i < 8; i++) {
-        const gx = Math.random() * w, gy = y + Math.random() * plankH;
-        ctx.strokeStyle = dark; ctx.globalAlpha = 0.12;
-        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + w / 3, gy + (Math.random() - 0.5) * 6); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
-  });
-}
-function brushedMetalTexture() {
-  return makeTexture((ctx, w, h) => {
-    const grad = ctx.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, '#b8bcc2'); grad.addColorStop(0.5, '#e8eaed'); grad.addColorStop(1, '#b0b4ba');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
-    for (let x = 0; x < w; x += 2) {
-      ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-    }
-  });
-}
-function stuccoTexture(base) {
-  return makeTexture((ctx, w, h) => {
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    const img = ctx.getImageData(0, 0, w, h);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const n = (Math.random() - 0.5) * 20;
-      img.data[i] += n; img.data[i+1] += n; img.data[i+2] += n;
-    }
-    ctx.putImageData(img, 0, 0);
-  });
-}
-function fabricTexture(base) {
-  return makeTexture((ctx, w, h) => {
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-    for (let x = 0; x < w; x += 4) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
-    for (let y = 0; y < h; y += 4) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-  });
+// ---- 프리셋: Poly Haven(polyhaven.com)의 CC0(저작권 없음) PBR 텍스처를 실시간으로 불러와 적용 ----
+// dl.polyhaven.org는 CORS를 전체 허용(access-control-allow-origin: *)하고 있어 별도 다운로드/호스팅 없이 바로 사용 가능
+function polyhavenDiffUrl(slug) {
+  return `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/${slug}/${slug}_diff_1k.jpg`;
 }
 function swatchDataUrl(hex) {
   const c = document.createElement('canvas'); c.width = c.height = 8;
   const ctx = c.getContext('2d'); ctx.fillStyle = hex; ctx.fillRect(0, 0, 8, 8);
   return c.toDataURL();
 }
-function textureThumbUrl(tex) { return tex.image.toDataURL(); }
 
-const PRESETS = [
-  { id: 'white',  label: '화이트 무광',    type: 'color', color: 0xf5f5f2, roughness: 0.9, metalness: 0.0 },
-  { id: 'black',  label: '블랙 글로시',    type: 'color', color: 0x1a1a1a, roughness: 0.2, metalness: 0.1 },
-  { id: 'grey',   label: '라이트 그레이',  type: 'color', color: 0xc9cad0, roughness: 0.8, metalness: 0.0 },
-  { id: 'oak',    label: '연한 오크',      type: 'texture', gen: () => woodTexture('#e8d3ae', '#b8874f', 40), roughness: 0.7, metalness: 0.0 },
-  { id: 'walnut', label: '월넛 다크우드',  type: 'texture', gen: () => woodTexture('#5a3a24', '#2c1a0f', 45), roughness: 0.6, metalness: 0.0 },
-  { id: 'floor',  label: '오크 마루',      type: 'texture', gen: () => plankFloorTexture('#8a6440', '#4a3120'), roughness: 0.75, metalness: 0.0 },
-  { id: 'steel',  label: '브러시드 스틸',  type: 'texture', gen: () => brushedMetalTexture(), roughness: 0.35, metalness: 0.85 },
-  { id: 'stucco', label: '스타코/플라스터', type: 'texture', gen: () => stuccoTexture('#e9e7e2'), roughness: 0.95, metalness: 0.0 },
-  { id: 'fabric', label: '패브릭',         type: 'texture', gen: () => fabricTexture('#d8d2c6'), roughness: 0.9, metalness: 0.0 },
+const PRESET_CATEGORIES = [
+  { id: 'basic', label: '기본', presets: [
+    { id: 'white', label: '화이트 무광',   type: 'color', color: 0xf5f5f2, roughness: 0.9, metalness: 0.0 },
+    { id: 'black', label: '블랙 글로시',   type: 'color', color: 0x1a1a1a, roughness: 0.2, metalness: 0.1 },
+    { id: 'grey',  label: '라이트 그레이', type: 'color', color: 0xc9cad0, roughness: 0.8, metalness: 0.0 },
+  ]},
+  { id: 'wood', label: '우드 컬러', presets: [
+    { id: 'walnut', label: '월넛 다크우드', type: 'texture', slug: 'american_walnut_veneer', repeat: 3, roughness: 0.55, metalness: 0.0 },
+    { id: 'ash',    label: '애쉬 라이트우드', type: 'texture', slug: 'ash_veneer', repeat: 3, roughness: 0.6, metalness: 0.0 },
+    { id: 'bamboo', label: '뱀부/밝은우드', type: 'texture', slug: 'bamboo_veneer', repeat: 3, roughness: 0.6, metalness: 0.0 },
+  ]},
+  { id: 'metal', label: '메탈 재질', presets: [
+    { id: 'steel_plate', label: '메탈 플레이트', type: 'texture', slug: 'metal_plate', repeat: 4, roughness: 0.4, metalness: 0.9 },
+    { id: 'corrugated',  label: '골강판/거친메탈', type: 'texture', slug: 'corrugated_iron', repeat: 4, roughness: 0.55, metalness: 0.8 },
+  ]},
+  { id: 'tile', label: '타일', presets: [
+    { id: 'tile_brown',  label: '브라운 바닥타일', type: 'texture', slug: 'brown_floor_tiles', repeat: 4, roughness: 0.5, metalness: 0.0 },
+    { id: 'tile_terra',  label: '테라코타 타일',   type: 'texture', slug: 'terracotta_floor_tiles', repeat: 4, roughness: 0.6, metalness: 0.0 },
+    { id: 'tile_interior', label: '욕실/인테리어 타일', type: 'texture', slug: 'interior_tiles', repeat: 4, roughness: 0.3, metalness: 0.0 },
+    { id: 'tile_grey',   label: '그레이 스톤타일', type: 'texture', slug: 'grey_cartago_01', repeat: 3, roughness: 0.5, metalness: 0.0 },
+  ]},
+  { id: 'wall', label: '벽지/플라스터', presets: [
+    { id: 'wall_beige', label: '베이지 벽면',  type: 'texture', slug: 'beige_wall_001', repeat: 2, roughness: 0.9, metalness: 0.0 },
+    { id: 'wall_grey',  label: '그레이 플라스터', type: 'texture', slug: 'grey_plaster', repeat: 2, roughness: 0.95, metalness: 0.0 },
+  ]},
 ];
+const PRESETS = PRESET_CATEGORIES.flatMap(c => c.presets);
+
+const textureLoader = new THREE.TextureLoader();
+textureLoader.crossOrigin = 'anonymous';
 const _presetTexCache = {};
 function presetTexture(p) {
-  if (!_presetTexCache[p.id]) _presetTexCache[p.id] = p.gen();
-  return _presetTexCache[p.id];
+  // 캐시된 게 있으면 즉시 반환, 없으면 로딩 시작하고 완료되면 텍스처 내용만 채워짐
+  // (three.js 텍스처는 로딩 전에도 자재에 바로 꽂아둘 수 있고, 이미지 로딩이 끝나면 자동 갱신됨)
+  if (_presetTexCache[p.id]) return _presetTexCache[p.id];
+  const tex = textureLoader.load(polyhavenDiffUrl(p.slug));
+  tex.encoding = THREE.sRGBEncoding;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(p.repeat || 2, p.repeat || 2);
+  _presetTexCache[p.id] = tex;
+  return tex;
 }
-const _presetThumbCache = {};
 function presetThumb(p) {
-  if (p.type === 'color') { if (!_presetThumbCache[p.id]) _presetThumbCache[p.id] = swatchDataUrl('#' + p.color.toString(16).padStart(6, '0')); return _presetThumbCache[p.id]; }
-  if (!_presetThumbCache[p.id]) _presetThumbCache[p.id] = textureThumbUrl(presetTexture(p));
-  return _presetThumbCache[p.id];
+  if (p.type === 'color') return swatchDataUrl('#' + p.color.toString(16).padStart(6, '0'));
+  return polyhavenDiffUrl(p.slug); // 실제 사진 텍스처를 썸네일로 그대로 사용
 }
 
 // ---- 모델 로드: 메시마다 재질을 독립 복제해서, 같은 SketchUp 재질을 공유하던
@@ -353,12 +306,19 @@ function renderPresetPanel() {
   // 묶음 안 부분들의 재질이 서로 다르면 활성 표시는 생략 (여러 값이라 하나로 못 정함)
   const ids = new Set(selectedMeshes.map(m => meshAssignments.get(m.uuid)));
   const activeId = ids.size === 1 ? [...ids][0] : null;
-  el.innerHTML = `<div class="preset-grid">${PRESETS.map(p => `
-    <div>
-      <button class="preset-btn ${activeId===p.id?'active':''}" data-preset="${p.id}" style="background-image:url(${presetThumb(p)})"></button>
-      <div class="preset-label">${p.label}</div>
-    </div>
-  `).join('')}</div>`;
+
+  const categoryHtml = (cat) => `
+    <div class="preset-category">
+      <div class="preset-category-title">${cat.label}</div>
+      <div class="preset-grid">${cat.presets.map(p => `
+        <div>
+          <button class="preset-btn ${activeId===p.id?'active':''}" data-preset="${p.id}" style="background-image:url(${presetThumb(p)})"></button>
+          <div class="preset-label">${p.label}</div>
+        </div>
+      `).join('')}</div>
+    </div>`;
+
+  el.innerHTML = PRESET_CATEGORIES.map(categoryHtml).join('');
   el.querySelectorAll('.preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const preset = PRESETS.find(p => p.id === btn.dataset.preset);
