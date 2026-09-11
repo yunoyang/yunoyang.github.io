@@ -500,14 +500,20 @@ const PRESET_CATEGORIES = [
     { id: 'birch',   label: '버치/자작나무', type: 'texture', slug: 'ash_veneer', repeat: 3, roughness: 0.6, metalness: 0.0 },
     { id: 'bamboo',  label: '뱀부/대나무', type: 'texture', slug: 'bamboo_veneer', repeat: 3, roughness: 0.6, metalness: 0.0 },
   ]},
-  { id: 'floor', label: '우드 마루', presets: [
-    { id: 'floor_oak',    label: '오크 마루',     type: 'texture', slug: 'oak_wood_planks', repeat: 3, roughness: 0.6, metalness: 0.0 },
-    { id: 'floor_plank',  label: '원목 마루',     type: 'texture', slug: 'wood_floor', repeat: 3, roughness: 0.55, metalness: 0.0 },
-    { id: 'floor_worn',   label: '앤틱/월넛 마루', type: 'texture', slug: 'wood_floor_worn', repeat: 3, roughness: 0.65, metalness: 0.0 },
-    { id: 'floor_plank2', label: '내추럴 마루',   type: 'texture', slug: 'plank_flooring_02', repeat: 3, roughness: 0.6, metalness: 0.0 },
+  // 구정마루 강마루 라인(블론테/그랜드텍스쳐165/구정강마루/모던강115)의 실제 컬러웨이 구성을 참고 —
+  // 같은 원목 결 텍스처에 색상(tint)만 다르게 입혀서 화이트오크~블랙오크까지 톤을 표현
+  { id: 'floor', label: '우드 마루 (구정마루 스타일)', presets: [
+    { id: 'floor_white_oak',  label: '화이트오크',   type: 'texture', slug: 'oak_wood_planks', repeat: 3, tint: 0xf2e9d8, roughness: 0.6, metalness: 0.0 },
+    { id: 'floor_wash_oak',   label: '워시오크',     type: 'texture', slug: 'wood_floor', repeat: 3, tint: 0xe4d6bf, roughness: 0.6, metalness: 0.0 },
+    { id: 'floor_natural_oak', label: '내추럴오크',  type: 'texture', slug: 'oak_wood_planks', repeat: 3, roughness: 0.6, metalness: 0.0 },
+    { id: 'floor_honey_oak',  label: '허니/브라이트오크', type: 'texture', slug: 'plank_flooring_02', repeat: 3, tint: 0xe0ad6e, roughness: 0.55, metalness: 0.0 },
+    { id: 'floor_grey_oak',   label: '미들그레이오크', type: 'texture', slug: 'wood_floor', repeat: 3, tint: 0xb2ada4, roughness: 0.6, metalness: 0.0 },
+    { id: 'floor_teak',       label: '티크',         type: 'texture', slug: 'wood_floor_worn', repeat: 3, roughness: 0.65, metalness: 0.0 },
+    { id: 'floor_walnut_brown', label: '월넛브라운', type: 'texture', slug: 'wood_floor_worn', repeat: 3, tint: 0x8a6a4d, roughness: 0.65, metalness: 0.0 },
+    { id: 'floor_black_oak',  label: '블랙오크',     type: 'texture', slug: 'wood_floor', repeat: 3, tint: 0x3c3430, roughness: 0.5, metalness: 0.0 },
     { id: 'floor_herringbone', label: '헤링본 마루', type: 'texture', slug: 'herringbone_parquet', repeat: 3, roughness: 0.55, metalness: 0.0 },
-    { id: 'floor_diagonal', label: '사선 파케트', type: 'texture', slug: 'diagonal_parquet', repeat: 3, roughness: 0.55, metalness: 0.0 },
-    { id: 'floor_laminate', label: '강마루/라미네이트', type: 'texture', slug: 'laminate_floor', repeat: 3, roughness: 0.4, metalness: 0.0 },
+    { id: 'floor_diagonal',   label: '사선 파케트',  type: 'texture', slug: 'diagonal_parquet', repeat: 3, roughness: 0.55, metalness: 0.0 },
+    { id: 'floor_laminate',   label: '강마루/라미네이트', type: 'texture', slug: 'laminate_floor', repeat: 3, roughness: 0.4, metalness: 0.0 },
   ]},
   { id: 'metal', label: '메탈 재질', presets: [
     { id: 'steel_plate', label: '메탈 플레이트', type: 'texture', slug: 'metal_plate', repeat: 4, roughness: 0.4, metalness: 0.9 },
@@ -723,7 +729,8 @@ function applyPresetToSelected(preset) {
       mat.map = null;
     } else {
       mat.map = presetTexture(preset);
-      mat.color.setHex(0xffffff);
+      // tint: 같은 원목 결(texture) 위에 색만 입혀서 여러 컬러웨이(화이트오크/그레이오크/월넛 등)를 표현
+      mat.color.setHex(preset.tint != null ? preset.tint : 0xffffff);
     }
     mat.roughness = preset.roughness;
     mat.metalness = preset.metalness;
@@ -745,7 +752,7 @@ function renderPresetPanel() {
       <div class="preset-category-title">${cat.label}</div>
       <div class="preset-grid">${cat.presets.map(p => `
         <div>
-          <button class="preset-btn ${activeId===p.id?'active':''}" data-preset="${p.id}" style="background-image:url(${presetThumb(p)})"></button>
+          <button class="preset-btn ${activeId===p.id?'active':''}" data-preset="${p.id}" style="background-image:url(${presetThumb(p)});${p.tint!=null?`background-color:#${p.tint.toString(16).padStart(6,'0')};background-blend-mode:multiply;`:''}"></button>
           <div class="preset-label">${p.label}</div>
         </div>
       `).join('')}</div>
