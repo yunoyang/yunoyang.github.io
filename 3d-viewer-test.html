@@ -231,8 +231,25 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// 선택된 영역을 살짝 확대한 파란 테두리(backface) 메시로 감싸서 시각적으로 표시
+function setOutline(mesh) {
+  if (outlineMesh) {
+    if (outlineMesh.parent) outlineMesh.parent.remove(outlineMesh);
+    outlineMesh.material.dispose();
+    outlineMesh = null;
+  }
+  if (!mesh) return;
+  const outlineMat = new THREE.MeshBasicMaterial({ color: 0x5084ff, side: THREE.BackSide, depthWrite: false });
+  outlineMesh = new THREE.Mesh(mesh.geometry, outlineMat);
+  outlineMesh.position.copy(mesh.position);
+  outlineMesh.rotation.copy(mesh.rotation);
+  outlineMesh.scale.copy(mesh.scale).multiplyScalar(1.02);
+  mesh.parent.add(outlineMesh);
+}
+
 function selectMesh(mesh) {
   selectedMesh = mesh;
+  setOutline(mesh);
   document.getElementById('click-hint').textContent = '선택됨: ' + (mesh.name || '(이름 없음)');
   document.getElementById('selected-info').textContent = mesh.name || '(이름 없음)';
   renderPresetPanel();
