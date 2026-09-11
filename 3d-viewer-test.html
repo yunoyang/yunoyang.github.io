@@ -195,10 +195,22 @@ function presetThumb(p) {
 
 // ---- 모델 로드: 메시마다 재질을 독립 복제해서, 같은 SketchUp 재질을 공유하던
 // 영역(예: 여러 방에 걸친 같은 바닥재)도 각각 따로 선택/편집 가능하게 함 ----
-let selectedMesh = null;
+let selectedMeshes = [];      // 현재 선택된 메시들 (묶음 선택 시 여러 개)
+let selectedGroupId = null;   // 현재 "묶음" 선택 기준이 된 최상위 그룹 id
+let selectionMode = null;     // 'group' | 'single'
 const meshAssignments = new Map(); // mesh.uuid -> presetId
 const EDGE_COLOR_DEFAULT = 0x333333;
 const EDGE_COLOR_SELECTED = 0x5084ff;
+const groupMap = new Map(); // outermost group id -> mesh[]
+
+// 메시 이름(예: "Mesh120_Group82_Group81_Group79_Model")에 스케치업의 중첩 그룹/컴포넌트
+// 체인이 그대로 남아있음 — 뒤에서부터가 바깥쪽(최상위) 그룹. 이를 이용해 "싱크대 세트" 같은
+// 묶음 전체를 한번에 선택할 수 있게 함.
+function outermostGroupId(mesh) {
+  const tokens = mesh.name.match(/Group\d+/g);
+  if (!tokens || !tokens.length) return mesh.name; // 그룹 정보 없으면 자기 자신이 곧 그룹
+  return tokens[tokens.length - 1];
+}
 
 const loader = new THREE.GLTFLoader();
 loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
@@ -230,6 +242,10 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
       overlay.raycast = () => {}; // 클릭 판정에서 제외
       obj.add(overlay);
       obj.userData.overlay = overlay;
+
+      const gid = outermostGroupId(obj);
+      if (!groupMap.has(gid)) groupMap.set(gid, []);
+      groupMap.get(gid).push(obj);
     }
   });
   scene.add(model);
@@ -255,23 +271,50 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// 선택된 메시: 엣지를 블루로, 면에 반투명 블루 오버레이 표시. 이전 선택은 원상복구.
-function setSelectionHighlight(mesh) {
-  if (selectedMesh && selectedMesh.userData.edges) {
-    selectedMesh.userData.edges.material.color.setHex(EDGE_COLOR_DEFAULT);
-    selectedMesh.userData.overlay.visible = false;
-  }
-  if (mesh && mesh.userData.edges) {
-    mesh.userData.edges.material.color.setHex(EDGE_COLOR_SELECTED);
-    mesh.userData.overlay.visible = true;
-  }
+// 선택된 메시들: 엣지를 블루로, 면에 반투명 블루 오버레이 표시. 이전 선택은 원상복구.
+function setSelectionHighlight(meshes) {
+  selectedMeshes.forEach((m) => {
+    if (m.userData.edges) {
+      m.userData.edges.material.color.setHex(EDGE_COLOR_DEFAULT);
+      m.userData.overlay.visible = false;
+    }
+  });
+  meshes.forEach((m) => {
+    if (m.userData.edges) {
+      m.userData.edges.material.color.setHex(EDGE_COLOR_SELECTED);
+      m.userData.overlay.visible = true;
+    }
+  });
 }
 
-function selectMesh(mesh) {
-  setSelectionHighlight(mesh);
-  selectedMesh = mesh;
-  document.getElementById('click-hint').textContent = '선택됨: ' + (mesh.name || '(이름 없음)');
-  document.getElementById('selected-info').textContent = mesh.name || '(이름 없음)';
+// 같은 묶음(그룹)이 이미 선택된 상태에서 그 안의 한 부분을 다시 클릭하면 그 부분만 선택,
+// 그 외의 경우(새 묶음을 처음 클릭)에는 묶음 전체를 선택
+function selectFromClick(mesh) {
+  const gid = outermostGroupId(mesh);
+  const groupMeshes = groupMap.get(gid) || [mesh];
+  const isDrillDown = selectionMode === 'group' && selectedGroupId === gid && groupMeshes.length > 1;
+
+  let meshes, mode;
+  if (isDrillDown) {
+    meshes = [mesh];
+    mode = 'single';
+  } else {
+    meshes = groupMeshes;
+    mode = groupMeshes.length > 1 ? 'group' : 'single';
+  }
+
+  setSelectionHighlight(meshes);
+  selectedMeshes = meshes;
+  selectedGroupId = gid;
+  selectionMode = mode;
+
+  const label = mode === 'group'
+    ? `선택됨: 묶음 (${meshes.length}개 부분) — 안의 특정 부분을 다시 클릭하면 그 부분만 선택돼요`
+    : `선택됨: ${mesh.name || '(이름 없음)'}`;
+  document.getElementById('click-hint').textContent = label;
+  document.getElementById('selected-info').textContent = mode === 'group'
+    ? `묶음 선택 (${meshes.length}개 부분)`
+    : (mesh.name || '(이름 없음)');
   renderPresetPanel();
 }
 
@@ -282,30 +325,34 @@ renderer.domElement.addEventListener('click', (ev) => {
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(scene.children, true).filter(i => i.object.isMesh);
   if (!intersects.length) return;
-  selectMesh(intersects[0].object);
+  selectFromClick(intersects[0].object);
 });
 
 function applyPresetToSelected(preset) {
-  if (!selectedMesh) return;
-  const mat = selectedMesh.material;
-  if (preset.type === 'color') {
-    mat.color.setHex(preset.color);
-    mat.map = null;
-  } else {
-    mat.map = presetTexture(preset);
-    mat.color.setHex(0xffffff);
-  }
-  mat.roughness = preset.roughness;
-  mat.metalness = preset.metalness;
-  mat.needsUpdate = true;
-  meshAssignments.set(selectedMesh.uuid, preset.id);
+  if (!selectedMeshes.length) return;
+  selectedMeshes.forEach((mesh) => {
+    const mat = mesh.material;
+    if (preset.type === 'color') {
+      mat.color.setHex(preset.color);
+      mat.map = null;
+    } else {
+      mat.map = presetTexture(preset);
+      mat.color.setHex(0xffffff);
+    }
+    mat.roughness = preset.roughness;
+    mat.metalness = preset.metalness;
+    mat.needsUpdate = true;
+    meshAssignments.set(mesh.uuid, preset.id);
+  });
   renderPresetPanel();
 }
 
 function renderPresetPanel() {
   const el = document.getElementById('preset-panel');
-  if (!selectedMesh) { el.innerHTML = ''; return; }
-  const activeId = meshAssignments.get(selectedMesh.uuid);
+  if (!selectedMeshes.length) { el.innerHTML = ''; return; }
+  // 묶음 안 부분들의 재질이 서로 다르면 활성 표시는 생략 (여러 값이라 하나로 못 정함)
+  const ids = new Set(selectedMeshes.map(m => meshAssignments.get(m.uuid)));
+  const activeId = ids.size === 1 ? [...ids][0] : null;
   el.innerHTML = `<div class="preset-grid">${PRESETS.map(p => `
     <div>
       <button class="preset-btn ${activeId===p.id?'active':''}" data-preset="${p.id}" style="background-image:url(${presetThumb(p)})"></button>
