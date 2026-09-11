@@ -14,7 +14,10 @@
   model-viewer { flex: 1; height: 100%; background: #eee; }
   #panel { width: 300px; height: 100%; overflow-y: auto; background: #fff; border-left: 1px solid #e5e5ec; padding: 14px; flex-shrink: 0; }
   #panel h3 { font-size: 13px; margin: 0 0 12px; color: #999; font-weight: 700; }
-  .mat-row { border: 1px solid #eef0f5; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+  .mat-row { border: 1px solid #eef0f5; border-radius: 12px; padding: 10px; margin-bottom: 10px; transition: border-color .2s, box-shadow .2s; }
+  .mat-row.selected { border-color: #5084ff; box-shadow: 0 0 0 2px rgba(80,132,255,0.15); }
+  #click-hint { position: absolute; top: 10px; left: 10px; background: rgba(17,17,17,0.75); color: #fff; font-size: 12px; padding: 7px 12px; border-radius: 999px; pointer-events: none; }
+  #mv-wrap { position: relative; flex: 1; height: 100%; }
   .mat-name { font-size: 12px; color: #666; margin-bottom: 8px; word-break: break-all; display:flex; align-items:center; gap:6px; }
   .mat-swatch { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #ddd; flex-shrink:0; }
   .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -31,7 +34,10 @@
 <body>
 <div id="topbar">3D 뷰어 테스트 — 정자동 우성아파트 (재질 편집 프로토타입)</div>
 <div id="main">
-  <model-viewer id="mv" src="assets/models/jeongja-woosung.glb" camera-controls shadow-intensity="1" exposure="1"></model-viewer>
+  <div id="mv-wrap">
+    <model-viewer id="mv" src="assets/models/jeongja-woosung.glb" camera-controls shadow-intensity="1" exposure="1"></model-viewer>
+    <div id="click-hint">모델을 클릭해서 바닥·벽·가구를 바로 선택하세요</div>
+  </div>
   <div id="panel">
     <h3>재질 편집 (유사 재질로 교체)</h3>
     <div id="mat-list">로딩 중…</div>
@@ -155,6 +161,8 @@ async function applyPreset(materialIndex, preset) {
   matAssignments[materialIndex] = preset.id;
 }
 
+let _selectedMatIndex = null;
+
 function renderPanel() {
   const mv2 = document.getElementById('mv');
   const materials = mv2.model.materials;
@@ -163,7 +171,7 @@ function renderPanel() {
     const c = m.pbrMetallicRoughness.baseColorFactor;
     const swatchColor = `rgb(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)})`;
     return `
-      <div class="mat-row">
+      <div class="mat-row ${_selectedMatIndex===i?'selected':''}" data-row="${i}">
         <div class="mat-name"><span class="mat-swatch" style="background:${swatchColor}"></span>${m.name || '(이름 없음)'}</div>
         <div class="preset-grid" data-mat="${i}">
           ${PRESETS.map(p => `<button class="preset-btn ${matAssignments[i]===p.id?'active':''}" title="${p.label}" data-mat="${i}" data-preset="${p.id}" style="background:${p.type==='color'?p.swatch:`url(${presetThumb(p)})`}"></button>`).join('')}
@@ -181,6 +189,23 @@ function renderPanel() {
 }
 
 mv.addEventListener('load', () => { renderPanel(); });
+
+// ---- 모델에서 직접 클릭해서 재질 선택 (바닥/벽/가구 등) ----
+mv.addEventListener('click', (ev) => {
+  const rect = mv.getBoundingClientRect();
+  const x = ev.clientX - rect.left;
+  const y = ev.clientY - rect.top;
+  const hit = mv.materialFromPoint ? mv.materialFromPoint(x, y) : null;
+  if (!hit) return;
+  const idx = mv.model.materials.indexOf(hit);
+  if (idx === -1) return;
+  _selectedMatIndex = idx;
+  const hint = document.getElementById('click-hint');
+  hint.textContent = '선택됨: ' + (hit.name || '(이름 없음)') + ' — 오른쪽에서 재질을 골라보세요';
+  renderPanel();
+  const row = document.querySelector(`.mat-row[data-row="${idx}"]`);
+  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 </script>
 </body>
 </html>
