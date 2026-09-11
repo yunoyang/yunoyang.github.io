@@ -57,6 +57,7 @@
     <div id="loading">모델 불러오는 중…</div>
     <div id="click-hint">모델을 클릭해서 바닥·벽·가구를 영역별로 선택하세요</div>
     <div id="view-toggle">
+      <button id="door-btn">🚪 전체 문열기</button>
       <button id="btn-orbit" class="active">궤도뷰</button>
       <button id="btn-firstperson">1인칭 시점</button>
     </div>
@@ -212,6 +213,69 @@ function setDownlights(on) {
   btn.textContent = on ? '💡 다운라이트 끄기' : '💡 다운라이트 켜기';
 }
 
+// ---- 문 열기 ----
+// obj2gltf가 만든 메시 이름에는 스케치업 원본의 "g" 라인 토큰이 그대로 남아있는데,
+// 문 손잡이 컴포넌트(Modern_Door_Handle_HAEFELE_4_*)를 통해 문 조립체(G_900_*)를 6개 찾아냈다.
+// 각 조립체 = 문짝 2개 메시 + 손잡이(앞/뒤) 4개 메시.
+const DOOR_GROUP_TOKENS = ['G_900_1_1', 'G_900_2_1', 'G_900_3_1', 'G_900_4_1', 'G_900_4_2', 'G_900_6_1'];
+let doorPivots = [];
+let doorsOpen = false;
+const DOOR_OPEN_ANGLE = Math.PI * 0.55; // 약 100도
+
+function setupDoors(model) {
+  DOOR_GROUP_TOKENS.forEach((token) => {
+    const allMeshes = [];
+    const panelMeshes = [];
+    model.traverse((o) => {
+      if (!o.isMesh) return;
+      if (o.name.includes('_' + token + '_Model')) {
+        allMeshes.push(o);
+        if (!o.name.includes('Handle')) panelMeshes.push(o);
+      }
+    });
+    if (!allMeshes.length) return;
+
+    // 문짝(손잡이 제외) 기준으로 경첩 축 계산: 두께가 얇은 쪽이 문 두께, 넓은 쪽이 문 폭
+    const box = new THREE.Box3();
+    panelMeshes.forEach((m) => box.expandByObject(m));
+    const size = box.getSize(new THREE.Vector3());
+    const widthAxis = size.x >= size.z ? 'x' : 'z';
+
+    const pivot = new THREE.Group();
+    if (widthAxis === 'z') {
+      pivot.position.set((box.min.x + box.max.x) / 2, box.min.y, box.min.z);
+    } else {
+      pivot.position.set(box.min.x, box.min.y, (box.min.z + box.max.z) / 2);
+    }
+    scene.add(pivot); // 씬 최상위에 둬서 pivot의 좌표를 월드 좌표 그대로 쓸 수 있게 함
+    allMeshes.forEach((m) => pivot.attach(m)); // 월드 변환을 유지한 채로 피벗의 자식으로 재배치
+    pivot.userData.targetAngle = 0;
+    doorPivots.push(pivot);
+  });
+}
+
+function setDoorsOpen(open) {
+  doorsOpen = open;
+  doorPivots.forEach((p) => { p.userData.targetAngle = open ? DOOR_OPEN_ANGLE : 0; });
+  const btn = document.getElementById('door-btn');
+  if (btn) {
+    btn.classList.toggle('active', open);
+    btn.textContent = open ? '🚪 전체 문닫기' : '🚪 전체 문열기';
+  }
+}
+
+function updateDoors(dt) {
+  doorPivots.forEach((p) => {
+    const target = p.userData.targetAngle;
+    const diff = target - p.rotation.y;
+    if (Math.abs(diff) > 0.001) {
+      p.rotation.y += diff * Math.min(1, dt * 6);
+    } else {
+      p.rotation.y = target;
+    }
+  });
+}
+
 // ---- 창밖 나무 + 바닥 — 건물 주변에 배치해서 창문 너머로 초록빛이 보이도록 ----
 function makeLeafTexture() {
   const c = document.createElement('canvas');
@@ -301,6 +365,7 @@ function setupTreesAndGround(box, center, maxDim) {
 
 document.getElementById('time-slider').addEventListener('input', (e) => updateSunForTime(parseFloat(e.target.value)));
 document.getElementById('downlight-btn').addEventListener('click', () => setDownlights(!downlightsOn));
+document.getElementById('door-btn').addEventListener('click', () => setDoorsOpen(!doorsOpen));
 updateSunForTime(dayHour);
 
 window.addEventListener('resize', () => {
@@ -468,6 +533,7 @@ function animate() {
   } else {
     controls.update();
   }
+  updateDoors(dt);
   renderer.render(scene, camera);
   renderMinimap();
 }
@@ -643,6 +709,7 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   modelMaxDim = maxDim;
   modelBox = box;
   setupDownlights(box, center);
+  setupDoors(model);
   setupTreesAndGround(box, center, maxDim);
 
   // 해 그림자를 찍는 카메라(직교 카메라)의 범위를 모델 크기에 맞춰 설정
