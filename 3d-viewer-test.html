@@ -14,6 +14,14 @@
   #canvas-wrap canvas { display: block; width: 100%; height: 100%; }
   #click-hint { position: absolute; top: 10px; left: 10px; background: rgba(17,17,17,0.75); color: #fff; font-size: 12px; padding: 7px 12px; border-radius: 999px; pointer-events: none; max-width: 70%; }
   #loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #999; background: #eee; }
+  #view-toggle { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+  #view-toggle button { padding: 7px 14px; border-radius: 999px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; background: rgba(17,17,17,0.75); color: #fff; font-family: inherit; }
+  #view-toggle button.active { background: #5084ff; }
+  #fp-overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.55); color: #fff; text-align: center; cursor: pointer; }
+  #fp-overlay .big { font-size: 16px; font-weight: 700; }
+  #fp-overlay .small { font-size: 13px; color: #ddd; }
+  #fp-hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(17,17,17,0.7); color: #fff; font-size: 12px; padding: 7px 14px; border-radius: 999px; pointer-events: none; display: none; }
+  #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,0.85); pointer-events: none; display: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.4); }
   #panel { width: 300px; height: 100%; overflow-y: auto; background: #fff; border-left: 1px solid #e5e5ec; padding: 14px; flex-shrink: 0; }
   #panel h3 { font-size: 13px; margin: 0 0 4px; color: #999; font-weight: 700; }
   #panel .hint { font-size: 12px; color: #bbb; margin-bottom: 14px; line-height: 1.5; }
@@ -39,6 +47,16 @@
   <div id="canvas-wrap">
     <div id="loading">모델 불러오는 중…</div>
     <div id="click-hint">모델을 클릭해서 바닥·벽·가구를 영역별로 선택하세요</div>
+    <div id="view-toggle">
+      <button id="btn-orbit" class="active">궤도뷰</button>
+      <button id="btn-firstperson">1인칭 시점</button>
+    </div>
+    <div id="crosshair"></div>
+    <div id="fp-hint">W A S D 이동 · 마우스로 시점 · ESC로 나가기</div>
+    <div id="fp-overlay">
+      <div class="big">클릭해서 1인칭 시점 시작</div>
+      <div class="small">W A S D로 이동, 마우스로 둘러보고, ESC로 나갈 수 있어요</div>
+    </div>
   </div>
   <div id="panel">
     <h3>재질 편집</h3>
@@ -51,6 +69,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 <script>
 const wrap = document.getElementById('canvas-wrap');
 
@@ -81,9 +100,96 @@ window.addEventListener('resize', () => {
   renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 });
 
+// ---- 1인칭 시점(방문 열고 걸어들어가듯 보기) ----
+// PointerLockControls: 마우스로 시점 회전, WASD로 이동. 모델 단위는 mm(밀리미터)로 확인됨
+// (천장고 약 2380mm) — 눈높이를 1600mm로 두고, 걷는 동안 그 높이를 그대로 유지한다.
+const plControls = new THREE.PointerLockControls(camera, renderer.domElement);
+let fpActive = false;
+let fpFloorY = 0;
+let fpEyeHeight = 1600;
+let fpBounds = null; // {minX,maxX,minZ,maxZ} — 모델 바깥으로 나가지 않도록
+const fpMoveSpeed = 1600; // mm/s (사람 보통 걸음 속도)
+const fpKeys = { w: false, a: false, s: false, d: false };
+const fpVelocity = new THREE.Vector3();
+let lastFrameTime = performance.now();
+
+function keyToDir(code) {
+  if (code === 'KeyW' || code === 'ArrowUp') return 'w';
+  if (code === 'KeyA' || code === 'ArrowLeft') return 'a';
+  if (code === 'KeyS' || code === 'ArrowDown') return 's';
+  if (code === 'KeyD' || code === 'ArrowRight') return 'd';
+  return null;
+}
+document.addEventListener('keydown', (e) => { const k = keyToDir(e.code); if (k) fpKeys[k] = true; });
+document.addEventListener('keyup', (e) => { const k = keyToDir(e.code); if (k) fpKeys[k] = false; });
+
+function enterFirstPerson() {
+  camera.position.y = fpFloorY + fpEyeHeight;
+  plControls.lock();
+}
+function exitFirstPerson() {
+  document.exitPointerLock();
+}
+
+plControls.addEventListener('lock', () => {
+  fpActive = true;
+  document.getElementById('fp-overlay').style.display = 'none';
+  document.getElementById('crosshair').style.display = 'block';
+  document.getElementById('fp-hint').style.display = 'block';
+  document.getElementById('btn-firstperson').classList.add('active');
+  document.getElementById('btn-orbit').classList.remove('active');
+  document.getElementById('click-hint').style.display = 'none';
+});
+plControls.addEventListener('unlock', () => {
+  fpActive = false;
+  document.getElementById('fp-overlay').style.display = 'none';
+  document.getElementById('crosshair').style.display = 'none';
+  document.getElementById('fp-hint').style.display = 'none';
+  document.getElementById('btn-firstperson').classList.remove('active');
+  document.getElementById('btn-orbit').classList.add('active');
+  document.getElementById('click-hint').style.display = '';
+  controls.target.set(camera.position.x, fpFloorY + 900, camera.position.z - 1);
+  controls.update();
+});
+
+document.getElementById('btn-firstperson').addEventListener('click', () => {
+  document.getElementById('fp-overlay').style.display = 'flex';
+});
+document.getElementById('fp-overlay').addEventListener('click', enterFirstPerson);
+document.getElementById('btn-orbit').addEventListener('click', () => {
+  if (fpActive) exitFirstPerson();
+});
+
+function updateFirstPersonMovement(dt) {
+  fpVelocity.x -= fpVelocity.x * 10 * dt;
+  fpVelocity.z -= fpVelocity.z * 10 * dt;
+  const moveX = (fpKeys.d ? 1 : 0) - (fpKeys.a ? 1 : 0);
+  const moveZ = (fpKeys.w ? 1 : 0) - (fpKeys.s ? 1 : 0);
+  if (moveX !== 0 || moveZ !== 0) {
+    fpVelocity.x += moveX * fpMoveSpeed * dt * 10;
+    fpVelocity.z += moveZ * fpMoveSpeed * dt * 10;
+  }
+  plControls.moveRight(fpVelocity.x * dt);
+  plControls.moveForward(fpVelocity.z * dt);
+
+  // 바닥 높이 고정 (계단/단차 없는 단층 평면 이동) + 모델 바깥으로 못 나가게 제한
+  camera.position.y = fpFloorY + fpEyeHeight;
+  if (fpBounds) {
+    camera.position.x = Math.min(fpBounds.maxX, Math.max(fpBounds.minX, camera.position.x));
+    camera.position.z = Math.min(fpBounds.maxZ, Math.max(fpBounds.minZ, camera.position.z));
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
+  const now = performance.now();
+  const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+  lastFrameTime = now;
+  if (fpActive) {
+    updateFirstPersonMovement(dt);
+  } else {
+    controls.update();
+  }
   renderer.render(scene, camera);
 }
 animate();
@@ -217,6 +323,11 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   controls.maxDistance = maxDim * 5;
   controls.update();
 
+  // 1인칭 모드용: 바닥 높이 + 걸어다닐 수 있는 XZ 범위(약간의 여유는 빼서 벽 밖으로 안 나가게)
+  fpFloorY = box.min.y;
+  const margin = maxDim * 0.01;
+  fpBounds = { minX: box.min.x + margin, maxX: box.max.x - margin, minZ: box.min.z + margin, maxZ: box.max.z - margin };
+
   document.getElementById('loading').style.display = 'none';
 });
 
@@ -272,6 +383,7 @@ function selectFromClick(mesh) {
 }
 
 renderer.domElement.addEventListener('click', (ev) => {
+  if (fpActive) return; // 1인칭 모드에서는 클릭이 이동/시점 조작용이라 재질 선택은 하지 않음
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
