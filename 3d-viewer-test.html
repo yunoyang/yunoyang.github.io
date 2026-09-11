@@ -87,6 +87,7 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
 <script>
 const wrap = document.getElementById('canvas-wrap');
 
@@ -166,16 +167,18 @@ function updateSunForTime(hour) {
   ambientLight.intensity = nightAmbient + (dayAmbient - nightAmbient) * t;
   fillLight.intensity = isDaytime ? 0.15 + elevation * 0.45 : 0.04;
 
-  // 하늘색: 낮은 하늘색, 일출·일몰은 주황, 밤은 짙은 남색
-  let skyColor;
-  if (!isDaytime) {
-    skyColor = new THREE.Color(0x0b0f1a);
-  } else if (elevation < 0.25) {
-    skyColor = new THREE.Color(0xffb37a).lerp(new THREE.Color(0xbcd4ea), elevation / 0.25);
-  } else {
-    skyColor = new THREE.Color(0xbcd4ea).lerp(new THREE.Color(0x8fc1ea), (elevation - 0.25) / 0.75);
+  // 하늘색: HDRI(실사 숲 파노라마)가 로드되기 전까지만 대략적인 색으로 대체 표시
+  if (!hdriLoaded) {
+    let skyColor;
+    if (!isDaytime) {
+      skyColor = new THREE.Color(0x0b0f1a);
+    } else if (elevation < 0.25) {
+      skyColor = new THREE.Color(0xffb37a).lerp(new THREE.Color(0xbcd4ea), elevation / 0.25);
+    } else {
+      skyColor = new THREE.Color(0xbcd4ea).lerp(new THREE.Color(0x8fc1ea), (elevation - 0.25) / 0.75);
+    }
+    scene.background = skyColor;
   }
-  scene.background = skyColor;
 
   const icon = !isDaytime ? '🌙' : (elevation < 0.25 ? '🌅' : '☀️');
   const h = Math.floor(hour) % 24;
@@ -212,57 +215,9 @@ function setDownlights(on) {
   btn.textContent = on ? '💡 다운라이트 끄기' : '💡 다운라이트 켜기';
 }
 
-// ---- 창밖 나무 + 바닥 — 건물 주변에 배치해서 창문 너머로 초록빛이 보이도록 ----
-function makeLeafTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#3f7a3a';
-  ctx.fillRect(0, 0, 256, 256);
-  const greens = ['#2e5f2a', '#4c8f42', '#5aa34d', '#356b31', '#639657'];
-  for (let i = 0; i < 900; i++) {
-    ctx.fillStyle = greens[(Math.random() * greens.length) | 0];
-    ctx.globalAlpha = 0.55 + Math.random() * 0.35;
-    const x = Math.random() * 256, y = Math.random() * 256, r = 4 + Math.random() * 10;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.7, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  const tex = new THREE.CanvasTexture(c);
-  tex.encoding = THREE.sRGBEncoding;
-  return tex;
-}
-
-function makeTree(scale) {
-  const group = new THREE.Group();
-  const trunkH = 1400 * scale;
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(45 * scale, 70 * scale, trunkH, 7),
-    new THREE.MeshStandardMaterial({ color: 0x5c4028, roughness: 0.95, flatShading: true })
-  );
-  trunk.position.y = trunkH / 2;
-  trunk.castShadow = true; trunk.receiveShadow = true;
-  group.add(trunk);
-
-  const leafTex = makeTree._leafTex || (makeTree._leafTex = makeLeafTexture());
-  const leafMat = new THREE.MeshStandardMaterial({ map: leafTex, color: 0xffffff, roughness: 0.9, flatShading: true });
-  const clusterCount = 3 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < clusterCount; i++) {
-    const r = (500 + Math.random() * 260) * scale;
-    const cluster = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), leafMat);
-    cluster.position.set(
-      (Math.random() - 0.5) * 500 * scale,
-      trunkH + r * 0.55 + (Math.random() - 0.5) * 300 * scale,
-      (Math.random() - 0.5) * 500 * scale
-    );
-    cluster.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    cluster.castShadow = true; cluster.receiveShadow = true;
-    group.add(cluster);
-  }
-  return group;
-}
-
 function setupTreesAndGround(box, center, maxDim) {
-  // 바닥: 건물 밖으로 넓게 깔린 잔디 (창밖 풍경의 배경 역할 + 나무 그림자를 받아줌)
+  // 바닥: 건물 밖으로 넓게 깔린 잔디 (창밖 풍경의 배경 역할 + 그림자를 받아줌)
+  // 먼 배경의 나무는 아래 실사 HDRI 파노라마가 대신하므로, 여기서는 건물 바로 아래 지면만 깔아준다
   const groundSize = maxDim * 6;
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(groundSize, groundSize),
@@ -272,32 +227,24 @@ function setupTreesAndGround(box, center, maxDim) {
   ground.position.set(center.x, box.min.y - 5, center.z);
   ground.receiveShadow = true;
   scene.add(ground);
-
-  // 건물 외곽에서 바깥쪽으로 떨어진 자리에 나무를 둘러 배치
-  const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
-  const ring = [];
-  const gap = Math.max(w, d) * 0.16;
-  const stepsX = 6, stepsZ = 6;
-  for (let i = 0; i <= stepsX; i++) {
-    const x = box.min.x + (w * i) / stepsX;
-    ring.push([x, box.min.z - gap]);
-    ring.push([x, box.max.z + gap]);
-  }
-  for (let j = 0; j <= stepsZ; j++) {
-    const z = box.min.z + (d * j) / stepsZ;
-    ring.push([box.min.x - gap, z]);
-    ring.push([box.max.x + gap, z]);
-  }
-  ring.forEach(([x, z]) => {
-    const jx = x + (Math.random() - 0.5) * gap * 0.7;
-    const jz = z + (Math.random() - 0.5) * gap * 0.7;
-    const scale = 0.75 + Math.random() * 0.6;
-    const tree = makeTree(scale);
-    tree.position.set(jx, box.min.y, jz);
-    tree.rotation.y = Math.random() * Math.PI * 2;
-    scene.add(tree);
-  });
 }
+
+// ---- 창밖 풍경: Poly Haven(CC0)의 실사 360° 숲 사진(HDRI)을 배경으로 사용 ----
+// 그림이나 절차적 나무보다 실제 사진이라 창문 너머로 봤을 때 훨씬 사실적으로 보임
+let hdriLoaded = false;
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+new THREE.RGBELoader()
+  .load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/forest_grove_1k.hdr', (hdrTex) => {
+    const envMap = pmremGenerator.fromEquirectangular(hdrTex).texture;
+    scene.background = envMap;
+    scene.environment = envMap; // 유리창·금속 등에 은은한 반사도 함께 생김
+    hdrTex.dispose();
+    pmremGenerator.dispose();
+    hdriLoaded = true;
+  }, undefined, (err) => {
+    console.warn('숲 파노라마 로드 실패, 기본 하늘색으로 대체:', err);
+  });
 
 document.getElementById('time-slider').addEventListener('input', (e) => updateSunForTime(parseFloat(e.target.value)));
 document.getElementById('downlight-btn').addEventListener('click', () => setDownlights(!downlightsOn));
