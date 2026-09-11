@@ -78,7 +78,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(window.devicePixelRatio);
+// 레티나/고해상도 디스플레이에서 선명하게 보이도록 실제 픽셀 밀도에 맞춰 렌더 (최대 2배로 제한, 성능 고려)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 renderer.outputEncoding = THREE.sRGBEncoding;
 wrap.appendChild(renderer.domElement);
@@ -86,11 +87,13 @@ wrap.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+// 스케치업의 "음영 처리(Shaded)" 스타일처럼 면 사이 명암 대비가 뚜렷하도록
+// 은은한 ambient보다 방향광 비중을 높임 (아래 flatShading과 함께 면 경계를 또렷하게 만듦)
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
 dirLight.position.set(5, 10, 7);
 scene.add(dirLight);
-const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
 dirLight2.position.set(-5, 5, -7);
 scene.add(dirLight2);
 
@@ -258,7 +261,7 @@ let selectedMeshes = [];      // 현재 선택된 메시들 (묶음 선택 시 �
 let selectedGroupId = null;   // 현재 "묶음" 선택 기준이 된 최상위 그룹 id
 let selectionMode = null;     // 'group' | 'single'
 const meshAssignments = new Map(); // mesh.uuid -> presetId
-const EDGE_COLOR_DEFAULT = 0x333333;
+const EDGE_COLOR_DEFAULT = 0x000000; // 스케치업처럼 또렷한 순수 검정 엣지
 const EDGE_COLOR_SELECTED = 0x5084ff;
 const groupMap = new Map(); // outermost group id -> mesh[]
 
@@ -282,6 +285,10 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
     {
       obj.material = obj.material.clone();
       obj.material.side = THREE.DoubleSide;
+      // 스케치업의 "면별 평면 음영(faceted shading)" 느낌 — 부드럽게 보간된 셰이딩 대신
+      // 면 하나하나가 또렷하게 구분되어 훨씬 선명하고 스케치업 화면과 비슷해짐
+      obj.material.flatShading = true;
+      obj.material.needsUpdate = true;
 
       // 스케치업처럼 모든 메시 가장자리에 스트로크(엣지) 표시 — 영역 구분을 명확하게
       const edges = new THREE.LineSegments(
