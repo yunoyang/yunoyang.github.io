@@ -99,6 +99,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 renderer.outputEncoding = THREE.sRGBEncoding;
+// 톤매핑: 밝은 곳이 그냥 하얗게 날아가지 않고 카메라 필름처럼 자연스럽게 압축되도록
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 wrap.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -110,6 +115,10 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
 scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 1.0); // 바깥의 해 — 시간에 따라 위치·색·밝기가 바뀜
 sunLight.position.set(5, 10, 7);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.bias = -0.0005;
+sunLight.shadow.normalBias = 2; // 모델 단위가 mm라 그림자 여드름/피터팬 현상 방지에 여유값 필요
 scene.add(sunLight);
 const fillLight = new THREE.DirectionalLight(0xffffff, 0.5); // 반대쪽 은은한 보조광(하늘 반사광 느낌)
 fillLight.position.set(-5, 5, -7);
@@ -465,6 +474,8 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
     {
       obj.material = obj.material.clone();
       obj.material.side = THREE.DoubleSide;
+      obj.castShadow = true;
+      obj.receiveShadow = true;
       // 스케치업의 "면별 평면 음영(faceted shading)" 느낌 — 부드럽게 보간된 셰이딩 대신
       // 면 하나하나가 또렷하게 구분되어 훨씬 선명하고 스케치업 화면과 비슷해짐
       obj.material.flatShading = true;
@@ -521,6 +532,15 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   modelMaxDim = maxDim;
   modelBox = box;
   setupDownlights(box, center);
+
+  // 해 그림자를 찍는 카메라(직교 카메라)의 범위를 모델 크기에 맞춰 설정
+  const shadowCam = sunLight.shadow.camera;
+  const shadowExtent = maxDim * 0.8;
+  shadowCam.left = -shadowExtent; shadowCam.right = shadowExtent;
+  shadowCam.top = shadowExtent; shadowCam.bottom = -shadowExtent;
+  shadowCam.near = maxDim * 0.1; shadowCam.far = maxDim * 4;
+  shadowCam.updateProjectionMatrix();
+
   updateSunForTime(dayHour); // 실제 모델 스케일 기준으로 해 위치 다시 계산
 
   document.getElementById('loading').style.display = 'none';
