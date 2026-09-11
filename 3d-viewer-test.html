@@ -527,7 +527,11 @@ function presetTexture(p) {
   const tex = textureLoader.load(polyhavenDiffUrl(p.slug));
   tex.encoding = THREE.sRGBEncoding;
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(p.repeat || 2, p.repeat || 2);
+  // 이 모델(OBJ→GLTF 변환본)의 UV는 0~1 정규화가 아니라 스케치업이 구운 실측 스케일 좌표라
+  // 여기서 repeat를 추가로 곱하면 타일링이 지나치게 촘촘해져서 GPU가 밉맵으로 뭉개버리고
+  // 나뭇결 없이 평균 색상 한 장처럼 보이는 문제가 있었음 — repeat는 그대로 1을 유지
+  tex.repeat.set(1, 1);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   _presetTexCache[p.id] = tex;
   return tex;
 }
