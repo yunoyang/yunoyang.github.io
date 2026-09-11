@@ -222,7 +222,22 @@ let doorPivots = [];
 let doorsOpen = false;
 const DOOR_OPEN_ANGLE = Math.PI * 0.55; // 약 100도
 
-function setupDoors(model) {
+// 문 중심에서 두께축 양쪽으로 레이를 쏴서, 벽에 더 빨리 막히는 쪽(=더 작고 닫힌 공간=방)을 찾음
+// 복도/거실처럼 트인 쪽은 레이가 더 멀리까지 나가는 경향이 있다는 점을 이용
+function pickRoomSide(origin, axis, testMeshes, excludeSet) {
+  const dirPos = axis === 'x' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+  const dirNeg = dirPos.clone().negate();
+  const raycaster = new THREE.Raycaster();
+  raycaster.far = 6000;
+  const distFor = (dir) => {
+    raycaster.set(origin, dir);
+    const hits = raycaster.intersectObjects(testMeshes, false).filter((h) => !excludeSet.has(h.object));
+    return hits.length ? hits[0].distance : Infinity;
+  };
+  return distFor(dirPos) <= distFor(dirNeg) ? 1 : -1; // 1 = +축 방향이 방(더 가까운 벽)
+}
+
+function setupDoors(model, buildingMeshes) {
   DOOR_GROUP_TOKENS.forEach((token) => {
     const allMeshes = [];
     const panelMeshes = [];
@@ -240,6 +255,8 @@ function setupDoors(model) {
     panelMeshes.forEach((m) => box.expandByObject(m));
     const size = box.getSize(new THREE.Vector3());
     const widthAxis = size.x >= size.z ? 'x' : 'z';
+    const thicknessAxis = widthAxis === 'x' ? 'z' : 'x';
+    const center = box.getCenter(new THREE.Vector3());
 
     const pivot = new THREE.Group();
     if (widthAxis === 'z') {
@@ -249,6 +266,19 @@ function setupDoors(model) {
     }
     scene.add(pivot); // 씬 최상위에 둬서 pivot의 좌표를 월드 좌표 그대로 쓸 수 있게 함
     allMeshes.forEach((m) => pivot.attach(m)); // 월드 변환을 유지한 채로 피벗의 자식으로 재배치
+
+    // 문틀 높이 중간(사람 눈높이 근처)에서 두께축 양쪽을 검사해 방 쪽을 찾고,
+    // 그 쪽으로 열리도록 회전 부호를 정함 (widthAxis별로 +/-가 어느 쪽으로 스윙하는지 다름 — 기하 계산으로 유도)
+    const rayOrigin = center.clone();
+    rayOrigin.y = box.min.y + size.y * 0.5;
+    const excludeSet = new Set(allMeshes);
+    const roomSide = pickRoomSide(rayOrigin, thicknessAxis, buildingMeshes, excludeSet); // 1 or -1
+
+    // widthAxis='z'(두께축 x): +θ → +X로 스윙 / widthAxis='x'(두께축 z): +θ → -Z로 스윙
+    const signForPositiveTheta = widthAxis === 'z' ? 1 : -1;
+    const openSign = roomSide === signForPositiveTheta ? 1 : -1;
+
+    pivot.userData.openAngle = DOOR_OPEN_ANGLE * openSign;
     pivot.userData.targetAngle = 0;
     doorPivots.push(pivot);
   });
@@ -256,7 +286,7 @@ function setupDoors(model) {
 
 function setDoorsOpen(open) {
   doorsOpen = open;
-  doorPivots.forEach((p) => { p.userData.targetAngle = open ? DOOR_OPEN_ANGLE : 0; });
+  doorPivots.forEach((p) => { p.userData.targetAngle = open ? p.userData.openAngle : 0; });
   const btn = document.getElementById('door-btn');
   if (btn) {
     btn.classList.toggle('active', open);
@@ -709,7 +739,7 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   modelMaxDim = maxDim;
   modelBox = box;
   setupDownlights(box, center);
-  setupDoors(model);
+  setupDoors(model, meshes);
   setupTreesAndGround(box, center, maxDim);
 
   // 해 그림자를 찍는 카메라(직교 카메라)의 범위를 모델 크기에 맞춰 설정
