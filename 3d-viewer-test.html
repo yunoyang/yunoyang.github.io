@@ -129,6 +129,35 @@ wrap.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+// 마우스: 좌클릭 회전, 우클릭/휠클릭 드래그는 화면 이동(팬) 둘 다 가능하게
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN };
+// 트랙패드 두 손가락 스크롤/핀치를 직접 처리하기 위해 기본 휠 줌은 끄고 아래에서 커스텀 처리
+controls.enableZoom = false;
+
+// 트랙패드: 핀치(Ctrl+휠로 감지됨)는 확대/축소, 일반 두 손가락 스크롤은 화면 이동(팬)
+// 마우스: 휠 스크롤은 그대로 확대/축소로 사용
+renderer.domElement.addEventListener('wheel', (e) => {
+  if (fpActive) return;
+  e.preventDefault();
+  if (e.ctrlKey) {
+    // 트랙패드 핀치 제스처는 브라우저가 ctrlKey를 켠 wheel 이벤트로 보냄 — 확대/축소로 처리
+    // (마우스에서 Ctrl+휠로도 동일하게 확대/축소 가능)
+    const scale = Math.pow(0.95, -e.deltaY * 0.5);
+    const offset = camera.position.clone().sub(controls.target);
+    const newDist = THREE.MathUtils.clamp(offset.length() * scale, controls.minDistance, controls.maxDistance);
+    offset.setLength(newDist);
+    camera.position.copy(controls.target).add(offset);
+  } else {
+    // 트랙패드 두 손가락 드래그(스크롤) — 화면 이동(팬)
+    const offset = camera.position.clone().sub(controls.target);
+    const panSpeed = offset.length() * 0.0015;
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(-e.deltaX * panSpeed);
+    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(e.deltaY * panSpeed);
+    camera.position.add(right).add(up);
+    controls.target.add(right).add(up);
+  }
+  controls.update();
+}, { passive: false });
 
 // 스케치업의 "음영 처리(Shaded)" 스타일처럼 면 사이 명암 대비가 뚜렷하도록
 // 은은한 ambient보다 방향광 비중을 높임 (아래 flatShading과 함께 면 경계를 또렷하게 만듦)
@@ -652,7 +681,7 @@ function updateControlsGuide() {
   const el = document.getElementById('controls-guide');
   el.innerHTML = fpActive
     ? `<b>W A S D</b> 이동<br><b>마우스</b> 시점 회전<br><b>ESC</b> 나가기`
-    : `<b>드래그</b> 회전<br><b>휠</b> 확대/축소<br><b>우클릭 드래그</b> 화면 이동`;
+    : `<b>드래그</b> 회전<br><b>스크롤/두 손가락</b> 화면 이동<br><b>Ctrl+스크롤/핀치</b> 확대·축소<br><b>우클릭 드래그</b> 화면 이동`;
 }
 
 plControls.addEventListener('lock', () => {
