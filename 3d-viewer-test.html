@@ -356,51 +356,115 @@ function updateDoors(dt) {
 }
 
 // ---- 창밖 나무 + 바닥 — 건물 주변에 배치해서 창문 너머로 초록빛이 보이도록 ----
-function makeLeafTexture() {
+// 나무껍질: 세로 결이 있는 갈색 텍스처 (원기둥 트렁크/가지에 사용)
+function makeBarkTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 256;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 128, 0);
+  grad.addColorStop(0, '#3a2a1c'); grad.addColorStop(0.5, '#5c4028'); grad.addColorStop(1, '#3a2a1c');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 256);
+  for (let i = 0; i < 220; i++) {
+    ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1 + Math.random() * 2;
+    let cx = Math.random() * 128;
+    ctx.beginPath(); ctx.moveTo(cx, 0);
+    for (let y = 0; y <= 256; y += 16) { cx += (Math.random() - 0.5) * 6; ctx.lineTo(cx, y); }
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 3);
+  return tex;
+}
+
+// 잎 카드: 투명 배경 위에 이파리 뭉치 실루엣 + 빛이 새는 작은 구멍들 — 속이 꽉 찬 구체보다
+// 훨씬 자연스러운 나뭇잎 캐노피 느낌을 냄 (게임에서 흔히 쓰는 "크로스 카드" 나무 기법)
+function makeLeafCardTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#3f7a3a';
-  ctx.fillRect(0, 0, 256, 256);
-  const greens = ['#2e5f2a', '#4c8f42', '#5aa34d', '#356b31', '#639657'];
-  for (let i = 0; i < 900; i++) {
+  const greens = ['#2e5f2a', '#4c8f42', '#5aa34d', '#356b31', '#639657', '#7fb26a'];
+  ctx.translate(128, 128);
+  for (let i = 0; i < 100; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.pow(Math.random(), 0.5) * 100; // 중심으로 쏠리게 해서 둥근 실루엣
+    const x = Math.cos(ang) * rad, y = Math.sin(ang) * rad;
+    const r = 18 + Math.random() * 30;
     ctx.fillStyle = greens[(Math.random() * greens.length) | 0];
-    ctx.globalAlpha = 0.55 + Math.random() * 0.35;
-    const x = Math.random() * 256, y = Math.random() * 256, r = 4 + Math.random() * 10;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.7, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.8 + Math.random() * 0.2;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.8, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.globalAlpha = 1;
+  // 빛이 새어 들어오는 구멍
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 20; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.random() * 90;
+    ctx.globalAlpha = 0.5 + Math.random() * 0.4;
+    ctx.beginPath(); ctx.arc(Math.cos(ang) * rad, Math.sin(ang) * rad, 4 + Math.random() * 9, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   const tex = new THREE.CanvasTexture(c);
   tex.encoding = THREE.sRGBEncoding;
   return tex;
 }
 
+const treeFoliages = []; // 바람에 흔들리는 애니메이션용 잎 그룹 모음
+
 function makeTree(scale) {
   const group = new THREE.Group();
-  const trunkH = 1400 * scale;
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(45 * scale, 70 * scale, trunkH, 7),
-    new THREE.MeshStandardMaterial({ color: 0x5c4028, roughness: 0.95, flatShading: true })
-  );
+  const trunkH = 1500 * scale;
+  const barkTex = makeTree._barkTex || (makeTree._barkTex = makeBarkTexture());
+  const trunkMat = new THREE.MeshStandardMaterial({ map: barkTex, roughness: 1, flatShading: true });
+
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(35 * scale, 75 * scale, trunkH, 8), trunkMat);
   trunk.position.y = trunkH / 2;
   trunk.castShadow = true; trunk.receiveShadow = true;
   group.add(trunk);
 
-  const leafTex = makeTree._leafTex || (makeTree._leafTex = makeLeafTexture());
-  const leafMat = new THREE.MeshStandardMaterial({ map: leafTex, color: 0xffffff, roughness: 0.9, flatShading: true });
-  const clusterCount = 3 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < clusterCount; i++) {
-    const r = (500 + Math.random() * 260) * scale;
-    const cluster = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), leafMat);
-    cluster.position.set(
-      (Math.random() - 0.5) * 500 * scale,
-      trunkH + r * 0.55 + (Math.random() - 0.5) * 300 * scale,
-      (Math.random() - 0.5) * 500 * scale
-    );
-    cluster.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    cluster.castShadow = true; cluster.receiveShadow = true;
-    group.add(cluster);
+  // 굵은 가지 몇 개 — 실루엣에 자연스러운 비대칭을 더함
+  const branchCount = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < branchCount; i++) {
+    const blen = (300 + Math.random() * 220) * scale;
+    const branch = new THREE.Mesh(new THREE.CylinderGeometry(9 * scale, 20 * scale, blen, 5), trunkMat);
+    const tilt = (Math.random() > 0.5 ? 1 : -1) * (Math.PI / 3 + Math.random() * 0.3);
+    branch.position.y = trunkH * (0.45 + Math.random() * 0.4);
+    branch.rotation.z = tilt;
+    branch.rotation.y = Math.random() * Math.PI * 2;
+    branch.position.x = Math.sin(tilt) * blen * 0.4;
+    branch.castShadow = true;
+    group.add(branch);
   }
+
+  const leafTex = makeTree._leafTex || (makeTree._leafTex = makeLeafCardTexture());
+  // 나무마다 초록 색조를 살짝 다르게 줘서 한 그루씩 다 똑같아 보이지 않게 함
+  const hue = 0.28 + (Math.random() - 0.5) * 0.06;
+  const tint = new THREE.Color().setHSL(hue, 0.45 + Math.random() * 0.15, 0.32 + Math.random() * 0.12);
+  const leafMat = new THREE.MeshStandardMaterial({
+    map: leafTex, color: tint, roughness: 0.85,
+    transparent: true, alphaTest: 0.35, side: THREE.DoubleSide,
+  });
+
+  const foliage = new THREE.Group();
+  const clusterCount = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < clusterCount; i++) {
+    const r = (420 + Math.random() * 260) * scale;
+    const cx = (Math.random() - 0.5) * 600 * scale;
+    const cy = trunkH * 0.55 + Math.random() * trunkH * 0.55;
+    const cz = (Math.random() - 0.5) * 600 * scale;
+    for (let k = 0; k < 2; k++) { // 십자로 겹친 카드 2장 — 어느 각도에서 봐도 부피감이 있어 보임
+      const quad = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), leafMat);
+      quad.position.set(cx, cy, cz);
+      quad.rotation.y = k * Math.PI / 2 + Math.random() * 0.3;
+      quad.rotation.x = (Math.random() - 0.5) * 0.2;
+      quad.castShadow = true;
+      foliage.add(quad);
+    }
+  }
+  foliage.userData.swayPhase = Math.random() * Math.PI * 2;
+  group.add(foliage);
+  treeFoliages.push(foliage);
   return group;
 }
 
@@ -805,6 +869,9 @@ function animate() {
     controls.update();
   }
   updateDoors(dt);
+  // 나무 잎 카드에 은은한 바람 흔들림 효과
+  const windT = now * 0.0006;
+  treeFoliages.forEach((f) => { f.rotation.z = Math.sin(windT + f.userData.swayPhase) * 0.03; });
   renderer.render(scene, camera);
   renderMinimap();
 }
