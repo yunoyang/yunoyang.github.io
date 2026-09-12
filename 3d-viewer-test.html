@@ -396,164 +396,8 @@ function updateDoors(dt) {
   });
 }
 
-// ---- 창밖 나무 + 바닥 — 건물 주변에 배치해서 창문 너머로 초록빛이 보이도록 ----
-// 나무껍질: 세로 결이 있는 갈색 텍스처 (원기둥 트렁크/가지에 사용)
-function makeBarkTexture() {
-  const c = document.createElement('canvas');
-  c.width = 128; c.height = 256;
-  const ctx = c.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 128, 0);
-  grad.addColorStop(0, '#3a2a1c'); grad.addColorStop(0.5, '#5c4028'); grad.addColorStop(1, '#3a2a1c');
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 256);
-  for (let i = 0; i < 220; i++) {
-    ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1 + Math.random() * 2;
-    let cx = Math.random() * 128;
-    ctx.beginPath(); ctx.moveTo(cx, 0);
-    for (let y = 0; y <= 256; y += 16) { cx += (Math.random() - 0.5) * 6; ctx.lineTo(cx, y); }
-    ctx.stroke();
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.encoding = THREE.sRGBEncoding;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 3);
-  return tex;
-}
-
-// 잎 카드: 투명 배경 위에 이파리 뭉치 실루엣 + 빛이 새는 작은 구멍들 — 속이 꽉 찬 구체보다
-// 훨씬 자연스러운 나뭇잎 캐노피 느낌을 냄 (게임에서 흔히 쓰는 "크로스 카드" 나무 기법)
-function makeLeafCardTexture() {
-  const SIZE = 512;
-  const R = SIZE / 2;
-  const c = document.createElement('canvas');
-  c.width = c.height = SIZE;
-  const ctx = c.getContext('2d');
-  const greens = ['#254d22', '#2e5f2a', '#3c7536', '#4c8f42', '#5aa34d', '#356b31', '#639657', '#7fb26a', '#8fc27a'];
-  ctx.translate(R, R);
-
-  // 울퉁불퉁한 캐노피 윤곽선(각도별로 반지름을 흔들어서 완전한 원이 되지 않게 함)
-  const wobble = [];
-  const WN = 10;
-  for (let i = 0; i < WN; i++) wobble.push(0.7 + Math.random() * 0.5);
-  const edgeR = (ang) => {
-    const t = (ang / (Math.PI * 2)) * WN;
-    const i0 = Math.floor(t) % WN, i1 = (i0 + 1) % WN;
-    const f = t - Math.floor(t);
-    return (wobble[i0] * (1 - f) + wobble[i1] * f) * R * 0.92;
-  };
-
-  // 작은 잎 뭉치를 훨씬 촘촘하게 채워서 "이파리가 빽빽한" 느낌을 냄 (전보다 크기는 작고 개수는 많게)
-  for (let i = 0; i < 420; i++) {
-    const ang = Math.random() * Math.PI * 2;
-    const maxRad = edgeR(ang);
-    const rad = Math.pow(Math.random(), 0.55) * maxRad;
-    const x = Math.cos(ang) * rad, y = Math.sin(ang) * rad;
-    const r = 10 + Math.random() * 20;
-    const base = greens[(Math.random() * greens.length) | 0];
-    ctx.fillStyle = base;
-    ctx.globalAlpha = 0.75 + Math.random() * 0.25;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * (0.55 + Math.random() * 0.3), Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
-  }
-  // 하이라이트: 밝은 잎사귀 몇 개를 얹어서 잎 표면의 반짝임을 표현
-  for (let i = 0; i < 60; i++) {
-    const ang = Math.random() * Math.PI * 2;
-    const rad = Math.pow(Math.random(), 0.6) * edgeR(ang) * 0.9;
-    ctx.fillStyle = '#a8d68f';
-    ctx.globalAlpha = 0.18 + Math.random() * 0.18;
-    const r = 6 + Math.random() * 12;
-    ctx.beginPath(); ctx.ellipse(Math.cos(ang) * rad, Math.sin(ang) * rad, r, r * 0.6, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
-  }
-  // 빛이 새어 들어오는 작은 구멍들(그림자 짙은 틈)
-  ctx.globalCompositeOperation = 'destination-out';
-  for (let i = 0; i < 55; i++) {
-    const ang = Math.random() * Math.PI * 2;
-    const rad = Math.random() * edgeR(ang) * 0.95;
-    ctx.globalAlpha = 0.45 + Math.random() * 0.4;
-    ctx.beginPath(); ctx.arc(Math.cos(ang) * rad, Math.sin(ang) * rad, 3 + Math.random() * 7, 0, Math.PI * 2); ctx.fill();
-  }
-  // 바깥 경계 바깥쪽은 완전히 투명하게 정리 (혹시 남은 잎 뭉치가 삐져나온 부분 제거)
-  ctx.globalAlpha = 1;
-  ctx.beginPath();
-  for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.05) {
-    const rr = edgeR(a) * 1.03;
-    const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-    if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.rect(-R, R, SIZE, -SIZE); // 캔버스 전체를 감싸는 사각형(짝수 규칙으로 바깥쪽만 지워짐)
-  ctx.fill('evenodd');
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const tex = new THREE.CanvasTexture(c);
-  tex.encoding = THREE.sRGBEncoding;
-  return tex;
-}
-
-const treeFoliages = []; // 바람에 흔들리는 애니메이션용 잎 그룹 모음
-
-function makeTree(scale) {
-  const group = new THREE.Group();
-  const trunkH = 1500 * scale;
-  const barkTex = makeTree._barkTex || (makeTree._barkTex = makeBarkTexture());
-  const trunkMat = new THREE.MeshStandardMaterial({ map: barkTex, roughness: 1, flatShading: true });
-
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(35 * scale, 75 * scale, trunkH, 8), trunkMat);
-  trunk.position.y = trunkH / 2;
-  trunk.castShadow = true; trunk.receiveShadow = true;
-  group.add(trunk);
-
-  // 뿌리 밑동 — 바닥과 만나는 부분을 살짝 넓혀서 나무가 땅에서 자란 느낌을 줌
-  const rootFlare = new THREE.Mesh(new THREE.CylinderGeometry(75 * scale, 110 * scale, 140 * scale, 8), trunkMat);
-  rootFlare.position.y = 70 * scale;
-  rootFlare.castShadow = true; rootFlare.receiveShadow = true;
-  group.add(rootFlare);
-
-  // 굵은 가지 몇 개 — 실루엣에 자연스러운 비대칭을 더함
-  const branchCount = 2 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < branchCount; i++) {
-    const blen = (300 + Math.random() * 220) * scale;
-    const branch = new THREE.Mesh(new THREE.CylinderGeometry(9 * scale, 20 * scale, blen, 5), trunkMat);
-    const tilt = (Math.random() > 0.5 ? 1 : -1) * (Math.PI / 3 + Math.random() * 0.3);
-    branch.position.y = trunkH * (0.45 + Math.random() * 0.4);
-    branch.rotation.z = tilt;
-    branch.rotation.y = Math.random() * Math.PI * 2;
-    branch.position.x = Math.sin(tilt) * blen * 0.4;
-    branch.castShadow = true;
-    group.add(branch);
-  }
-
-  const leafTex = makeTree._leafTex || (makeTree._leafTex = makeLeafCardTexture());
-  // 나무마다 초록 색조를 살짝 다르게 줘서 한 그루씩 다 똑같아 보이지 않게 함
-  const hue = 0.28 + (Math.random() - 0.5) * 0.06;
-  const tint = new THREE.Color().setHSL(hue, 0.45 + Math.random() * 0.15, 0.32 + Math.random() * 0.12);
-  const leafMat = new THREE.MeshStandardMaterial({
-    map: leafTex, color: tint, roughness: 0.85,
-    transparent: true, alphaTest: 0.35, side: THREE.DoubleSide,
-  });
-
-  const foliage = new THREE.Group();
-  const clusterCount = 8 + Math.floor(Math.random() * 4); // 전보다 더 많은 작은 뭉치로 빈틈없이 채움
-  for (let i = 0; i < clusterCount; i++) {
-    const r = (300 + Math.random() * 200) * scale;
-    const cx = (Math.random() - 0.5) * 700 * scale;
-    const cy = trunkH * 0.5 + Math.random() * trunkH * 0.65;
-    const cz = (Math.random() - 0.5) * 700 * scale;
-    for (let k = 0; k < 3; k++) { // 세 방향으로 겹친 카드 — 어느 각도에서 봐도 부피감이 있어 보임
-      const quad = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), leafMat);
-      quad.position.set(cx, cy, cz);
-      quad.rotation.y = (k * Math.PI) / 3 + Math.random() * 0.3;
-      quad.rotation.x = (Math.random() - 0.5) * 0.3;
-      quad.castShadow = true;
-      foliage.add(quad);
-    }
-  }
-  foliage.userData.swayPhase = Math.random() * Math.PI * 2;
-  group.add(foliage);
-  treeFoliages.push(foliage);
-  return group;
-}
-
-function setupTreesAndGround(box, center, maxDim) {
+// ---- 창밖 바닥(잔디) — 나무는 성능 문제로 제거함 ----
+function setupGround(box, center, maxDim) {
   // 바닥: 건물 밖으로 넓게 깔린 잔디 (창밖 풍경의 배경 역할 + 나무 그림자를 받아줌)
   // Poly Haven의 실사 잔디 텍스처 사용 — 단색보다 훨씬 사실적
   const groundSize = maxDim * 6;
@@ -571,35 +415,7 @@ function setupTreesAndGround(box, center, maxDim) {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // 건물 외곽에서 바깥쪽으로 떨어진 자리에 나무를 둘러 배치 — 요청으로 2배 늘림:
-  // 가까운 링(기존 밀도) + 그보다 더 바깥쪽 링(같은 밀도)을 겹쳐서 앞뒤로 깊이감 있게 배치
-  const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
-  function placeTreeRing(gap, stepsX, stepsZ) {
-    const ring = [];
-    for (let i = 0; i <= stepsX; i++) {
-      const x = box.min.x + (w * i) / stepsX;
-      ring.push([x, box.min.z - gap]);
-      ring.push([x, box.max.z + gap]);
-    }
-    for (let j = 0; j <= stepsZ; j++) {
-      const z = box.min.z + (d * j) / stepsZ;
-      ring.push([box.min.x - gap, z]);
-      ring.push([box.max.x + gap, z]);
-    }
-    ring.forEach(([x, z]) => {
-      const jx = x + (Math.random() - 0.5) * gap * 0.7;
-      const jz = z + (Math.random() - 0.5) * gap * 0.7;
-      const scale = 0.75 + Math.random() * 0.6;
-      const tree = makeTree(scale);
-      tree.position.set(jx, box.min.y, jz);
-      tree.rotation.y = Math.random() * Math.PI * 2;
-      scene.add(tree);
-    });
-  }
-  const gap1 = Math.max(w, d) * 0.16;
-  const gap2 = Math.max(w, d) * 0.32;
-  placeTreeRing(gap1, 6, 6);
-  placeTreeRing(gap2, 6, 6);
+  // 나무는 렌더링 부하가 커서(알파컷아웃 잎 카드 다수) 성능 문제로 제거함 — 잔디 바닥만 유지
 }
 
 document.getElementById('time-slider').addEventListener('input', (e) => updateSunForTime(parseFloat(e.target.value)));
@@ -966,9 +782,6 @@ function animate() {
     controls.update();
   }
   updateDoors(dt);
-  // 나무 잎 카드에 은은한 바람 흔들림 효과
-  const windT = now * 0.0006;
-  treeFoliages.forEach((f) => { f.rotation.z = Math.sin(windT + f.userData.swayPhase) * 0.03; });
   renderer.render(scene, camera);
   renderMinimap();
 }
@@ -1146,7 +959,7 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   setupDownlights(box, center);
   setupIndirectLighting(box, center);
   setupDoors(model, meshes);
-  setupTreesAndGround(box, center, maxDim);
+  setupGround(box, center, maxDim);
 
   // 해 그림자를 찍는 카메라(직교 카메라)의 범위를 모델 크기에 맞춰 설정
   const shadowCam = sunLight.shadow.camera;
