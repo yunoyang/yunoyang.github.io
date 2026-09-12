@@ -382,28 +382,66 @@ function makeBarkTexture() {
 // 잎 카드: 투명 배경 위에 이파리 뭉치 실루엣 + 빛이 새는 작은 구멍들 — 속이 꽉 찬 구체보다
 // 훨씬 자연스러운 나뭇잎 캐노피 느낌을 냄 (게임에서 흔히 쓰는 "크로스 카드" 나무 기법)
 function makeLeafCardTexture() {
+  const SIZE = 512;
+  const R = SIZE / 2;
   const c = document.createElement('canvas');
-  c.width = c.height = 256;
+  c.width = c.height = SIZE;
   const ctx = c.getContext('2d');
-  const greens = ['#2e5f2a', '#4c8f42', '#5aa34d', '#356b31', '#639657', '#7fb26a'];
-  ctx.translate(128, 128);
-  for (let i = 0; i < 100; i++) {
+  const greens = ['#254d22', '#2e5f2a', '#3c7536', '#4c8f42', '#5aa34d', '#356b31', '#639657', '#7fb26a', '#8fc27a'];
+  ctx.translate(R, R);
+
+  // 울퉁불퉁한 캐노피 윤곽선(각도별로 반지름을 흔들어서 완전한 원이 되지 않게 함)
+  const wobble = [];
+  const WN = 10;
+  for (let i = 0; i < WN; i++) wobble.push(0.7 + Math.random() * 0.5);
+  const edgeR = (ang) => {
+    const t = (ang / (Math.PI * 2)) * WN;
+    const i0 = Math.floor(t) % WN, i1 = (i0 + 1) % WN;
+    const f = t - Math.floor(t);
+    return (wobble[i0] * (1 - f) + wobble[i1] * f) * R * 0.92;
+  };
+
+  // 작은 잎 뭉치를 훨씬 촘촘하게 채워서 "이파리가 빽빽한" 느낌을 냄 (전보다 크기는 작고 개수는 많게)
+  for (let i = 0; i < 420; i++) {
     const ang = Math.random() * Math.PI * 2;
-    const rad = Math.pow(Math.random(), 0.5) * 100; // 중심으로 쏠리게 해서 둥근 실루엣
+    const maxRad = edgeR(ang);
+    const rad = Math.pow(Math.random(), 0.55) * maxRad;
     const x = Math.cos(ang) * rad, y = Math.sin(ang) * rad;
-    const r = 18 + Math.random() * 30;
-    ctx.fillStyle = greens[(Math.random() * greens.length) | 0];
-    ctx.globalAlpha = 0.8 + Math.random() * 0.2;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.8, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
+    const r = 10 + Math.random() * 20;
+    const base = greens[(Math.random() * greens.length) | 0];
+    ctx.fillStyle = base;
+    ctx.globalAlpha = 0.75 + Math.random() * 0.25;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * (0.55 + Math.random() * 0.3), Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
   }
-  // 빛이 새어 들어오는 구멍
-  ctx.globalCompositeOperation = 'destination-out';
-  for (let i = 0; i < 20; i++) {
+  // 하이라이트: 밝은 잎사귀 몇 개를 얹어서 잎 표면의 반짝임을 표현
+  for (let i = 0; i < 60; i++) {
     const ang = Math.random() * Math.PI * 2;
-    const rad = Math.random() * 90;
-    ctx.globalAlpha = 0.5 + Math.random() * 0.4;
-    ctx.beginPath(); ctx.arc(Math.cos(ang) * rad, Math.sin(ang) * rad, 4 + Math.random() * 9, 0, Math.PI * 2); ctx.fill();
+    const rad = Math.pow(Math.random(), 0.6) * edgeR(ang) * 0.9;
+    ctx.fillStyle = '#a8d68f';
+    ctx.globalAlpha = 0.18 + Math.random() * 0.18;
+    const r = 6 + Math.random() * 12;
+    ctx.beginPath(); ctx.ellipse(Math.cos(ang) * rad, Math.sin(ang) * rad, r, r * 0.6, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
   }
+  // 빛이 새어 들어오는 작은 구멍들(그림자 짙은 틈)
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 55; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.random() * edgeR(ang) * 0.95;
+    ctx.globalAlpha = 0.45 + Math.random() * 0.4;
+    ctx.beginPath(); ctx.arc(Math.cos(ang) * rad, Math.sin(ang) * rad, 3 + Math.random() * 7, 0, Math.PI * 2); ctx.fill();
+  }
+  // 바깥 경계 바깥쪽은 완전히 투명하게 정리 (혹시 남은 잎 뭉치가 삐져나온 부분 제거)
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.05) {
+    const rr = edgeR(a) * 1.03;
+    const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+    if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.rect(-R, R, SIZE, -SIZE); // 캔버스 전체를 감싸는 사각형(짝수 규칙으로 바깥쪽만 지워짐)
+  ctx.fill('evenodd');
+
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const tex = new THREE.CanvasTexture(c);
   tex.encoding = THREE.sRGBEncoding;
@@ -422,6 +460,12 @@ function makeTree(scale) {
   trunk.position.y = trunkH / 2;
   trunk.castShadow = true; trunk.receiveShadow = true;
   group.add(trunk);
+
+  // 뿌리 밑동 — 바닥과 만나는 부분을 살짝 넓혀서 나무가 땅에서 자란 느낌을 줌
+  const rootFlare = new THREE.Mesh(new THREE.CylinderGeometry(75 * scale, 110 * scale, 140 * scale, 8), trunkMat);
+  rootFlare.position.y = 70 * scale;
+  rootFlare.castShadow = true; rootFlare.receiveShadow = true;
+  group.add(rootFlare);
 
   // 굵은 가지 몇 개 — 실루엣에 자연스러운 비대칭을 더함
   const branchCount = 2 + Math.floor(Math.random() * 2);
@@ -447,17 +491,17 @@ function makeTree(scale) {
   });
 
   const foliage = new THREE.Group();
-  const clusterCount = 5 + Math.floor(Math.random() * 3);
+  const clusterCount = 8 + Math.floor(Math.random() * 4); // 전보다 더 많은 작은 뭉치로 빈틈없이 채움
   for (let i = 0; i < clusterCount; i++) {
-    const r = (420 + Math.random() * 260) * scale;
-    const cx = (Math.random() - 0.5) * 600 * scale;
-    const cy = trunkH * 0.55 + Math.random() * trunkH * 0.55;
-    const cz = (Math.random() - 0.5) * 600 * scale;
-    for (let k = 0; k < 2; k++) { // 십자로 겹친 카드 2장 — 어느 각도에서 봐도 부피감이 있어 보임
+    const r = (300 + Math.random() * 200) * scale;
+    const cx = (Math.random() - 0.5) * 700 * scale;
+    const cy = trunkH * 0.5 + Math.random() * trunkH * 0.65;
+    const cz = (Math.random() - 0.5) * 700 * scale;
+    for (let k = 0; k < 3; k++) { // 세 방향으로 겹친 카드 — 어느 각도에서 봐도 부피감이 있어 보임
       const quad = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), leafMat);
       quad.position.set(cx, cy, cz);
-      quad.rotation.y = k * Math.PI / 2 + Math.random() * 0.3;
-      quad.rotation.x = (Math.random() - 0.5) * 0.2;
+      quad.rotation.y = (k * Math.PI) / 3 + Math.random() * 0.3;
+      quad.rotation.x = (Math.random() - 0.5) * 0.3;
       quad.castShadow = true;
       foliage.add(quad);
     }
@@ -470,10 +514,16 @@ function makeTree(scale) {
 
 function setupTreesAndGround(box, center, maxDim) {
   // 바닥: 건물 밖으로 넓게 깔린 잔디 (창밖 풍경의 배경 역할 + 나무 그림자를 받아줌)
+  // Poly Haven의 실사 잔디 텍스처 사용 — 단색보다 훨씬 사실적
   const groundSize = maxDim * 6;
+  const grassTex = textureLoader.load(polyhavenDiffUrl('leafy_grass'));
+  grassTex.encoding = THREE.sRGBEncoding;
+  grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+  grassTex.repeat.set(groundSize / 2500, groundSize / 2500); // 실제 잔디 스케일감에 맞춰 반복
+  grassTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(groundSize, groundSize),
-    new THREE.MeshStandardMaterial({ color: 0x6a9152, roughness: 1 })
+    new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(center.x, box.min.y - 5, center.z);
