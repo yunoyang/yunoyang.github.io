@@ -13744,7 +13744,9 @@ async function _fetchContentLinksFromCloud() {
     const cloudLinks = snap.data()?.projectData?.contentLinks || [];
     const localLinks = proj.contentLinks || [];
     const seen = new Set(localLinks.map(x => x.id));
-    const extra = cloudLinks.filter(x => !seen.has(x.id));
+    // 로컬에서 방금 삭제된(tombstone) 링크는 클라우드에 아직 삭제가 반영 안 됐어도
+    // "extra"로 오인해 되살리지 않도록 제외 — _mergeListById와 동일한 보호
+    const extra = cloudLinks.filter(x => !seen.has(x.id) && !_isRecentlyDeletedId('contentLink', x.id));
     if (!extra.length) return;
     const merged = [...localLinks, ...extra].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
     proj.contentLinks = merged;
