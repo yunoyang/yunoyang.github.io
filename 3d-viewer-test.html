@@ -530,30 +530,35 @@ function setupTreesAndGround(box, center, maxDim) {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // 건물 외곽에서 바깥쪽으로 떨어진 자리에 나무를 둘러 배치
+  // 건물 외곽에서 바깥쪽으로 떨어진 자리에 나무를 둘러 배치 — 요청으로 2배 늘림:
+  // 가까운 링(기존 밀도) + 그보다 더 바깥쪽 링(같은 밀도)을 겹쳐서 앞뒤로 깊이감 있게 배치
   const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
-  const ring = [];
-  const gap = Math.max(w, d) * 0.16;
-  const stepsX = 6, stepsZ = 6;
-  for (let i = 0; i <= stepsX; i++) {
-    const x = box.min.x + (w * i) / stepsX;
-    ring.push([x, box.min.z - gap]);
-    ring.push([x, box.max.z + gap]);
+  function placeTreeRing(gap, stepsX, stepsZ) {
+    const ring = [];
+    for (let i = 0; i <= stepsX; i++) {
+      const x = box.min.x + (w * i) / stepsX;
+      ring.push([x, box.min.z - gap]);
+      ring.push([x, box.max.z + gap]);
+    }
+    for (let j = 0; j <= stepsZ; j++) {
+      const z = box.min.z + (d * j) / stepsZ;
+      ring.push([box.min.x - gap, z]);
+      ring.push([box.max.x + gap, z]);
+    }
+    ring.forEach(([x, z]) => {
+      const jx = x + (Math.random() - 0.5) * gap * 0.7;
+      const jz = z + (Math.random() - 0.5) * gap * 0.7;
+      const scale = 0.75 + Math.random() * 0.6;
+      const tree = makeTree(scale);
+      tree.position.set(jx, box.min.y, jz);
+      tree.rotation.y = Math.random() * Math.PI * 2;
+      scene.add(tree);
+    });
   }
-  for (let j = 0; j <= stepsZ; j++) {
-    const z = box.min.z + (d * j) / stepsZ;
-    ring.push([box.min.x - gap, z]);
-    ring.push([box.max.x + gap, z]);
-  }
-  ring.forEach(([x, z]) => {
-    const jx = x + (Math.random() - 0.5) * gap * 0.7;
-    const jz = z + (Math.random() - 0.5) * gap * 0.7;
-    const scale = 0.75 + Math.random() * 0.6;
-    const tree = makeTree(scale);
-    tree.position.set(jx, box.min.y, jz);
-    tree.rotation.y = Math.random() * Math.PI * 2;
-    scene.add(tree);
-  });
+  const gap1 = Math.max(w, d) * 0.16;
+  const gap2 = Math.max(w, d) * 0.32;
+  placeTreeRing(gap1, 6, 6);
+  placeTreeRing(gap2, 6, 6);
 }
 
 document.getElementById('time-slider').addEventListener('input', (e) => updateSunForTime(parseFloat(e.target.value)));
