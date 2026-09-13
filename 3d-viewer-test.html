@@ -258,25 +258,6 @@ function setupDoors(model, buildingMeshes) {
     });
     if (!allMeshes.length) return;
 
-    // 문 두께를 절반으로: 각 메시(문짝+손잡이)를 자기 중심 기준으로 두께축만 0.5배 스케일
-    // (먼저 얇은 축을 대략 추정하기 위해 문짝만으로 임시 박스를 구함)
-    {
-      const tmpBox = new THREE.Box3();
-      panelMeshes.forEach((m) => tmpBox.expandByObject(m));
-      const tmpSize = tmpBox.getSize(new THREE.Vector3());
-      const thinAxis = tmpSize.x >= tmpSize.z ? 'z' : 'x';
-      allMeshes.forEach((m) => {
-        m.geometry = m.geometry.clone();
-        m.geometry.computeBoundingBox();
-        const c = new THREE.Vector3();
-        m.geometry.boundingBox.getCenter(c);
-        m.geometry.translate(-c.x, -c.y, -c.z);
-        if (thinAxis === 'x') m.geometry.scale(0.5, 1, 1);
-        else m.geometry.scale(1, 1, 0.5);
-        m.geometry.translate(c.x, c.y, c.z);
-      });
-    }
-
     // 문짝(손잡이 제외) 기준으로 경첩 축 계산: 두께가 얇은 쪽이 문 두께, 넓은 쪽이 문 폭
     const box = new THREE.Box3();
     panelMeshes.forEach((m) => box.expandByObject(m));
