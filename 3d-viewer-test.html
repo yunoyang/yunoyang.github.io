@@ -29,9 +29,6 @@
   #lighting-panel { position: absolute; left: 14px; bottom: 14px; width: 220px; background: rgba(17,17,17,0.78); color: #fff; padding: 12px 14px; border-radius: 14px; }
   #lighting-panel .row-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px; }
   #lighting-panel input[type=range] { width: 100%; accent-color: #ffb340; }
-  #downlight-btn, #indirect-btn { margin-top: 10px; width: 100%; padding: 8px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.3); background: transparent; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  #downlight-btn.active { background: #ffb340; border-color: #ffb340; color: #1a1200; }
-  #indirect-btn.active { background: #ffd9a0; border-color: #ffd9a0; color: #1a1200; }
   #panel { width: 300px; height: 100%; overflow-y: auto; background: #fff; border-left: 1px solid #e5e5ec; padding: 14px; flex-shrink: 0; }
   #panel h3 { font-size: 13px; margin: 0 0 4px; color: #999; font-weight: 700; }
   #panel .hint { font-size: 12px; color: #bbb; margin-bottom: 14px; line-height: 1.5; }
@@ -84,8 +81,6 @@
     <div id="lighting-panel">
       <div class="row-label"><span id="time-icon">☀️</span> <span id="time-label">14:00</span></div>
       <input type="range" id="time-slider" min="0" max="24" step="0.25" value="14">
-      <button id="downlight-btn">💡 다운라이트 켜기</button>
-      <button id="indirect-btn" style="margin-top:8px;">🕯️ 간접조명 켜기</button>
     </div>
   </div>
   <div id="panel">
@@ -182,8 +177,6 @@ let modelCenter = new THREE.Vector3();
 let modelMaxDim = 10000;
 let modelBox = null;
 let dayHour = 14;
-const downlights = [];
-let downlightsOn = false;
 
 function updateSunForTime(hour) {
   dayHour = hour;
@@ -234,73 +227,6 @@ function updateSunForTime(hour) {
   const m = Math.round((hour % 1) * 60);
   document.getElementById('time-icon').textContent = icon;
   document.getElementById('time-label').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
-
-function setupDownlights(box, center) {
-  const ceilingY = box.max.y - (box.max.y - box.min.y) * 0.04;
-  const cols = 4, rows = 3;
-  const marginX = (box.max.x - box.min.x) * 0.15;
-  const marginZ = (box.max.z - box.min.z) * 0.15;
-  const x0 = box.min.x + marginX, x1 = box.max.x - marginX;
-  const z0 = box.min.z + marginZ, z1 = box.max.z - marginZ;
-  const range = (box.max.x - box.min.x + box.max.z - box.min.z) / 2;
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      const x = cols === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (i / (cols - 1));
-      const z = rows === 1 ? (z0 + z1) / 2 : z0 + (z1 - z0) * (j / (rows - 1));
-      const light = new THREE.PointLight(0xffdca8, 0, range * 0.9, 2);
-      light.position.set(x, ceilingY, z);
-      scene.add(light);
-      downlights.push(light);
-    }
-  }
-}
-
-function setDownlights(on) {
-  downlightsOn = on;
-  downlights.forEach(l => { l.intensity = on ? 1.4 : 0; });
-  const btn = document.getElementById('downlight-btn');
-  btn.classList.toggle('active', on);
-  btn.textContent = on ? '💡 다운라이트 끄기' : '💡 다운라이트 켜기';
-}
-
-// ---- 간접조명(코브 조명) — 천장 몰딩 안에 숨겨서 벽/천장을 은은하게 비추는 방식 ----
-// 다운라이트(아래로 쏘는 스팟)와 달리, 벽선을 따라 천장 바로 아래에 낮은 광량의 점광원을 둘러서
-// 직접 비추기보다 천장·벽에 반사되는 부드러운 분위기 조명을 흉내낸다.
-const indirectLights = [];
-let indirectOn = false;
-
-function setupIndirectLighting(box, center) {
-  const ceilingY = box.max.y - (box.max.y - box.min.y) * 0.08;
-  const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
-  const inset = Math.min(w, d) * 0.03;
-  const stepsX = 10, stepsZ = 10;
-  const perimeter = [];
-  for (let i = 0; i <= stepsX; i++) {
-    const x = box.min.x + (w * i) / stepsX;
-    perimeter.push([x, box.min.z + inset]);
-    perimeter.push([x, box.max.z - inset]);
-  }
-  for (let j = 0; j <= stepsZ; j++) {
-    const z = box.min.z + (d * j) / stepsZ;
-    perimeter.push([box.min.x + inset, z]);
-    perimeter.push([box.max.x - inset, z]);
-  }
-  const range = Math.max(w, d) * 0.14;
-  perimeter.forEach(([x, z]) => {
-    const light = new THREE.PointLight(0xfff2d9, 0, range, 2);
-    light.position.set(x, ceilingY, z);
-    scene.add(light);
-    indirectLights.push(light);
-  });
-}
-
-function setIndirectLighting(on) {
-  indirectOn = on;
-  indirectLights.forEach((l) => { l.intensity = on ? 0.5 : 0; });
-  const btn = document.getElementById('indirect-btn');
-  btn.classList.toggle('active', on);
-  btn.textContent = on ? '🕯️ 간접조명 끄기' : '🕯️ 간접조명 켜기';
 }
 
 // ---- 문 열기 ----
@@ -419,8 +345,6 @@ function setupGround(box, center, maxDim) {
 }
 
 document.getElementById('time-slider').addEventListener('input', (e) => updateSunForTime(parseFloat(e.target.value)));
-document.getElementById('downlight-btn').addEventListener('click', () => setDownlights(!downlightsOn));
-document.getElementById('indirect-btn').addEventListener('click', () => setIndirectLighting(!indirectOn));
 document.getElementById('door-btn').addEventListener('click', () => setDoorsOpen(!doorsOpen));
 updateSunForTime(dayHour);
 
@@ -956,8 +880,6 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   modelCenter = center;
   modelMaxDim = maxDim;
   modelBox = box;
-  setupDownlights(box, center);
-  setupIndirectLighting(box, center);
   setupDoors(model, meshes);
   setupGround(box, center, maxDim);
 
