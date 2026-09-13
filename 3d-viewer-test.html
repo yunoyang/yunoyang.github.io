@@ -121,7 +121,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 wrap.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -163,7 +163,7 @@ scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 1.0); // 바깥의 해 — 시간에 따라 위치·색·밝기가 바뀜
 sunLight.position.set(5, 10, 7);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.mapSize.set(1024, 1024);
 sunLight.shadow.bias = -0.0005;
 sunLight.shadow.normalBias = 2; // 모델 단위가 mm라 그림자 여드름/피터팬 현상 방지에 여유값 필요
 scene.add(sunLight);
@@ -695,6 +695,7 @@ function renderMinimap() {
   renderer.setViewport(0, 0, wrap.clientWidth, wrap.clientHeight);
 }
 
+let minimapFrameCount = 0;
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now();
@@ -707,7 +708,9 @@ function animate() {
   }
   updateDoors(dt);
   renderer.render(scene, camera);
-  renderMinimap();
+  // 미니맵은 씬 전체를 한 번 더 렌더링하는 부담이 커서 매 프레임 대신 3프레임에 한 번만 갱신
+  minimapFrameCount++;
+  if (minimapFrameCount % 3 === 0) renderMinimap();
 }
 animate();
 
