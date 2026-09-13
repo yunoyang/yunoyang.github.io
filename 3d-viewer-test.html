@@ -356,17 +356,18 @@ updateSunForTime(dayHour);
 // Poly Haven 모델은 gltf가 참조하는 텍스처/bin 경로가 실제 CDN 경로와 다르게(예: 텍스처는 jpg/ 폴더,
 // bin은 4k/ 폴더 등) 흩어져 있어서, GLTFLoader의 기본 상대경로 방식으로는 못 불러옴 —
 // LoadingManager.setURLModifier로 요청 경로를 실제 CDN 절대경로로 바꿔치기해서 불러온다.
+// 모던 & 빈티지 북유럽(스칸디나비아) 스타일 위주로 선정 — 밝은 우드, 미니멀하고 절제된 라인
 const FURNITURE_CATALOG = [
-  { slug: 'Sofa_01', label: '소파' },
-  { slug: 'sofa_02', label: '소파 2' },
-  { slug: 'chinese_sofa', label: '차이니즈 소파' },
-  { slug: 'ArmChair_01', label: '암체어' },
   { slug: 'modern_arm_chair_01', label: '모던 암체어' },
-  { slug: 'mid_century_lounge_chair', label: '라운지체어' },
-  { slug: 'dining_chair_02', label: '다이닝체어' },
-  { slug: 'WoodenChair_01', label: '우드체어' },
-  { slug: 'Ottoman_01', label: '오토만' },
-  { slug: 'bar_chair_round_01', label: '바체어' },
+  { slug: 'mid_century_lounge_chair', label: '미드센추리 라운지체어' },
+  { slug: 'dining_chair_02', label: '모던 다이닝체어' },
+  { slug: 'WoodenChair_01', label: '빈티지 우드체어' },
+  { slug: 'modern_coffee_table_01', label: '모던 커피테이블' },
+  { slug: 'side_table_01', label: '사이드 테이블' },
+  { slug: 'round_wooden_table_02', label: '빈티지 원형 테이블' },
+  { slug: 'modern_wooden_cabinet', label: '모던 우드 캐비닛' },
+  { slug: 'vintage_cabinet_01', label: '빈티지 캐비닛' },
+  { slug: 'wooden_display_shelves_01', label: '우드 디스플레이 선반' },
 ];
 const _polyhavenFilesCache = {};
 async function fetchPolyhavenFiles(slug) {
