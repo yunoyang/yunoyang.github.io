@@ -41,7 +41,9 @@
   .furniture-btn:disabled { opacity: .5; cursor: wait; }
   .furniture-label { font-size: 10px; text-align: center; color: #999; margin-top: 3px; }
   #furniture-selected-info { font-size: 13px; font-weight: 700; color: #111; padding: 10px 12px; background: #fff5ea; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  #furniture-delete-btn { padding: 6px 12px; border-radius: 8px; border: none; background: #e33; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+  #furniture-delete-btn, #furniture-rotate-btn { padding: 6px 12px; border-radius: 8px; border: none; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+  #furniture-delete-btn { background: #e33; }
+  #furniture-rotate-btn { background: #5084ff; margin-right: 6px; }
   #selected-info { font-size: 13px; font-weight: 700; color: #111; padding: 10px 12px; background: #f7f8fa; border-radius: 10px; margin-bottom: 12px; min-height: 20px; }
   .preset-category { margin-bottom: 16px; }
   .preset-category-title { font-size: 12px; font-weight: 700; color: #5084ff; margin-bottom: 8px; }
@@ -462,11 +464,17 @@ function selectFurniture(wrapper) {
   const info = document.getElementById('furniture-selected-info');
   if (wrapper) {
     info.style.display = 'flex';
-    info.innerHTML = `<span>선택됨: ${wrapper.userData.label}</span><button id="furniture-delete-btn">삭제</button>`;
+    info.innerHTML = `<span>선택됨: ${wrapper.userData.label}</span><button id="furniture-rotate-btn">↻ 회전</button><button id="furniture-delete-btn">삭제</button>`;
+    document.getElementById('furniture-rotate-btn').addEventListener('click', () => rotateSelectedFurniture());
     document.getElementById('furniture-delete-btn').addEventListener('click', () => deleteSelectedFurniture());
   } else {
     info.style.display = 'none';
   }
+}
+
+function rotateSelectedFurniture() {
+  if (!selectedFurniture) return;
+  selectedFurniture.rotation.y += Math.PI / 8; // 클릭할 때마다 22.5도씩 회전
 }
 
 function deleteSelectedFurniture() {
