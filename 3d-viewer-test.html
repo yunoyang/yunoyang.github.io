@@ -307,18 +307,28 @@ function setupDoors(model, buildingMeshes) {
 
     pivot.userData.openAngle = DOOR_OPEN_ANGLE * openSign;
     pivot.userData.targetAngle = 0;
+    pivot.userData.isOpen = false;
     doorPivots.push(pivot);
   });
 }
 
 function setDoorsOpen(open) {
   doorsOpen = open;
-  doorPivots.forEach((p) => { p.userData.targetAngle = open ? p.userData.openAngle : 0; });
+  doorPivots.forEach((p) => {
+    p.userData.isOpen = open;
+    p.userData.targetAngle = open ? p.userData.openAngle : 0;
+  });
   const btn = document.getElementById('door-btn');
   if (btn) {
     btn.classList.toggle('active', open);
     btn.textContent = open ? '🚪 전체 문닫기' : '🚪 전체 문열기';
   }
+}
+
+// 손잡이를 클릭하면 그 문 하나만 열고/닫기 (전체 열기/닫기 버튼과는 별개로 개별 조작)
+function toggleDoorPivot(pivot) {
+  pivot.userData.isOpen = !pivot.userData.isOpen;
+  pivot.userData.targetAngle = pivot.userData.isOpen ? pivot.userData.openAngle : 0;
 }
 
 function updateDoors(dt) {
@@ -991,7 +1001,14 @@ renderer.domElement.addEventListener('click', (ev) => {
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(scene.children, true).filter(i => i.object.isMesh);
   if (!intersects.length) return;
-  selectFromClick(intersects[0].object);
+  const hit = intersects[0].object;
+  // 손잡이(문 조립체의 자식이면서 이름에 Handle이 들어간 메시)를 클릭하면 재질 선택 대신
+  // 그 문 하나만 여닫음 — 실제로 손잡이를 잡고 문을 열고 닫는 느낌을 줌
+  if (hit.name.includes('Handle') && doorPivots.includes(hit.parent)) {
+    toggleDoorPivot(hit.parent);
+    return;
+  }
+  selectFromClick(hit);
 });
 
 function applyPresetToSelected(preset) {
