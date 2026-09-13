@@ -110,7 +110,7 @@ const wrap = document.getElementById('canvas-wrap');
 
 // ---- 씬 기본 설정 ----
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xffffff);
 const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 // 레티나/고해상도 디스플레이에서 선명하게 보이도록 실제 픽셀 밀도에 맞춰 렌더 (최대 2배로 제한, 성능 고려)
@@ -211,16 +211,8 @@ function updateSunForTime(hour) {
   ambientLight.intensity = nightAmbient + (dayAmbient - nightAmbient) * t;
   fillLight.intensity = isDaytime ? 0.15 + elevation * 0.45 : 0.04;
 
-  // 하늘색: 낮은 하늘색, 일출·일몰은 주황, 밤은 짙은 남색
-  let skyColor;
-  if (!isDaytime) {
-    skyColor = new THREE.Color(0x0b0f1a);
-  } else if (elevation < 0.25) {
-    skyColor = new THREE.Color(0xffb37a).lerp(new THREE.Color(0xbcd4ea), elevation / 0.25);
-  } else {
-    skyColor = new THREE.Color(0xbcd4ea).lerp(new THREE.Color(0x8fc1ea), (elevation - 0.25) / 0.75);
-  }
-  scene.background = skyColor;
+  // 배경은 시간대와 무관하게 항상 화이트로 고정
+  scene.background = new THREE.Color(0xffffff);
 
   const icon = !isDaytime ? '🌙' : (elevation < 0.25 ? '🌅' : '☀️');
   const h = Math.floor(hour) % 24;
