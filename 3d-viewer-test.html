@@ -822,6 +822,13 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   // 그 자식도 traverse 대상에 걸려 무한 재귀(오버레이 안에 오버레이…)로 스택오버플로우가 났음
   const meshes = [];
   model.traverse((obj) => { if (obj.isMesh) meshes.push(obj); });
+  // 엣지 라인을 메시마다 따로 추가하면(LineSegments 오브젝트 수 = 메시 수) 드로우콜이 두 배로
+  // 늘어나 성능이 크게 떨어짐 — 모든 메시의 엣지 좌표를 월드 공간으로 합쳐서 씬 전체에 딱 하나의
+  // LineSegments로만 그리도록 변경 (선택 시 엣지를 파랗게 바꾸는 기능은 포기하고, 대신 반투명
+  // 블루 오버레이만으로 선택 표시)
+  model.updateMatrixWorld(true);
+  const mergedEdgePositions = [];
+  const _edgeVec = new THREE.Vector3();
   meshes.forEach((obj) => {
     {
       obj.material = obj.material.clone();
@@ -834,13 +841,13 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
       obj.material.needsUpdate = true;
 
       // 스케치업처럼 모든 메시 가장자리에 스트로크(엣지) 표시 — 영역 구분을 명확하게
-      const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(obj.geometry, 20),
-        new THREE.LineBasicMaterial({ color: EDGE_COLOR_DEFAULT })
-      );
-      edges.raycast = () => {}; // 클릭 판정에서 제외 (원본 메시만 클릭되게)
-      obj.add(edges);
-      obj.userData.edges = edges;
+      const edgeGeom = new THREE.EdgesGeometry(obj.geometry, 20);
+      const posAttr = edgeGeom.attributes.position;
+      for (let i = 0; i < posAttr.count; i++) {
+        _edgeVec.fromBufferAttribute(posAttr, i).applyMatrix4(obj.matrixWorld);
+        mergedEdgePositions.push(_edgeVec.x, _edgeVec.y, _edgeVec.z);
+      }
+      edgeGeom.dispose();
 
       // 선택 시 표시할 반투명 블루 오버레이 (기본은 숨김)
       const overlay = new THREE.Mesh(obj.geometry, new THREE.MeshBasicMaterial({
@@ -858,6 +865,12 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
     }
   });
   scene.add(model);
+
+  const mergedEdgeGeom = new THREE.BufferGeometry();
+  mergedEdgeGeom.setAttribute('position', new THREE.Float32BufferAttribute(mergedEdgePositions, 3));
+  const mergedEdges = new THREE.LineSegments(mergedEdgeGeom, new THREE.LineBasicMaterial({ color: EDGE_COLOR_DEFAULT }));
+  mergedEdges.raycast = () => {};
+  scene.add(mergedEdges);
 
   // 카메라를 모델 크기에 맞게 배치
   const box = new THREE.Box3().setFromObject(model);
@@ -906,16 +919,10 @@ const mouse = new THREE.Vector2();
 // 선택된 메시들: 엣지를 블루로, 면에 반투명 블루 오버레이 표시. 이전 선택은 원상복구.
 function setSelectionHighlight(meshes) {
   selectedMeshes.forEach((m) => {
-    if (m.userData.edges) {
-      m.userData.edges.material.color.setHex(EDGE_COLOR_DEFAULT);
-      m.userData.overlay.visible = false;
-    }
+    if (m.userData.overlay) m.userData.overlay.visible = false;
   });
   meshes.forEach((m) => {
-    if (m.userData.edges) {
-      m.userData.edges.material.color.setHex(EDGE_COLOR_SELECTED);
-      m.userData.overlay.visible = true;
-    }
+    if (m.userData.overlay) m.userData.overlay.visible = true;
   });
 }
 
