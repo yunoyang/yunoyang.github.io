@@ -70,6 +70,7 @@
       <button id="door-btn">🚪 전체 문열기</button>
       <button id="btn-orbit" class="active">궤도뷰</button>
       <button id="btn-firstperson">1인칭 시점</button>
+      <button id="save-btn">💾 저장</button>
     </div>
     <div id="crosshair"></div>
     <div id="fp-overlay">
@@ -436,6 +437,7 @@ async function addFurniture(slug, btnEl) {
     wrapper.add(obj);
     wrapper.userData.isFurniture = true;
     wrapper.userData.furnitureId = _furnitureIdCounter.n++;
+    wrapper.userData.slug = slug;
     wrapper.userData.label = FURNITURE_CATALOG.find((f) => f.slug === slug)?.label || slug;
     scene.add(wrapper);
 
@@ -812,10 +814,11 @@ function presetThumb(p) {
 let selectedMeshes = [];      // 현재 선택된 메시들 (묶음 선택 시 여러 개)
 let selectedGroupId = null;   // 현재 "묶음" 선택 기준이 된 최상위 그룹 id
 let selectionMode = null;     // 'group' | 'single'
-const meshAssignments = new Map(); // mesh.uuid -> presetId
+const meshAssignments = new Map(); // mesh.name -> presetId (페이지를 새로고침해도 저장/복원할 수 있게 uuid 대신 안정적인 이름을 키로 씀)
 const EDGE_COLOR_DEFAULT = 0x000000; // 스케치업처럼 또렷한 순수 검정 엣지
 const EDGE_COLOR_SELECTED = 0x5084ff;
 const groupMap = new Map(); // outermost group id -> mesh[]
+const meshByName = new Map(); // mesh.name -> mesh (저장된 재질을 새로고침 후 복원할 때 사용)
 
 // 메시 이름(예: "Mesh120_Group82_Group81_Group79_Model")에 스케치업의 중첩 그룹/컴포넌트
 // 체인이 그대로 남아있음 — 뒤에서부터가 바깥쪽(최상위) 그룹. 이를 이용해 "싱크대 세트" 같은
@@ -887,6 +890,7 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
       const gid = outermostGroupId(obj);
       if (!groupMap.has(gid)) groupMap.set(gid, []);
       groupMap.get(gid).push(obj);
+      meshByName.set(obj.name, obj);
     }
   });
   scene.add(model);
@@ -935,6 +939,7 @@ loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
   updateSunForTime(dayHour); // 실제 모델 스케일 기준으로 해 위치 다시 계산
 
   document.getElementById('loading').style.display = 'none';
+  loadSavedState();
 });
 
 // ---- 클릭으로 개별 영역(메시) 선택 ----
@@ -1001,31 +1006,83 @@ renderer.domElement.addEventListener('click', (ev) => {
   selectFromClick(hit);
 });
 
+function applyPresetToMesh(mesh, preset) {
+  const mat = mesh.material;
+  if (preset.type === 'color') {
+    mat.color.setHex(preset.color);
+    mat.map = null;
+  } else {
+    mat.map = presetTexture(preset);
+    // tint: 같은 원목 결(texture) 위에 색만 입혀서 여러 컬러웨이(화이트오크/그레이오크/월넛 등)를 표현
+    mat.color.setHex(preset.tint != null ? preset.tint : 0xffffff);
+  }
+  mat.roughness = preset.roughness;
+  mat.metalness = preset.metalness;
+  mat.needsUpdate = true;
+  meshAssignments.set(mesh.name, preset.id);
+}
+
 function applyPresetToSelected(preset) {
   if (!selectedMeshes.length) return;
-  selectedMeshes.forEach((mesh) => {
-    const mat = mesh.material;
-    if (preset.type === 'color') {
-      mat.color.setHex(preset.color);
-      mat.map = null;
-    } else {
-      mat.map = presetTexture(preset);
-      // tint: 같은 원목 결(texture) 위에 색만 입혀서 여러 컬러웨이(화이트오크/그레이오크/월넛 등)를 표현
-      mat.color.setHex(preset.tint != null ? preset.tint : 0xffffff);
-    }
-    mat.roughness = preset.roughness;
-    mat.metalness = preset.metalness;
-    mat.needsUpdate = true;
-    meshAssignments.set(mesh.uuid, preset.id);
-  });
+  selectedMeshes.forEach((mesh) => applyPresetToMesh(mesh, preset));
   renderPresetPanel();
 }
+
+// ---- 저장/불러오기 — 재질 편집 결과와 배치한 가구를 브라우저(localStorage)에 저장해서
+// 새로고침하거나 나중에 다시 들어와도 그대로 복원되게 함 ----
+const SAVE_KEY = 'vibespace-3d-viewer-save-v1';
+
+function saveState() {
+  const materials = [...meshAssignments.entries()].map(([name, presetId]) => ({ name, presetId }));
+  const furniture = placedFurniture.map((w) => ({
+    slug: w.userData.slug,
+    x: w.position.x, y: w.position.y, z: w.position.z,
+    rotY: w.rotation.y,
+  }));
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ materials, furniture }));
+    const btn = document.getElementById('save-btn');
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = '✅ 저장됨';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    }
+  } catch (e) {
+    console.error('저장 실패:', e);
+  }
+}
+
+function loadSavedState() {
+  let data;
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    data = JSON.parse(raw);
+  } catch (e) {
+    return;
+  }
+  (data.materials || []).forEach(({ name, presetId }) => {
+    const mesh = meshByName.get(name);
+    const preset = PRESETS.find((p) => p.id === presetId);
+    if (mesh && preset) applyPresetToMesh(mesh, preset);
+  });
+  (data.furniture || []).forEach((f) => {
+    addFurniture(f.slug, null).then(() => {
+      const wrapper = placedFurniture[placedFurniture.length - 1];
+      if (!wrapper) return;
+      wrapper.position.set(f.x, f.y, f.z);
+      wrapper.rotation.y = f.rotY || 0;
+    });
+  });
+}
+
+document.getElementById('save-btn').addEventListener('click', saveState);
 
 function renderPresetPanel() {
   const el = document.getElementById('preset-panel');
   if (!selectedMeshes.length) { el.innerHTML = ''; return; }
   // 묶음 안 부분들의 재질이 서로 다르면 활성 표시는 생략 (여러 값이라 하나로 못 정함)
-  const ids = new Set(selectedMeshes.map(m => meshAssignments.get(m.uuid)));
+  const ids = new Set(selectedMeshes.map(m => meshAssignments.get(m.name)));
   const activeId = ids.size === 1 ? [...ids][0] : null;
 
   const categoryHtml = (cat) => `
