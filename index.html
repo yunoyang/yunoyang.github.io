@@ -1018,6 +1018,8 @@ button, input, textarea, select { font-family:var(--font); }
   align-items: start;
 }
 @media (min-width: 660px) { #content-list { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { #content-list { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1300px) { #content-list { grid-template-columns: repeat(4, 1fr); } }
 /* Card */
 .content-card {
   display: block; width: 100%; min-width: 0;
@@ -1230,6 +1232,8 @@ button, input, textarea, select { font-family:var(--font); }
 @media (min-width: 660px) {
   #style-rooms-container { grid-template-columns: 1fr 1fr; }
 }
+@media (min-width: 1000px) { #style-rooms-container { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1300px) { #style-rooms-container { grid-template-columns: repeat(4, 1fr); } }
 /* 커뮤니티: 항상 2단 그리드 (스타일 카드와 동일한 카드 구조 재사용) */
 #community-grid {
   display: grid;
@@ -1256,6 +1260,13 @@ button, input, textarea, select { font-family:var(--font); }
 @media (min-width: 660px) {
   .specbook-card-grid { grid-template-columns: repeat(4, 1fr); }
 }
+@media (min-width: 1000px) { .specbook-card-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 1300px) { .specbook-card-grid { grid-template-columns: repeat(8, 1fr); } }
+/* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
+.furniture-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 660px) { .furniture-cat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1000px) { .furniture-cat-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1300px) { .furniture-cat-grid { grid-template-columns: repeat(6, 1fr); } }
 .specbook-card {
   background: #fff; border-radius: 14px; border: 1px solid #eef0f5;
   overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -3233,6 +3244,20 @@ button, input, textarea, select { font-family:var(--font); }
     right: auto !important;
     width: 640px !important;
     transform: translateX(-50%);
+  }
+
+  /* 일정/스타일/컨텐츠/가구&가전/스펙북 탭은 .app의 640px 프레임을 벗어나 PC 화면 폭 전체로 확장 */
+  #tab-calendar, #tab-style, #tab-content, #tab-furniture, #tab-specbook {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+  }
+  /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
+  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > * {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -15692,7 +15717,7 @@ function _renderFurnitureCategoryGrid() {
     </div>
     ${cats.length === 0
       ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">아직 등록된 제품이 없습니다</div>`
-      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${cats.map(c => catCardHtml(c)).join('')}</div>`
+      : `<div class="furniture-cat-grid">${cats.map(c => catCardHtml(c)).join('')}</div>`
     }
   `;
 }
