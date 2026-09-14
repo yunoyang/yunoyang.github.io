@@ -3246,12 +3246,18 @@ button, input, textarea, select { font-family:var(--font); }
     transform: translateX(-50%);
   }
 
-  /* 일정/스타일/컨텐츠/가구&가전/스펙북 탭은 .app의 640px 프레임을 벗어나 PC 화면 폭 전체로 확장 */
-  #tab-calendar, #tab-style, #tab-content, #tab-furniture, #tab-specbook {
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    margin-left: -50vw;
+  /* 일정/스타일/컨텐츠/가구&가전/스펙북 탭이 활성화되면 .app 자체를 화면 전체 폭으로 확장.
+     (100vw 네거티브 마진으로 뻐져나가게 하는 방식은 .screen의 overflow:hidden에 그대로 잘려서
+     달력이 잘려 보이는 버그가 있었음 — .app을 직접 넓히는 방식으로 교체) */
+  body.wide-tab .app { max-width: 100%; }
+  /* 헤더·공사정보 요약·탭 버튼 줄은 넓어진 .app 안에서도 원래처럼 640px로 가운데 정렬 유지 */
+  body.wide-tab .header,
+  body.wide-tab .summary-wrap,
+  body.wide-tab .tab-section {
+    max-width: 640px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
   #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > * {
@@ -7687,6 +7693,8 @@ function switchMainTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
+  // PC에서 넓게 쓰는 탭(일정/스타일/컨텐츠/가구&가전/스펙북)일 때만 .app을 화면 전체 폭으로 확장
+  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook'].includes(tab));
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
