@@ -3229,20 +3229,20 @@ button, input, textarea, select { font-family:var(--font); }
   .sv-gallery-col { gap: 8px; }
   #sv-gallery-area.sv-list { gap: 10px; }
 
-  /* 스타일 상세(뷰어 화면): position:fixed를 640px 안에 고정 */
+  /* 스타일 상세(뷰어 화면): PC에서는 이미지가 더 크게 보이도록 브라우저 폭에 맞춰 넓게(최대 1600px) */
   #style-viewer-screen {
     left: 50% !important;
     right: auto !important;
-    width: 640px !important;
+    width: min(94vw, 1600px) !important;
     transform: translateX(-50%);
   }
-  /* 스타일 뷰어 내부 시트(메모·핀)도 동일하게 640px 제한 */
+  /* 스타일 뷰어 내부 시트(메모·핀)도 뷰어와 동일한 폭으로 맞춤 */
   #sv-memo-action-sheet,
   #sv-memo-sheet,
   #sv-pins-sheet {
     left: 50% !important;
     right: auto !important;
-    width: 640px !important;
+    width: min(94vw, 1600px) !important;
     transform: translateX(-50%);
   }
 
