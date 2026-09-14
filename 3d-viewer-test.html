@@ -116,6 +116,15 @@
 <script>
 const wrap = document.getElementById('canvas-wrap');
 
+// 모바일(터치 기기)에서는 보기만 가능하고, PC에서만 재질/가구 편집·저장이 가능하게 함
+const isEditable = !(window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+if (!isEditable) {
+  const panel = document.getElementById('panel');
+  const saveBtn = document.getElementById('save-btn');
+  if (panel) panel.style.display = 'none';
+  if (saveBtn) saveBtn.style.display = 'none';
+}
+
 // ---- 씬 기본 설정 ----
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
@@ -524,7 +533,7 @@ function getFurnitureHit(ev) {
 }
 
 renderer.domElement.addEventListener('pointerdown', (ev) => {
-  if (fpActive) return;
+  if (fpActive || !isEditable) return;
   const hit = getFurnitureHit(ev);
   if (!hit) return;
   selectFurniture(hit);
@@ -1034,6 +1043,7 @@ renderer.domElement.addEventListener('click', (ev) => {
     toggleDoorPivot(hit.parent);
     return;
   }
+  if (!isEditable) return; // 모바일에서는 영역 클릭으로 재질을 바꾸는 편집 기능을 막음 (보기 전용)
   selectFromClick(hit);
 });
 
