@@ -23,7 +23,7 @@
   #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,0.85); pointer-events: none; display: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.4); }
   #controls-guide { position: absolute; right: 14px; bottom: 158px; background: rgba(17,17,17,0.72); color: #fff; font-size: 11.5px; line-height: 1.7; padding: 10px 12px; border-radius: 12px; pointer-events: none; text-align: right; }
   #controls-guide b { color: #8fb4ff; font-weight: 700; }
-  #minimap-frame { position: absolute; right: 14px; bottom: 14px; width: 130px; height: 130px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 10px rgba(0,0,0,0.25); pointer-events: none; overflow: hidden; }
+  #minimap-frame { display: none; position: absolute; right: 14px; bottom: 14px; width: 130px; height: 130px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 10px rgba(0,0,0,0.25); pointer-events: none; overflow: hidden; }
   #minimap-frame::after { content: ''; position: absolute; inset: 0; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); }
   #minimap-label { position: absolute; left: 8px; top: 6px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.6); pointer-events: none; }
   #minimap-dim-h, #minimap-dim-v { position: absolute; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.95); text-shadow: 0 1px 2px rgba(0,0,0,0.7); pointer-events: none; }
@@ -619,6 +619,7 @@ plControls.addEventListener('lock', () => {
   document.getElementById('btn-firstperson').classList.add('active');
   document.getElementById('btn-orbit').classList.remove('active');
   document.getElementById('click-hint').style.display = 'none';
+  document.getElementById('minimap-frame').style.display = ''; // 1인칭 시점에서만 미니맵 표시
   updateControlsGuide();
 });
 plControls.addEventListener('unlock', () => {
@@ -628,6 +629,7 @@ plControls.addEventListener('unlock', () => {
   document.getElementById('btn-firstperson').classList.remove('active');
   document.getElementById('btn-orbit').classList.add('active');
   document.getElementById('click-hint').style.display = '';
+  document.getElementById('minimap-frame').style.display = 'none'; // 궤도뷰에서는 숨김
   controls.target.set(camera.position.x, fpFloorY + 900, camera.position.z - 1);
   controls.update();
   updateControlsGuide();
@@ -728,7 +730,6 @@ function renderMinimap() {
   renderer.setViewport(0, 0, wrap.clientWidth, wrap.clientHeight);
 }
 
-let minimapFrameCount = 0;
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now();
@@ -741,9 +742,9 @@ function animate() {
   }
   updateDoors(dt);
   renderer.render(scene, camera);
-  // 미니맵은 씬 전체를 한 번 더 렌더링하는 부담이 커서 매 프레임 대신 3프레임에 한 번만 갱신
-  minimapFrameCount++;
-  if (minimapFrameCount % 3 === 0) renderMinimap();
+  // 1인칭 시점일 때만 미니맵을 그림 — 궤도뷰에서는 숨겨져 있어 그릴 필요 없고,
+  // 몇 프레임에 한 번씩만 갱신하면 메인 화면이 그 사이 미니맵 영역을 덮어써 깜빡이므로 매 프레임 갱신
+  if (fpActive) renderMinimap();
 }
 animate();
 
