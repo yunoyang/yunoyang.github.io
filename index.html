@@ -3229,16 +3229,13 @@ button, input, textarea, select { font-family:var(--font); }
   .sv-gallery-col { gap: 8px; }
   #sv-gallery-area.sv-list { gap: 10px; }
 
-  /* 스타일 상세(뷰어 화면): 1단(캐러셀) 선택은 기존처럼 640px, 바둑판(그리드) 선택일 때만
-     핀터레스트처럼 브라우저 폭 꽉 차게(최대 1800px) */
-  #style-viewer-screen {
-    left: 50% !important;
-    right: auto !important;
-    width: 640px !important;
-    transform: translateX(-50%);
-  }
-  #style-viewer-screen.sv-mode-grid {
-    width: min(96vw, 1800px) !important;
+  /* 스타일 상세(뷰어 화면): style-viewer-screen 자체는 항상 뷰포트 전체(흰 배경)를 덮고,
+     안쪽 콘텐츠 폭만 제한 — 예전에는 화면 자체를 640px로 줄였더니 뒤에 있는(PC에서 넓어진)
+     스타일 그리드가 화면 양옆으로 비쳐 보이는 버그가 있었음.
+     1단(캐러셀) 선택은 기존처럼 640px, 바둑판(그리드) 선택일 때만 핀터레스트처럼 넓게(최대 1800px) */
+  #sv-inner { max-width: 640px; }
+  #style-viewer-screen.sv-mode-grid #sv-inner {
+    max-width: min(96vw, 1800px);
   }
   /* 스타일 뷰어 내부 시트(메모·핀)는 항상 640px 유지 */
   #sv-memo-action-sheet,
@@ -20043,59 +20040,63 @@ async function fpShareLink() {
 </div>
 
 <!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
+<!-- style-viewer-screen 자체는 항상 뷰포트 전체를 흰 배경으로 덮음(PC에서 뒤의 넓은 그리드가 비치지 않게) —
+     실제 콘텐츠 폭 제한(640px/그리드모드 와이드)은 안쪽 #sv-inner 래퍼에만 적용 -->
 <div id="style-viewer-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;">
-  <!-- header -->
-  <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;">
-    <button class="back-btn" onclick="closeStyleViewer()">
-      <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
-    </button>
-    <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
-    <div style="display:flex;align-items:center;gap:2px;">
-      <!-- 추가 -->
-      <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
-        <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div id="sv-inner" style="display:flex;flex-direction:column;height:100%;min-height:0;position:relative;width:100%;margin:0 auto;">
+    <!-- header -->
+    <div class="form-header" style="background:#fff;justify-content:space-between;border-bottom:none;">
+      <button class="back-btn" onclick="closeStyleViewer()">
+        <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
+      </button>
+      <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <!-- 추가 -->
+        <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
+          <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- 스크롤 바디: 이미지 + 내용 함께 스크롤 -->
+    <div id="sv-scroll-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;">
+      <!-- image area + touch + dot pagination -->
+      <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
+        <div id="style-viewer-reel" class="sv-reel-wrap"></div>
+        <div id="sv-dots" class="sv-dots"></div>
+        <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
+          <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
+          <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <!-- gallery area (list / grid) — hidden in carousel mode -->
+      <div id="sv-gallery-area" style="display:none;"></div>
+      <!-- product list + memos -->
+      <div id="sv-product-list"></div>
+    </div>
+    <!-- 뷰타입 플로팅 버튼 -->
+    <div id="sv-view-float">
+      <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+          <rect x="0" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
+          <rect x="9" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
+          <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
+          <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+          <rect x="0" y="0" width="16" height="16" rx="3.5" fill="currentColor"/>
+        </svg>
       </button>
     </div>
-  </div>
-  <!-- 스크롤 바디: 이미지 + 내용 함께 스크롤 -->
-  <div id="sv-scroll-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;">
-    <!-- image area + touch + dot pagination -->
-    <div id="sv-image-area" ontouchstart="svTouchStart(event)" ontouchend="svTouchEnd(event)" ontouchmove="svTouchMove(event)">
-      <div id="style-viewer-reel" class="sv-reel-wrap"></div>
-      <div id="sv-dots" class="sv-dots"></div>
-      <button id="sv-prev" class="sv-nav-arrow sv-nav-prev" onclick="_svGoTo(styleViewerIndex-1)" aria-label="이전">
-        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <button id="sv-next" class="sv-nav-arrow sv-nav-next" onclick="_svGoTo(styleViewerIndex+1)" aria-label="다음">
-        <svg width="20" height="20" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
+    <div id="sv-memo-float" style="display:none;">
+      <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
+        <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <!-- gallery area (list / grid) — hidden in carousel mode -->
-    <div id="sv-gallery-area" style="display:none;"></div>
-    <!-- product list + memos -->
-    <div id="sv-product-list"></div>
-  </div>
-  <!-- 뷰타입 플로팅 버튼 -->
-  <div id="sv-view-float">
-    <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
-      <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
-        <rect x="9" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
-        <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
-        <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
-      </svg>
-    </button>
-    <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
-      <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-        <rect x="0" y="0" width="16" height="16" rx="3.5" fill="currentColor"/>
-      </svg>
-    </button>
-  </div>
-  <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
-  <div id="sv-memo-float" style="display:none;">
-    <button class="sv-memo-float-btn" onclick="_svToggleMemoInput()" title="메모">
-      <svg width="18" height="18" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
   </div>
 </div>
 
