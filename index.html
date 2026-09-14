@@ -3229,20 +3229,24 @@ button, input, textarea, select { font-family:var(--font); }
   .sv-gallery-col { gap: 8px; }
   #sv-gallery-area.sv-list { gap: 10px; }
 
-  /* 스타일 상세(뷰어 화면): PC에서는 이미지가 더 크게 보이도록 브라우저 폭에 맞춰 넓게(최대 1600px) */
+  /* 스타일 상세(뷰어 화면): 1단(캐러셀) 선택은 기존처럼 640px, 바둑판(그리드) 선택일 때만
+     핀터레스트처럼 브라우저 폭 꽉 차게(최대 1800px) */
   #style-viewer-screen {
     left: 50% !important;
     right: auto !important;
-    width: min(94vw, 1600px) !important;
+    width: 640px !important;
     transform: translateX(-50%);
   }
-  /* 스타일 뷰어 내부 시트(메모·핀)도 뷰어와 동일한 폭으로 맞춤 */
+  #style-viewer-screen.sv-mode-grid {
+    width: min(96vw, 1800px) !important;
+  }
+  /* 스타일 뷰어 내부 시트(메모·핀)는 항상 640px 유지 */
   #sv-memo-action-sheet,
   #sv-memo-sheet,
   #sv-pins-sheet {
     left: 50% !important;
     right: auto !important;
-    width: min(94vw, 1600px) !important;
+    width: 640px !important;
     transform: translateX(-50%);
   }
 
@@ -8545,6 +8549,8 @@ function _svApplyViewMode() {
   const cBtn = document.getElementById('sv-float-carousel');
   if (gBtn) gBtn.classList.toggle('active', !isCarousel);
   if (cBtn) cBtn.classList.toggle('active', isCarousel);
+  // 그리드(바둑판) 모드일 때만 뷰어 화면을 PC에서 브라우저 폭 꽉 차게(핀터레스트 스타일)
+  document.getElementById('style-viewer-screen')?.classList.toggle('sv-mode-grid', !isCarousel);
 }
 
 function _svBuildGallery() {
@@ -8560,11 +8566,13 @@ function _svBuildGallery() {
       ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
     </div>`;
   };
-  const left  = items.filter((_, i) => i % 2 === 0).map((item) => renderItem(item, items.indexOf(item))).join('');
-  const right = items.filter((_, i) => i % 2 === 1).map((item) => renderItem(item, items.indexOf(item))).join('');
+  // PC에서 바둑판(그리드) 모드는 화면이 넓어지므로 열 수도 함께 늘려 핀터레스트처럼 보이게 함
+  const w = window.innerWidth;
+  const colCount = w >= 1300 ? 5 : w >= 1000 ? 4 : w >= 660 ? 3 : 2;
+  const cols = Array.from({ length: colCount }, () => []);
+  items.forEach((item, i) => cols[i % colCount].push(renderItem(item, i)));
   el.innerHTML = `<div class="sv-gallery-masonry">
-    <div class="sv-gallery-col">${left}</div>
-    <div class="sv-gallery-col">${right}</div>
+    ${cols.map((c) => `<div class="sv-gallery-col">${c.join('')}</div>`).join('')}
   </div>`;
 }
 
