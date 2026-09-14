@@ -475,7 +475,8 @@ function selectFurniture(wrapper) {
   const info = document.getElementById('furniture-selected-info');
   if (wrapper) {
     info.style.display = 'flex';
-    info.innerHTML = `<span>선택됨: ${wrapper.userData.label}</span><button id="furniture-rotate-btn">↻ 회전</button><button id="furniture-delete-btn">삭제</button>`;
+    const box = new THREE.Box3().setFromObject(wrapper);
+    info.innerHTML = `<span>선택됨: ${wrapper.userData.label}<br><span style="font-weight:400;color:#666;">${sizeLabelMm(box)}</span></span><button id="furniture-rotate-btn">↻ 회전</button><button id="furniture-delete-btn">삭제</button>`;
     document.getElementById('furniture-rotate-btn').addEventListener('click', () => rotateSelectedFurniture());
     document.getElementById('furniture-delete-btn').addEventListener('click', () => deleteSelectedFurniture());
   } else {
@@ -964,6 +965,13 @@ function setSelectionHighlight(meshes) {
   });
 }
 
+// 모델이 밀리미터 단위이므로 월드 바운딩박스 크기를 그대로 mm로 표시하면 됨
+function sizeLabelMm(box) {
+  const s = box.getSize(new THREE.Vector3());
+  const r = (v) => Math.round(v).toLocaleString();
+  return `${r(s.x)} × ${r(s.y)} × ${r(s.z)} mm (가로×높이×깊이)`;
+}
+
 // 같은 묶음(그룹)이 이미 선택된 상태에서 그 안의 한 부분을 다시 클릭하면 그 부분만 선택,
 // 그 외의 경우(새 묶음을 처음 클릭)에는 묶음 전체를 선택
 function selectFromClick(mesh) {
@@ -989,9 +997,12 @@ function selectFromClick(mesh) {
     ? `선택됨: 묶음 (${meshes.length}개 부분) — 안의 특정 부분을 다시 클릭하면 그 부분만 선택돼요`
     : `선택됨: ${mesh.name || '(이름 없음)'}`;
   document.getElementById('click-hint').textContent = label;
-  document.getElementById('selected-info').textContent = mode === 'group'
+  const box = new THREE.Box3();
+  meshes.forEach((m) => box.expandByObject(m));
+  const nameLine = mode === 'group'
     ? `묶음 선택 (${meshes.length}개 부분)`
     : (mesh.name || '(이름 없음)');
+  document.getElementById('selected-info').innerHTML = `${nameLine}<br><span style="font-weight:400;color:#666;">${sizeLabelMm(box)}</span>`;
   renderPresetPanel();
 }
 
