@@ -3126,6 +3126,42 @@ button, input, textarea, select { font-family:var(--font); }
   scroll-snap-align: start;
   display: block;
 }
+/* 도면 2D/3D 탭 (모바일 최적화 — 터치 타겟 넉넉하게, 세그먼트 컨트롤 스타일) */
+.iv-fp-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f2f2f4;
+  border-radius: 10px;
+  padding: 3px;
+  margin: 12px 0 14px;
+}
+.iv-fp-tab-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #888;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background .15s, color .15s;
+}
+.iv-fp-tab-btn.active { background: #fff; color: #111; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.iv-fp-3d-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eee;
+}
+.iv-fp-3d-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+.iv-fp-3d-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; height: 100%; color: #999; font-size: 13px; text-align: center; padding: 0 24px;
+}
 
 .floorplan-upload-area {
   border:1.5px dashed #dde3ef; border-radius:12px;
@@ -3733,7 +3769,12 @@ button, input, textarea, select { font-family:var(--font); }
             </button>
           </div>
         </div>
+        <div class="iv-fp-tabs">
+          <button class="iv-fp-tab-btn active" id="iv-fp-tab-2d" onclick="_ivSwitchFpTab('2d')">2D</button>
+          <button class="iv-fp-tab-btn" id="iv-fp-tab-3d" onclick="_ivSwitchFpTab('3d')">3D</button>
+        </div>
         <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
+        <div class="iv-fp-3d-wrap" id="iv-fp-3d-wrap" style="display:none;"></div>
       </div>
 
       <!-- 총 예상 비용 -->
@@ -11982,6 +12023,12 @@ function _loadInfoView() {
         fpLinkBtn.style.display = 'none';
       }
     }
+    // 2D/3D 탭 — 프로젝트가 바뀔 때마다 2D 탭으로 리셋하고, 이 프로젝트의 3D 링크를 기억해둠
+    // (링크가 없으면 뷰어 쇼케이스로 대체)
+    window._ivFp3dLink = proj.floorplanLink || '3d-viewer-test.html';
+    const fp3dWrap = document.getElementById('iv-fp-3d-wrap');
+    if (fp3dWrap) fp3dWrap.innerHTML = '';
+    _ivSwitchFpTab('2d');
   }
 
   // 비용 내역 카드
@@ -12079,6 +12126,33 @@ function _toggleIvSection(name) {
   const open = list.style.display === 'none';
   list.style.display = open ? '' : 'none';
   if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+// 공사정보 > 도면 카드의 2D/3D 탭 전환. 3D 탭은 처음 열 때만 iframe을 붙여서(lazy)
+// 모바일에서 평소엔 무거운 3D 뷰어를 불필요하게 로드하지 않게 함.
+function _ivSwitchFpTab(tab) {
+  const tab2dBtn = document.getElementById('iv-fp-tab-2d');
+  const tab3dBtn = document.getElementById('iv-fp-tab-3d');
+  const scroll2d = document.getElementById('iv-floorplan-scroll');
+  const wrap3d = document.getElementById('iv-fp-3d-wrap');
+  if (!tab2dBtn || !tab3dBtn || !scroll2d || !wrap3d) return;
+  const is3d = tab === '3d';
+  tab2dBtn.classList.toggle('active', !is3d);
+  tab3dBtn.classList.toggle('active', is3d);
+  scroll2d.style.display = is3d ? 'none' : '';
+  wrap3d.style.display = is3d ? '' : 'none';
+  if (is3d && !wrap3d.querySelector('iframe')) {
+    const link = window._ivFp3dLink;
+    if (link) {
+      const iframe = document.createElement('iframe');
+      iframe.src = link;
+      iframe.setAttribute('allowfullscreen', '');
+      wrap3d.innerHTML = '';
+      wrap3d.appendChild(iframe);
+    } else {
+      wrap3d.innerHTML = '<div class="iv-fp-3d-empty">아직 3D 도면이 없어요<br>도면수정하기에서 3D 도면 링크를 추가해보세요</div>';
+    }
+  }
 }
 
 function _ivAddFloorplan() {
