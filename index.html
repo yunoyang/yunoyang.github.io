@@ -14945,6 +14945,15 @@ function _fpSlotUpload(e, idx) {
   };
   reader.readAsDataURL(file);
 }
+// 슬롯을 지울 때 원본(floorplanImages)만 지우고 "편집된" 버전(floorplanEditedImage(s))을
+// 그대로 두면, 화면에는 editedImgs가 원본보다 우선 표시되는 로직 때문에 지운 뒤 새로 올려도
+// 예전 편집 이미지가 계속 보이는 버그가 있었음 — 편집본도 함께 지워야 함
+function _clearFpEditedSlot(proj, idx) {
+  if (Array.isArray(proj.floorplanEditedImages)) proj.floorplanEditedImages[idx] = null;
+  if (idx === 0 && proj.floorplanEditedImage) delete proj.floorplanEditedImage;
+  try { localStorage.removeItem(`vb_fp_${proj.id}`); } catch(_) {}
+}
+
 function _fpSlotDelete(e, idx) {
   e.stopPropagation();
   const proj = getProject();
@@ -14954,6 +14963,7 @@ function _fpSlotDelete(e, idx) {
     // 방금 지운 도면을 되살리지 못하도록, save() 호출보다 먼저 tombstone 등록
     _markFloorplanUrlDeleted(proj.floorplanImages[idx]);
     proj.floorplanImages[idx] = null;
+    _clearFpEditedSlot(proj, idx);
     if (idx === 0) {
       // 슬롯 0 삭제 시 floorplanImage를 다음 유효 이미지로 대체
       proj.floorplanImage = proj.floorplanImages.find(Boolean) || null;
@@ -14974,6 +14984,7 @@ function _ivDeleteFloorplanSlot(e, idx) {
     if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
     _markFloorplanUrlDeleted(proj.floorplanImages[idx]);
     proj.floorplanImages[idx] = null;
+    _clearFpEditedSlot(proj, idx);
     if (idx === 0) {
       proj.floorplanImage = proj.floorplanImages.find(Boolean) || null;
       if (!proj.floorplanImage) delete proj.floorplanImage;
@@ -15038,10 +15049,14 @@ function clearFloorplan(e) {
   if (proj) {
     delete proj.floorplanImage;
     proj.floorplanImages = [null, null, null];
+    delete proj.floorplanEditedImage;
+    proj.floorplanEditedImages = [null, null, null];
+    try { localStorage.removeItem(`vb_fp_${proj.id}`); } catch(_) {}
     save();
     _syncFloorplanToCloud(proj);
   }
   _renderFpSlots();
+  if (document.getElementById('form-view-panel')?.style.display !== 'none') _loadInfoView();
 }
 
 // ===== FEEDBACK =====
