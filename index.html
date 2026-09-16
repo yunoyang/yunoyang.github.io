@@ -12044,15 +12044,21 @@ function _loadInfoView() {
     const hasImgs = validImgs.length > 0;
     const canAdd  = validImgs.length < 3;
     if (hasImgs) {
-      fpScroll.innerHTML = validImgs.map((src, i) =>
-        `<img src="${src}" alt="도면 ${i+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">`
-      ).join('');
+      // displayImages는 슬롯(0~2) 순서 그대로라 인덱스가 곧 슬롯 번호 — 삭제 시 이 인덱스로 지움
+      fpScroll.innerHTML = displayImages.map((src, slotIdx) => {
+        if (!src) return '';
+        return `
+          <div style="position:relative;flex-shrink:0;">
+            <img src="${src}" alt="도면 ${slotIdx+1}" style="cursor:zoom-in;" onclick="openPhotoModalFp('${src}')">
+            ${canEdit() ? `<button class="floorplan-slot-del" title="도면 삭제" onclick="_ivDeleteFloorplanSlot(event,${slotIdx})">✕</button>` : ''}
+          </div>`;
+      }).join('');
     } else {
       fpScroll.innerHTML = '';
     }
     // 버튼 visibility: 도면편집 | 도면추가 | 코멘트
-    if (fpModifyBtn)  fpModifyBtn.style.display   = hasImgs ? '' : 'none';
-    if (fpAddBtn)     fpAddBtn.style.display      = canAdd ? '' : 'none';
+    if (fpModifyBtn)  fpModifyBtn.style.display   = (hasImgs && canEdit()) ? '' : 'none';
+    if (fpAddBtn)     fpAddBtn.style.display      = (canAdd && canEdit()) ? '' : 'none';
     // 3D 도면 링크 버튼
     const fpLinkBtn = document.getElementById('iv-fp-link-btn');
     if (fpLinkBtn) {
@@ -14954,6 +14960,24 @@ function _fpSlotDelete(e, idx) {
     _syncFloorplanToCloud(proj);
   }
   _renderFpSlots();
+}
+// 공사정보(뷰 화면)에서 바로 도면 한 장을 삭제 — 편집 폼으로 들어가지 않고도 삭제 가능하게 함
+function _ivDeleteFloorplanSlot(e, idx) {
+  e.stopPropagation();
+  if (!confirm('이 도면을 삭제하시겠습니까?')) return;
+  const proj = getProject();
+  if (proj) {
+    if (!proj.floorplanImages) proj.floorplanImages = [null, null, null];
+    _markFloorplanUrlDeleted(proj.floorplanImages[idx]);
+    proj.floorplanImages[idx] = null;
+    if (idx === 0) {
+      proj.floorplanImage = proj.floorplanImages.find(Boolean) || null;
+      if (!proj.floorplanImage) delete proj.floorplanImage;
+    }
+    save();
+    _syncFloorplanToCloud(proj);
+  }
+  _loadInfoView();
 }
 function _getFpImages(proj) {
   if (!proj) return [null, null, null];
