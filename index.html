@@ -12057,8 +12057,8 @@ function _loadInfoView() {
       fpScroll.innerHTML = '';
     }
     // 버튼 visibility: 도면편집 | 도면추가 | 코멘트
-    if (fpModifyBtn)  fpModifyBtn.style.display   = (hasImgs && canEdit()) ? '' : 'none';
-    if (fpAddBtn)     fpAddBtn.style.display      = (canAdd && canEdit()) ? '' : 'none';
+    if (fpModifyBtn)  fpModifyBtn.style.display   = hasImgs ? '' : 'none';
+    if (fpAddBtn)     fpAddBtn.style.display      = canAdd ? '' : 'none';
     // 3D 도면 링크 버튼
     const fpLinkBtn = document.getElementById('iv-fp-link-btn');
     if (fpLinkBtn) {
