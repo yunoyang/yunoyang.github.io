@@ -1276,8 +1276,9 @@ button, input, textarea, select { font-family:var(--font); }
 .sbs-cover .contents a:hover { text-decoration:underline; }
 .sbs-page { border-top:2px solid #111; margin-bottom:40px; scroll-margin-top:70px; }
 .sbs-page-hd { display:flex; justify-content:space-between; align-items:baseline; padding:16px 2px 10px; }
-.sbs-page-hd .l { font-size:18px; font-weight:500; }
-.sbs-page-hd .r { font-size:22px; font-weight:600; letter-spacing:.01em; }
+.sbs-page-hd { justify-content:flex-start; gap:12px; }
+.sbs-page-hd .l { font-size:22px; font-weight:600; letter-spacing:.01em; }
+.sbs-page-hd .r { font-size:12px; font-weight:400; color:#888; }
 .sbs-grid { display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid #111; border-left:1px solid #111; }
 @media (min-width:660px){ .sbs-grid { grid-template-columns:repeat(3,1fr); } }
 @media (min-width:1000px){ .sbs-grid { grid-template-columns:repeat(5,1fr); } }
@@ -16066,7 +16067,7 @@ function _renderSpecbookSheet() {
     const target = Math.max(5, Math.ceil((list.length + 1) / 5) * 5);
     while (cards.length < target) cards.push(emptyCard(cat));
     return '<section class="sbs-page" id="sbs-cat-' + idx + '">' +
-      '<div class="sbs-page-hd"><div class="l">' + esc(projName) + '</div><div class="r">' + SB_CAT_EN[cat] + ' LIST</div></div>' +
+      '<div class="sbs-page-hd"><div class="l">' + esc(cat) + ' 리스트</div><div class="r">' + esc(projName) + '</div></div>' +
       '<div class="sbs-grid">' + cards.join('') + '</div></section>';
   }).join('');
   const contents = MATERIAL_CATEGORIES.map((cat, idx) => '<a onclick="document.getElementById(\'sbs-cat-' + idx + '\').scrollIntoView({behavior:\'smooth\'})">' + SB_CAT_EN[cat] + (SB_CAT_EN[cat].includes('MATERIAL') || cat === '몰딩' || cat === '하드웨어세트' ? '' : '') + ' LIST</a>').join('');
