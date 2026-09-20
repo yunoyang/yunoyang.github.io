@@ -3266,6 +3266,8 @@ button, input, textarea, select { font-family:var(--font); }
   #main-scroll > *:not(.header) {
     width: 100%; max-width: 640px; margin-left: auto; margin-right: auto;
   }
+  /* sticky 탭 버튼 줄은 배경이 양옆까지 꽉 차게(스크롤 시 뒤 콘텐츠가 비치지 않도록), 버튼은 640px 컬럼 위치 유지 */
+  #main-scroll > .tab-section { max-width: none; padding-left: calc(var(--gutter) + 16px); padding-right: calc(var(--gutter) + 16px); }
   /* 일정/스타일/컨텐츠/가구&가전/스펙북 탭이 활성화되면 .app 자체를 화면 전체 폭으로 확장.
      (100vw 네거티브 마진으로 뻐져나가게 하는 방식은 .screen의 overflow:hidden에 그대로 잘려서
      달력이 잘려 보이는 버그가 있었음 — .app을 직접 넓히는 방식으로 교체) */
