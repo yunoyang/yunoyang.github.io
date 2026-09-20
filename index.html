@@ -16072,11 +16072,7 @@ function _renderSpecbookSheet() {
   const contents = MATERIAL_CATEGORIES.map((cat, idx) => '<a onclick="document.getElementById(\'sbs-cat-' + idx + '\').scrollIntoView({behavior:\'smooth\'})">' + SB_CAT_EN[cat] + (SB_CAT_EN[cat].includes('MATERIAL') || cat === '몰딩' || cat === '하드웨어세트' ? '' : '') + ' LIST</a>').join('');
   el.innerHTML = '<div class="sbs-wrap">' + _sbModeBarHtml() +
     (editable ? '<div class="sbs-hint">칸을 클릭해서 바로 수정할 수 있어요 (Enter로 저장). 비어있는 ＋ 칸을 눌러 자재를 추가하세요.</div>' : '') +
-    '<div class="sbs-cover">' +
-      '<div><div class="brand">VIBESPACE</div></div>' +
-      '<div><div class="lbl">SPEC BOOK</div><div class="lbl" style="margin-top:18px;">CONTENTS</div><div class="contents">' + contents + '</div></div>' +
-      '<div><div class="lbl">PROJECT DETAIL</div><div>' + esc(projName) + '</div>' + (addr ? '<div>' + esc(addr) + '</div>' : '') + '<div>' + dateStr + '</div></div>' +
-    '</div>' + pages + '</div>';
+    pages + '</div>';
 }
 
 function _sbInlineSave(el) {
