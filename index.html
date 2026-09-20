@@ -12198,7 +12198,7 @@ function _ivSwitchFpTab(tab) {
     const link = window._ivFp3dLink;
     if (link) {
       const iframe = document.createElement('iframe');
-      iframe.src = link;
+      iframe.src = _ivFp3dSrc(link, false);
       iframe.setAttribute('allowfullscreen', '');
       wrap3d.innerHTML = '';
       wrap3d.appendChild(iframe);
@@ -12214,6 +12214,11 @@ function _ivSwitchFpTab(tab) {
   }
 }
 
+// 임베드(비전체화면)일 땐 ?embed=1 로 불러와 3D 뷰어의 안내/패널 UI를 숨기고, 전체 화면일 때만 UI를 보여줌
+function _ivFp3dSrc(link, full) {
+  if (!/3d-viewer-test\.html/.test(link)) return link;
+  return link.split('?')[0] + (full ? '' : '?embed=1');
+}
 function _ivToggleFp3dFull(force) {
   const wrap = document.getElementById('iv-fp-3d-wrap');
   const btn = document.getElementById('iv-fp-3d-full-btn');
@@ -12230,6 +12235,8 @@ function _ivToggleFp3dFull(force) {
     window._ivFp3dPlaceholder = null;
   }
   wrap.classList.toggle('iv-fp-3d-full', on);
+  const ifr = wrap.querySelector('iframe');
+  if (ifr && window._ivFp3dLink) ifr.src = _ivFp3dSrc(window._ivFp3dLink, on);
   if (btn) btn.textContent = on ? '✕ 닫기' : '⛶ 전체 화면';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') _ivToggleFp3dFull(false); });
