@@ -3224,8 +3224,10 @@ button, input, textarea, select { font-family:var(--font); }
   body.consulting-bg .app { max-width: 100% !important; }
   body.consulting-bg #screen-consulting .form-screen-inner > div:last-child { max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   body.consulting-bg #screen-consulting .form-header { max-width: 1100px; margin: 0 auto; }
+  /* PC: .app은 브라우저 전체 폭. 헤더 바는 전체 폭, 본문만 640px 컬럼으로 가운데 정렬 */
+  :root { --gutter: max(0px, calc((100vw - 640px) / 2)); }
   .app {
-    max-width: 640px;
+    max-width: 100%;
     margin: 0 auto;
     /* 배경 흰색 — 경계선 없이 자연스럽게 */
     box-shadow: none;
@@ -3254,19 +3256,19 @@ button, input, textarea, select { font-family:var(--font); }
     transform: translateX(-50%);
   }
 
+  .header { padding-left: calc(var(--gutter) + 20px); padding-right: calc(var(--gutter) + 20px); }
+  .form-header { padding-left: calc(var(--gutter) + 9px); padding-right: calc(var(--gutter) + 10px); }
+  .form-screen-inner > *:not(.form-header),
+  #main-scroll > *:not(.header) {
+    width: 100%; max-width: 640px; margin-left: auto; margin-right: auto;
+  }
   /* 일정/스타일/컨텐츠/가구&가전/스펙북 탭이 활성화되면 .app 자체를 화면 전체 폭으로 확장.
      (100vw 네거티브 마진으로 뻐져나가게 하는 방식은 .screen의 overflow:hidden에 그대로 잘려서
      달력이 잘려 보이는 버그가 있었음 — .app을 직접 넓히는 방식으로 교체) */
   body.wide-tab .app { max-width: 100%; }
   /* 헤더·공사정보 요약·탭 버튼 줄은 넓어진 .app 안에서도 원래처럼 640px로 가운데 정렬 유지 */
-  body.wide-tab .header,
-  body.wide-tab .summary-wrap,
-  body.wide-tab .tab-section {
-    max-width: 640px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  body.wide-tab #main-scroll > #tab-calendar, body.wide-tab #main-scroll > #tab-style, body.wide-tab #main-scroll > #tab-content,
+  body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook { max-width: none; }
   /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
   #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > * {
     max-width: 1400px;
@@ -7685,6 +7687,22 @@ function formatNum(n) {
   if (n >= 10000) return Math.round(n/10000).toLocaleString() + '만';
   return n.toLocaleString();
 }
+
+// PC: 본문이 640px 컬럼이라 좌우 여백 위에서 휠을 굴리면 스크롤이 안 되므로, 가장 가까운 스크롤 영역으로 전달
+document.addEventListener('wheel', e => {
+  if (innerWidth < 660 || e.ctrlKey) return;
+  for (let el = e.target; el && el !== document.body; el = el.parentElement) {
+    const oy = getComputedStyle(el).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) return;
+  }
+  const screen = e.target.closest && e.target.closest('.screen');
+  if (!screen) return;
+  const sc = [...screen.querySelectorAll('*')].find(el => {
+    const oy = getComputedStyle(el).overflowY;
+    return (oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight && el.offsetParent;
+  });
+  if (sc) sc.scrollTop += e.deltaY;
+}, { passive: true });
 
 // ===== TABS =====
 const _MAIN_TABS = ['plan','calendar','style','content','furniture','meeting'];
