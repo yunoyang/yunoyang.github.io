@@ -1262,6 +1262,49 @@ button, input, textarea, select { font-family:var(--font); }
 }
 @media (min-width: 1000px) { .specbook-card-grid { grid-template-columns: repeat(6, 1fr); } }
 @media (min-width: 1300px) { .specbook-card-grid { grid-template-columns: repeat(8, 1fr); } }
+/* ===== 스펙시트 (PDF 스펙북 스타일) ===== */
+.sbs-wrap { color:#111; font-family:var(--font); }
+.sbs-modebar { display:flex; gap:6px; margin-bottom:14px; }
+.sbs-modebar button { padding:7px 14px; border-radius:999px; border:1.5px solid #e5e5ec; background:#fff; font-size:13px; font-weight:600; color:#666; cursor:pointer; font-family:var(--font); }
+.sbs-modebar button.on { background:#111; border-color:#111; color:#fff; }
+.sbs-cover { border-top:2px solid #111; border-bottom:2px solid #111; display:grid; grid-template-columns:1fr; margin-bottom:34px; }
+@media (min-width:900px){ .sbs-cover { grid-template-columns:1fr 1fr 1fr; } }
+.sbs-cover > div { padding:22px 18px; font-size:13px; line-height:1.9; }
+.sbs-cover .brand { font-size:26px; font-weight:600; letter-spacing:.02em; }
+.sbs-cover .lbl { font-size:13px; font-weight:600; margin-bottom:10px; letter-spacing:.02em; }
+.sbs-cover .contents a { display:block; color:#111; text-decoration:none; cursor:pointer; }
+.sbs-cover .contents a:hover { text-decoration:underline; }
+.sbs-page { border-top:2px solid #111; margin-bottom:40px; scroll-margin-top:70px; }
+.sbs-page-hd { display:flex; justify-content:space-between; align-items:baseline; padding:16px 2px 10px; }
+.sbs-page-hd .l { font-size:18px; font-weight:500; }
+.sbs-page-hd .r { font-size:22px; font-weight:600; letter-spacing:.01em; }
+.sbs-grid { display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid #111; border-left:1px solid #111; }
+@media (min-width:660px){ .sbs-grid { grid-template-columns:repeat(3,1fr); } }
+@media (min-width:1000px){ .sbs-grid { grid-template-columns:repeat(5,1fr); } }
+.sbs-card { border-right:1px solid #111; border-bottom:1px solid #111; font-size:12px; min-width:0; }
+.sbs-row { display:grid; grid-template-columns:34% 66%; border-bottom:1px solid #111; min-height:24px; }
+.sbs-row:last-child { border-bottom:none; }
+.sbs-row > .k { padding:4px 8px; font-weight:600; border-right:1px solid #111; display:flex; align-items:center; }
+.sbs-row > .v { padding:4px 8px; color:#444; word-break:break-all; min-width:0; outline:none; display:flex; align-items:center; }
+.sbs-row.sample > .k { border-right:1px solid #111; }
+.sbs-row.sample > .v { justify-content:flex-end; font-weight:600; color:#111; }
+.sbs-row.sup3 { grid-template-columns:34% 66%; }
+.sbs-sup { border-left:1px solid #111; }
+.sbs-supg { display:grid; grid-template-rows:repeat(3,auto); }
+.sbs-supg > div { padding:4px 8px; border-bottom:1px solid #111; color:#444; display:flex; gap:4px; }
+.sbs-supg > div:last-child { border-bottom:none; }
+.sbs-img { aspect-ratio: 4 / 3.6; border-bottom:1px solid #111; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#fff; }
+.sbs-img img { max-width:86%; max-height:86%; object-fit:contain; }
+.sbs-img .add { font-size:28px; color:#ccc; cursor:pointer; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.sbs-img .add:hover { color:#111; background:#fafafa; }
+.sbs-img .acts { position:absolute; right:6px; bottom:6px; display:none; gap:4px; }
+.sbs-img:hover .acts { display:flex; }
+.sbs-img .acts button { border:1px solid #111; background:#fff; font-size:11px; padding:3px 8px; border-radius:4px; cursor:pointer; font-family:var(--font); }
+.sbs-edit[contenteditable="true"]:hover { background:#fffbe6; }
+.sbs-edit[contenteditable="true"]:focus { background:#fff3bf; }
+.sbs-hint { font-size:12px; color:#888; margin:-4px 0 14px; }
+/* 스펙북 탭은 PC에서 양옆 꽉 차게 */
+@media (min-width:660px){ #tab-specbook > * { max-width:none !important; } }
 /* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
 .furniture-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 660px) { .furniture-cat-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -15970,11 +16013,90 @@ let _sbSearchQuery = '';
 let _sbViewMode = null; // 'manage' | 'browse' — null이면 권한에 따라 최초 진입 시 자동 결정
 
 function _setSbViewMode(mode) { _sbViewMode = mode; _renderSpecbookTab(); }
+const SB_CAT_EN = { '외부마감재':'EXTERIOR MATERIAL', '외부조명':'EXTERIOR LIGHTING', '내부마감재':'INTERIOR MATERIAL', '위생기구':'SANITARY ACCESSORY', '실내조명':'INTERIOR LIGHTING', '전기설비':'ELECTRIC EQUIPMENT', '몰딩':'MOLDING', '하드웨어세트':'HARDWARE SET' };
+
+function _sbModeBarHtml() {
+  const m = _sbViewMode;
+  const b = (mode, label) => '<button class="' + (m === mode ? 'on' : '') + '" onclick="_setSbViewMode(\'' + mode + '\')">' + label + '</button>';
+  return '<div class="sbs-modebar">' + b('sheet', '스펙시트') + b('browse', '카드 조회') + (canEdit() ? b('manage', '관리 리스트') : '') + '</div>';
+}
+
+// ===== 스펙시트: PDF 스펙북과 같은 구성(표지 + 카테고리별 5열 카드표) + 셀 클릭 인라인 수정 =====
+function _renderSpecbookSheet() {
+  const el = document.getElementById('specbook-list');
+  if (!el) return;
+  const proj = getProject();
+  const editable = canEdit();
+  const items = _getMaterialItems().slice().reverse(); // 등록순
+  const projName = proj?.name || '';
+  const addr = proj?.form?.address || '';
+  const d = new Date();
+  const dateStr = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
+  const cell = (it, field, extra) => editable
+    ? '<div class="v sbs-edit" contenteditable="true" spellcheck="false" data-id="' + it.id + '" data-f="' + field + '" onblur="_sbInlineSave(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' + esc(it[field] || '') + '</div>'
+    : '<div class="v">' + esc(it[field] || '') + '</div>';
+  const supRow = (it, label, field) => '<div><span style="font-weight:600;flex-shrink:0;">' + label + '</span>' + (editable
+    ? '<span class="sbs-edit" style="flex:1;outline:none;min-width:40px;" contenteditable="true" spellcheck="false" data-id="' + it.id + '" data-f="' + field + '" onblur="_sbInlineSave(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' + esc(it[field] || '') + '</span>'
+    : '<span>' + esc(it[field] || '') + '</span>') + '</div>';
+  const cardHtml = (it) => {
+    const img = it.imageUrl
+      ? '<img src="' + it.imageUrl + '" alt="' + esc(it.itemName) + '">' + (editable ? '<div class="acts"><button onclick="openAddSpecbookItem(\'' + it.id + '\')">이미지·전체 수정</button><button onclick="_deleteMaterialItem(\'' + it.id + '\')">삭제</button></div>' : '')
+      : (editable ? '<div class="add" onclick="openAddSpecbookItem(\'' + it.id + '\')" title="이미지 추가">＋</div>' : '');
+    return '<div class="sbs-card">' +
+      '<div class="sbs-row sample"><div class="k">SAMPLE</div>' + cell(it, 'itemCode') + '</div>' +
+      '<div class="sbs-img">' + img + '</div>' +
+      '<div class="sbs-row"><div class="k">아이템</div>' + cell(it, 'itemName') + '</div>' +
+      '<div class="sbs-row"><div class="k">위치</div>' + cell(it, 'location') + '</div>' +
+      '<div class="sbs-row"><div class="k">모델명</div>' + cell(it, 'modelName') + '</div>' +
+      '<div class="sbs-row"><div class="k">크기/마감</div>' + cell(it, 'specSize') + '</div>' +
+      '<div class="sbs-row"><div class="k">제조사</div>' + cell(it, 'manufacturer') + '</div>' +
+      '<div class="sbs-row" style="min-height:0;"><div class="k" style="align-items:flex-start;padding-top:8px;">공급사</div><div class="sbs-supg" style="border-left:none;">' + supRow(it,'회사:','supplierCompany') + supRow(it,'담당자:','supplierContact') + supRow(it,'전화번호:','supplierPhone') + '</div></div>' +
+      '<div class="sbs-row"><div class="k">기타</div>' + cell(it, 'note') + '</div>' +
+      '</div>';
+  };
+  const emptyCard = (cat) => '<div class="sbs-card" style="opacity:.75;">' +
+    '<div class="sbs-row sample"><div class="k">SAMPLE</div><div class="v"></div></div>' +
+    '<div class="sbs-img">' + (editable ? '<div class="add" onclick="openAddSpecbookItem(null,\'' + esc(cat) + '\')" title="자재 추가">＋</div>' : '') + '</div>' +
+    ['아이템','위치','모델명','크기/마감','제조사'].map(k => '<div class="sbs-row"><div class="k">' + k + '</div><div class="v"></div></div>').join('') +
+    '<div class="sbs-row" style="min-height:74px;"><div class="k">공급사</div><div class="v"></div></div>' +
+    '<div class="sbs-row"><div class="k">기타</div><div class="v"></div></div></div>';
+  const pages = MATERIAL_CATEGORIES.map((cat, idx) => {
+    const list = items.filter(it => it.category === cat);
+    let cards = list.map(cardHtml);
+    const target = Math.max(5, Math.ceil((list.length + 1) / 5) * 5);
+    while (cards.length < target) cards.push(emptyCard(cat));
+    return '<section class="sbs-page" id="sbs-cat-' + idx + '">' +
+      '<div class="sbs-page-hd"><div class="l">' + esc(projName) + '</div><div class="r">' + SB_CAT_EN[cat] + ' LIST</div></div>' +
+      '<div class="sbs-grid">' + cards.join('') + '</div></section>';
+  }).join('');
+  const contents = MATERIAL_CATEGORIES.map((cat, idx) => '<a onclick="document.getElementById(\'sbs-cat-' + idx + '\').scrollIntoView({behavior:\'smooth\'})">' + SB_CAT_EN[cat] + (SB_CAT_EN[cat].includes('MATERIAL') || cat === '몰딩' || cat === '하드웨어세트' ? '' : '') + ' LIST</a>').join('');
+  el.innerHTML = '<div class="sbs-wrap">' + _sbModeBarHtml() +
+    (editable ? '<div class="sbs-hint">칸을 클릭해서 바로 수정할 수 있어요 (Enter로 저장). 비어있는 ＋ 칸을 눌러 자재를 추가하세요.</div>' : '') +
+    '<div class="sbs-cover">' +
+      '<div><div class="brand">VIBESPACE</div></div>' +
+      '<div><div class="lbl">SPEC BOOK</div><div class="lbl" style="margin-top:18px;">CONTENTS</div><div class="contents">' + contents + '</div></div>' +
+      '<div><div class="lbl">PROJECT DETAIL</div><div>' + esc(projName) + '</div>' + (addr ? '<div>' + esc(addr) + '</div>' : '') + '<div>' + dateStr + '</div></div>' +
+    '</div>' + pages + '</div>';
+}
+
+function _sbInlineSave(el) {
+  const proj = getProject();
+  const it = proj?.materialItems?.find(i => i.id === el.dataset.id);
+  if (!it) return;
+  const val = (el.textContent || '').trim();
+  if ((it[el.dataset.f] || '') === val) return;
+  it[el.dataset.f] = val;
+  it.updatedAt = Date.now();
+  save();
+  _syncMaterialItemsToCloud(proj);
+}
 
 function _renderSpecbookTab() {
-  if (_sbViewMode === null) _sbViewMode = canEdit() ? 'manage' : 'browse';
-  if (_sbViewMode === 'browse') { _renderSpecbookBrowseView(); return; }
-  _renderSpecbookManageView();
+  if (_sbViewMode === null) _sbViewMode = 'sheet';
+  if (_sbViewMode === 'sheet') { _renderSpecbookSheet(); return; }
+  if (_sbViewMode === 'browse') _renderSpecbookBrowseView(); else _renderSpecbookManageView();
+  const _el = document.getElementById('specbook-list');
+  if (_el && !_el.querySelector('.sbs-modebar')) _el.insertAdjacentHTML('afterbegin', _sbModeBarHtml());
 }
 
 // ===== 화면2: 관리 리스트 (요약 카운트 + 카테고리 탭 + 검색 + 편집/삭제) =====
@@ -16202,17 +16324,17 @@ function _closeSpecbookDetail() {
   document.getElementById('dlg-specbook-detail').style.display = 'none';
 }
 
-function openAddSpecbookItem(id) {
-  requireLogin(() => _openAddSpecbookItem(id));
+function openAddSpecbookItem(id, presetCategory) {
+  requireLogin(() => _openAddSpecbookItem(id, presetCategory));
 }
 
-function _openAddSpecbookItem(id) {
+function _openAddSpecbookItem(id, presetCategory) {
   _sbEditingId = id || null;
   const it = id ? _getMaterialItems().find(i => i.id === id) : null;
   const dlg = document.getElementById('dlg-specbook');
   const sel = dlg.querySelector('#sb-category');
   sel.innerHTML = MATERIAL_CATEGORIES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  sel.value = it?.category || MATERIAL_CATEGORIES[0];
+  sel.value = it?.category || presetCategory || MATERIAL_CATEGORIES[0];
   dlg.querySelector('#sb-code').value = it?.itemCode || '';
   dlg.querySelector('#sb-location').value = it?.location || '';
   dlg.querySelector('#sb-name').value = it?.itemName || '';
