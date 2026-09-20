@@ -3260,7 +3260,8 @@ button, input, textarea, select { font-family:var(--font); }
   /* 홈(랜딩) 화면은 이전처럼 640px 컬럼 안에 이미지가 들어가게 */
   #screen-landing { max-width: 640px; margin-left: auto; margin-right: auto; }
   .header { padding-left: 24px; padding-right: 24px; }
-  .form-header { padding-left: calc(var(--gutter) + 9px); padding-right: calc(var(--gutter) + 10px); }
+  /* 화면 직속 헤더만 전체 폭 처리 — #sv-inner 같은 이미 640px 안에 있는 헤더는 제외(이중 밀림 방지) */
+  .form-screen-inner > .form-header, .screen > .form-header { padding-left: calc(var(--gutter) + 9px); padding-right: calc(var(--gutter) + 10px); }
   .form-screen-inner > *:not(.form-header),
   #main-scroll > *:not(.header) {
     width: 100%; max-width: 640px; margin-left: auto; margin-right: auto;
