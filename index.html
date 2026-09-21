@@ -10046,7 +10046,16 @@ function _getProcPhase(proc) {
   for (const cat of PROCESS_CATEGORIES) {
     if (cat.items.includes(proc.name)) return cat.id;
   }
-  return 'planning'; // 매칭 안 되는 구버전 데이터 — 첫 탭에서라도 보이게
+  // 구버전 공정명(욕실/싱크/동의서 및 보양 등)이나 '타일공사'처럼 이름이 조금 다른 공정이 전부 플래닝으로
+  // 떨어지던 문제 — 별칭 + 이름에 포함된 공정명으로 단계를 추정
+  const LEGACY = { '동의서 및 보양':'structure', '보양':'structure', '욕실':'finish', '싱크':'finish', '페인트':'finish', '도장':'finish', '청소':'after' };
+  const nm = (proc.name || '').trim();
+  if (LEGACY[nm]) return LEGACY[nm];
+  const hit = PROCESS_CATEGORIES.flatMap(c => c.items.map(i => ({ i, id: c.id }))).sort((a, b) => b.i.length - a.i.length).find(x => nm.includes(x.i));
+  if (hit) return hit.id;
+  const legacyHit = Object.keys(LEGACY).find(k => nm.includes(k));
+  if (legacyHit) return LEGACY[legacyHit];
+  return 'finish'; // 어디에도 안 맞는 공정은 플래닝이 아니라 마감공사 쪽에 둠(플래닝에 잘못 섞여 보이는 것 방지)
 }
 
 function setPlanPhase(phase, btn) {
