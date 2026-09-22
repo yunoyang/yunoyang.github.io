@@ -1306,6 +1306,37 @@ button, input, textarea, select { font-family:var(--font); }
 .sbs-hint { font-size:12px; color:#888; margin:-4px 0 14px; }
 /* 스펙북 탭은 PC에서 양옆 꽉 차게 */
 @media (min-width:660px){ #tab-specbook > * { max-width:none !important; } }
+/* ===== 자재선택 탭 ===== */
+#matselect-container { display:flex; flex-direction:column; gap:22px; padding:14px 14px 100px; }
+.ms-room { background:#fff; border:1px solid #eef0f5; border-radius:16px; padding:18px; }
+.ms-room-hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+.ms-room-hd .name { font-size:17px; font-weight:700; color:#111; }
+.ms-room-hd .cnt { font-size:12px; color:#999; }
+.ms-refs { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.ms-refs::-webkit-scrollbar { display:none; }
+.ms-refs-empty { font-size:13px; color:#aaa; padding:10px 2px; }
+.ms-ref { position:relative; flex-shrink:0; width:96px; height:96px; border-radius:10px; overflow:hidden; cursor:pointer; border:2.5px solid transparent; -webkit-tap-highlight-color:transparent; }
+.ms-ref img { width:100%; height:100%; object-fit:cover; display:block; }
+.ms-ref.picked { border-color:#111; }
+.ms-ref .badge { position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; }
+.ms-ref.picked .badge { background:#111; }
+.ms-ref:not(.picked) .badge { display:none; }
+.ms-picked-strip { display:flex; gap:10px; margin-bottom:16px; }
+.ms-picked-strip .item { flex:1; max-width:220px; aspect-ratio:4/3; border-radius:12px; overflow:hidden; background:#f2f3f5; }
+.ms-picked-strip .item img { width:100%; height:100%; object-fit:cover; display:block; }
+.ms-picked-empty { font-size:13px; color:#bbb; padding:24px 0; text-align:center; border:1.5px dashed #e5e5ec; border-radius:12px; margin-bottom:16px; }
+.ms-fields { display:grid; grid-template-columns:80px 1fr; border-top:1px solid #eef0f5; }
+.ms-fields > div { padding:10px 4px; border-bottom:1px solid #eef0f5; display:flex; align-items:center; }
+.ms-fields .k { font-size:13px; font-weight:600; color:#666; }
+.ms-fields .v { font-size:14px; color:#222; outline:none; word-break:break-word; }
+.ms-fields .v:empty:before { content:attr(data-ph); color:#bbb; }
+.ms-fields .v[contenteditable="true"]:hover { background:#fffbe6; border-radius:4px; }
+.ms-fields .v[contenteditable="true"]:focus { background:#fff3bf; border-radius:4px; }
+.ms-note { margin-top:12px; }
+.ms-note .k { font-size:13px; font-weight:600; color:#666; margin-bottom:6px; }
+.ms-note .v { font-size:13px; color:#444; line-height:1.6; background:#f7f8fa; border-radius:10px; padding:12px; min-height:20px; outline:none; }
+.ms-note .v:empty:before { content:attr(data-ph); color:#bbb; }
+.ms-note .v[contenteditable="true"]:focus { background:#fff3bf; }
 /* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
 .furniture-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 660px) { .furniture-cat-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -3320,7 +3351,7 @@ button, input, textarea, select { font-family:var(--font); }
   body.wide-tab #main-scroll > #tab-calendar, body.wide-tab #main-scroll > #tab-style, body.wide-tab #main-scroll > #tab-content,
   body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook { max-width: none; }
   /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
-  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > * {
+  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > *, #tab-matselect > * {
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
@@ -3707,6 +3738,7 @@ button, input, textarea, select { font-family:var(--font); }
         <button class="tab-btn" onclick="switchMainTab('calendar',this)"><span class="tab-label">일정</span></button>
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
+        <button class="tab-btn" id="tab-btn-matselect" onclick="switchMainTab('matselect',this)"><span class="tab-label">자재선택</span></button>
         <button class="tab-btn" id="tab-btn-furniture" onclick="switchMainTab('furniture',this)"><span class="tab-label">가구&가전</span></button>
         <button class="tab-btn" id="tab-btn-sitephotos" onclick="switchMainTab('sitephotos',this)"><span class="tab-label">현장사진</span></button>
         <button class="tab-btn" id="tab-btn-specbook" onclick="switchMainTab('specbook',this)"><span class="tab-label">스펙북</span></button>
@@ -3744,6 +3776,13 @@ button, input, textarea, select { font-family:var(--font); }
     <div id="tab-content" style="display:none; background:#fff;">
       <div class="content-tab-inner">
         <div id="content-list"></div>
+      </div>
+    </div>
+
+    <!-- Material Select Tab -->
+    <div id="tab-matselect" style="display:none; background:#fff;">
+      <div class="style-tab-inner">
+        <div id="matselect-container"></div>
       </div>
     </div>
 
@@ -7772,16 +7811,17 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
   // PC에서 넓게 쓰는 탭(일정/스타일/컨텐츠/가구&가전/스펙북)일 때만 .app을 화면 전체 폭으로 확장
-  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook'].includes(tab));
+  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect'].includes(tab));
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
+  document.getElementById('tab-matselect').style.display = tab === 'matselect' ? '' : 'none';
   document.getElementById('tab-furniture').style.display = tab === 'furniture' ? '' : 'none';
   document.getElementById('tab-sitephotos').style.display = tab === 'sitephotos' ? '' : 'none';
   document.getElementById('tab-specbook').style.display = tab === 'specbook' ? '' : 'none';
-  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook') ? 'none' : (!canEdit() ? 'none' : '');
+  document.getElementById('floating-add-process').style.display = (tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook' || tab === 'matselect') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = (tab === 'style' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
@@ -7795,6 +7835,7 @@ function switchMainTab(tab, btn) {
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
   if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); _fetchFurnitureFromCloud(); }
   if (tab === 'sitephotos') { _renderSitePhotosTab(); }
+  if (tab === 'matselect') { renderMatSelectTab(); }
   if (tab === 'calendar') {
     const proj = getProject();
     if (proj) {
@@ -8175,6 +8216,87 @@ function getStyleData() {
   if (!proj) return {};
   if (!proj.styleImages) proj.styleImages = {};
   return proj.styleImages;
+}
+
+// ===== 자재선택 탭 =====
+// 스타일 탭에서 모은 레퍼런스 이미지 중 "이걸로 최종 결정" 이미지를 공간별로 고르고,
+// 벽/바닥/가구/참고제품/문의사항을 협의안(PDF) 형식처럼 기록하는 화면.
+function _getMatSelections() {
+  const proj = getProject();
+  if (!proj) return {};
+  if (!proj.materialSelections) proj.materialSelections = {};
+  return proj.materialSelections;
+}
+function _getMatSel(room) {
+  const sels = _getMatSelections();
+  if (!sels[room]) sels[room] = { picks: [], wall: '', floor: '', furniture: '', refProduct: '', note: '' };
+  if (!Array.isArray(sels[room].picks)) sels[room].picks = [];
+  return sels[room];
+}
+function _msSaveAndSync() {
+  const proj = getProject();
+  save();
+  if (proj) _syncProjToCloud(proj);
+}
+function renderMatSelectTab() {
+  const el = document.getElementById('matselect-container');
+  if (!el) return;
+  const editable = canEdit();
+  const rooms = getStyleRooms();
+  const data = getStyleData();
+  if (!rooms.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">스타일 탭에서 공간별로 레퍼런스 이미지를 먼저 모아주세요</div>';
+    return;
+  }
+  const fieldRow = (room, key, label, placeholder) => {
+    const sel = _getMatSel(room);
+    return '<div class="k">' + label + '</div><div class="v" ' + (editable ? 'contenteditable="true" spellcheck="false"' : '') +
+      ' data-room="' + esc(room) + '" data-f="' + key + '" data-ph="' + placeholder + '"' +
+      (editable ? ' onblur="_msFieldSave(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}"' : '') +
+      '>' + esc(sel[key] || '') + '</div>';
+  };
+  el.innerHTML = rooms.map(room => {
+    const items = data[room] || [];
+    const sel = _getMatSel(room);
+    const refsHtml = items.length
+      ? items.map(it => {
+          const picked = sel.picks.includes(it.url);
+          return '<div class="ms-ref' + (picked ? ' picked' : '') + '" onclick="' + (editable ? '_msTogglePick(\'' + esc(room) + '\',\'' + esc(it.url) + '\')' : '') + '">' +
+            '<img src="' + it.url + '" loading="lazy"><div class="badge">✓</div></div>';
+        }).join('')
+      : '<div class="ms-refs-empty">아직 모은 레퍼런스 이미지가 없어요</div>';
+    const pickedHtml = sel.picks.length
+      ? '<div class="ms-picked-strip">' + sel.picks.map(u => '<div class="item"><img src="' + u + '"></div>').join('') + '</div>'
+      : '<div class="ms-picked-empty">' + (editable ? '위 레퍼런스에서 최종 선택할 이미지를 눌러주세요' : '아직 최종 선택된 이미지가 없어요') + '</div>';
+    return '<div class="ms-room">' +
+      '<div class="ms-room-hd"><span class="name">' + esc(room) + '</span><span class="cnt">최종 선택 ' + sel.picks.length + '장</span></div>' +
+      '<div class="ms-refs">' + refsHtml + '</div>' +
+      pickedHtml +
+      '<div class="ms-fields">' +
+        fieldRow(room, 'wall', '벽', '예: 화이트 계열') +
+        fieldRow(room, 'floor', '바닥', '예: 구정마루 헤리티지 브라운오크') +
+        fieldRow(room, 'furniture', '가구', '예: 원목 책장 목공 / A타입 방향') +
+        fieldRow(room, 'refProduct', '참고 제품', '예: 구정마루 헤리티지 브라운오크') +
+      '</div>' +
+      '<div class="ms-note"><div class="k">문의사항 / 메모</div><div class="v" ' + (editable ? 'contenteditable="true" spellcheck="false"' : '') +
+        ' data-room="' + esc(room) + '" data-f="note" data-ph="업체에 확인이 필요한 내용을 적어주세요"' +
+        (editable ? ' onblur="_msFieldSave(this)"' : '') + '>' + esc(sel.note || '') + '</div></div>' +
+    '</div>';
+  }).join('');
+}
+function _msTogglePick(room, url) {
+  const sel = _getMatSel(room);
+  const i = sel.picks.indexOf(url);
+  if (i === -1) sel.picks.push(url); else sel.picks.splice(i, 1);
+  _msSaveAndSync();
+  renderMatSelectTab();
+}
+function _msFieldSave(elm) {
+  const sel = _getMatSel(elm.dataset.room);
+  const val = (elm.textContent || '').trim();
+  if ((sel[elm.dataset.f] || '') === val) return;
+  sel[elm.dataset.f] = val;
+  _msSaveAndSync();
 }
 
 let _styleRecoveryAttempted = false;
