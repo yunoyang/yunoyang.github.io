@@ -1337,6 +1337,17 @@ button, input, textarea, select { font-family:var(--font); }
 .ms-note .v { font-size:13px; color:#444; line-height:1.6; background:#f7f8fa; border-radius:10px; padding:12px; min-height:20px; outline:none; }
 .ms-note .v:empty:before { content:attr(data-ph); color:#bbb; }
 .ms-note .v[contenteditable="true"]:focus { background:#fff3bf; }
+/* ===== 사진 공통: 핀터레스트식 간격 + 선택/삭제 ===== */
+.sv-gallery-masonry { gap: 10px; }
+.sv-gallery-col { gap: 10px; }
+@media (min-width:660px){ .sv-gallery-masonry, .sv-gallery-col { gap: 16px; } #style-rooms-container, #sitephotos-grid { gap:16px; } }
+.ph-sel { position:absolute; top:8px; left:8px; width:24px; height:24px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.28); z-index:3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; opacity:.9; }
+.ph-sel.on { background:#111; border-color:#111; }
+.ph-item.selected { outline:3px solid #111; outline-offset:-3px; }
+#ph-selbar { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:9990; background:#111; color:#fff; border-radius:999px; padding:10px 12px 10px 20px; display:none; align-items:center; gap:14px; font-size:14px; font-weight:600; box-shadow:0 6px 24px rgba(0,0,0,.3); }
+#ph-selbar button { border:none; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font); }
+#ph-selbar .del { background:#e33; color:#fff; }
+#ph-selbar .cancel { background:rgba(255,255,255,.18); color:#fff; }
 /* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
 .furniture-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 660px) { .furniture-cat-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -3309,8 +3320,8 @@ button, input, textarea, select { font-family:var(--font); }
   }
   /* 갤러리: 좌우 패딩 늘려서 이미지가 엣지에 붙지 않게 */
   #sv-gallery-area { padding: 8px 12px 80px; }
-  .sv-gallery-masonry { gap: 8px; }
-  .sv-gallery-col { gap: 8px; }
+  .sv-gallery-masonry { gap: 16px; }
+  .sv-gallery-col { gap: 16px; }
   #sv-gallery-area.sv-list { gap: 10px; }
 
   /* 스타일 상세(뷰어 화면): style-viewer-screen 자체는 항상 뷰포트 전체(흰 배경)를 덮고,
@@ -8774,13 +8785,14 @@ function _svApplyViewMode() {
 }
 
 function _svBuildGallery() {
+  _phSelBegin('style', _styleDeleteUrls, _svBuildGallery);
   const items = (getStyleData()[styleViewerRoom] || []);
   const el = document.getElementById('sv-gallery-area');
   if (!el) return;
   const renderItem = (item, i) => {
     const pinCount = (item.productPins || []).length;
     const ini = item.uploadedBy ? item.uploadedBy.charAt(0).toUpperCase() : '';
-    return `<div class="sv-gallery-item" onclick="_svGalleryTap(${i})">
+    return `<div class="sv-gallery-item ph-item${_phSel.ctx === 'style' && _phSel.urls.has(item.url) ? ' selected' : ''}" data-url="${item.url}" onclick="_svGalleryTap(${i})">${_phSelHtml('style', item.url)}
       <img src="${item.url}" alt="" loading="lazy">
       ${ini ? `<div class="sv-gallery-uploader">${ini}</div>` : ''}
       ${pinCount ? `<div class="sv-gallery-pin-badge"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="4"/><path d="M12 14 L12 22"/></svg>${pinCount}</div>` : ''}
@@ -8796,17 +8808,79 @@ function _svBuildGallery() {
   </div>`;
 }
 
+function _svGalleryTapDel(u, i) { _styleDeleteUrls([u]); const rest = (getStyleData()[styleViewerRoom] || []); if (rest.length) _svGalleryTap(Math.min(i, rest.length - 1)); }
 function _svGalleryTap(index) {
   const items = (getStyleData()[styleViewerRoom] || []);
-  _openSwipeViewer(items.map(it => it.url), index);
+  _openSwipeViewer(items.map(it => it.url), index, _phCanDelete() ? (u, i) => { _styleDeleteUrls([u]); const rest = (getStyleData()[styleViewerRoom] || []); if (rest.length) _openSwipeViewer(rest.map(x => x.url), Math.min(i, rest.length - 1), (uu, ii) => _svGalleryTapDel(uu, ii)); } : null);
 }
 window.addEventListener('resize', () => {
   const scr = document.getElementById('style-viewer-screen');
   if (scr && scr.style.display !== 'none') _svBuildGallery();
 });
 
+// ===== 사진 리스트 다중 선택 → 삭제 (스타일/현장사진 공통) =====
+let _phSel = { ctx: null, urls: new Set(), del: null, refresh: null };
+function _phCanDelete() { return typeof canEdit === 'function' && canEdit(); }
+function _phSelBegin(ctx, del, refresh) {
+  if (_phSel.ctx !== ctx) _phSel = { ctx, urls: new Set(), del, refresh };
+  _phSel.del = del; _phSel.refresh = refresh;
+}
+function _phToggle(ev, ctx, url) {
+  ev.stopPropagation();
+  if (_phSel.ctx !== ctx) return;
+  if (_phSel.urls.has(url)) _phSel.urls.delete(url); else _phSel.urls.add(url);
+  _phRenderBar();
+  const el = ev.currentTarget.closest('.ph-item');
+  if (el) { el.classList.toggle('selected', _phSel.urls.has(url)); ev.currentTarget.classList.toggle('on', _phSel.urls.has(url)); ev.currentTarget.textContent = _phSel.urls.has(url) ? '✓' : ''; }
+}
+function _phRenderBar() {
+  let bar = document.getElementById('ph-selbar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'ph-selbar'; document.body.appendChild(bar); }
+  const n = _phSel.urls.size;
+  bar.style.display = n ? 'flex' : 'none';
+  bar.innerHTML = '<span>' + n + '장 선택됨</span><button class="cancel" onclick="_phClear()">취소</button><button class="del" onclick="_phDeleteSelected()">삭제</button>';
+}
+function _phClear() { _phSel.urls = new Set(); _phRenderBar(); _phSel.refresh && _phSel.refresh(); }
+function _phDeleteSelected() {
+  const n = _phSel.urls.size; if (!n) return;
+  if (!confirm(n + '장의 사진을 삭제할까요?')) return;
+  const urls = [..._phSel.urls];
+  _phSel.urls = new Set(); _phRenderBar();
+  _phSel.del(urls);
+}
+function _phSelHtml(ctx, url) {
+  if (!_phCanDelete()) return '';
+  const on = _phSel.ctx === ctx && _phSel.urls.has(url);
+  return '<div class="ph-sel' + (on ? ' on' : '') + '" onclick="_phToggle(event,\'' + ctx + '\',this.parentElement.dataset.url)">' + (on ? '✓' : '') + '</div>';
+}
+
+// 스타일/현장사진 실제 삭제 (여러 장)
+function _styleDeleteUrls(urls) {
+  const proj = getProject(); if (!proj || styleViewerRoom === null) return;
+  const arr = proj.styleImages?.[styleViewerRoom] || [];
+  urls.forEach(u => { _markStyleImgDeleted(u); const i = arr.findIndex(x => x.url === u); if (i > -1) arr.splice(i, 1); });
+  try { save(); } catch(e) {}
+  if (!_isProjOwner(proj) && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
+  renderStyleTab();
+  if (document.getElementById('style-viewer-screen')?.style.display !== 'none') { if (arr.length) _svBuildGallery(); else closeStyleViewer(); }
+}
+function _siteDeleteUrls(key, urls) {
+  const proj = getProject(); if (!proj) return;
+  const set = new Set(urls);
+  (proj.processes || []).forEach(proc => {
+    if (proc.deleted || (proc.type || proc.name) !== key) return;
+    let changed = false;
+    (proc.records || []).forEach(rec => { if (rec.images && rec.images.some(u => set.has(u))) { rec.images = rec.images.filter(u => !set.has(u)); changed = true; } });
+    (proc.checklist || []).forEach(sec => (sec.items || []).forEach(it => { if (it.images && it.images.some(u => set.has(u))) { it.images = it.images.filter(u => !set.has(u)); changed = true; } }));
+    if (changed) proc.updatedAt = Date.now();
+  });
+  save(); _syncProcessesToCloud(proj);
+  _renderSitePhotosTab();
+  _openSitePhotoGroupDetail(key);
+}
+
 // ===== 공용 사진 뷰어: 좌우 스와이프(터치) / 화살표·키보드(PC)로 넘겨보는 전체화면 라이트박스 =====
-function _openSwipeViewer(urls, startIdx) {
+function _openSwipeViewer(urls, startIdx, onDelete) {
   if (!urls || !urls.length) return;
   document.getElementById('swipe-viewer')?.remove();
   const ov = document.createElement('div');
@@ -8815,7 +8889,7 @@ function _openSwipeViewer(urls, startIdx) {
   ov.innerHTML =
     '<div style="position:absolute;top:max(env(safe-area-inset-top,0px),14px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:3;pointer-events:none;">' +
       '<span id="sv2-cnt" style="color:#fff;font-size:14px;font-weight:600;"></span>' +
-      '<button id="sv2-close" style="pointer-events:auto;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer;">✕</button></div>' +
+      '<span style="display:flex;gap:8px;">' + (onDelete ? '<button id="sv2-del" style="pointer-events:auto;height:40px;padding:0 16px;border-radius:999px;border:none;background:#e33;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">🗑 삭제</button>' : '') + '<button id="sv2-close" style="pointer-events:auto;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer;">✕</button></span></div>' +
     '<div id="sv2-track" style="flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">' +
       urls.map(u => '<div style="flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;padding:56px 0 20px;"><img src="' + u + '" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;"></div>').join('') +
     '</div>' +
@@ -8834,6 +8908,10 @@ function _openSwipeViewer(urls, startIdx) {
   track.style.scrollBehavior = '';
   track.addEventListener('scroll', upd, { passive: true });
   ov.querySelector('#sv2-close').onclick = close;
+  ov.querySelector('#sv2-del')?.addEventListener('click', () => {
+    if (!confirm('이 사진을 삭제할까요?')) return;
+    const u = urls[cur]; close(); onDelete(u, cur);
+  });
   ov.querySelector('#sv2-prev')?.addEventListener('click', () => go(cur - 1));
   ov.querySelector('#sv2-next')?.addEventListener('click', () => go(cur + 1));
   ov.addEventListener('click', (e) => { if (e.target.tagName === 'DIV' && e.target !== track && e.target.id !== 'sv2-track' && e.target.parentElement === track) close(); });
@@ -16755,6 +16833,7 @@ let _sitePhotosDetailKey = null;
 
 function _openSitePhotoGroupDetail(key) {
   _sitePhotosDetailKey = key;
+  _phSelBegin('site', (urls) => _siteDeleteUrls(key, urls), () => _openSitePhotoGroupDetail(key));
   const groups = _collectSitePhotoGroups();
   const imgs = groups[key] || [];
   const titleEl = document.getElementById('sitephotos-detail-title');
@@ -16765,8 +16844,8 @@ function _openSitePhotoGroupDetail(key) {
   if (contentEl) {
     contentEl.innerHTML = imgs.length === 0
       ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">사진이 없습니다</div>`
-      : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">${imgs.map((img, i) => `
-          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#e8e8ec;cursor:pointer;" onclick="_openSitePhotoViewer('${esc(key)}',${i})">
+      : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">${imgs.map((img, i) => `
+          <div class="ph-item${_phSel.ctx === 'site' && _phSel.urls.has(img.url) ? ' selected' : ''}" data-url="${img.url}" style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#e8e8ec;cursor:pointer;" onclick="_openSitePhotoViewer('${esc(key)}',${i})">${_phSelHtml('site', img.url)}
             <img src="${img.url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
           </div>
         `).join('')}</div>`;
@@ -16777,7 +16856,7 @@ function _openSitePhotoGroupDetail(key) {
 
 function _openSitePhotoViewer(key, i) {
   const imgs = _collectSitePhotoGroups()[key] || [];
-  _openSwipeViewer(imgs.map(x => x.url), i);
+  _openSwipeViewer(imgs.map(x => x.url), i, _phCanDelete() ? (u, idx) => { _siteDeleteUrls(key, [u]); const rest = _collectSitePhotoGroups()[key] || []; if (rest.length) _openSitePhotoViewer(key, Math.min(idx, rest.length - 1)); } : null);
 }
 
 function _closeSitePhotoGroupDetail() {
