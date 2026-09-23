@@ -1339,6 +1339,13 @@ button, input, textarea, select { font-family:var(--font); }
 .ms-note .v { font-size:13px; color:#444; line-height:1.6; background:#f7f8fa; border-radius:10px; padding:12px; min-height:20px; outline:none; }
 .ms-note .v:empty:before { content:attr(data-ph); color:#bbb; }
 .ms-note .v[contenteditable="true"]:focus { background:#fff3bf; }
+.style-card-top-row { display:flex; align-items:center; justify-content:space-between; }
+.sr-more-wrap { position:relative; margin-left:auto; }
+.sr-more { width:32px; height:32px; border:none; background:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.sr-more:hover { background:#f1f1f5; }
+#sr-menu { position:fixed; z-index:10002; background:#fff; border:1px solid #eef0f5; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.16); padding:6px; min-width:120px; }
+#sr-menu button { width:100%; text-align:left; border:none; background:none; padding:11px 14px; font-size:15px; font-weight:500; color:#111; cursor:pointer; border-radius:8px; font-family:var(--font); }
+#sr-menu button:hover { background:#f5f6f8; }
 /* ===== 사진 공통: 핀터레스트식 간격 + 선택/삭제 ===== */
 .sv-gallery-masonry { gap: 10px; }
 .sv-gallery-col { gap: 10px; }
@@ -8399,11 +8406,43 @@ function renderStyleTab() {
       <div class="style-card-info">
         <div class="style-card-top-row">
           <span style="display:flex;align-items:center;gap:0;"><span class="style-card-title">${room}</span>${roomNew ? '<span class="n-badge">N</span>' : ''}</span>
+          ${canEdit() ? `<span class="sr-more-wrap"><button class="sr-more" onclick="_srToggleMenu(event,'${r}')" aria-label="더보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="#666"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></span>` : ''}
         </div>
         <div class="style-card-meta">${meta}</div>
       </div>
     </div>`;
   }).join('');
+}
+
+function _srCloseMenu() { document.getElementById('sr-menu')?.remove(); }
+function _srToggleMenu(ev, room) {
+  ev.stopPropagation();
+  const had = document.getElementById('sr-menu'); _srCloseMenu();
+  if (had && had.dataset.room === room) return;
+  const r = ev.currentTarget.getBoundingClientRect();
+  const m = document.createElement('div');
+  m.id = 'sr-menu'; m.dataset.room = room;
+  m.style.top = (r.bottom + 4) + 'px';
+  m.style.left = Math.max(8, Math.min(innerWidth - 136, r.right - 120)) + 'px';
+  m.innerHTML = '<button onclick="_srDeleteRoom(event,this.parentElement.dataset.room)">삭제</button>';
+  document.body.appendChild(m);
+  setTimeout(() => document.addEventListener('click', _srCloseMenu, { once: true }), 0);
+}
+function _srDeleteRoom(ev, room) {
+  ev.stopPropagation(); _srCloseMenu();
+  const proj = getProject(); if (!proj) return;
+  const n = (proj.styleImages?.[room] || []).length;
+  if (!confirm('"' + room + '" 폴더를 삭제할까요?' + (n ? '\n안에 있는 사진 ' + n + '장도 함께 삭제돼요.' : ''))) return;
+  // 병합이 되살리지 못하도록 방 이름 + 안의 사진 URL 모두 tombstone 등록 후 삭제
+  _markIdDeleted('styleRoom', room);
+  (proj.styleImages?.[room] || []).forEach(it => _markStyleImgDeleted(it.url));
+  proj.styleRooms = (proj.styleRooms || getStyleRooms()).filter(r => r !== room);
+  if (proj.styleImages) delete proj.styleImages[room];
+  if (proj.materialSelections) delete proj.materialSelections[room];
+  try { save(); } catch(e) {}
+  if (!_isProjOwner(proj) && proj.isCloud && proj.cloudId) _syncStyleImagesToCloud(proj);
+  renderStyleTab();
+  showToastMessage('폴더를 삭제했어요');
 }
 
 function openStyleNewSpace() {
@@ -14048,6 +14087,7 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
   const merged = {};
   const rooms = new Set([...Object.keys(cloudImgs), ...Object.keys(localImgs)]);
   rooms.forEach(r => {
+    if (_isRecentlyDeletedId('styleRoom', r)) return;
     const ci = cloudImgs[r] || [];
     const li = (localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
     const cloudUrls = new Set(ci.map(x => x.url));
@@ -14087,7 +14127,7 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
 
 // styleRooms(커스텀 공간 목록): 이름 기준 합집합
 function _mergeStyleRoomsArr(localRooms, cloudRooms) {
-  return [...new Set([...(cloudRooms || []), ...(localRooms || [])])];
+  return [...new Set([...(cloudRooms || []), ...(localRooms || [])])].filter(r => !_isRecentlyDeletedId('styleRoom', r));
 }
 
 // processes: id 기준 병합, 없는 로컬 항목은 신규(local-only)로 보존
