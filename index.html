@@ -8736,13 +8736,9 @@ function _svTogglePhotoLike(index) {
 }
 
 // ===== STYLE VIEWER — VIEW MODE (carousel / list / grid) =====
-let _svViewMode = (() => { const v = localStorage.getItem('vb_sv_view'); return v === 'grid' ? 'grid' : 'carousel'; })();
+let _svViewMode = 'grid'; // 뷰타입은 그리드 하나만 사용 (PC: 브라우저 꽉 찬 다단, 모바일: 1단)
 
-function _svSetViewMode(mode) {
-  _svViewMode = mode;
-  try { localStorage.setItem('vb_sv_view', mode); } catch(e) {}
-  _svApplyViewMode();
-}
+function _svSetViewMode() { _svApplyViewMode(); }
 
 function _svApplyViewMode() {
   const imageArea  = document.getElementById('sv-image-area');
@@ -8792,7 +8788,7 @@ function _svBuildGallery() {
   };
   // PC에서 바둑판(그리드) 모드는 화면이 넓어지므로 열 수도 함께 늘려 핀터레스트처럼 보이게 함
   const w = window.innerWidth;
-  const colCount = w >= 1300 ? 5 : w >= 1000 ? 4 : w >= 660 ? 3 : 2;
+  const colCount = w >= 1300 ? 5 : w >= 1000 ? 4 : w >= 660 ? 3 : 1;
   const cols = Array.from({ length: colCount }, () => []);
   items.forEach((item, i) => cols[i % colCount].push(renderItem(item, i)));
   el.innerHTML = `<div class="sv-gallery-masonry">
@@ -8801,10 +8797,47 @@ function _svBuildGallery() {
 }
 
 function _svGalleryTap(index) {
-  _svViewMode = 'carousel';
-  try { localStorage.setItem('vb_sv_view', 'carousel'); } catch(e) {}
-  _svGoTo(index);
-  _svApplyViewMode();
+  const items = (getStyleData()[styleViewerRoom] || []);
+  _openSwipeViewer(items.map(it => it.url), index);
+}
+window.addEventListener('resize', () => {
+  const scr = document.getElementById('style-viewer-screen');
+  if (scr && scr.style.display !== 'none') _svBuildGallery();
+});
+
+// ===== 공용 사진 뷰어: 좌우 스와이프(터치) / 화살표·키보드(PC)로 넘겨보는 전체화면 라이트박스 =====
+function _openSwipeViewer(urls, startIdx) {
+  if (!urls || !urls.length) return;
+  document.getElementById('swipe-viewer')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'swipe-viewer';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.94);display:flex;flex-direction:column;';
+  ov.innerHTML =
+    '<div style="position:absolute;top:max(env(safe-area-inset-top,0px),14px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:3;pointer-events:none;">' +
+      '<span id="sv2-cnt" style="color:#fff;font-size:14px;font-weight:600;"></span>' +
+      '<button id="sv2-close" style="pointer-events:auto;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer;">✕</button></div>' +
+    '<div id="sv2-track" style="flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">' +
+      urls.map(u => '<div style="flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;padding:56px 0 20px;"><img src="' + u + '" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;"></div>').join('') +
+    '</div>' +
+    (urls.length > 1 ? '<button id="sv2-prev" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;cursor:pointer;z-index:3;">‹</button><button id="sv2-next" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:24px;cursor:pointer;z-index:3;">›</button>' : '');
+  document.body.appendChild(ov);
+  const track = ov.querySelector('#sv2-track'), cnt = ov.querySelector('#sv2-cnt');
+  let cur = Math.max(0, Math.min(startIdx || 0, urls.length - 1));
+  const idx = () => Math.round(track.scrollLeft / track.clientWidth);
+  const upd = () => { cur = idx(); cnt.textContent = (cur + 1) + ' / ' + urls.length; };
+  const go = (i) => { i = Math.max(0, Math.min(i, urls.length - 1)); track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' }); };
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); else if (e.key === 'ArrowRight') go(cur + 1); else if (e.key === 'ArrowLeft') go(cur - 1); };
+  document.addEventListener('keydown', onKey);
+  track.style.scrollBehavior = 'auto';
+  track.scrollLeft = cur * track.clientWidth;
+  track.style.scrollBehavior = '';
+  track.addEventListener('scroll', upd, { passive: true });
+  ov.querySelector('#sv2-close').onclick = close;
+  ov.querySelector('#sv2-prev')?.addEventListener('click', () => go(cur - 1));
+  ov.querySelector('#sv2-next')?.addEventListener('click', () => go(cur + 1));
+  ov.addEventListener('click', (e) => { if (e.target.tagName === 'DIV' && e.target !== track && e.target.id !== 'sv2-track' && e.target.parentElement === track) close(); });
+  upd();
 }
 
 function openStyleViewer(room, index) {
@@ -16732,14 +16765,19 @@ function _openSitePhotoGroupDetail(key) {
   if (contentEl) {
     contentEl.innerHTML = imgs.length === 0
       ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">사진이 없습니다</div>`
-      : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">${imgs.map(img => `
-          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#e8e8ec;cursor:pointer;" onclick="window.open('${img.url}','_blank')">
+      : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">${imgs.map((img, i) => `
+          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#e8e8ec;cursor:pointer;" onclick="_openSitePhotoViewer('${esc(key)}',${i})">
             <img src="${img.url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
           </div>
         `).join('')}</div>`;
   }
   const scr = document.getElementById('screen-sitephotos-detail');
   if (scr) { scr.style.transform = 'translateY(0)'; scr.style.pointerEvents = 'auto'; }
+}
+
+function _openSitePhotoViewer(key, i) {
+  const imgs = _collectSitePhotoGroups()[key] || [];
+  _openSwipeViewer(imgs.map(x => x.url), i);
 }
 
 function _closeSitePhotoGroupDetail() {
@@ -20505,22 +20543,6 @@ async function fpShareLink() {
       <div id="sv-gallery-area" style="display:none;"></div>
       <!-- product list + memos -->
       <div id="sv-product-list"></div>
-    </div>
-    <!-- 뷰타입 플로팅 버튼 -->
-    <div id="sv-view-float">
-      <button class="sv-float-btn" id="sv-float-grid" onclick="_svSetViewMode('grid')" title="그리드">
-        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-          <rect x="0" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
-          <rect x="9" y="0" width="7" height="7" rx="1.5" fill="currentColor"/>
-          <rect x="0" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
-          <rect x="9" y="9" width="7" height="7" rx="1.5" fill="currentColor"/>
-        </svg>
-      </button>
-      <button class="sv-float-btn active" id="sv-float-carousel" onclick="_svSetViewMode('carousel')" title="캐러셀">
-        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-          <rect x="0" y="0" width="16" height="16" rx="3.5" fill="currentColor"/>
-        </svg>
-      </button>
     </div>
     <!-- 메모 플로팅 버튼 (우측 하단 독립) -->
     <div id="sv-memo-float" style="display:none;">
