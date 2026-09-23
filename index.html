@@ -5233,7 +5233,8 @@ button, input, textarea, select { font-family:var(--font); }
     <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:600;color:#111;"></span>
     <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;margin-right:6px;"></span>
     <button class="ph-hd-btn" id="ph-mode-btn-site" onclick="_phToggleMode('site')" style="display:none;">선택</button>
-    <label class="ph-hd-btn filled" style="cursor:pointer;">추가
+    <button class="ph-hd-btn filled" id="ph-del-btn-site" onclick="_phDeleteSelected()" style="display:none;">삭제</button>
+    <label class="ph-hd-btn filled" id="ph-add-btn-site" style="cursor:pointer;">추가
       <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,_sitePhotosDetailKey)">
     </label>
   </div>
@@ -8830,7 +8831,8 @@ function _phSelBegin(ctx, del, refresh) {
   if (_phSel.ctx !== ctx) _phSel = { ctx, urls: new Set(), del, refresh, mode: false };
   _phSel.del = del; _phSel.refresh = refresh;
   const b = document.getElementById('ph-mode-btn-' + ctx);
-  if (b) { b.style.display = _phCanDelete() ? '' : 'none'; b.textContent = _phSel.mode ? '완료' : '선택'; }
+  if (b) { b.style.display = _phCanDelete() ? '' : 'none'; }
+  _phUpdateHeader();
 }
 function _phToggleMode(ctx) {
   if (_phSel.ctx !== ctx) return;
@@ -8853,7 +8855,18 @@ function _phToggle(ev, ctx, url) {
   const el = ev.currentTarget.closest('.ph-item');
   if (el) { el.classList.toggle('selected', _phSel.urls.has(url)); ev.currentTarget.classList.toggle('on', _phSel.urls.has(url)); ev.currentTarget.textContent = _phSel.urls.has(url) ? '✓' : ''; }
 }
+function _phUpdateHeader() {
+  const c = _phSel.ctx; if (!c) return;
+  const n = _phSel.urls.size;
+  const m = document.getElementById('ph-mode-btn-' + c), a = document.getElementById('ph-add-btn-' + c), d = document.getElementById('ph-del-btn-' + c);
+  if (m) m.textContent = n ? '취소' : (_phSel.mode ? '완료' : '선택');
+  if (a) a.style.display = n ? 'none' : '';
+  if (d) d.style.display = n ? '' : 'none';
+}
 function _phRenderBar() {
+  _phUpdateHeader();
+  return; // 하단 바 대신 우측 상단 헤더 버튼(취소/삭제)으로 표시
+  // eslint-disable-next-line no-unreachable
   if (!_phSel.mode && !document.getElementById('ph-selbar')) return;
   let bar = document.getElementById('ph-selbar');
   if (!bar) { bar = document.createElement('div'); bar.id = 'ph-selbar'; document.body.appendChild(bar); }
@@ -20625,7 +20638,8 @@ async function fpShareLink() {
       <div style="display:flex;align-items:center;gap:8px;">
         <!-- 추가 -->
         <button class="ph-hd-btn" id="ph-mode-btn-style" onclick="_phToggleMode('style')" style="display:none;">선택</button>
-        <button class="ph-hd-btn filled" onclick="openStyleAddFromViewer()" title="이미지 추가">추가</button>
+        <button class="ph-hd-btn filled" id="ph-add-btn-style" onclick="openStyleAddFromViewer()" title="이미지 추가">추가</button>
+        <button class="ph-hd-btn filled" id="ph-del-btn-style" onclick="_phDeleteSelected()" style="display:none;">삭제</button>
         <button class="sv-icon-btn" style="display:none" onclick="openStyleAddFromViewer()">
           <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
