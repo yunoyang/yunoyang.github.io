@@ -16892,11 +16892,6 @@ function _renderSitePhotosTab() {
           <div class="style-card-meta"><span>${imgs.length === 0 ? '사진을 추가해보세요' : `사진 ${imgs.length}장`}</span></div>
         </div>
       </div>
-      ${canEdit() ? `<button onclick="_siteDeleteGroup(event,'${esc(key)}')" style="position:absolute;top:16px;right:54px;height:30px;padding:0 12px;border-radius:999px;border:none;background:rgba(0,0,0,0.55);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);">삭제</button>` : ''}
-      <label onclick="event.stopPropagation()" style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;cursor:pointer;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,'${esc(key)}')">
-      </label>
     </div>`;
   };
 
@@ -16906,17 +16901,6 @@ function _renderSitePhotosTab() {
 }
 
 let _sitePhotosDetailKey = null;
-
-// 현장사진 카드(공정별 그룹) 삭제 — 그 공정의 사진을 모두 지우고 현장사진 카드에서도 내림 (공정 자체는 유지)
-function _siteDeleteGroup(ev, key) {
-  ev.stopPropagation();
-  const proj = getProject(); if (!proj) return;
-  const urls = (_collectSitePhotoGroups()[key] || []).map(x => x.url);
-  if (!confirm('"' + key + '" 현장사진 카드를 삭제할까요?' + (urls.length ? '\n사진 ' + urls.length + '장이 모두 삭제돼요. (공정은 그대로 유지)' : ''))) return;
-  (proj.processes || []).forEach(proc => { if (!proc.deleted && (proc.type || proc.name) === key) { proc.sitePhotosEnabled = false; proc.updatedAt = Date.now(); } });
-  if (urls.length) _siteDeleteUrls(key, urls, true);
-  else { save(); _syncProcessesToCloud(proj); _renderSitePhotosTab(); }
-}
 
 function _openSitePhotoGroupDetail(key) {
   _sitePhotosDetailKey = key;
