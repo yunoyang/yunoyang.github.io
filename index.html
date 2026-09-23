@@ -8233,10 +8233,38 @@ function _getMatSel(room) {
   if (!Array.isArray(sels[room].picks)) sels[room].picks = [];
   return sels[room];
 }
-function _msSaveAndSync() {
+// 오너는 전체 sync(save()가 트리거), 편집자/뷰어는 materialSelections 필드만 read-merge-write —
+// 예전엔 협업자도 _syncProjToCloud(전체 projectData 덮어쓰기)를 호출해 오너 전용 규칙
+// ("공동작업자는 projectData 전체를 쓰지 않는다")을 깨고 다른 필드를 옛 값으로 덮어쓸 수 있었음
+async function _msSaveAndSync(room) {
   const proj = getProject();
+  if (room) _getMatSel(room).updatedAt = Date.now();
   save();
-  if (proj) _syncProjToCloud(proj);
+  if (!proj || !proj.isCloud || !proj.cloudId) return;
+  if (_isProjOwner(proj)) { if (typeof _db !== 'undefined' && _db) await _syncProjToCloud(proj); }
+  else await _syncMatSelectionsToCloud(proj);
+}
+async function _syncMatSelectionsToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const canWrite = _isProjOwner(proj) || proj.myRole === '편집자';
+  if (!canWrite) return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const merged = _mergeMatSelectionsObj(proj.materialSelections, snap.data()?.projectData?.materialSelections);
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.materialSelections': merged,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+    proj.materialSelections = merged;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+  } catch(e) {
+    console.error('[matSelSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 자재선택 동기화 실패' + (e.code ? ' (' + e.code + ')' : '') + ' — 다른 기기에 반영되지 않았습니다');
+  }
 }
 function renderMatSelectTab() {
   const el = document.getElementById('matselect-container');
@@ -8288,7 +8316,7 @@ function _msTogglePick(room, url) {
   const sel = _getMatSel(room);
   const i = sel.picks.indexOf(url);
   if (i === -1) sel.picks.push(url); else sel.picks.splice(i, 1);
-  _msSaveAndSync();
+  _msSaveAndSync(room);
   renderMatSelectTab();
 }
 function _msFieldSave(elm) {
@@ -8296,7 +8324,7 @@ function _msFieldSave(elm) {
   const val = (elm.textContent || '').trim();
   if ((sel[elm.dataset.f] || '') === val) return;
   sel[elm.dataset.f] = val;
-  _msSaveAndSync();
+  _msSaveAndSync(elm.dataset.room);
 }
 
 let _styleRecoveryAttempted = false;
@@ -13528,6 +13556,8 @@ function renderAll() {
     if (meetingTabEl && meetingTabEl.style.display !== 'none') renderMeetingTab();
     const specbookTabEl = document.getElementById('tab-specbook');
     if (specbookTabEl && specbookTabEl.style.display !== 'none') _renderSpecbookTab();
+    const matselTabEl = document.getElementById('tab-matselect');
+    if (matselTabEl && matselTabEl.style.display !== 'none' && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#matselect-container'))) renderMatSelectTab();
     // 공사정보 뷰 패널 열려있으면 도면 등 최신 상태로 갱신
     const vp = document.getElementById('form-view-panel');
     if (vp && vp.style.display !== 'none') _loadInfoView();
@@ -13928,6 +13958,23 @@ function _mergeProcessesArr(localArr, cloudArr) {
   return [...merged, ...localOnly].filter(p => !_isRecentlyDeletedId('process', p.id));
 }
 
+// materialSelections(자재선택): { [공간명]: { picks, wall, floor, ..., updatedAt } } —
+// 공간 단위로 updatedAt이 더 최신인 쪽을 채택 (같으면 로컬 우선). 그냥 통째로 덮어쓰면
+// 새로고침/실시간 스냅샷 시 아직 동기화 안 된 로컬 편집이나, 오너 전체 sync 시 협업자가
+// 방금 기록한 다른 공간의 선택이 사라짐
+function _mergeMatSelectionsObj(localSels, cloudSels) {
+  localSels = (localSels && typeof localSels === 'object') ? localSels : {};
+  cloudSels = (cloudSels && typeof cloudSels === 'object') ? cloudSels : {};
+  const out = {};
+  new Set([...Object.keys(cloudSels), ...Object.keys(localSels)]).forEach(room => {
+    const l = localSels[room], c = cloudSels[room];
+    if (!l) { out[room] = c; return; }
+    if (!c) { out[room] = l; return; }
+    out[room] = (c.updatedAt || 0) > (l.updatedAt || 0) ? c : l;
+  });
+  return out;
+}
+
 function _mergeLocalPreserve(cp, localProjs) {
   const local = localProjs.find(lp => lp.cloudId === cp.cloudId);
   if (!local) return cp;
@@ -13949,6 +13996,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   // 스펙북 자재: 이 필드만 병합에서 빠져 있으면 새로고침 시 클라우드 값으로 통째로 덮어써져
   // 아직 동기화 안 된 로컬 자재가 사라짐 (삭제는 soft-delete(.deleted)라 union 병합으로 안전)
   merged.materialItems = _mergeListById(local.materialItems, cp.materialItems, { newFirst: true, type: 'materialItem' });
+  merged.materialSelections = _mergeMatSelectionsObj(local.materialSelections, cp.materialSelections);
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   if (Array.isArray(local.floorplanEditedImages) && local.floorplanEditedImages.some(Boolean)) {
@@ -14199,6 +14247,7 @@ function _syncProjToCloud(proj) {
     projData.furnitureItems = _mergeListById(proj.furnitureItems, cloudData.furnitureItems, { newFirst: true, type: 'furnitureItem' });
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
+    projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
@@ -14520,6 +14569,7 @@ function _startCollabListener(cloudId) {
     const localFurnitureItems = proj.furnitureItems || []; // 가구&가전 보존
     const localProcesses = proj.processes || []; // 공정 기록·체크리스트 보존 (미동기화 로컬 편집 유실 방지)
     const localMaterialItems = proj.materialItems || []; // 스펙북 자재 보존
+    const localMatSelections = proj.materialSelections || {}; // 자재선택 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -14578,6 +14628,7 @@ function _startCollabListener(cloudId) {
     proj.furnitureItems = _mergeListById(localFurnitureItems, remote.furnitureItems, { newFirst: true, type: 'furnitureItem' });
     proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
+    proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
