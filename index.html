@@ -1341,12 +1341,13 @@ button, input, textarea, select { font-family:var(--font); }
 .sv-gallery-masonry { gap: 10px; }
 .sv-gallery-col { gap: 10px; }
 @media (min-width:660px){ .sv-gallery-masonry, .sv-gallery-col { gap: 16px; } #style-rooms-container, #sitephotos-grid { gap:16px; } }
-.ph-sel { position:absolute; top:8px; left:8px; width:24px; height:24px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.28); z-index:3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; opacity:.9; }
+.ph-hd-btn { height:32px; padding:0 10px; background:none; border:none; cursor:pointer; font-size:14px; font-weight:600; color:#111; font-family:var(--font); }
+.ph-sel { position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.28); z-index:3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; opacity:.9; }
 .ph-sel.on { background:#111; border-color:#111; }
 .ph-item.selected { outline:3px solid #111; outline-offset:-3px; }
 #ph-selbar { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:9990; background:#111; color:#fff; border-radius:999px; padding:10px 12px 10px 20px; display:none; align-items:center; gap:14px; font-size:14px; font-weight:600; box-shadow:0 6px 24px rgba(0,0,0,.3); }
 #ph-selbar button { border:none; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font); }
-#ph-selbar .del { background:#e33; color:#fff; }
+#ph-selbar .del { background:#fff; color:#111; }
 #ph-selbar .cancel { background:rgba(255,255,255,.18); color:#fff; }
 /* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
 .furniture-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -5227,6 +5228,7 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
     <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
     <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;"></span>
+    <button class="ph-hd-btn" id="ph-mode-btn-site" onclick="_phToggleMode('site')" style="display:none;">선택</button>
     <label style="height:32px;padding:0 4px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;flex-shrink:0;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span style="font-size:14px;font-weight:600;color:#111;">추가</span>
@@ -8811,6 +8813,7 @@ function _svBuildGallery() {
 function _svGalleryTapDel(u, i) { _styleDeleteUrls([u]); const rest = (getStyleData()[styleViewerRoom] || []); if (rest.length) _svGalleryTap(Math.min(i, rest.length - 1)); }
 function _svGalleryTap(index) {
   const items = (getStyleData()[styleViewerRoom] || []);
+  if (_phPickByUrl('style', items[index]?.url)) return;
   _openSwipeViewer(items.map(it => it.url), index, _phCanDelete() ? (u, i) => { _styleDeleteUrls([u]); const rest = (getStyleData()[styleViewerRoom] || []); if (rest.length) _openSwipeViewer(rest.map(x => x.url), Math.min(i, rest.length - 1), (uu, ii) => _svGalleryTapDel(uu, ii)); } : null);
 }
 window.addEventListener('resize', () => {
@@ -8819,11 +8822,26 @@ window.addEventListener('resize', () => {
 });
 
 // ===== 사진 리스트 다중 선택 → 삭제 (스타일/현장사진 공통) =====
-let _phSel = { ctx: null, urls: new Set(), del: null, refresh: null };
+let _phSel = { ctx: null, urls: new Set(), del: null, refresh: null, mode: false };
 function _phCanDelete() { return typeof canEdit === 'function' && canEdit(); }
 function _phSelBegin(ctx, del, refresh) {
-  if (_phSel.ctx !== ctx) _phSel = { ctx, urls: new Set(), del, refresh };
+  if (_phSel.ctx !== ctx) _phSel = { ctx, urls: new Set(), del, refresh, mode: false };
   _phSel.del = del; _phSel.refresh = refresh;
+  const b = document.getElementById('ph-mode-btn-' + ctx);
+  if (b) { b.style.display = _phCanDelete() ? '' : 'none'; b.textContent = _phSel.mode ? '완료' : '선택'; }
+}
+function _phToggleMode(ctx) {
+  if (_phSel.ctx !== ctx) return;
+  _phSel.mode = !_phSel.mode; _phSel.urls = new Set(); _phRenderBar();
+  _phSel.refresh && _phSel.refresh();
+}
+function _phExit() { _phSel.mode = false; _phSel.urls = new Set(); _phRenderBar(); }
+function _phPickByUrl(ctx, url) {
+  if (_phSel.ctx !== ctx) return false;
+  if (!_phSel.mode) return false;
+  if (_phSel.urls.has(url)) _phSel.urls.delete(url); else _phSel.urls.add(url);
+  _phRenderBar(); _phSel.refresh && _phSel.refresh();
+  return true;
 }
 function _phToggle(ev, ctx, url) {
   ev.stopPropagation();
@@ -8834,6 +8852,7 @@ function _phToggle(ev, ctx, url) {
   if (el) { el.classList.toggle('selected', _phSel.urls.has(url)); ev.currentTarget.classList.toggle('on', _phSel.urls.has(url)); ev.currentTarget.textContent = _phSel.urls.has(url) ? '✓' : ''; }
 }
 function _phRenderBar() {
+  if (!_phSel.mode && !document.getElementById('ph-selbar')) return;
   let bar = document.getElementById('ph-selbar');
   if (!bar) { bar = document.createElement('div'); bar.id = 'ph-selbar'; document.body.appendChild(bar); }
   const n = _phSel.urls.size;
@@ -8849,7 +8868,7 @@ function _phDeleteSelected() {
   _phSel.del(urls);
 }
 function _phSelHtml(ctx, url) {
-  if (!_phCanDelete()) return '';
+  if (!_phCanDelete() || !(_phSel.mode && _phSel.ctx === ctx)) return '';
   const on = _phSel.ctx === ctx && _phSel.urls.has(url);
   return '<div class="ph-sel' + (on ? ' on' : '') + '" onclick="_phToggle(event,\'' + ctx + '\',this.parentElement.dataset.url)">' + (on ? '✓' : '') + '</div>';
 }
@@ -8889,7 +8908,7 @@ function _openSwipeViewer(urls, startIdx, onDelete) {
   ov.innerHTML =
     '<div style="position:absolute;top:max(env(safe-area-inset-top,0px),14px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:3;pointer-events:none;">' +
       '<span id="sv2-cnt" style="color:#fff;font-size:14px;font-weight:600;"></span>' +
-      '<span style="display:flex;gap:8px;">' + (onDelete ? '<button id="sv2-del" style="pointer-events:auto;height:40px;padding:0 16px;border-radius:999px;border:none;background:#e33;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">🗑 삭제</button>' : '') + '<button id="sv2-close" style="pointer-events:auto;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer;">✕</button></span></div>' +
+      '<span style="display:flex;gap:8px;">' + (onDelete ? '<button id="sv2-del" style="pointer-events:auto;height:40px;padding:0 16px;border-radius:999px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>삭제</button>' : '') + '<button id="sv2-close" style="pointer-events:auto;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer;">✕</button></span></div>' +
     '<div id="sv2-track" style="flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">' +
       urls.map(u => '<div style="flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;padding:56px 0 20px;"><img src="' + u + '" style="max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;"></div>').join('') +
     '</div>' +
@@ -9276,6 +9295,7 @@ function _svRenderProductList() {
 }
 
 function closeStyleViewer() {
+  if (typeof _phExit === 'function') _phExit();
   closeMemoSheet();
   closePinsSheet();
   closeMemoActionSheet();
@@ -16856,10 +16876,12 @@ function _openSitePhotoGroupDetail(key) {
 
 function _openSitePhotoViewer(key, i) {
   const imgs = _collectSitePhotoGroups()[key] || [];
+  if (_phPickByUrl('site', imgs[i]?.url)) return;
   _openSwipeViewer(imgs.map(x => x.url), i, _phCanDelete() ? (u, idx) => { _siteDeleteUrls(key, [u]); const rest = _collectSitePhotoGroups()[key] || []; if (rest.length) _openSitePhotoViewer(key, Math.min(idx, rest.length - 1)); } : null);
 }
 
 function _closeSitePhotoGroupDetail() {
+  _phExit();
   const scr = document.getElementById('screen-sitephotos-detail');
   if (scr) { scr.style.transform = 'translateY(100%)'; scr.style.pointerEvents = 'none'; }
 }
@@ -20600,7 +20622,9 @@ async function fpShareLink() {
       <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
       <div style="display:flex;align-items:center;gap:2px;">
         <!-- 추가 -->
-        <button class="sv-icon-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">
+        <button class="ph-hd-btn" id="ph-mode-btn-style" onclick="_phToggleMode('style')" style="display:none;">선택</button>
+        <button class="ph-hd-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">추가</button>
+        <button class="sv-icon-btn" style="display:none" onclick="openStyleAddFromViewer()">
           <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
