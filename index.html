@@ -1341,7 +1341,9 @@ button, input, textarea, select { font-family:var(--font); }
 .sv-gallery-masonry { gap: 10px; }
 .sv-gallery-col { gap: 10px; }
 @media (min-width:660px){ .sv-gallery-masonry, .sv-gallery-col { gap: 16px; } #style-rooms-container, #sitephotos-grid { gap:16px; } }
-.ph-hd-btn { height:32px; padding:0 10px; background:none; border:none; cursor:pointer; font-size:14px; font-weight:600; color:#111; font-family:var(--font); }
+.ph-hd-btn { height:34px; padding:0 16px; border-radius:999px; background:#fff; border:1.5px solid #111; cursor:pointer; font-size:13px; font-weight:700; color:#111; font-family:var(--font); display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
+.ph-hd-btn.filled { background:#111; color:#fff; }
+.ph-hd-btn svg { stroke:currentColor; }
 .ph-sel { position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.28); z-index:3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; opacity:.9; }
 .ph-sel.on { background:#111; border-color:#111; }
 .ph-item.selected { outline:3px solid #111; outline-offset:-3px; }
@@ -5227,11 +5229,9 @@ button, input, textarea, select { font-family:var(--font); }
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span id="sitephotos-detail-title" style="flex:1;font-size:17px;font-weight:700;color:#111;"></span>
-    <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;"></span>
+    <span id="sitephotos-detail-count" style="font-size:13px;color:#aaa;margin-right:6px;"></span>
     <button class="ph-hd-btn" id="ph-mode-btn-site" onclick="_phToggleMode('site')" style="display:none;">선택</button>
-    <label style="height:32px;padding:0 4px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;flex-shrink:0;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span style="font-size:14px;font-weight:600;color:#111;">추가</span>
+    <label class="ph-hd-btn filled" style="cursor:pointer;">추가
       <input type="file" accept="image/*" multiple style="display:none;" onchange="_onSitePhotoFile(this,_sitePhotosDetailKey)">
     </label>
   </div>
@@ -20620,10 +20620,10 @@ async function fpShareLink() {
         <svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
       </button>
       <h2 id="style-viewer-room" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:700;margin:0;"></h2>
-      <div style="display:flex;align-items:center;gap:2px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <!-- 추가 -->
         <button class="ph-hd-btn" id="ph-mode-btn-style" onclick="_phToggleMode('style')" style="display:none;">선택</button>
-        <button class="ph-hd-btn" onclick="openStyleAddFromViewer()" title="이미지 추가">추가</button>
+        <button class="ph-hd-btn filled" onclick="openStyleAddFromViewer()" title="이미지 추가">추가</button>
         <button class="sv-icon-btn" style="display:none" onclick="openStyleAddFromViewer()">
           <svg width="22" height="22" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
