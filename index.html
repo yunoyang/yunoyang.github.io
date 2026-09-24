@@ -8943,7 +8943,9 @@ function _siteDeleteUrls(key, urls, noOpen) {
   (proj.processes || []).forEach(proc => {
     if (proc.deleted || (proc.type || proc.name) !== key) return;
     let changed = false;
-    (proc.records || []).forEach(rec => { if (rec.images && rec.images.some(u => set.has(u))) { rec.images = rec.images.filter(u => !set.has(u)); changed = true; } });
+    // rec.updatedAt도 갱신 필수 — _mergeProcessRecords는 기록 단위로 updatedAt이 더 최신인 쪽을
+    // 채택하는데(같으면 클라우드 우선), 이걸 안 올리면 삭제 직전 클라우드 기록이 이겨 사진이 되살아남
+    (proc.records || []).forEach(rec => { if (rec.images && rec.images.some(u => set.has(u))) { rec.images = rec.images.filter(u => !set.has(u)); rec.updatedAt = Date.now(); changed = true; } });
     (proc.checklist || []).forEach(sec => (sec.items || []).forEach(it => { if (it.images && it.images.some(u => set.has(u))) { it.images = it.images.filter(u => !set.has(u)); changed = true; } }));
     if (changed) proc.updatedAt = Date.now();
   });
@@ -14153,6 +14155,8 @@ function _mergeMatSelectionsObj(localSels, cloudSels) {
   cloudSels = (cloudSels && typeof cloudSels === 'object') ? cloudSels : {};
   const out = {};
   new Set([...Object.keys(cloudSels), ...Object.keys(localSels)]).forEach(room => {
+    // 방금 삭제한 공간(_srDeleteRoom)의 선택이 클라우드 스냅샷에서 되살아나지 않도록 tombstone 필터링
+    if (_isRecentlyDeletedId('styleRoom', room)) return;
     const l = localSels[room], c = cloudSels[room];
     if (!l) { out[room] = c; return; }
     if (!c) { out[room] = l; return; }
