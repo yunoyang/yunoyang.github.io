@@ -8195,6 +8195,9 @@ function _addCvProduct() {
   if (!item) return;
   if (!item.products) item.products = [];
   item.products.push({ id: Date.now().toString(36), name, url });
+  // updatedAt 갱신 — 없으면 _mergeListById에서 타임스탬프 동률(addedAt)로 판정돼
+  // 다른 기기는 자기 로컬(상품 없는 버전)을 채택하고 변경이 전파되지 않음
+  item.updatedAt = Date.now();
   save();
   _renderCvProducts(item);
   renderContentTab();
@@ -8207,6 +8210,7 @@ function _deleteCvProduct(productId) {
   const item = (proj?.contentLinks || []).find(l => l.id === _cvCurrentId);
   if (!item) return;
   item.products = (item.products || []).filter(p => p.id !== productId);
+  item.updatedAt = Date.now(); // _addCvProduct와 동일 — 삭제가 다른 기기/병합에서 되살아나지 않도록
   save();
   _renderCvProducts(item);
   renderContentTab();
@@ -12086,6 +12090,9 @@ function deleteDayDetail(procId, detailId) {
   const proc = proj.processes.find(p => p.id === procId);
   if (!proc) return;
   proc.details = proc.details.filter(d => d.id !== detailId);
+  // updatedAt을 갱신하지 않으면 _mergeOneProcess(updatedAt 비교, 동률이면 클라우드 우선)에서
+  // 삭제 직전 클라우드 공정이 채택돼 지운 상세내역이 되살아남
+  proc.updatedAt = Date.now();
   save();
   renderAll();
   // 팝업 내용 갱신 (현재 날짜 다시 렌더)
@@ -13958,6 +13965,8 @@ function _genToken(len = 28) {
 
 // id 기준 합집합 + updatedAt(또는 createdAt/addedAt) 최신 우선 병합
 // furnitureItems / contentLinks / meetings 등 "id를 가진 리스트" 전반에 공통 사용
+// 컨텐츠 링크 목록 순서는 추가 시각(addedAt) 기준 — 상품 추가/삭제로 updatedAt이 바뀌어도 순서가 튀지 않도록
+const _contentLinkOrderTs = it => (it && (it.addedAt || it.createdAt || it.updatedAt)) || 0;
 function _mergeListById(localArr, cloudArr, opts) {
   opts = opts || {};
   const tsOf = it => (it && (it.updatedAt || it.createdAt || it.addedAt)) || 0;
@@ -13972,7 +13981,8 @@ function _mergeListById(localArr, cloudArr, opts) {
   });
   const combined = opts.newFirst ? [...localOnly, ...merged] : [...merged, ...localOnly];
   const filtered = opts.type ? combined.filter(it => !_isRecentlyDeletedId(opts.type, it.id)) : combined;
-  return opts.sortByTsDesc ? filtered.sort((a, b) => tsOf(b) - tsOf(a)) : filtered;
+  const orderTs = opts.orderTsOf || tsOf;
+  return opts.sortByTsDesc ? filtered.sort((a, b) => orderTs(b) - orderTs(a)) : filtered;
 }
 
 // id 기준 union 병합(_mergeListById/_mergeProcessesArr)에서 하드 삭제한 항목이 그대로
@@ -14179,7 +14189,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   // 매번 한두 곳씩 누락되는 게 반복되는 버그의 근본 원인이었음).
   merged.styleImages = _mergeStyleImagesObj(local.styleImages, cp.styleImages);
   merged.styleRooms = _mergeStyleRoomsArr(local.styleRooms, cp.styleRooms);
-  merged.contentLinks = _mergeListById(local.contentLinks, cp.contentLinks, { sortByTsDesc: true, type: 'contentLink' });
+  merged.contentLinks = _mergeListById(local.contentLinks, cp.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
   merged.furnitureItems = _mergeListById(local.furnitureItems, cp.furnitureItems, { newFirst: true, type: 'furnitureItem' });
   merged.meetings = _mergeListById(local.meetings, cp.meetings, { sortByTsDesc: true, type: 'meeting' });
   merged.processes = _mergeProcessesArr(local.processes, cp.processes);
@@ -14433,7 +14443,7 @@ function _syncProjToCloud(proj) {
     // 규칙을 공유하므로, 병합 로직을 한 곳만 고치면 세 경로 모두에 동시 적용된다.
     // (예전엔 이 함수가 styleRooms를 아예 push조차 안 했던 것처럼, 세 경로에 각자 따로
     // 구현돼 있어서 필드 하나가 통째로 누락되는 사고가 반복됐음)
-    projData.contentLinks = _mergeListById(proj.contentLinks, cloudData.contentLinks, { sortByTsDesc: true, type: 'contentLink' });
+    projData.contentLinks = _mergeListById(proj.contentLinks, cloudData.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     projData.furnitureItems = _mergeListById(proj.furnitureItems, cloudData.furnitureItems, { newFirst: true, type: 'furnitureItem' });
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
@@ -14656,7 +14666,7 @@ async function _syncContentLinksToCloud(proj) {
     //    편집자/뷰어도 쓰게 되면서 로컬이 항상 정본이라는 가정이 깨지므로, 다른 협업자가
     //    올린 cloud 전용 항목도 보존해야 함 — _deleteContentLink()가 이미 호출하는
     //    _markIdDeleted('contentLink', id) tombstone으로 삭제 항목의 재생성을 방지
-    const mergedFinal = _mergeListById(proj.contentLinks, cloudLinks, { sortByTsDesc: true, type: 'contentLink' });
+    const mergedFinal = _mergeListById(proj.contentLinks, cloudLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     // 3) 변경 없으면 스킵
     if (JSON.stringify(mergedFinal.map(x=>x.id)) === JSON.stringify(cloudLinks.map(x=>x.id))) return;
     // 4) Firestore에 쓰기
@@ -14814,7 +14824,7 @@ function _startCollabListener(cloudId) {
     // 규칙을 공유하므로, 병합 로직을 한 곳만 고치면 세 경로 모두에 동시 적용된다.
     proj.styleImages = _mergeStyleImagesObj(localImages, remote.styleImages);
     proj.styleRooms = _mergeStyleRoomsArr(localStyleRooms, remote.styleRooms);
-    proj.contentLinks = _mergeListById(localContentLinks, remote.contentLinks, { sortByTsDesc: true, type: 'contentLink' });
+    proj.contentLinks = _mergeListById(localContentLinks, remote.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     proj.furnitureItems = _mergeListById(localFurnitureItems, remote.furnitureItems, { newFirst: true, type: 'furnitureItem' });
     proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
