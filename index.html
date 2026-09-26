@@ -11082,7 +11082,7 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
             finalUrl = await ref.getDownloadURL();
           } catch(err) {
             console.warn('checklist photo upload failed, using local data URL:', err);
-            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
+            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요(' + (err.code || err.message || '업로드 실패') + ') — 용량이 크면 사라질 수 있으니 다시 시도해주세요');
           }
         }
         const proj2 = getProject();
@@ -16975,7 +16975,7 @@ function _onSitePhotoFile(input, key) {
             finalSrc = await ref.getDownloadURL();
           } catch(err) {
             console.warn('site photo upload failed, using local data URL:', err);
-            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
+            showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요(' + (err.code || err.message || '업로드 실패') + ') — 용량이 크면 사라질 수 있으니 다시 시도해주세요');
           }
         }
         uploaded.push(finalSrc);
@@ -17214,7 +17214,7 @@ function _onFurnitureImageFile(input) {
         } catch(err) {
           console.warn('furniture image upload failed, using local data URL:', err);
           imgInput.value = dataUrl;
-          showToastMessage('⚠️ 이미지가 이 기기에만 저장됐어요. 용량이 크면 사라질 수 있으니 다시 시도해주세요');
+          showToastMessage('⚠️ 이미지가 이 기기에만 저장됐어요(' + (err.code || err.message || '업로드 실패') + ') — 용량이 크면 사라질 수 있으니 다시 시도해주세요');
         }
       } else {
         imgInput.value = dataUrl;
