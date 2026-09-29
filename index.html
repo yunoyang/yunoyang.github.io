@@ -18021,9 +18021,15 @@ async function saveMeeting() {
   // 인라인 이미지 추출 — 에디터 HTML에서 base64 img를 Firebase Storage로 업로드 후 URL 교체
   const tmpDiv = document.createElement('div');
   tmpDiv.innerHTML = content;
-  if (state.loggedIn) await _initFirebase(); // _fbStorage 미초기화 시 조용히 base64로 새는 것 방지
+  if (state.loggedIn) {
+    await _initFirebase(); // _fbStorage 미초기화 시 조용히 base64로 새는 것 방지
+    // 모바일은 auth 세션 복원이 늦어 init 직후 currentUser가 아직 null일 수 있음 — 그러면
+    // 업로드를 아예 건너뛰고 인라인 이미지가 이 기기에만 남음 (스타일/공정기록 사진과 동일 대응)
+    if (tmpDiv.querySelector('img[src^="data:"]')) await _waitForFirebaseUser(4000);
+  }
   const fbUser = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
   let _mwUploadFailed = false;
+  let _mwUploadErr = '';
   if (fbUser && typeof _fbStorage !== 'undefined' && _fbStorage) {
     const proj0 = getProject();
     const projId = (proj0?.cloudId || proj0?.id || 'local').replace(/[^a-zA-Z0-9_-]/g,'_');
@@ -18039,8 +18045,9 @@ async function saveMeeting() {
         ]);
         imgEl.setAttribute('src', url);
       } catch(e) {
-        console.warn('[meetingImg] 업로드 실패, 로컬 유지:', e.message);
+        console.warn('[meetingImg] 업로드 실패, 로컬 유지:', e.code, e.message);
         _mwUploadFailed = true;
+        _mwUploadErr = e.code || e.message || '';
       }
     }
   } else if (tmpDiv.querySelector('img[src^="data:"]')) {
@@ -18086,7 +18093,7 @@ async function saveMeeting() {
     closeMeetingAdd();
     renderMeetingTab();
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
-    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요 (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 수정됐습니다');
+    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요' + (_mwUploadErr ? '(' + _mwUploadErr + ')' : '') + ' (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 수정됐습니다');
     // 수정 시 새로 추가된 멘션에만 알림 발송
     const newMentions = mentionEmails.filter(e => !prevMentions.includes(e));
     if (newMentions.length && idx !== -1) _sendMentionNotifications(proj.meetings[idx], newMentions, proj);
@@ -18107,7 +18114,7 @@ async function saveMeeting() {
     if (proj.cloudId) { try { await _syncMeetingsToCloud(proj); } catch(e) { console.warn('[saveMeeting] cloud sync wait failed:', e); } }
     closeMeetingAdd();
     renderMeetingTab();
-    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요 (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 저장됐습니다');
+    showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요' + (_mwUploadErr ? '(' + _mwUploadErr + ')' : '') + ' (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 저장됐습니다');
     if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
   }
   } finally {
