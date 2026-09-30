@@ -14182,7 +14182,14 @@ function _mergeLocalPreserve(cp, localProjs) {
   // 공동작업자 역할 보존 — 단, cp.myRole은 이미 _parseDoc에서 클라우드 기준으로 정규화된
   // 최신 값이므로, 로컬 캐시에 옛날(영문 'editor'/'viewer' 등) 값이 남아있다는 이유만으로
   // 그대로 덮어쓰면 정규화가 매번 무효화된다. local 값도 동일하게 정규화해서 적용
-  if (local.myRole) merged.myRole = _normalizeRole(local.myRole);
+  //
+  // 단, 클라우드 owner/collaborators에서 내 이메일이 매칭된 경우에는 cp.myRole(클라우드 기준
+  // 재계산 값)을 그대로 써야 함 — 예전엔 로컬 값이 무조건 우선이라, 오너가 협업자 역할을
+  // 바꾸거나(편집자↔뷰어) 과거 버그로 로컬에 'owner'가 잘못 캐시된 경우 기존 기기에서는
+  // 새로고침해도 영영 옛 역할로 남았음. 매칭 실패(등록 지연 등)일 때만 로컬 역할로 폴백.
+  const myEmail = state.user?.email;
+  const roleMatched = !!myEmail && (cp.owner?.email === myEmail || (cp.collaborators || []).some(c => c.email === myEmail));
+  if (!roleMatched && local.myRole && local.myRole !== 'owner') merged.myRole = _normalizeRole(local.myRole);
   // 아래 필드들은 모두 공용 헬퍼(_mergeStyleImagesObj 등)로 병합한다 — 이 함수와
   // _startCollabListener, _syncProjToCloud가 전부 같은 헬퍼를 호출하므로, 병합 규칙을
   // 한 곳에서 고치면 세 경로 모두에 동시 적용된다 (예전엔 각자 따로 구현돼 있어서
@@ -14758,7 +14765,17 @@ function _startCollabListener(cloudId) {
     if (!remote) return;
     // 여기서도 정규화 — proj.myRole에 옛 영문 값이 남아있으면 이 리스너가 매 스냅샷마다
     // 계속 영문 값을 그대로 재적용해 _parseDoc/_mergeLocalPreserve의 정규화를 무효화시킴
-    const myRole = _normalizeRole(proj.myRole);
+    let myRole = _normalizeRole(proj.myRole);
+    // 역할도 스냅샷의 meta 기준으로 재계산 — 로컬 캐시 값만 재적용하면 오너가 협업자 역할을
+    // 변경해도 이미 열려있는 협업자 화면에 반영되지 않음 (_parseDoc과 동일한 매칭 규칙)
+    {
+      const myEmail = state.user?.email;
+      if (myEmail && meta.owner?.email === myEmail) myRole = 'owner';
+      else {
+        const myCollab = (meta.collaborators || []).find(c => c.email === myEmail);
+        if (myCollab?.role) myRole = _normalizeRole(myCollab.role);
+      }
+    }
     const localImages = proj.styleImages || {};
     const localFloorplan = proj.floorplanImage; // 도면 보존
     const localFloorplanEdited = proj.floorplanEditedImage; // 편집 도면 보존
