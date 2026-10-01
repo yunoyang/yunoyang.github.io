@@ -14807,12 +14807,16 @@ function _startCollabListener(cloudId) {
     }
     // floorplanCanvasJSON: 로컬 우선 (편집 레이어) — 없으면 cloud 백업 사용
     if (localCanvasJSON) proj.floorplanCanvasJSON = localCanvasJSON;
-    if (localFloorplan || localFloorplanImages) {
-      // 슬롯별 머지: local 값이 있으면 유지, 없으면 cloud 값 사용
+    // 슬롯별 머지: local 값이 있으면 유지, 없으면 cloud 값 사용 — 로컬 도면이 전부 비어있을
+    // 때도 항상 실행해야 함. 예전엔 로컬에 도면이 하나라도 있을 때만 이 블록을 탔는데,
+    // 마지막 도면을 삭제해 로컬이 전부 null이 되면 위 Object.assign(remote)가 삭제 직전 URL을
+    // tombstone 필터 없이 그대로 되살렸고, 이어지는 save()의 전체 sync가 이를 다시 push함
+    {
       const cloudImgs = (remote.floorplanImages || [null, null, null]);
       const mergedImgs = cloudImgs.map((ci, i) => (localFloorplanImages && localFloorplanImages[i]) || (!_isRecentlyDeletedFloorplanUrl(ci) ? ci : null) || null);
       proj.floorplanImages = mergedImgs;
-      proj.floorplanImage = mergedImgs.find(Boolean) || localFloorplan || null;
+      const remoteSingle = remote.floorplanImage && !_isRecentlyDeletedFloorplanUrl(remote.floorplanImage) ? remote.floorplanImage : null;
+      proj.floorplanImage = mergedImgs.find(Boolean) || localFloorplan || (remote.floorplanImages ? null : remoteSingle) || null;
     }
     // ★ meetings: 로컬+클라우드 합집합 — updatedAt 기준 최신 버전 우선 (이미지 sync 보장)
     // (_mergeLocalPreserve/_syncProjToCloud와 동일한 공용 헬퍼 사용)
