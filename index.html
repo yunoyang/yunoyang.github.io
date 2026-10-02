@@ -14478,6 +14478,12 @@ function _syncProjToCloud(proj) {
     (projData.furnitureItems || []).forEach(it => {
       if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
     });
+    // 스펙북 자재(materialItems) 이미지도 동일 — _syncMaterialItemsToCloud에선 제거하는데 여기서만
+    // 빠져 있어서, 스펙북 사진 업로드가 실패해 남은 1200px data URL이 owner 전체 sync에 그대로
+    // 실려 문서가 1MB를 넘기면 다른 모든 데이터 타입의 sync까지 통째로 실패할 수 있었음
+    (projData.materialItems || []).forEach(it => {
+      if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
+    });
     // 체크리스트 메모 사진 + 공정기록 사진 모두 base64면 제거 (Storage 업로드 실패 폴백분)
     if (Array.isArray(projData.processes)) projData.processes = projData.processes.map(_stripProcessBase64);
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
@@ -16808,6 +16814,7 @@ async function confirmSaveSpecbookItem(continueAdding) {
   if (!proj.materialItems) proj.materialItems = [];
 
   let imageUrl = dlg.querySelector('#sb-image').value.trim();
+  let sbUploadErr = ''; // 업로드 실패 시 조용히 넘어가지 않도록 저장 토스트 대신 원인 표시
   // base64로 편집된 이미지는 업로드 시도 (furniture 업로드와 동일한 방식으로 Storage에 저장)
   if (imageUrl.startsWith('data:') && state.loggedIn) {
     try {
@@ -16819,7 +16826,10 @@ async function confirmSaveSpecbookItem(continueAdding) {
         await ref.put(_dataUrlToBlob(imageUrl), { contentType: 'image/jpeg' });
         imageUrl = await ref.getDownloadURL();
       }
-    } catch(e) { console.warn('specbook image upload failed, keeping local data URL:', e); }
+    } catch(e) {
+      console.warn('specbook image upload failed, keeping local data URL:', e);
+      sbUploadErr = e.code || e.message || '업로드 실패';
+    }
   }
 
   const fields = {
@@ -16851,7 +16861,9 @@ async function confirmSaveSpecbookItem(continueAdding) {
   }
   save();
   _syncMaterialItemsToCloud(proj);
-  showToastMessage('✅ 저장됐습니다');
+  showToastMessage(sbUploadErr
+    ? '⚠️ 이미지가 이 기기에만 저장됐어요(' + sbUploadErr + ') — 다른 사람 화면에는 보이지 않을 수 있어요. 다시 시도해주세요'
+    : '✅ 저장됐습니다');
   _renderSpecbookTab();
 
   if (continueAdding && !_sbEditingId) {
