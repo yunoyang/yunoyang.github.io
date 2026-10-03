@@ -5887,6 +5887,10 @@ async function _uploadPortfolioPhotos(input) {
   if (!files.length) return;
   input.value = '';
   showToastMessage('업로드 중...');
+  // _fbStorage 초기화 + 모바일에서 느릴 수 있는 auth 세션 복원 대기 — 안 하면 _fbStorage가
+  // null이거나 permission-denied로 조용히 base64 폴백되어 vb_users 문서(1MB 제한)에 실림
+  if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); }
+  let uploadErr = '';
   for (const file of files) {
     try {
       const dataUrl = await _compressImage(file, 1200, 0.75);
@@ -5900,14 +5904,15 @@ async function _uploadPortfolioPhotos(input) {
           url = await full.ref.getDownloadURL();
           const th = await _fbStorage.ref(`${base}_t.jpg`).put(_dataUrlToBlob(thumbUrl||dataUrl), { contentType:'image/jpeg' });
           thumb = await th.ref.getDownloadURL();
-        } catch(e) { console.warn('portfolio storage upload failed, fallback to dataURL:', e); }
+        } catch(e) { console.warn('portfolio storage upload failed, fallback to dataURL:', e); uploadErr = e.code || e.message || '업로드 실패'; }
       }
       _upPortfolio.push({ url, thumb, createdAt: Date.now() });
     } catch(e) { console.warn('portfolio compress/upload failed:', e); }
   }
   _renderPortfolioGrid();
   await _savePortfolioToCloud();
-  showToastMessage('포트폴리오에 추가됐습니다');
+  if (uploadErr) showToastMessage('⚠️ 일부 사진이 서버에 업로드되지 않았어요(' + uploadErr + ') — 다시 시도해주세요');
+  else showToastMessage('포트폴리오에 추가됐습니다');
 }
 
 async function _removePortfolioPhoto(idx) {
