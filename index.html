@@ -10681,6 +10681,7 @@ function _selectCompany(idx) {
   if (!proc) return;
   proc.company = item.name;
   proc.companyData = { name:item.name, phone:item.phone, address:item.address, url:item.url, source:item.source, placeId:item.placeId };
+  proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 되돌아가지 않도록
   save(); renderAll();
   closeDialog('dlg-company-search');
 }
@@ -11143,6 +11144,7 @@ function _addCheckSection(procId) {
   if (!proc) return;
   if (!proc.checklist) proc.checklist = [];
   proc.checklist.push({ section: name.trim(), items: [] });
+  proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 추가한 섹션이 사라지지 않도록
   save();
   _renderProcChecklist(procId);
 }
@@ -11590,6 +11592,7 @@ function toggleTipCheck(procId, phase, itemId) {
   if (!proc.tipChecks) proc.tipChecks = {};
   if (!proc.tipChecks[phase]) proc.tipChecks[phase] = {};
   proc.tipChecks[phase][itemId] = !proc.tipChecks[phase][itemId];
+  proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 체크가 되돌아가지 않도록
   save();
   const el = document.getElementById('ptab-tip');
   const data = el?._tipData;
@@ -11838,6 +11841,9 @@ function confirmSchedule() {
   }
   proc.scheduleStart = calPicker.start || '';
   proc.scheduleEnd = calPicker.end || '';
+  // updatedAt을 갱신하지 않으면 _mergeOneProcess(updatedAt 비교, 동률이면 클라우드 우선)에서
+  // 변경 전 클라우드 공정이 채택돼 방금 바꾼 일정이 owner 전체 sync/새로고침 시 되돌아감
+  proc.updatedAt = Date.now();
   gtag('event', 'set_schedule', { process_name: proc.name, start: proc.scheduleStart, end: proc.scheduleEnd });
   trackEvent('schedule', 'set_schedule', proc.name);
   save(); renderAll();
