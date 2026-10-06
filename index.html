@@ -10258,6 +10258,7 @@ function confirmContractorSelect() {
   if (proc) {
     proc.company = c.name;
     proc.companyData = { name: c.name, phone: c.phone||'', source: c.source||'db', area: c.area||'', rating: c.rating||0, contractorId: c.id||'' };
+    proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 업체가 되돌아가지 않도록
     save(); renderAll();
   }
   closeDialog('dlg-company-search');
@@ -10357,6 +10358,7 @@ function saveCompanyManual() {
   if (proc) {
     proc.company = name;
     proc.companyData = { name, phone, source: 'manual' };
+    proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 업체가 되돌아가지 않도록
     save(); renderAll();
   }
   closeDialog('dlg-company-search');
@@ -10376,6 +10378,7 @@ function _clearProcCompany() {
   if (!proc) return;
   proc.company = '';
   proc.companyData = null;
+  proc.updatedAt = Date.now(); // 병합 시 변경 전 클라우드 공정에 밀려 삭제한 업체가 되살아나지 않도록
   save(); renderAll(); _refreshProcDetailIfOpen();
   const cur = document.getElementById('comp-current-info');
   if (cur) cur.style.display = 'none';
