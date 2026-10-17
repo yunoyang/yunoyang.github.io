@@ -14739,9 +14739,17 @@ async function _syncFloorplanToCloud(proj) {
   try {
     const editedImage = (proj.floorplanEditedImage && proj.floorplanEditedImage.startsWith('data:')) ? null : (proj.floorplanEditedImage || null);
     const editedImages = (proj.floorplanEditedImages || []).map(img => (img && img.startsWith('data:')) ? null : img);
+    // floorplanImages: read-merge-write (_syncProjToCloud와 동일한 슬롯별 로컬 우선 + tombstone 정책)
+    // — 예전엔 로컬 슬롯 배열을 그대로 덮어써서, 다른 사람이 방금 다른 슬롯에 올린 도면이
+    // 아직 내 리스너에 도착하기 전에 이 sync가 실행되면 그 슬롯이 null로 덮여 사라질 수 있었음
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const cloudFpImgs = snap.data()?.projectData?.floorplanImages || [null, null, null];
+    const localFpImgs = Array.isArray(proj.floorplanImages) ? proj.floorplanImages : [null, null, null];
+    const mergedFpImgs = cloudFpImgs.map((ci, i) => localFpImgs[i] || (!_isRecentlyDeletedFloorplanUrl(ci) ? ci : null) || null);
+    const mergedFpImage = mergedFpImgs.find(Boolean) || null;
     await _db.collection('vb_projects').doc(proj.cloudId).update({
-      'projectData.floorplanImages': proj.floorplanImages || [null, null, null],
-      'projectData.floorplanImage': proj.floorplanImage || null,
+      'projectData.floorplanImages': mergedFpImgs,
+      'projectData.floorplanImage': mergedFpImage,
       'projectData.floorplanEditedImage': editedImage,
       'projectData.floorplanEditedImages': editedImages,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
