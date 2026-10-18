@@ -8552,6 +8552,7 @@ async function handleStyleFileSelect(e) {
   const total = files.length;
   let done = 0;
   let storageFailed = false;
+  let storageErrCode = '';
   // _fbStorage 초기화 + 모바일에서 느릴 수 있는 auth 세션 복원을 파일 처리 전에 한 번만 대기
   // (안 기다리면 _fbStorage는 이미 있어도 currentUser가 아직 null이라 업로드가 permission-denied로
   // 실패해 조용히 base64로 새어버림 → base64는 클라우드 push 시 제거되기 때문에 다른 사람 화면/
@@ -8595,8 +8596,9 @@ async function handleStyleFileSelect(e) {
         done++;
         continue;
       } catch(err) {
-        console.warn('Storage upload failed, fallback:', err.message);
+        console.warn('Storage upload failed, fallback:', err.code, err.message);
         storageFailed = true;
+        storageErrCode = err.code || err.message || '';
       }
     }
 
@@ -8614,7 +8616,8 @@ async function handleStyleFileSelect(e) {
 
   _styleUploadHideProgress();
   if (done > 0) showToastMessage(_ti('check') + (done > 1 ? `${done}장 업로드 완료` : '업로드 완료'));
-  if (storageFailed) showToastMessage('⚠️ 네트워크 문제로 일부 이미지가 이 기기에만 저장됐어요. 다시 시도해주세요');
+  // 다른 업로드 함수들과 동일하게 에러 코드를 노출 — 원인(권한/auth 미복원/네트워크)을 사용자가 알 수 있도록
+  if (storageFailed) showToastMessage('⚠️ 일부 이미지가 이 기기에만 저장됐어요(' + (storageErrCode || '업로드 실패') + ') — 다시 시도해주세요');
 }
 
 
