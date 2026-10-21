@@ -9260,6 +9260,7 @@ function _svToggleMemoLike(memoId, replyId) {
   if (!target.likes) target.likes = [];
   const idx = target.likes.indexOf(state.user.email);
   idx >= 0 ? target.likes.splice(idx,1) : target.likes.push(state.user.email);
+  (idx >= 0 ? _markIdDeleted : _unmarkIdDeleted)('memoLike', target.id + '|' + state.user.email);
   save();
   const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
@@ -9272,6 +9273,7 @@ function _svDeleteMemo(memoId) {
   if (!item?.memos) return;
   const idx = item.memos.findIndex(m => m.id === memoId && m.author?.email === state.user?.email);
   if (idx < 0) return;
+  _markIdDeleted('styleMemo', memoId); // save()가 유발하는 전체 sync보다 먼저 등록
   item.memos.splice(idx,1);
   save();
   const isOwner = _isProjOwner(proj);
@@ -9305,6 +9307,7 @@ function _svDeleteReply(memoId, replyId) {
   if (!memo?.replies) return;
   const idx = memo.replies.findIndex(r => r.id === replyId && r.author?.email === state.user?.email);
   if (idx < 0) return;
+  _markIdDeleted('styleReply', replyId); // save()가 유발하는 전체 sync보다 먼저 등록
   memo.replies.splice(idx, 1);
   save();
   const isOwner = _isProjOwner(proj);
@@ -9458,6 +9461,7 @@ function _deleteProdPin(pinIndex) {
   const items = proj.styleImages?.[styleViewerRoom];
   if (!items?.[styleViewerIndex]) return;
   if (!items[styleViewerIndex].productPins) return;
+  _markIdDeleted('stylePin', items[styleViewerIndex].productPins[pinIndex]?.id); // save()보다 먼저 등록
   items[styleViewerIndex].productPins.splice(pinIndex, 1);
   save();
   // 협업자: _syncProjToCloud 대신 styleImages만 직접 sync
@@ -14112,6 +14116,10 @@ function _markIdDeleted(type, id) {
   _deletedIds.set(type + ':' + id, Date.now());
   _persistDeletedIds();
 }
+// 좋아요처럼 토글되는 값은 다시 켜면 tombstone을 지워야 함 (안 그러면 60초 동안 재추가가 걸러짐)
+function _unmarkIdDeleted(type, id) {
+  if (_deletedIds.delete(type + ':' + id)) _persistDeletedIds();
+}
 function _isRecentlyDeletedId(type, id) {
   const key = type + ':' + id;
   const t = _deletedIds.get(key);
@@ -14201,30 +14209,31 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
     const li = (localImgs[r] || []).filter(it => it?.url && !it.url.startsWith('data:'));
     const cloudUrls = new Set(ci.map(x => x.url));
     // 같은 URL 이미지는 productPins·memos도 id 기준 합집합으로 병합 (핀/댓글 유실 방지)
+    // 핀/댓글/대댓글/좋아요도 union 병합이라 "삭제·좋아요 취소"를 표현할 수 없음 — 각각
+    // _markIdDeleted tombstone('stylePin'/'styleMemo'/'styleReply'/'memoLike')으로 걸러낸다.
+    // 예전엔 같은 id 댓글은 클라우드 쪽만 채택해서, 기존 댓글에 단 대댓글(로컬에만 있음)이
+    // owner 전체 sync 때 통째로 사라졌음 → replies도 id 기준 합집합
+    const mergeLikes = (id, a, b) => [...new Set([...(a || []), ...(b || [])])].filter(e => !_isRecentlyDeletedId('memoLike', id + '|' + e));
+    const mergeById = (cArr, lArr, type, fn) => {
+      cArr = cArr || []; lArr = lArr || [];
+      const seen = new Set(cArr.map(x => x.id));
+      return [...cArr.map(c => { const l = lArr.find(x => x.id === c.id); return l && fn ? fn(c, l) : c; }), ...lArr.filter(x => !seen.has(x.id))]
+        .filter(x => !_isRecentlyDeletedId(type, x.id));
+    };
     const cloudWithMerged = ci.map(cloudItem => {
       const localItem = li.find(x => x.url === cloudItem.url);
       if (!localItem) return cloudItem;
       let result = cloudItem;
-      const cP = cloudItem.productPins || [], lP = localItem.productPins || [];
-      if (lP.length) {
-        const seenP = new Set(cP.map(p => p.id));
-        const extraP = lP.filter(p => !seenP.has(p.id));
-        if (extraP.length) result = { ...result, productPins: [...cP, ...extraP] };
-      }
-      const cM = cloudItem.memos || [], lM = localItem.memos || [];
-      if (lM.length) {
-        const seenM = new Set(cM.map(m => m.id));
-        const extraM = lM.filter(m => !seenM.has(m.id));
-        const mergedM = cM.map(cm => {
-          const lm = lM.find(m => m.id === cm.id);
-          if (!lm) return cm;
-          const likes = [...new Set([...(cm.likes || []), ...(lm.likes || [])])];
-          return likes.length !== (cm.likes || []).length ? { ...cm, likes } : cm;
-        });
-        if (extraM.length || JSON.stringify(mergedM) !== JSON.stringify(cM)) {
-          result = { ...result, memos: [...mergedM, ...extraM] };
+      const pins = mergeById(cloudItem.productPins, localItem.productPins, 'stylePin');
+      if (JSON.stringify(pins) !== JSON.stringify(cloudItem.productPins || [])) result = { ...result, productPins: pins };
+      const memos = mergeById(cloudItem.memos, localItem.memos, 'styleMemo', (cm, lm) => {
+        const out = { ...cm, likes: mergeLikes(cm.id, cm.likes, lm.likes) };
+        if (cm.replies || lm.replies) {
+          out.replies = mergeById(cm.replies, lm.replies, 'styleReply', (cr, lr) => ({ ...cr, likes: mergeLikes(cr.id, cr.likes, lr.likes) }));
         }
-      }
+        return out;
+      });
+      if (JSON.stringify(memos) !== JSON.stringify(cloudItem.memos || [])) result = { ...result, memos };
       return result;
     });
     const localOnly = li.filter(x => !cloudUrls.has(x.url));
