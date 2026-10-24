@@ -3374,9 +3374,9 @@ button, input, textarea, select { font-family:var(--font); }
   body.wide-tab .app { max-width: 100%; }
   /* 헤더·공사정보 요약·탭 버튼 줄은 넓어진 .app 안에서도 원래처럼 640px로 가운데 정렬 유지 */
   body.wide-tab #main-scroll > #tab-calendar, body.wide-tab #main-scroll > #tab-style, body.wide-tab #main-scroll > #tab-content,
-  body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook, body.wide-tab #main-scroll > #tab-matselect, body.wide-tab #main-scroll > #tab-sitephotos { max-width: none; }
+  body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook, body.wide-tab #main-scroll > #tab-matselect, body.wide-tab #main-scroll > #tab-sitephotos, body.wide-tab #main-scroll > #tab-meeting { max-width: none; }
   /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
-  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > *, #tab-matselect > *, #tab-sitephotos > * {
+  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > *, #tab-matselect > *, #tab-sitephotos > *, #tab-meeting > * {
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
@@ -3385,6 +3385,10 @@ button, input, textarea, select { font-family:var(--font); }
   .cal-content-td { height: 140px; }
 
   /* ===== 그 외 모든 화면 PC 최적화 ===== */
+  /* 기록: 2컬럼 카드 */
+  #meeting-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  #meeting-list > div { margin-bottom: 0 !important; }
+  #meeting-list > div:only-child:not([onclick]) { grid-column: 1 / -1; }
   /* 현장사진: 카드 3~4열 */
   #sitephotos-grid { grid-template-columns: repeat(3, 1fr); }
   /* 공사정보(읽기): 전체 폭 스크롤 + 좌(프로젝트 정보·도면) / 우(비용·업체·작업자) 2컬럼 */
@@ -7855,7 +7859,7 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
   // PC에서 넓게 쓰는 탭(일정/스타일/컨텐츠/가구&가전/스펙북)일 때만 .app을 화면 전체 폭으로 확장
-  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect', 'sitephotos'].includes(tab));
+  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect', 'sitephotos', 'meeting'].includes(tab));
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
