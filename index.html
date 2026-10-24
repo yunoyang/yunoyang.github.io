@@ -3114,10 +3114,12 @@ button, input, textarea, select { font-family:var(--font); }
   flex-shrink:0; margin-left:6px; font-size:0;
 }
 /* 새 프로젝트 버튼 */
-.landing-row { display:flex; gap:8px; align-items:center; justify-content:center; }
-.landing-row .landing-proj-card { width:184px; }
+.landing-row { display:flex; gap:8px; align-items:center; justify-content:center; width:min(calc(100vw - 32px), 360px); margin:0 auto; }
+.landing-row .landing-proj-card { flex:1 1 auto; min-width:0; width:auto; padding:16px 14px 16px 18px; }
+.landing-row .landing-proj-card-name { max-width:none; font-size:16px; }
+.landing-row .landing-proj-card > div { min-width:0; }
 .landing-btn-new {
-  width:132px; padding:16px 16px 16px 20px;
+  flex:0 0 auto; width:116px; padding:16px 16px 16px 20px;
   background:#000;
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   color:#fff; border:none; border-radius:999px;
