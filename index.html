@@ -3373,15 +3373,42 @@ button, input, textarea, select { font-family:var(--font); }
   body.wide-tab .app { max-width: 100%; }
   /* 헤더·공사정보 요약·탭 버튼 줄은 넓어진 .app 안에서도 원래처럼 640px로 가운데 정렬 유지 */
   body.wide-tab #main-scroll > #tab-calendar, body.wide-tab #main-scroll > #tab-style, body.wide-tab #main-scroll > #tab-content,
-  body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook { max-width: none; }
+  body.wide-tab #main-scroll > #tab-furniture, body.wide-tab #main-scroll > #tab-specbook, body.wide-tab #main-scroll > #tab-matselect, body.wide-tab #main-scroll > #tab-sitephotos { max-width: none; }
   /* 일정은 진짜 끝까지 꽉 차게, 나머지는 너무 늘어지지 않게 안쪽 콘텐츠 폭만 제한(핀터레스트류 사이트와 동일한 패턴) */
-  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > *, #tab-matselect > * {
+  #tab-style > *, #tab-content > *, #tab-furniture > *, #tab-specbook > *, #tab-matselect > *, #tab-sitephotos > * {
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
   }
   /* PC 일정 탭: 날짜 칸을 더 길게 늘려서 내용이 많이 들어가고, 한 달 전체 높이가 화면보다 커져 세로 스크롤이 생기게 함 */
   .cal-content-td { height: 140px; }
+
+  /* ===== 그 외 모든 화면 PC 최적화 ===== */
+  /* 현장사진: 카드 3~4열 */
+  #sitephotos-grid { grid-template-columns: repeat(3, 1fr); }
+  /* 공사정보(읽기): 스크롤 영역은 전체 폭, 카드는 최대 1040px 안에서 2열 (도면은 한 줄 전체) */
+  #form-view-panel { max-width: none !important; width: 100%; padding-left: max(16px, calc((100% - 1040px) / 2)); padding-right: max(16px, calc((100% - 1040px) / 2)); }
+  #form-view-panel[style*="display: block"] { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
+  #form-view-panel > .info-view-card { margin: 0 !important; align-self: start; }
+  #form-view-panel > #iv-floorplan-card { grid-column: 1 / -1; }
+  /* 커뮤니티: 화면 전체 폭에서 3~5열 */
+  #screen-community .form-screen-inner > div:not(.form-header) { max-width: none; }
+  #community-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding-left: max(14px, calc((100% - 1400px) / 2)); padding-right: max(14px, calc((100% - 1400px) / 2)); }
+  /* 프로필: 포트폴리오 4열, 본문은 960px */
+  #screen-user-profile .form-body { max-width: 960px; margin: 0 auto; width: 100%; }
+  #up-portfolio-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+  /* 읽는 글(공지/약관/공정팁): 한 줄 길이를 읽기 좋게 760px */
+  #screen-notice .form-screen-inner > *:not(.form-header), #screen-legal .form-screen-inner > *:not(.form-header), #screen-tip .form-screen-inner > *:not(.form-header) { max-width: 760px; }
+  /* 설정/계정: 760px */
+  #screen-account .form-screen-inner > *:not(.form-header) { max-width: 760px; }
+}
+@media (min-width: 1000px) {
+  #sitephotos-grid { grid-template-columns: repeat(4, 1fr); }
+  #community-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1300px) {
+  #sitephotos-grid { grid-template-columns: repeat(5, 1fr); }
+  #community-grid { grid-template-columns: repeat(5, 1fr); }
 }
 
 /* ===== EXPORT / PRINT ===== */
@@ -7821,7 +7848,7 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
   // PC에서 넓게 쓰는 탭(일정/스타일/컨텐츠/가구&가전/스펙북)일 때만 .app을 화면 전체 폭으로 확장
-  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect'].includes(tab));
+  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect', 'sitephotos'].includes(tab));
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
