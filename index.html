@@ -1346,6 +1346,7 @@ button, input, textarea, select { font-family:var(--font); }
 #sr-menu { position:fixed; z-index:10002; background:#fff; border:1px solid #eef0f5; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.16); padding:6px; min-width:120px; }
 #sr-menu button { width:100%; text-align:left; border:none; background:none; padding:11px 14px; font-size:15px; font-weight:500; color:#111; cursor:pointer; border-radius:8px; font-family:var(--font); }
 #sr-menu button:hover { background:#f5f6f8; }
+.iv-col { display:contents; }
 /* ===== 사진 공통: 핀터레스트식 간격 + 선택/삭제 ===== */
 .sv-gallery-masonry { gap: 10px; }
 .sv-gallery-col { gap: 10px; }
@@ -3360,7 +3361,7 @@ button, input, textarea, select { font-family:var(--font); }
   #screen-landing { max-width: 640px; margin-left: auto; margin-right: auto; }
   .header { padding-left: 24px; padding-right: 24px; }
   /* 화면 직속 헤더만 전체 폭 처리 — #sv-inner 같은 이미 640px 안에 있는 헤더는 제외(이중 밀림 방지) */
-  .form-screen-inner > .form-header, .screen > .form-header { padding-left: calc(var(--gutter) + 9px); padding-right: calc(var(--gutter) + 10px); }
+  .form-screen-inner > .form-header, .screen > .form-header { padding-left: 24px; padding-right: 24px; }
   .form-screen-inner > *:not(.form-header),
   #main-scroll > *:not(.header) {
     width: 100%; max-width: 640px; margin-left: auto; margin-right: auto;
@@ -3386,11 +3387,13 @@ button, input, textarea, select { font-family:var(--font); }
   /* ===== 그 외 모든 화면 PC 최적화 ===== */
   /* 현장사진: 카드 3~4열 */
   #sitephotos-grid { grid-template-columns: repeat(3, 1fr); }
-  /* 공사정보(읽기): 스크롤 영역은 전체 폭, 카드는 최대 1040px 안에서 2열 (도면은 한 줄 전체) */
-  #form-view-panel { max-width: none !important; width: 100%; padding-left: max(16px, calc((100% - 1040px) / 2)); padding-right: max(16px, calc((100% - 1040px) / 2)); }
-  #form-view-panel[style*="display: block"] { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
-  #form-view-panel > .info-view-card { margin: 0 !important; align-self: start; }
-  #form-view-panel > #iv-floorplan-card { grid-column: 1 / -1; }
+  /* 공사정보(읽기): 전체 폭 스크롤 + 좌(프로젝트 정보·도면) / 우(비용·업체·작업자) 2컬럼 */
+  #form-view-panel { max-width: none !important; width: 100%; padding: 24px max(24px, calc((100% - 1480px) / 2)) 48px; }
+  #form-view-panel[style*="display: block"] { display: grid !important; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
+  .iv-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .iv-col > .info-view-card { margin: 0 !important; }
+  .iv-fp-3d-wrap { aspect-ratio: 16 / 10; }
+  .iv-floorplan-scroll img { width: 320px; height: 240px; }
   /* 커뮤니티: 화면 전체 폭에서 3~5열 */
   #screen-community .form-screen-inner > div:not(.form-header) { max-width: none; }
   #community-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding-left: max(14px, calc((100% - 1400px) / 2)); padding-right: max(14px, calc((100% - 1400px) / 2)); }
@@ -3892,6 +3895,7 @@ button, input, textarea, select { font-family:var(--font); }
 
     <!-- ▶ VIEW MODE (읽기 전용) -->
     <div id="form-view-panel" class="info-view-body" style="display:none;">
+      <div class="iv-col iv-col-l">
 
       <!-- 프로젝트명 (클릭 시 상세정보 접기/펴기) — 상세정보 전체를 카드 하나로, 섹션 사이는 구분선만 -->
       <div class="info-view-card" style="overflow:visible;">
@@ -3960,6 +3964,8 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="iv-fp-3d-wrap" id="iv-fp-3d-wrap" style="display:none;"></div>
       </div>
 
+      </div><!-- /iv-col-l -->
+      <div class="iv-col iv-col-r">
       <!-- 총 예상 비용 -->
       <div class="info-view-card" id="iv-cost-section" style="display:none;">
         <div id="iv-cost-card">
@@ -4009,6 +4015,7 @@ button, input, textarea, select { font-family:var(--font); }
         </div>
       </div>
 
+      </div><!-- /iv-col-r -->
     </div>
 
     <!-- ▶ EDIT MODE (기존 폼) -->
