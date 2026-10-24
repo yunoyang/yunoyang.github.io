@@ -14248,6 +14248,7 @@ function _estApplyImport(groups, meta) {
 }
 
 function renderAll() {
+  try { const _p = getProject(); if (_p && _p.myRole !== '뷰어' && _estSeedDefault(_p)) { save(); _syncProjToCloud(_p); } } catch(e) {}
   const proj = getProject();
   if (proj) {
     document.getElementById('current-project-name').textContent = proj.name;
@@ -14688,6 +14689,13 @@ function _mergeProcessesArr(localArr, cloudArr) {
 // 공간 단위로 updatedAt이 더 최신인 쪽을 채택 (같으면 로컬 우선). 그냥 통째로 덮어쓰면
 // 새로고침/실시간 스냅샷 시 아직 동기화 안 된 로컬 편집이나, 오너 전체 sync 시 협업자가
 // 방금 기록한 다른 공간의 선택이 사라짐
+// 견적(estimate)은 통째로 한 덩어리 — 둘 다 있으면 updatedAt이 최신인 쪽, 한쪽만 있으면 그쪽을 유지
+// (이 병합이 없으면 클라우드 문서에 estimate가 없을 때 새로고침/실시간 갱신으로 로컬 견적이 사라짐)
+function _mergeEstimate(localEst, cloudEst) {
+  if (!localEst) return cloudEst || undefined;
+  if (!cloudEst) return localEst;
+  return (localEst.updatedAt || 0) >= (cloudEst.updatedAt || 0) ? localEst : cloudEst;
+}
 function _mergeMatSelectionsObj(localSels, cloudSels) {
   localSels = (localSels && typeof localSels === 'object') ? localSels : {};
   cloudSels = (cloudSels && typeof cloudSels === 'object') ? cloudSels : {};
@@ -14732,6 +14740,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   // 아직 동기화 안 된 로컬 자재가 사라짐 (삭제는 soft-delete(.deleted)라 union 병합으로 안전)
   merged.materialItems = _mergeListById(local.materialItems, cp.materialItems, { newFirst: true, type: 'materialItem' });
   merged.materialSelections = _mergeMatSelectionsObj(local.materialSelections, cp.materialSelections);
+  const _est = _mergeEstimate(local.estimate, cp.estimate); if (_est) merged.estimate = _est;
+  if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   if (Array.isArray(local.floorplanEditedImages) && local.floorplanEditedImages.some(Boolean)) {
@@ -14983,6 +14993,7 @@ function _syncProjToCloud(proj) {
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
+    { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
@@ -15329,6 +15340,7 @@ function _startCollabListener(cloudId) {
     const localProcesses = proj.processes || []; // 공정 기록·체크리스트 보존 (미동기화 로컬 편집 유실 방지)
     const localMaterialItems = proj.materialItems || []; // 스펙북 자재 보존
     const localMatSelections = proj.materialSelections || {}; // 자재선택 보존
+    const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -15392,6 +15404,7 @@ function _startCollabListener(cloudId) {
     proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
+    { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
