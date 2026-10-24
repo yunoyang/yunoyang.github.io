@@ -8776,6 +8776,8 @@ function _svTogglePhotoLike(index) {
   if (!item.likes) item.likes = [];
   const idx = item.likes.indexOf(state.user.email);
   idx >= 0 ? item.likes.splice(idx, 1) : item.likes.push(state.user.email);
+  // 좋아요 취소는 union 병합으로 되살아나지 않도록 tombstone, 다시 누르면 해제 (save()보다 먼저)
+  (idx >= 0 ? _markIdDeleted : _unmarkIdDeleted)('photoLike', item.url + '|' + state.user.email);
   save();
   const isOwner = _isProjOwner(proj);
   if (proj.isCloud && proj.cloudId) { isOwner ? _syncProjToCloud(proj) : _syncStyleImagesToCloud(proj); }
@@ -14213,7 +14215,7 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
     // _markIdDeleted tombstone('stylePin'/'styleMemo'/'styleReply'/'memoLike')으로 걸러낸다.
     // 예전엔 같은 id 댓글은 클라우드 쪽만 채택해서, 기존 댓글에 단 대댓글(로컬에만 있음)이
     // owner 전체 sync 때 통째로 사라졌음 → replies도 id 기준 합집합
-    const mergeLikes = (id, a, b) => [...new Set([...(a || []), ...(b || [])])].filter(e => !_isRecentlyDeletedId('memoLike', id + '|' + e));
+    const mergeLikes = (id, a, b, type) => [...new Set([...(a || []), ...(b || [])])].filter(e => !_isRecentlyDeletedId(type || 'memoLike', id + '|' + e));
     const mergeById = (cArr, lArr, type, fn) => {
       cArr = cArr || []; lArr = lArr || [];
       const seen = new Set(cArr.map(x => x.id));
@@ -14224,6 +14226,13 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
       const localItem = li.find(x => x.url === cloudItem.url);
       if (!localItem) return cloudItem;
       let result = cloudItem;
+      // 사진 자체의 좋아요(item.likes)도 합집합 — 예전엔 같은 URL이면 클라우드 likes를 그대로
+      // 채택해서, 방금 누른 좋아요가 sync(_syncStyleImagesToCloud의 로컬 갱신/새로고침 병합) 때
+      // 클라우드의 이전 값으로 덮여 사라졌음. 좋아요 취소는 'photoLike' tombstone으로 걸러낸다.
+      if (cloudItem.likes || localItem.likes) {
+        const likes = mergeLikes(cloudItem.url, cloudItem.likes, localItem.likes, 'photoLike');
+        if (JSON.stringify(likes) !== JSON.stringify(cloudItem.likes || [])) result = { ...result, likes };
+      }
       const pins = mergeById(cloudItem.productPins, localItem.productPins, 'stylePin');
       if (JSON.stringify(pins) !== JSON.stringify(cloudItem.productPins || [])) result = { ...result, productPins: pins };
       const memos = mergeById(cloudItem.memos, localItem.memos, 'styleMemo', (cm, lm) => {
