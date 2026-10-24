@@ -3594,8 +3594,8 @@ button, input, textarea, select { font-family:var(--font); }
       <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <button class="landing-btn-new" id="landing-btn-new" onclick="landingStartPlanning()" style="display:none;">
-      <span>계획세우기</span>
-      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="landing-btn-new-label">공정보기</span>
+      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
     <!-- 비로그인: 구글 로그인 -->
     <button class="landing-btn-google" id="landing-btn-google" onclick="openDialog('dlg-login')">
@@ -7407,6 +7407,8 @@ function updateLoginUI() {
     // 로그인: 새 공사 버튼 + 프로젝트 있으면 바로가기 카드
     if (googleBtn) googleBtn.style.display = 'none';
     if (newBtn)    newBtn.style.display = '';
+    const _lbl = document.getElementById('landing-btn-new-label');
+    if (_lbl) _lbl.textContent = state.projects?.length ? '공정보기' : '계획세우기';
     const proj = state.projects?.find(p => p.id === state.currentProjectId) || state.projects?.[0];
     if (projCard) projCard.style.display = proj ? '' : 'none';
     if (projName && proj) projName.textContent = proj.name || '내 프로젝트';
