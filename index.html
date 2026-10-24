@@ -1347,6 +1347,46 @@ button, input, textarea, select { font-family:var(--font); }
 #sr-menu button { width:100%; text-align:left; border:none; background:none; padding:11px 14px; font-size:15px; font-weight:500; color:#111; cursor:pointer; border-radius:8px; font-family:var(--font); }
 #sr-menu button:hover { background:#f5f6f8; }
 .iv-col { display:contents; }
+/* ===== 견적 ===== */
+.est-wrap { max-width:1100px; margin:0 auto; padding:20px 16px 90px; }
+.est-tab { padding:14px 4px; margin-right:20px; background:none; border:none; border-bottom:2px solid transparent; font-size:15px; font-weight:500; color:#999; cursor:pointer; font-family:var(--font); }
+.est-tab.on { color:#111; border-bottom-color:#111; }
+.est-card { background:#fff; border:1px solid #eef0f5; border-radius:16px; overflow:hidden; margin-bottom:14px; }
+.est-row { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid #f1f2f5; font-size:15px; }
+.est-row:last-child { border-bottom:none; }
+.est-row .no { width:26px; color:#aaa; font-size:13px; flex-shrink:0; }
+.est-row .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#111; }
+.est-row .amt { font-variant-numeric:tabular-nums; color:#111; text-align:right; min-width:92px; }
+.est-bar { height:4px; background:#f1f2f5; border-radius:2px; overflow:hidden; margin-top:6px; }
+.est-bar > i { display:block; height:100%; background:#111; }
+.est-chip { font-size:12px; padding:3px 9px; border-radius:999px; background:#eef6ff; color:#3a6fd8; flex-shrink:0; }
+.est-chip.none { background:#f3f3f5; color:#999; }
+.est-sum { background:#111; color:#fff; border-radius:16px; padding:22px 24px; margin-bottom:14px; }
+.est-sum .big { font-size:30px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums; }
+.est-grp-hd { display:flex; align-items:center; gap:10px; padding:14px 18px; cursor:pointer; }
+.est-grp-hd .t { flex:1; font-size:16px; font-weight:500; color:#111; min-width:0; }
+.est-tbl { width:100%; border-collapse:collapse; font-size:14px; }
+.est-tbl th { text-align:left; font-weight:500; color:#888; font-size:12px; padding:8px 10px; border-top:1px solid #eef0f5; border-bottom:1px solid #eef0f5; background:#fafbfc; white-space:nowrap; }
+.est-tbl td { padding:2px 10px; border-bottom:1px solid #f1f2f5; vertical-align:middle; }
+.est-tbl td.num, .est-tbl th.num { text-align:right; font-variant-numeric:tabular-nums; }
+.est-cell { display:block; min-height:34px; line-height:34px; outline:none; border-radius:4px; word-break:break-word; }
+.est-cell[contenteditable="true"]:hover { background:#fffbe6; }
+.est-cell[contenteditable="true"]:focus { background:#fff3bf; }
+.est-cell:empty:before { content:attr(data-ph); color:#ccc; }
+.est-head-row td { background:#f7f8fa; font-weight:500; }
+.est-btn { height:34px; padding:0 14px; border-radius:999px; border:1.5px solid #d5d8de; background:#fff; color:#555; font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font); }
+.est-btn.dark { background:#111; border-color:#111; color:#fff; }
+.est-x { border:none; background:none; color:#ccc; cursor:pointer; font-size:16px; padding:4px 6px; }
+.est-x:hover { color:#555; }
+@media (max-width:659px){
+  .est-tbl thead { display:none; }
+  .est-tbl, .est-tbl tbody, .est-tbl tr, .est-tbl td { display:block; width:100%; }
+  .est-tbl tr.est-item { padding:10px 14px; border-bottom:1px solid #f1f2f5; }
+  .est-tbl td { border:none; padding:0; }
+  .est-tbl td.num { text-align:left; display:inline-block; width:auto; margin-right:10px; }
+  .est-tbl td.num:before { content:attr(data-l) ' '; color:#aaa; font-size:12px; }
+  .est-tbl td.amtc { float:right; font-weight:500; }
+}
 /* ===== 사진 공통: 핀터레스트식 간격 + 선택/삭제 ===== */
 .sv-gallery-masonry { gap: 10px; }
 .sv-gallery-col { gap: 10px; }
@@ -3976,6 +4016,8 @@ button, input, textarea, select { font-family:var(--font); }
 
       </div><!-- /iv-col-l -->
       <div class="iv-col iv-col-r">
+      <!-- 견적 -->
+      <div class="info-view-card" id="iv-estimate-card" style="padding:22px 24px;"></div>
       <!-- 총 예상 비용 -->
       <div class="info-view-card" id="iv-cost-section" style="display:none;">
         <div id="iv-cost-card">
@@ -7777,11 +7819,12 @@ function updateSummary() {
   let totalCost = 0;
   const companies = new Set();
   proj.processes.forEach(p => {
-    p.details.forEach(d => { totalCost += d.cost || 0; });
+    totalCost += _procCost(p);
     if (p.company) companies.add(p.company);
   });
   // 소프트 삭제(_deleteFurnitureItem)된 항목은 제외 — 원시 배열을 그대로 쓰면 삭제한
   // 가구의 가격이 총 비용에 영원히 남아있는 버그가 생김 (_getFurnitureItems가 필터링)
+  const _ex = _estExtra(proj); totalCost += _ex.unlinked + _ex.indirect;
   const furnitureCost = _getFurnitureItems().filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const excludeFurniture = !!proj.costExcludeFurniture;
   const totalAll = totalCost + (excludeFurniture ? 0 : furnitureCost);
@@ -10610,7 +10653,7 @@ function renderWorkCards() {
   // 시공 시작일 임박 판정 기준일 (오늘 자정)
   const _today = new Date(); _today.setHours(0,0,0,0);
   container.innerHTML = sorted.map(p => {
-    const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
+    const totalCost = _procCost(p);
     const schedDisplay = (p.scheduleStart && p.scheduleEnd)
       ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 설정하기';
     const compDisplay = p.companyData?.name || p.company || '업체 설정하기';
@@ -10887,7 +10930,7 @@ function _renderProcDetailContent(procId) {
   const p = proj?.processes.find(x => x.id === procId);
   if (!p) return;
   document.getElementById('proc-detail-screen-title').textContent = p.name;
-  const totalCost = p.details.reduce((s,d) => s + (d.cost||0), 0);
+  const totalCost = _procCost(p);
   const schedDisplay = (p.scheduleStart && p.scheduleEnd)
     ? formatDate(p.scheduleStart) + ' ~ ' + formatDate(p.scheduleEnd) : '일정 선택';
   document.getElementById('ptab-info').innerHTML = `
@@ -12662,6 +12705,7 @@ function _loadInfoView() {
       companiesCard.style.display = 'none';
     }
   }
+  _renderEstimateCard();
   // 함께하는 작업자 (오너 + 협업자)
   _renderInfoViewWorkers(proj);
   // 도면 (다중 이미지)
@@ -12717,14 +12761,14 @@ function _loadInfoView() {
   const costTotal = document.getElementById('iv-cost-total');
   if (costCard && costRows && costTotal) {
     // 공정별 비용
-    const procCost = proj.processes.reduce((s,p) => s + (p.details||[]).reduce((a,d) => a+(d.cost||0), 0), 0);
+    const _ex2 = _estExtra(proj);
+    const procCost = proj.processes.reduce((s,p) => s + _procCost(p), 0) + _ex2.unlinked + _ex2.indirect;
     // 공정 세부 항목
     const procDetails = proj.processes
-      .filter(p => (p.details||[]).some(d => d.cost > 0))
-      .map(p => {
-        const c = (p.details||[]).reduce((a,d) => a+(d.cost||0), 0);
-        return { label: p.name || '공정', cost: c };
-      });
+      .filter(p => _procCost(p) > 0)
+      .map(p => ({ label: p.name || '공정', cost: _procCost(p) }));
+    if (_ex2.unlinked > 0) procDetails.push({ label: '견적 (공정 미연결)', cost: _ex2.unlinked });
+    if (_ex2.indirect !== 0) procDetails.push({ label: '견적 간접비·조정', cost: _ex2.indirect });
     // 가구&가전 비용 — 소프트 삭제된 항목은 _getFurnitureItems()가 걸러줌 (updateSummary와 동일)
     const furnitureItems = _getFurnitureItems();
     const furnitureCost = furnitureItems.filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s,it) => s+(it.price||0)*(it.qty||1), 0);
@@ -13937,6 +13981,252 @@ document.addEventListener('click', e => {
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 // ===== RENDER =====
+// ===== 견적 =====
+const EST_ALIAS = { '창호':'샷시', '위생기기':'위생도기', '냉방기설치':'시스템에어컨', '도장':'페인트', '가설':'동의서 및 보양' };
+let _estTab = 'summary', _estOpen = new Set();
+function _estNum(v) { const n = Number(String(v == null ? '' : v).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; }
+function _won(n) { return Math.round(n || 0).toLocaleString(); }
+function _estGet(proj) { return proj && proj.estimate && Array.isArray(proj.estimate.groups) ? proj.estimate : null; }
+function _estItemAmt(it) { return it.type === 'head' ? 0 : (it.qty || 0) * ((it.mat || 0) + (it.labor || 0)); }
+function _estGroupTotal(g) { return (g.items || []).reduce((a, it) => a + _estItemAmt(it), 0); }
+function _estCalc(e) {
+  const direct = e.groups.reduce((a, g) => a + _estGroupTotal(g), 0);
+  const mgmt = Math.round(direct * (e.mgmtPct || 0) / 100);
+  return { direct, mgmt, adjust: e.adjust || 0, total: direct + mgmt + (e.adjust || 0) };
+}
+function _estGroupForProc(proj, procId) { const e = _estGet(proj); return e ? e.groups.find(g => g.procId === procId) : null; }
+// 공정 비용: 연동된 견적 공정이 있으면 견적 금액, 없으면 기존 상세내역 합계
+function _procCost(p) {
+  const g = _estGroupForProc(getProject(), p.id);
+  if (g && (g.items || []).length) return _estGroupTotal(g);
+  return (p.details || []).reduce((s, d) => s + (d.cost || 0), 0);
+}
+// 공정에 연동되지 않은 견적(미연동 공정 + 간접비)도 총 예상 비용에 포함
+function _estExtra(proj) {
+  const e = _estGet(proj); if (!e) return { unlinked: 0, indirect: 0 };
+  const pids = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.id));
+  const unlinked = e.groups.filter(g => !g.procId || !pids.has(g.procId)).reduce((a, g) => a + _estGroupTotal(g), 0);
+  const c = _estCalc(e);
+  return { unlinked, indirect: c.mgmt + c.adjust };
+}
+function _estNormName(n) { return String(n || '').replace(/공사$/,'').replace(/\s+/g,'').trim(); }
+function _estMatchProc(proj, gname) {
+  const k = _estNormName(gname), alias = EST_ALIAS[k] || '';
+  const procs = (proj.processes || []).filter(p => !p.deleted);
+  const cand = (p) => _estNormName(p.type || p.name);
+  return procs.find(p => cand(p) === k || (alias && cand(p) === alias)) ||
+         procs.find(p => { const c = cand(p); return c && (k.includes(c) || c.includes(k) || (alias && (alias.includes(c) || c.includes(alias)))); }) || null;
+}
+function _estSave() {
+  const proj = getProject(); if (!proj || !proj.estimate) return;
+  proj.estimate.updatedAt = Date.now();
+  save(); _syncProjToCloud(proj);
+}
+function _estId() { return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function _renderEstimateCard() {
+  const el = document.getElementById('iv-estimate-card'); if (!el) return;
+  const proj = getProject(), e = _estGet(proj), editable = canEdit();
+  if (!e) {
+    el.innerHTML = '<div style="font-size:16px;font-weight:600;color:#111;margin-bottom:6px;">견적</div><div style="font-size:14px;color:#888;line-height:1.5;margin-bottom:16px;">업체 견적서를 넣으면 공정별 비용이 자동으로 연동돼요.</div>' +
+      (editable ? '<div style="display:flex;gap:8px;"><button class="est-btn dark" onclick="_estCreate(false)">직접 입력</button><button class="est-btn" onclick="_estCreate(true)">엑셀 가져오기</button></div>' : '<div style="font-size:13px;color:#bbb;">아직 등록된 견적이 없어요</div>');
+    return;
+  }
+  const c = _estCalc(e);
+  const linked = e.groups.filter(g => g.procId).length;
+  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:16px;font-weight:600;color:#111;">견적</span><span style="font-size:13px;color:#aaa;">' + esc(e.vendor || e.name || '') + '</span></div>' +
+    '<div style="font-size:28px;font-weight:600;color:#111;margin:10px 0 4px;font-variant-numeric:tabular-nums;">' + _won(c.total) + '<span style="font-size:16px;font-weight:400;color:#888;"> 원</span></div>' +
+    '<div style="font-size:13px;color:#888;margin-bottom:16px;">공정 ' + e.groups.length + '개 · 공정 연동 ' + linked + '개 · 직접공사비 ' + _won(c.direct) + '원</div>' +
+    '<button class="est-btn dark" onclick="openEstimate()">견적 보기 →</button>';
+}
+function _estCreate(importXlsx) {
+  requireLogin(() => {
+    const proj = getProject(); if (!proj) return;
+    if (!proj.estimate) proj.estimate = { id: _estId(), name: '견적서', vendor: '', docNo: '', mgmtPct: 10, adjust: 0, split: false, groups: [], updatedAt: Date.now() };
+    _estLoadProcesses(proj, true);
+    _estSave();
+    openEstimate();
+    if (importXlsx) document.getElementById('est-file').click();
+  });
+}
+// 공정 탭의 공정들을 견적 공정으로 불러오기(이미 있는 공정은 건너뜀)
+function _estLoadProcesses(proj, silent) {
+  const e = proj.estimate; let n = 0;
+  (proj.processes || []).filter(p => !p.deleted).forEach(p => {
+    if (e.groups.some(g => g.procId === p.id)) return;
+    e.groups.push({ id: _estId(), procId: p.id, name: p.name, items: [] }); n++;
+  });
+  if (!silent) { _estSave(); renderEstimate(); showToastMessage(n ? n + '개 공정을 불러왔어요' : '불러올 공정이 없어요'); }
+}
+function openEstimate() {
+  _estTab = 'summary';
+  const scr = document.getElementById('screen-estimate'); scr.style.transform = 'translateY(0)'; scr.style.pointerEvents = 'auto';
+  renderEstimate();
+}
+function closeEstimate() {
+  const scr = document.getElementById('screen-estimate'); scr.style.transform = 'translateY(100%)'; scr.style.pointerEvents = 'none';
+  renderAll();
+  if (document.getElementById('form-view-panel')?.style.display !== 'none') _loadInfoView();
+}
+function _estSetTab(t) { _estTab = t; renderEstimate(); }
+function renderEstimate() {
+  const proj = getProject(), e = _estGet(proj), editable = canEdit();
+  const body = document.getElementById('est-body'); if (!body || !e) return;
+  document.getElementById('est-tabs').innerHTML = [['summary','요약'],['items','공정별 입력']].map(([k,l]) => '<button class="est-tab' + (_estTab === k ? ' on' : '') + '" onclick="_estSetTab(\'' + k + '\')">' + l + '</button>').join('');
+  document.getElementById('est-hd-actions').innerHTML = editable ? '<button class="est-btn" onclick="document.getElementById(\'est-file\').click()">엑셀 가져오기</button>' : '';
+  const c = _estCalc(e);
+  if (_estTab === 'summary') {
+    const max = Math.max(1, ...e.groups.map(_estGroupTotal));
+    const procName = (g) => { const p = (proj.processes || []).find(x => x.id === g.procId); return p ? p.name : ''; };
+    body.innerHTML = '<div class="est-wrap">' +
+      '<div class="est-sum"><div style="font-size:13px;opacity:.7;">공사비 총계 (' + esc(e.vendor || e.name || '견적') + (e.docNo ? ' · ' + esc(e.docNo) : '') + ')</div><div class="big"><span data-calc="total">' + _won(c.total) + '</span> 원</div></div>' +
+      '<div class="est-card">' + (e.groups.length ? e.groups.map((g, i) => {
+        const t = _estGroupTotal(g);
+        return '<div class="est-row" style="cursor:pointer;" onclick="_estGoGroup(\'' + g.id + '\')"><span class="no">' + (i + 1) + '</span><div class="nm"><div style="overflow:hidden;text-overflow:ellipsis;">' + esc(g.name) + '</div><div class="est-bar"><i style="width:' + Math.round(t / max * 100) + '%"></i></div></div>' +
+          (g.procId ? '<span class="est-chip">공정 연동 · ' + esc(procName(g)) + '</span>' : '<span class="est-chip none">공정 미연결</span>') + '<span class="amt">' + _won(t) + '</span></div>';
+      }).join('') : '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">공정이 없어요. "공정별 입력"에서 추가하거나 엑셀을 가져오세요.</div>') + '</div>' +
+      '<div class="est-card">' +
+        '<div class="est-row"><span class="nm">직접공사비</span><span class="amt" data-calc="direct">' + _won(c.direct) + '</span></div>' +
+        '<div class="est-row"><span class="nm">일반관리비 및 공과잡비 <span class="est-cell" style="display:inline-block;min-width:34px;text-align:center;background:#f5f6f8;line-height:26px;min-height:26px;border-radius:6px;padding:0 6px;" ' + (editable ? 'contenteditable="true"' : '') + ' data-e="mgmtPct" onblur="_estField(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' + (e.mgmtPct || 0) + '</span> %</span><span class="amt" data-calc="mgmt">' + _won(c.mgmt) + '</span></div>' +
+        '<div class="est-row"><span class="nm">단수정리 · 조정</span><span class="amt"><span class="est-cell" style="display:inline-block;min-width:70px;" ' + (editable ? 'contenteditable="true"' : '') + ' data-e="adjust" onblur="_estField(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' + (e.adjust || 0) + '</span></span></div>' +
+        '<div class="est-row" style="font-weight:600;"><span class="nm">공사비 총계</span><span class="amt" data-calc="total">' + _won(c.total) + '</span></div>' +
+      '</div>' +
+      (editable ? '<div style="display:flex;gap:8px;"><button class="est-btn" onclick="_estLoadProcesses(getProject(),false)">공정 탭에서 공정 불러오기</button></div>' : '') +
+      '</div>';
+  } else {
+    const split = !!e.split;
+    body.innerHTML = '<div class="est-wrap">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;"><label style="font-size:14px;color:#555;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" ' + (split ? 'checked' : '') + ' ' + (editable ? '' : 'disabled') + ' onchange="_estToggleSplit(this.checked)"> 재료비 / 노무비 나눠서 입력</label>' +
+      (editable ? '<div style="display:flex;gap:8px;"><button class="est-btn" onclick="_estLoadProcesses(getProject(),false)">공정 불러오기</button><button class="est-btn dark" onclick="_estAddGroup()">+ 공정 추가</button></div>' : '') + '</div>' +
+      e.groups.map(g => _estGroupHtml(g, proj, split, editable)).join('') + '</div>';
+  }
+}
+function _estGoGroup(gid) { _estOpen.add(gid); _estTab = 'items'; renderEstimate(); setTimeout(() => document.getElementById('estg-' + gid)?.scrollIntoView({ block: 'start' }), 30); }
+function _estCellHtml(g, it, f, val, ph, editable) {
+  return '<span class="est-cell" ' + (editable ? 'contenteditable="true" spellcheck="false"' : '') + ' data-g="' + g.id + '" data-i="' + it.id + '" data-f="' + f + '" data-ph="' + ph + '" onblur="_estItem(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' + esc(String(val == null ? '' : val)) + '</span>';
+}
+function _estGroupHtml(g, proj, split, editable) {
+  const open = _estOpen.has(g.id);
+  const procs = (proj.processes || []).filter(p => !p.deleted);
+  const linkSel = editable
+    ? '<select onchange="_estLink(\'' + g.id + '\',this.value)" onclick="event.stopPropagation()" style="font-size:13px;border:1px solid #e5e5ec;border-radius:999px;padding:5px 10px;background:#fff;color:#555;max-width:150px;"><option value="">공정 미연결</option>' + procs.map(p => '<option value="' + p.id + '"' + (p.id === g.procId ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('') + '</select>'
+    : (g.procId ? '<span class="est-chip">공정 연동</span>' : '');
+  const rows = (g.items || []).map(it => {
+    if (it.type === 'head') return '<tr class="est-head-row"><td colspan="' + (split ? 8 : 7) + '">' + _estCellHtml(g, it, 'name', it.name, '소제목', editable) + '</td><td>' + (editable ? '<button class="est-x" onclick="_estDelItem(\'' + g.id + '\',\'' + it.id + '\')">✕</button>' : '') + '</td></tr>';
+    const unit = split ? '' : _estCellHtml(g, it, 'price', _won((it.mat || 0) + (it.labor || 0)).replace(/^0$/,''), '0', editable);
+    return '<tr class="est-item"><td>' + _estCellHtml(g, it, 'name', it.name, '품명', editable) + '</td><td>' + _estCellHtml(g, it, 'spec', it.spec, '규격', editable) + '</td><td>' + _estCellHtml(g, it, 'unit', it.unit, '단위', editable) + '</td>' +
+      '<td class="num" data-l="수량">' + _estCellHtml(g, it, 'qty', it.qty || '', '0', editable) + '</td>' +
+      (split ? '<td class="num" data-l="재료">' + _estCellHtml(g, it, 'mat', _won(it.mat).replace(/^0$/,''), '0', editable) + '</td><td class="num" data-l="노무">' + _estCellHtml(g, it, 'labor', _won(it.labor).replace(/^0$/,''), '0', editable) + '</td>' : '<td class="num" data-l="단가">' + unit + '</td>') +
+      '<td class="num amtc" data-calc="item:' + it.id + '">' + _won(_estItemAmt(it)) + '</td><td>' + (editable ? '<button class="est-x" onclick="_estDelItem(\'' + g.id + '\',\'' + it.id + '\')">✕</button>' : '') + '</td></tr>';
+  }).join('');
+  return '<div class="est-card" id="estg-' + g.id + '"><div class="est-grp-hd" onclick="_estToggleGroup(\'' + g.id + '\')"><span style="color:#999;">' + (open ? '▾' : '▸') + '</span><span class="t">' + (editable ? '<span class="est-cell" style="display:inline;" contenteditable="true" spellcheck="false" data-g="' + g.id + '" data-gf="name" onclick="event.stopPropagation()" onblur="_estGroupName(this)">' + esc(g.name) + '</span>' : esc(g.name)) + '</span>' + linkSel + '<span style="font-weight:600;font-variant-numeric:tabular-nums;" data-calc="group:' + g.id + '">' + _won(_estGroupTotal(g)) + '</span></div>' +
+    (open ? '<div style="overflow-x:auto;"><table class="est-tbl"><thead><tr><th>품명</th><th>규격</th><th>단위</th><th class="num">수량</th>' + (split ? '<th class="num">재료비 단가</th><th class="num">노무비 단가</th>' : '<th class="num">단가</th>') + '<th class="num">금액</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      (editable ? '<div style="padding:10px 14px;display:flex;gap:8px;"><button class="est-btn" onclick="_estAddItem(\'' + g.id + '\')">+ 항목 추가</button><button class="est-btn" onclick="_estAddItem(\'' + g.id + '\',true)">+ 소제목</button><span style="flex:1"></span><button class="est-btn" onclick="_estDelGroup(\'' + g.id + '\')">공정 삭제</button></div>' : '') + '</div>' : '') + '</div>';
+}
+function _estToggleGroup(gid) { if (_estOpen.has(gid)) _estOpen.delete(gid); else _estOpen.add(gid); renderEstimate(); }
+function _estRefreshNumbers() {
+  const e = _estGet(getProject()); if (!e) return; const c = _estCalc(e);
+  document.querySelectorAll('#est-body [data-calc]').forEach(el => {
+    const [k, id] = el.dataset.calc.split(':');
+    if (k === 'total') el.textContent = _won(c.total); else if (k === 'direct') el.textContent = _won(c.direct); else if (k === 'mgmt') el.textContent = _won(c.mgmt);
+    else if (k === 'group') { const g = e.groups.find(x => x.id === id); if (g) el.textContent = _won(_estGroupTotal(g)); }
+    else if (k === 'item') { for (const g of e.groups) { const it = g.items.find(x => x.id === id); if (it) { el.textContent = _won(_estItemAmt(it)); break; } } }
+  });
+}
+function _estItem(el) {
+  const e = _estGet(getProject()); if (!e) return;
+  const g = e.groups.find(x => x.id === el.dataset.g); const it = g && g.items.find(x => x.id === el.dataset.i); if (!it) return;
+  const f = el.dataset.f, raw = (el.textContent || '').trim();
+  if (f === 'price') { const v = _estNum(raw); if (v === (it.mat || 0) + (it.labor || 0)) return; it.mat = v; it.labor = 0; }
+  else if (f === 'qty' || f === 'mat' || f === 'labor') { const v = _estNum(raw); if (v === (it[f] || 0)) return; it[f] = v; }
+  else { if ((it[f] || '') === raw) return; it[f] = raw; }
+  if (['qty','mat','labor','price'].includes(f)) { el.textContent = f === 'qty' ? (it.qty || '') : _won(f === 'price' ? it.mat : it[f]).replace(/^0$/, ''); }
+  _estSave(); _estRefreshNumbers();
+}
+function _estGroupName(el) { const e = _estGet(getProject()); const g = e && e.groups.find(x => x.id === el.dataset.g); if (!g) return; const v = (el.textContent || '').trim(); if (!v || v === g.name) { el.textContent = g.name; return; } g.name = v; _estSave(); }
+function _estField(el) { const e = _estGet(getProject()); if (!e) return; const k = el.dataset.e; const v = _estNum(el.textContent); el.textContent = v; if (v === (e[k] || 0)) return; e[k] = v; _estSave(); _estRefreshNumbers(); }
+function _estToggleSplit(on) {
+  const e = _estGet(getProject()); if (!e) return; e.split = !!on;
+  if (!on) e.groups.forEach(g => g.items.forEach(it => { it.mat = (it.mat || 0) + (it.labor || 0); it.labor = 0; }));
+  _estSave(); renderEstimate();
+}
+function _estLink(gid, procId) {
+  const e = _estGet(getProject()); const g = e.groups.find(x => x.id === gid); if (!g) return;
+  if (procId) e.groups.forEach(o => { if (o !== g && o.procId === procId) o.procId = ''; });
+  g.procId = procId || ''; _estSave(); renderEstimate();
+}
+function _estAddGroup() { const e = _estGet(getProject()); const g = { id: _estId(), procId: '', name: '새 공정', items: [] }; e.groups.push(g); _estOpen.add(g.id); _estSave(); renderEstimate(); }
+function _estDelGroup(gid) { if (!confirm('이 공정과 안의 항목을 삭제할까요?')) return; const e = _estGet(getProject()); e.groups = e.groups.filter(g => g.id !== gid); _estSave(); renderEstimate(); }
+function _estAddItem(gid, head) {
+  const e = _estGet(getProject()); const g = e.groups.find(x => x.id === gid); if (!g) return;
+  g.items.push({ id: _estId(), type: head ? 'head' : 'item', name: '', spec: '', unit: '', qty: 0, mat: 0, labor: 0 });
+  _estSave(); renderEstimate();
+  setTimeout(() => { const cells = document.querySelectorAll('#estg-' + gid + ' tbody tr:last-child [data-f="name"]'); cells[0]?.focus(); }, 30);
+}
+function _estDelItem(gid, iid) { const e = _estGet(getProject()); const g = e.groups.find(x => x.id === gid); if (!g) return; g.items = g.items.filter(i => i.id !== iid); _estSave(); renderEstimate(); }
+
+// ----- 엑셀 가져오기 (하우먼트 견적서 양식: 내역서/중갑지/갑지) -----
+function _estLoadXlsxLib() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = res; s.onerror = () => rej(new Error('엑셀 라이브러리를 불러오지 못했어요')); document.head.appendChild(s); });
+}
+function _estParseWorkbook(wb) {
+  const rowsOf = (name) => { const ws = wb.Sheets[name]; return ws ? XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' }) : null; };
+  const names = wb.SheetNames;
+  const detName = names.find(n => /내역/.test(n)) || names[0];
+  const rows = rowsOf(detName) || [];
+  let hr = rows.findIndex(r => r.some(c => String(c).trim() === '품명'));
+  if (hr < 0) throw new Error('"품명" 열이 있는 내역 시트를 찾지 못했어요');
+  const H = rows[hr], col = (label, from) => { const i = H.findIndex((c, k) => k >= (from || 0) && String(c).trim() === label); return i; };
+  const cName = col('품명'), cSpec = col('규격'), cUnit = col('단위'), cQty = col('수량'), cMat = col('재료비'), cLab = col('노무비'), cNo = cName > 0 ? cName - 1 : 0;
+  const t = (v) => String(v == null ? '' : v).trim();
+  const groups = []; let cur = null;
+  for (let r = hr + 1; r < rows.length; r++) {
+    const row = rows[r], no = t(row[cNo]), nm = t(row[cName]), unit = t(row[cUnit]), qty = row[cQty];
+    if (!nm) continue;
+    if (/소계/.test(nm)) continue;
+    if (/^\d+\.$/.test(no) && !unit && (qty === '' || qty == null)) { cur = { id: _estId(), procId: '', name: nm, items: [] }; groups.push(cur); continue; }
+    if (!cur) continue;
+    const mat = _estNum(row[cMat]), lab = _estNum(row[cLab]), q = _estNum(qty);
+    if (!unit && !q && !mat && !lab) { cur.items.push({ id: _estId(), type: 'head', name: nm.replace(/^\*/, ''), spec: '', unit: '', qty: 0, mat: 0, labor: 0 }); continue; }
+    cur.items.push({ id: _estId(), type: 'item', name: nm, spec: t(row[cSpec]), unit, qty: q, mat: Math.round(mat), labor: Math.round(lab) });
+  }
+  const meta = { name: '', vendor: '', docNo: '', mgmtPct: null, adjust: null };
+  const mid = names.find(n => /중갑지/.test(n)); const mrows = mid ? rowsOf(mid) : null;
+  if (mrows) mrows.forEach(r => {
+    const label = t(r[1]);
+    if (/일반관리비/.test(label)) { const p = _estNum(r[4]); if (p) meta.mgmtPct = p; }
+    if (/단수정리/.test(label)) meta.adjust = Math.round(_estNum(r[10]));
+  });
+  const gid = names.find(n => /^갑지$/.test(n.trim())); const grows = gid ? rowsOf(gid) : null;
+  if (grows) grows.forEach(r => { if (/문서번호/.test(t(r[1]))) meta.docNo = t(r[2]); if (/PROJECT/i.test(t(r[1]))) meta.name = t(r[2]); if (/주식회사|\(주\)/.test(t(r[5]))) meta.vendor = t(r[5]); });
+  return { groups, meta };
+}
+async function _estOnFile(input) {
+  const file = input.files && input.files[0]; if (!file) return; input.value = '';
+  try {
+    showToastMessage('엑셀을 읽는 중…');
+    await _estLoadXlsxLib();
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const { groups, meta } = _estParseWorkbook(wb);
+    if (!groups.length) throw new Error('견적 공정을 찾지 못했어요');
+    _estApplyImport(groups, meta);
+  } catch (err) { alert('가져오기 실패: ' + err.message); }
+}
+function _estApplyImport(groups, meta) {
+  const proj = getProject(); const e = proj.estimate;
+  if (e.groups.some(g => g.items.length) && !confirm('기존 견적 항목이 있어요. 가져온 내용으로 바꿀까요?')) return;
+  const used = new Set();
+  groups.forEach(g => { const p = _estMatchProc(proj, g.name); if (p && !used.has(p.id)) { g.procId = p.id; used.add(p.id); } });
+  e.groups = groups;
+  if (meta.name) e.name = meta.name; if (meta.vendor) e.vendor = meta.vendor; if (meta.docNo) e.docNo = meta.docNo;
+  if (meta.mgmtPct != null) e.mgmtPct = meta.mgmtPct; if (meta.adjust != null) e.adjust = meta.adjust;
+  e.split = groups.some(g => g.items.some(it => it.mat && it.labor));
+  _estOpen = new Set(); _estSave(); _estTab = 'summary'; renderEstimate();
+  const linked = groups.filter(g => g.procId).length;
+  showToastMessage('공정 ' + groups.length + '개를 가져왔어요 (공정 연동 ' + linked + '개)');
+}
+
 function renderAll() {
   const proj = getProject();
   if (proj) {
@@ -20794,6 +21084,18 @@ async function fpShareLink() {
     <button onclick="closeStyleNewSpace()" style="flex:1;height:48px;border:1.5px solid #E1E5EF;border-radius:10px;background:#fff;font-size:15px;font-weight:500;color:#555;cursor:pointer;font-family:var(--font);">취소</button>
     <button onclick="confirmStyleNewSpace()" style="flex:1;height:48px;border:none;border-radius:10px;background:#333;font-size:15px;font-weight:500;color:#fff;cursor:pointer;font-family:var(--font);">추가하기</button>
   </div>
+</div>
+
+<!-- ===== 견적 화면 ===== -->
+<div id="screen-estimate" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f8fa;z-index:8600;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+  <div class="form-header" style="background:#fff;flex-shrink:0;">
+    <button class="back-btn" onclick="closeEstimate()"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
+    <h2 style="flex:1;font-size:18px;">견적</h2>
+    <span id="est-hd-actions" style="display:flex;gap:8px;align-items:center;"></span>
+  </div>
+  <div id="est-tabs" style="background:#fff;border-bottom:1px solid #eef0f5;display:flex;gap:4px;padding:0 24px;flex-shrink:0;"></div>
+  <div id="est-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  <input type="file" id="est-file" accept=".xlsx,.xls" style="display:none;" onchange="_estOnFile(this)">
 </div>
 
 <!-- Style Image Viewer — body 직속 (transform 부모 없어야 fixed 정상 동작) -->
