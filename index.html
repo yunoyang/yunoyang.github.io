@@ -3586,15 +3586,15 @@ button, input, textarea, select { font-family:var(--font); }
   <!-- 하단 버튼 그룹 -->
   <div class="landing-bottom">
     <!-- 로그인: 프로젝트 카드 + 새 프로젝트 -->
-    <button class="landing-proj-card" id="landing-proj-card-btn" onclick="loadExistingProjects()" style="display:none;">
+    <button class="landing-proj-card" id="landing-proj-card-btn" onclick="toggleLandingProjDD(event)" style="display:none;">
       <div style="display:flex;align-items:center;min-width:0;flex:1;">
         <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
         <span class="landing-status-badge">진행중</span>
       </div>
-      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-    <button class="landing-btn-new" id="landing-btn-new" onclick="startNewProject()" style="display:none;">
-      <span>새 프로젝트</span>
+    <button class="landing-btn-new" id="landing-btn-new" onclick="landingStartPlanning()" style="display:none;">
+      <span>계획세우기</span>
       <svg width="18" height="18" fill="none" stroke="#111" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <!-- 비로그인: 구글 로그인 -->
@@ -7407,7 +7407,7 @@ function updateLoginUI() {
     // 로그인: 새 공사 버튼 + 프로젝트 있으면 바로가기 카드
     if (googleBtn) googleBtn.style.display = 'none';
     if (newBtn)    newBtn.style.display = '';
-    const proj = state.projects?.[0];
+    const proj = state.projects?.find(p => p.id === state.currentProjectId) || state.projects?.[0];
     if (projCard) projCard.style.display = proj ? '' : 'none';
     if (projName && proj) projName.textContent = proj.name || '내 프로젝트';
   } else {
@@ -7539,6 +7539,32 @@ function _startNewProject() {
   save();
   formMode = 'new';
   goTo('form');
+}
+// 랜딩: 프로젝트 선택 드롭다운 + 계획세우기(선택한 프로젝트로 입장)
+function closeLandingProjDD() { document.getElementById('landing-proj-dd')?.remove(); }
+function toggleLandingProjDD(e) {
+  e.stopPropagation();
+  if (document.getElementById('landing-proj-dd')) { closeLandingProjDD(); return; }
+  const btn = document.getElementById('landing-proj-card-btn');
+  const r = btn.getBoundingClientRect();
+  const dd = document.createElement('div');
+  dd.id = 'landing-proj-dd';
+  dd.style.cssText = 'position:fixed;z-index:9000;background:#fff;border-radius:20px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:8px;max-height:50vh;overflow-y:auto;width:' + r.width + 'px;left:' + r.left + 'px;bottom:' + (innerHeight - r.top + 8) + 'px;';
+  dd.innerHTML = (state.projects || []).map(p =>
+    '<div onclick="selectLandingProject(\'' + p.id + '\')" style="padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;color:#111;display:flex;align-items:center;justify-content:space-between;gap:8px;' + (p.id === state.currentProjectId ? 'background:#f5f6f8;font-weight:500;' : '') + '"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(p.name || '내 프로젝트') + '</span>' + (p.id === state.currentProjectId ? '<span style="color:#00C87D;">✓</span>' : '') + '</div>'
+  ).join('') + '<div onclick="closeLandingProjDD();startNewProject()" style="padding:12px 14px;border-radius:12px;cursor:pointer;font-size:16px;color:#888;border-top:1px solid #f0f0f0;margin-top:4px;">+ 새 프로젝트</div>';
+  document.body.appendChild(dd);
+  setTimeout(() => document.addEventListener('click', closeLandingProjDD, { once: true }), 0);
+}
+function selectLandingProject(id) {
+  closeLandingProjDD();
+  state.currentProjectId = id; save();
+  updateLoginUI();
+}
+function landingStartPlanning() {
+  if (!state.projects.length) { startNewProject(); return; }
+  if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0].id;
+  save(); goTo('main'); renderAll();
 }
 function loadExistingProjects() {
   if (!state.projects.length) { alert('저장된 프로젝트가 없습니다.'); return; }
