@@ -2878,6 +2878,7 @@ button, input, textarea, select { font-family:var(--font); }
   display:flex; flex-direction:column; align-items:center;
   padding:4px 0 6px; cursor:pointer; position:relative; min-height:50px;
 }
+.dp-cell.dp-before { opacity:.35; }
 .dp-cell.dp-empty { cursor:default; pointer-events:none; }
 .dp-num {
   width:32px; height:32px; display:flex; align-items:center; justify-content:center;
@@ -4071,10 +4072,10 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="form-label">전체 시공일정</span>
         <div class="date-row">
           <input type="hidden" id="f-start">
-          <div class="date-input date-custom-btn" id="f-start-btn" onclick="openSingleDate('f-start','시작일')">날짜 선택</div>
+          <div class="date-input date-custom-btn" id="f-start-btn" onclick="openFormSchedule('start')">날짜 선택</div>
           <span class="date-sep">~</span>
           <input type="hidden" id="f-end">
-          <div class="date-input date-custom-btn" id="f-end-btn" onclick="openSingleDate('f-end','종료일')">날짜 선택</div>
+          <div class="date-input date-custom-btn" id="f-end-btn" onclick="openFormSchedule('end')">날짜 선택</div>
         </div>
       </div>
       <div class="form-group">
@@ -11777,6 +11778,7 @@ let schedulingProcessId = null;
 let calPicker = { year:0, month:0, start:null, end:null, step:'start', otherProcs:[] };
 
 function openScheduleDialog(procId) {
+  _schedMode = 'process';
   schedulingProcessId = procId;
   const proj = getProject();
   const proc = proj.processes.find(p => p.id === procId);
@@ -11801,6 +11803,22 @@ function openScheduleDialog(procId) {
   openDialog('dlg-schedule');
 }
 
+// 프로젝트 전체 시공일정(공사 정보) — 공정 일정과 같은 범위 선택 달력: 시작일 선택 → 이어서 종료일 선택
+let _schedMode = 'process';
+function openFormSchedule(step) {
+  _schedMode = 'form';
+  schedulingProcessId = null;
+  const start = document.getElementById('f-start')?.value || null;
+  const end = document.getElementById('f-end')?.value || null;
+  const base = start ? new Date(start + 'T00:00:00') : new Date();
+  calPicker.year = base.getFullYear(); calPicker.month = base.getMonth();
+  calPicker.start = start; calPicker.end = end;
+  calPicker.step = (step === 'end' && start) ? 'end' : 'start';
+  calPicker.otherProcs = [];
+  const t = document.getElementById('dlg-schedule-title'); if (t) t.textContent = '전체 시공일정 선택';
+  renderDatePicker();
+  openDialog('dlg-schedule');
+}
 function calPickerNav(delta) {
   calPicker.month += delta;
   if (calPicker.month < 0) { calPicker.month = 11; calPicker.year--; }
@@ -11876,6 +11894,7 @@ function renderDatePicker() {
     if (isToday && !isStart && !isEnd) cls += ' dp-today';
     if (isSun) cls += ' dp-sun';
     if (isSat) cls += ' dp-sat';
+    if (step === 'end' && start && ds < start) cls += ' dp-before';
     const dots = others.length ? `<div class="dp-dots">${others.slice(0,3).map(p=>`<span class="dp-dot" style="background:${p.color}"></span>`).join('')}</div>` : '';
     cells += `<div class="${cls}" onclick="calPickerSelect('${ds}')"><span class="dp-num">${d}</span>${dots}</div>`;
   }
@@ -11904,6 +11923,7 @@ function renderDatePicker() {
         <span class="dp-range-val">${endLabel}</span>
       </div>
     </div>
+    <div style="font-size:13px;color:#888;text-align:center;margin:2px 0 8px;">${step==='start' ? '시작일을 선택하세요' : '종료일을 선택하세요'}</div>
     <div class="dp-weekdays">${DOW.map((w,i)=>`<span class="${i===0?'dp-wks':i===6?'dp-wksa':''}">${w}</span>`).join('')}</div>
     <div class="dp-grid">${cells}</div>`;
 
@@ -11926,6 +11946,17 @@ function renderDatePicker() {
 }
 
 function confirmSchedule() {
+  if (_schedMode === 'form') {
+    if (calPicker.start && !calPicker.end) { alert('종료일도 선택해주세요.'); return; }
+    document.getElementById('f-start').value = calPicker.start || '';
+    document.getElementById('f-end').value = calPicker.end || '';
+    _updateDateBtn('f-start', calPicker.start || '');
+    _updateDateBtn('f-end', calPicker.end || '');
+    saveFormData();
+    _schedMode = 'process';
+    closeDialog('dlg-schedule');
+    return;
+  }
   const proc = getProject()?.processes.find(p => p.id === schedulingProcessId);
   if (!proc) return;
   if (calPicker.start && calPicker.end && calPicker.start > calPicker.end) {
