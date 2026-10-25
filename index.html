@@ -7816,7 +7816,7 @@ function _applyDdayBadge(el, startDateStr, endDateStr) {
 }
 function updateSummary() {
   const proj = getProject(); if (!proj) return;
-  if (proj.myRole !== '뷰어' && typeof _estSeedDefault === 'function' && _estSeedDefault(proj)) { save(); _syncProjToCloud(proj); }
+  if (proj.myRole !== '뷰어' && typeof _estSeedDefault === 'function' && _estSeedDefault(proj)) { save(); _estSyncCloud(proj); }
   let totalCost = 0;
   const companies = new Set();
   proj.processes.forEach(p => {
@@ -14021,7 +14021,37 @@ function _estMatchProc(proj, gname) {
 function _estSave() {
   const proj = getProject(); if (!proj || !proj.estimate) return;
   proj.estimate.updatedAt = Date.now();
-  save(); _syncProjToCloud(proj);
+  save(); _estSyncCloud(proj);
+}
+// 오너는 전체 sync, 편집자는 estimate 필드만 read-merge-write — 예전엔 편집자도 _syncProjToCloud
+// (projectData 전체 덮어쓰기)를 호출해 "공동작업자는 projectData 전체를 쓰지 않는다" 규칙을 깨고
+// 다른 필드(공사정보·예산 등)를 편집자 기기의 옛 값으로 덮어쓸 수 있었음 (_msSaveAndSync와 동일 패턴)
+function _estSyncCloud(proj) {
+  if (!proj || !proj.cloudId) return Promise.resolve();
+  return _isProjOwner(proj) ? _syncProjToCloud(proj) : _syncEstimateToCloud(proj);
+}
+async function _syncEstimateToCloud(proj) {
+  if (!proj?.cloudId || proj.myRole !== '편집자') return;
+  const ok = await _initFirebase();
+  if (!ok || !_db) return;
+  try {
+    const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
+    const pd = snap.data()?.projectData || {};
+    const merged = _mergeEstimate(proj.estimate, pd.estimate);
+    if (!merged) return;
+    await _db.collection('vb_projects').doc(proj.cloudId).update({
+      'projectData.estimate': merged,
+      'projectData.estimateSeeded': true,
+      'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
+      'meta.updatedBy': state.user?.email || '',
+      'meta.updatedBySessionId': _sessionId,
+    });
+    proj.estimate = merged; proj.estimateSeeded = true;
+    localStorage.setItem('vibespace', JSON.stringify(state));
+  } catch(e) {
+    console.error('[estimateSync] ❌', e.code, e.message);
+    showToastMessage('⚠️ 견적 동기화 실패' + (e.code ? ' (' + e.code + ')' : '') + ' — 다른 기기에 반영되지 않았습니다');
+  }
 }
 function _estId() { return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -14045,14 +14075,17 @@ function _estSeedDefault(proj, force) {
       ? { id: _estId(), type: 'head', name: r[1], spec: '', unit: '', qty: 0, mat: 0, labor: 0 }
       : { id: _estId(), type: 'item', name: r[1], spec: r[2], unit: r[3], qty: r[4], mat: r[5], labor: r[6] }) };
   });
-  proj.estimate = { id: _estId(), name: D.name, vendor: D.vendor, docNo: D.docNo, mgmtPct: D.mgmtPct, adjust: D.adjust, split: true, groups, updatedAt: Date.now() };
+  // updatedAt: 0 — 기본 데이터는 사용자 편집이 아니므로 클라우드에 이미 있는 견적에 항상 져야 함.
+  // (Date.now()로 찍으면 로컬 캐시에 견적이 아직 없는 기기가 클라우드 fetch 전 renderAll/updateSummary에서
+  // 시드를 만들고, _mergeEstimate가 이 "더 최신" 시드를 골라 다른 기기에서 편집한 견적을 기본값으로 덮어씀)
+  proj.estimate = { id: _estId(), name: D.name, vendor: D.vendor, docNo: D.docNo, mgmtPct: D.mgmtPct, adjust: D.adjust, split: true, groups, updatedAt: 0 };
   return true;
 }
-function _estSeedNow() { const p = getProject(); if (_estSeedDefault(p, true)) { save(); _syncProjToCloud(p); _renderEstimateCard(); showToastMessage('견적서를 불러왔어요'); } }
+function _estSeedNow() { const p = getProject(); if (_estSeedDefault(p, true)) { save(); _estSyncCloud(p); _renderEstimateCard(); showToastMessage('견적서를 불러왔어요'); } }
 function _renderEstimateCard() {
   const el = document.getElementById('iv-estimate-card'); if (!el) return;
   const proj = getProject(), editable = canEdit();
-  if (proj && proj.myRole !== '뷰어' && _estSeedDefault(proj)) { save(); _syncProjToCloud(proj); }
+  if (proj && proj.myRole !== '뷰어' && _estSeedDefault(proj)) { save(); _estSyncCloud(proj); }
   const e = _estGet(proj);
   if (!e) {
     el.innerHTML = '<div style="font-size:16px;font-weight:600;color:#111;margin-bottom:6px;">견적</div><div style="font-size:14px;color:#888;line-height:1.5;margin-bottom:16px;">업체 견적서를 넣으면 공정별 비용이 자동으로 연동돼요.</div>' +
@@ -14255,7 +14288,7 @@ function _estApplyImport(groups, meta) {
 }
 
 function renderAll() {
-  try { const _p = getProject(); if (_p && _p.myRole !== '뷰어' && _estSeedDefault(_p)) { save(); _syncProjToCloud(_p); } } catch(e) {}
+  try { const _p = getProject(); if (_p && _p.myRole !== '뷰어' && _estSeedDefault(_p)) { save(); _estSyncCloud(_p); } } catch(e) {}
   const proj = getProject();
   if (proj) {
     document.getElementById('current-project-name').textContent = proj.name;
