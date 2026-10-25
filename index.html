@@ -4014,6 +4014,8 @@ button, input, textarea, select { font-family:var(--font); }
         <div class="iv-fp-3d-wrap" id="iv-fp-3d-wrap" style="display:none;"></div>
       </div>
 
+      <!-- 도면 정보 (싱글소스) -->
+      <div class="info-view-card" id="iv-plan-card" style="padding:22px 24px;display:none;"></div>
       </div><!-- /iv-col-l -->
       <div class="iv-col iv-col-r">
       <!-- 견적 -->
@@ -12707,6 +12709,7 @@ function _loadInfoView() {
     }
   }
   _renderEstimateCard();
+  _renderPlanCard();
   // 함께하는 작업자 (오너 + 협업자)
   _renderInfoViewWorkers(proj);
   // 도면 (다중 이미지)
@@ -14082,6 +14085,167 @@ function _estSeedDefault(proj, force) {
   return true;
 }
 function _estSeedNow() { const p = getProject(); if (_estSeedDefault(p, true)) { save(); _estSyncCloud(p); _renderEstimateCard(); showToastMessage('견적서를 불러왔어요'); } }
+// ===== 도면 정보 (싱글소스 디지털 도면) =====
+// 좌표 단위 mm, 원점 = 도면 외곽 좌상단. 넓이·둘레·벽면적·설비 개수는 좌표에서 자동 계산.
+// 기본값: (STUDIO) DANHAN 도면 및 제안서(2026.10.21) 평면도·마감도·전기도·천장도 기준
+const PLAN_DEFAULT = {
+  name: '정자동 우성아파트 311-205', source: 'STUDIO DANHAN 도면 2026.10.21 (1/100)', width: 9300, height: 11500, ceiling: 2300,
+  gridX: [0, 3300, 6300, 9300], gridXb: [0, 4500, 9300], gridY: [0, 3800, 6100, 10000, 11500], gridYr: [0, 300, 1700, 5000, 6400, 11500],
+  zones: [
+    { id: 'z1', name: '작은방1', alias: '유찬이방', poly: [[0,0],[3300,0],[3300,3800],[0,3800]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 5 }, fan: 1 },
+    { id: 'z2', name: '주방·식당', poly: [[3300,0],[6300,0],[6300,5000],[3300,5000]], floor: '02 WF 스퀘어마루', light: { 'L-01 매입등': 5, 'L-03 펜던트': 1, 'L-04 LED BAR': 1 } },
+    { id: 'z3', name: '다용도·세탁실', poly: [[6300,0],[9300,0],[9300,1700],[6300,1700]], floor: '03 TL 포세린타일 · PT 탄성코트', light: { 'L-07 직부등': 1 } },
+    { id: 'z4', name: '작은방2', alias: '유나방', poly: [[6300,1700],[9300,1700],[9300,5000],[6300,5000]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 4 }, fan: 1 },
+    { id: 'z5', name: '드레스룸', alias: '헹거옷장', poly: [[0,3800],[1300,3800],[1300,4400],[0,4400]], floor: '01 WF 합판마루', light: { 'L-08 센서등': 1 } },
+    { id: 'z6', name: '부부욕실', poly: [[0,4400],[1300,4400],[1300,6100],[0,6100]], floor: '01 TL 포세린타일 600×600', light: { 'L-02 방습등': 2 } },
+    { id: 'z7', name: '공용욕실', poly: [[1300,3800],[3000,3800],[3000,6100],[1300,6100]], floor: '01·02 TL 포세린타일', light: { 'L-02 방습등': 3, 'L-04 LED BAR': 1, 'L-06 벽등': 1 } },
+    { id: 'z8', name: '복도', poly: [[3300,5000],[7500,5000],[7500,6400],[4500,6400],[4500,6100],[3300,6100]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 1 } },
+    { id: 'z9', name: '현관', poly: [[7500,5000],[9300,5000],[9300,6400],[7500,6400]], floor: '04 TL 모자이크 타일', light: { 'L-05 벽등': 1, 'L-04 LED BAR': 1, '센서': 2 } },
+    { id: 'z10', name: '안방', poly: [[0,6100],[4500,6100],[4500,10000],[0,10000]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 4, 'L-04 LED BAR': 1 }, fan: 1 },
+    { id: 'z11', name: '거실', poly: [[4500,6400],[9300,6400],[9300,11500],[4500,11500]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 11, 'L-04 LED BAR': 1 }, fan: 1 },
+    { id: 'z12', name: '안방 발코니', poly: [[0,10000],[4500,10000],[4500,11500],[0,11500]], floor: '03 TL 포세린타일 · PT 탄성코트', light: { 'L-07 직부등': 1 } },
+  ],
+  // 신설 벽(도면 빨간선) — 나머지 외곽·기존 벽은 구조벽
+  walls: [
+    { a: [4500,6100], b: [4500,10000], type: '신설', note: '안방–거실 가벽' },
+    { a: [7500,5000], b: [7500,6400], type: '신설', note: '현관 벽체' },
+    { a: [7500,6400], b: [9300,6400], type: '신설', note: '현관 벽체' },
+    { a: [6900,0], b: [7700,0], type: '신설', note: '다용도실 단열 + 창호' },
+  ],
+  doors: [
+    { zone: 'z1', type: '방문', size: '900×2100', spec: '영림 양방향 슬림 와이드형 PS160' },
+    { zone: 'z4', type: '방문', size: '900×2100', spec: '영림 양방향 슬림 와이드형 PS160' },
+    { zone: 'z10', type: '방문', size: '900×2100', spec: '영림 양방향 슬림 와이드형 PS160' },
+    { zone: 'z3', type: '세탁실문', size: '600×2100', spec: '영림 슬림 와이드형 PS160' },
+    { zone: 'z6', type: '화장실문', size: '700×2100', spec: '영림 슬림 와이드형 발포 PS160' },
+    { zone: 'z7', type: '화장실문', size: '700×2100', spec: '영림 슬림 와이드형 발포 PS160' },
+    { zone: 'z9', type: '현관중문', size: '1000×2100', spec: '합판 가마찌도어 제작 · 라왕합판' },
+    { zone: 'z10', type: '베란다 덧문', size: '650×2100', spec: '합판 가마찌도어 제작 · 라왕합판' },
+  ],
+  // 전기 포인트(전기도 판독) — outlet 콘센트 / wet 방우·특수 콘센트 / tv TV·통신 / sw 스위치 / panel 분전반
+  points: [
+    { t: 'outlet', x: 1650, y: 330 }, { t: 'outlet', x: 2950, y: 2590 }, { t: 'wet', x: 3150, y: 400 }, { t: 'wet', x: 290, y: 1260 }, { t: 'sw', x: 3150, y: 2900 },
+    { t: 'outlet', x: 3560, y: 1220 }, { t: 'outlet', x: 6140, y: 3490 }, { t: 'wet', x: 5470, y: 330 }, { t: 'wet', x: 5930, y: 330 }, { t: 'wet', x: 3810, y: 1220 }, { t: 'wet', x: 5050, y: 2190 }, { t: 'sw', x: 6150, y: 1650 }, { t: 'sw', x: 6110, y: 4800 },
+    { t: 'outlet', x: 7120, y: 650 }, { t: 'wet', x: 9050, y: 1300 },
+    { t: 'tv', x: 6580, y: 3240 }, { t: 'outlet', x: 6580, y: 3500 }, { t: 'outlet', x: 7600, y: 4600 }, { t: 'sw', x: 7900, y: 4820 },
+    { t: 'wet', x: 320, y: 4820 }, { t: 'outlet', x: 1100, y: 4770 }, { t: 'outlet', x: 1100, y: 5160, h: 1200 },
+    { t: 'wet', x: 1870, y: 5160 }, { t: 'outlet', x: 1900, y: 5850 }, { t: 'outlet', x: 2340, y: 5850 },
+    { t: 'sw', x: 1480, y: 6300 }, { t: 'tv', x: 2410, y: 6300, h: 900 }, { t: 'outlet', x: 2700, y: 6300, h: 900 }, { t: 'sw', x: 3270, y: 6300 }, { t: 'outlet', x: 3270, y: 6510 }, { t: 'tv', x: 4350, y: 8060 }, { t: 'outlet', x: 4350, y: 8350 }, { t: 'outlet', x: 4330, y: 9600, h: 1600 },
+    { t: 'outlet', x: 5160, y: 9820 }, { t: 'outlet', x: 5160, y: 10110 }, { t: 'outlet', x: 9100, y: 10720 }, { t: 'panel', x: 4700, y: 6600 }, { t: 'sw', x: 4700, y: 6900 },
+  ],
+  updatedAt: 0,
+};
+const PLAN_PT = { outlet: { l: '콘센트', c: '#2a5bd7' }, wet: { l: '방우·특수 콘센트', c: '#d9541e' }, tv: { l: 'TV·통신', c: '#7b3fbf' }, sw: { l: '스위치', c: '#2e7d32' }, panel: { l: '분전반', c: '#555' } };
+const PLAN_ZONE_COLORS = ['#f4ede3', '#eef3ea', '#e9eef6', '#f6ece9', '#efeaf4', '#e8f2f3'];
+function _planArea(poly) { let a = 0; for (let i = 0; i < poly.length; i++) { const [x1, y1] = poly[i], [x2, y2] = poly[(i + 1) % poly.length]; a += x1 * y2 - x2 * y1; } return Math.abs(a) / 2 / 1e6; }
+function _planPerim(poly) { let p = 0; for (let i = 0; i < poly.length; i++) { const [x1, y1] = poly[i], [x2, y2] = poly[(i + 1) % poly.length]; p += Math.hypot(x2 - x1, y2 - y1); } return p / 1000; }
+function _planBBox(poly) { const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }; }
+function _planInPoly(x, y, poly) { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) ins = !ins; } return ins; }
+function _planZoneOf(pm, x, y) { return (pm.zones || []).find(z => _planInPoly(x, y, z.poly)) || null; }
+function _planZoneStats(pm, z) {
+  const bb = _planBBox(z.poly), area = _planArea(z.poly), perim = _planPerim(z.poly), ceil = (z.ceiling || pm.ceiling || 2300) / 1000;
+  const counts = {}; (pm.points || []).forEach(p => { const zz = _planZoneOf(pm, p.x, p.y); if (zz && zz.id === z.id) counts[p.t] = (counts[p.t] || 0) + 1; });
+  return { w: bb.w, h: bb.h, area, perim, wall: perim * ceil, counts, lights: Object.values(z.light || {}).reduce((a, b) => a + b, 0) };
+}
+function _planGet(proj) { return proj && proj.planModel && Array.isArray(proj.planModel.zones) ? proj.planModel : null; }
+function _planSeed(proj) {
+  if (!proj || proj.planModel || proj.planSeeded || proj.myRole === '뷰어' || !_estSeedAllowed(proj)) return false;
+  proj.planSeeded = true;
+  proj.planModel = JSON.parse(JSON.stringify(PLAN_DEFAULT));
+  return true;
+}
+function _planSvg(pm, opts) {
+  opts = opts || {};
+  const pad = opts.dims ? 1100 : 150, W = pm.width, H = pm.height;
+  let s = `<svg viewBox="${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2}" style="width:100%;height:100%;display:block;font-family:inherit;">`;
+  (pm.zones || []).forEach((z, i) => {
+    const sel = opts.sel === z.id, bb = _planBBox(z.poly), st = _planZoneStats(pm, z);
+    s += `<polygon points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]}" stroke="${sel ? '#111' : '#9a9a9a'}" stroke-width="${sel ? 60 : 30}" ${opts.click ? `style="cursor:pointer" onclick="_planSelect('${z.id}')"` : ''}/>`;
+    const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
+    s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
+    if (bb.w > 1200 && bb.h > 1200) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.2}" text-anchor="middle" font-size="${fs * .8}" fill="#777" pointer-events="none">${st.area.toFixed(1)}㎡</text>`;
+  });
+  s += `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#222" stroke-width="120"/>`;
+  if (opts.walls !== false) (pm.walls || []).forEach(w => { s += `<line x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}" stroke="${w.type === '신설' ? '#e53935' : '#222'}" stroke-width="140" stroke-linecap="square"><title>${esc(w.type + ' · ' + (w.note || ''))}</title></line>`; });
+  if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="130" fill="${m.c}" stroke="#fff" stroke-width="40" pointer-events="none"/>`; });
+  if (opts.dims) {
+    const dim = (vals, axis, off) => {
+      for (let i = 0; i < vals.length - 1; i++) {
+        const a = vals[i], b = vals[i + 1], mid = (a + b) / 2, t = (b - a).toLocaleString();
+        if (axis === 'x') s += `<line x1="${a}" y1="${off}" x2="${b}" y2="${off}" stroke="#888" stroke-width="20"/><line x1="${a}" y1="${off - 120}" x2="${a}" y2="${off + 120}" stroke="#888" stroke-width="20"/><line x1="${b}" y1="${off - 120}" x2="${b}" y2="${off + 120}" stroke="#888" stroke-width="20"/><text x="${mid}" y="${off - 80}" text-anchor="middle" font-size="200" fill="#555">${t}</text>`;
+        else s += `<line x1="${off}" y1="${a}" x2="${off}" y2="${b}" stroke="#888" stroke-width="20"/><line x1="${off - 120}" y1="${a}" x2="${off + 120}" y2="${a}" stroke="#888" stroke-width="20"/><line x1="${off - 120}" y1="${b}" x2="${off + 120}" y2="${b}" stroke="#888" stroke-width="20"/><text x="${off - 80}" y="${mid}" text-anchor="middle" font-size="200" fill="#555" transform="rotate(-90 ${off - 80} ${mid})">${t}</text>`;
+      }
+    };
+    dim(pm.gridX, 'x', -500); dim([0, W], 'x', -900);
+    dim(pm.gridXb, 'x', H + 500); dim(pm.gridY, 'y', -500); dim([0, H], 'y', -900); dim(pm.gridYr, 'y', W + 500);
+  }
+  return s + '</svg>';
+}
+function _renderPlanCard() {
+  const el = document.getElementById('iv-plan-card'); if (!el) return;
+  const proj = getProject();
+  if (_planSeed(proj)) { save(); if (_isProjOwner(proj)) _syncProjToCloud(proj); }
+  const pm = _planGet(proj);
+  if (!pm) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const total = pm.zones.reduce((a, z) => a + _planArea(z.poly), 0);
+  const cnt = t => (pm.points || []).filter(p => p.t === t).length;
+  const lights = pm.zones.reduce((a, z) => a + Object.values(z.light || {}).reduce((x, y) => x + y, 0), 0);
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:16px;font-weight:600;color:#111;">도면 정보</div><button class="est-btn" onclick="_openPlanView()">자세히 보기</button></div>
+    <div style="aspect-ratio:${pm.width + 300}/${pm.height + 300};max-height:340px;margin:0 auto 14px;cursor:pointer;" onclick="_openPlanView()">${_planSvg(pm, {})}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
+      ${[['구역', pm.zones.length + '개'], ['면적 합계', total.toFixed(1) + '㎡'], ['콘센트', (cnt('outlet') + cnt('wet')) + '개'], ['조명', lights + '개']].map(([k, v]) => `<div style="background:#f7f8fa;border-radius:10px;padding:10px 4px;"><div style="font-size:12px;color:#888;">${k}</div><div style="font-size:15px;font-weight:700;color:#111;margin-top:2px;">${v}</div></div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-top:10px;">${esc(pm.source || '')} · 벽 중심선 기준</div>`;
+}
+let _planSel = null, _planPtFilter = { outlet: true, wet: true, tv: true, sw: true, panel: true };
+function _openPlanView() {
+  let ov = document.getElementById('plan-view');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'plan-view';
+    ov.style.cssText = 'position:fixed;inset:0;background:#f7f8fa;z-index:8700;display:flex;flex-direction:column;';
+    document.body.appendChild(ov);
+  }
+  ov.style.display = 'flex';
+  _planSel = _planSel || 'z11';
+  _renderPlanView();
+}
+function _closePlanView() { const ov = document.getElementById('plan-view'); if (ov) ov.style.display = 'none'; }
+function _planSelect(id) { _planSel = id; _renderPlanView(); }
+function _planTogglePt(t) { _planPtFilter[t] = !_planPtFilter[t]; _renderPlanView(); }
+function _renderPlanView() {
+  const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
+  const z = pm.zones.find(x => x.id === _planSel) || pm.zones[0], st = _planZoneStats(pm, z);
+  const total = pm.zones.reduce((a, q) => a + _planArea(q.poly), 0);
+  const row = (k, v) => `<div style="display:flex;padding:9px 0;border-bottom:1px solid #f2f2f2;font-size:14px;"><span style="width:96px;color:#888;flex-shrink:0;">${k}</span><span style="color:#111;">${v}</span></div>`;
+  const doors = (pm.doors || []).filter(d => d.zone === z.id);
+  const ptRows = Object.keys(PLAN_PT).filter(t => st.counts[t]).map(t => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><i style="width:8px;height:8px;border-radius:50%;background:${PLAN_PT[t].c};display:inline-block;"></i>${PLAN_PT[t].l} ${st.counts[t]}</span>`).join('') || '—';
+  const lightRows = Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join(' · ') + (z.fan ? ` · 씰링팬 ${z.fan}` : '') || '—';
+  ov.innerHTML = `
+  <div style="background:#fff;border-bottom:1px solid #eef0f5;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <button onclick="_closePlanView()" style="border:none;background:none;font-size:22px;cursor:pointer;padding:0 6px;">‹</button>
+    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;">도면 정보</div><div style="font-size:12px;color:#888;">${esc(pm.name)} · ${pm.width.toLocaleString()} × ${pm.height.toLocaleString()}mm · 합계 ${total.toFixed(1)}㎡ · 천장고 ${pm.ceiling.toLocaleString()}</div></div>
+  </div>
+  <div class="plan-view-body" style="flex:1;min-height:0;display:flex;flex-wrap:wrap;overflow-y:auto;">
+    <div style="flex:1 1 520px;min-width:0;padding:16px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${Object.keys(PLAN_PT).map(t => `<button onclick="_planTogglePt('${t}')" style="border:1px solid ${_planPtFilter[t] ? PLAN_PT[t].c : '#ddd'};background:${_planPtFilter[t] ? PLAN_PT[t].c : '#fff'};color:${_planPtFilter[t] ? '#fff' : '#666'};border-radius:16px;padding:5px 11px;font-size:12px;cursor:pointer;">${PLAN_PT[t].l}</button>`).join('')}<span style="font-size:12px;color:#e53935;align-self:center;margin-left:4px;">━ 신설 벽</span></div>
+      <div style="background:#fff;border-radius:12px;padding:8px;aspect-ratio:${pm.width + 2200}/${pm.height + 2200};max-height:calc(100vh - 170px);">${_planSvg(pm, { dims: true, points: true, click: true, sel: z.id, ptFilter: _planPtFilter })}</div>
+    </div>
+    <div style="flex:1 1 340px;min-width:0;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="background:#fff;border-radius:12px;padding:16px 18px;">
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">${esc(z.name)}${z.alias ? `<span style="font-size:13px;color:#888;font-weight:500;margin-left:6px;">${esc(z.alias)}</span>` : ''}</div>
+        ${row('크기', `${st.w.toLocaleString()} × ${st.h.toLocaleString()}mm`)}${row('바닥 면적', st.area.toFixed(2) + '㎡ (' + (st.area / 3.3058).toFixed(1) + '평)')}${row('둘레', st.perim.toFixed(1) + 'm')}${row('벽 면적', '약 ' + st.wall.toFixed(1) + '㎡ (천장고 ' + ((z.ceiling || pm.ceiling) / 1000) + 'm)')}${row('바닥 마감', esc(z.floor || '—'))}${row('전기', ptRows)}${row('조명', lightRows)}${row('문', doors.length ? doors.map(d => `${esc(d.type)} ${esc(d.size)}`).join('<br>') : '—')}
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:6px 0;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;">
+          <tr style="color:#888;text-align:right;"><th style="text-align:left;padding:8px 14px;font-weight:500;">구역</th><th style="font-weight:500;">면적㎡</th><th style="font-weight:500;">둘레m</th><th style="font-weight:500;">콘센트</th><th style="font-weight:500;">조명</th><th style="padding-right:14px;font-weight:500;">스위치</th></tr>
+          ${pm.zones.map(q => { const s = _planZoneStats(pm, q); return `<tr onclick="_planSelect('${q.id}')" style="cursor:pointer;text-align:right;border-top:1px solid #f2f2f2;${q.id === z.id ? 'background:#fff6ee;font-weight:600;' : ''}"><td style="text-align:left;padding:8px 14px;">${esc(q.name)}</td><td>${s.area.toFixed(1)}</td><td>${s.perim.toFixed(1)}</td><td>${(s.counts.outlet || 0) + (s.counts.wet || 0)}</td><td>${s.lights}</td><td style="padding-right:14px;">${s.counts.sw || 0}</td></tr>`; }).join('')}
+        </table>
+      </div>
+      <div style="font-size:12px;color:#999;line-height:1.6;">치수는 도면 그리드(벽 중심선) 기준이라 실제 마감 면적과 차이가 있을 수 있어요. 전기 포인트 위치는 전기도 판독값이에요.</div>
+    </div>
+  </div>`;
+}
 function _renderEstimateCard() {
   const el = document.getElementById('iv-estimate-card'); if (!el) return;
   const proj = getProject(), editable = canEdit();
@@ -14782,6 +14946,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   merged.materialSelections = _mergeMatSelectionsObj(local.materialSelections, cp.materialSelections);
   const _est = _mergeEstimate(local.estimate, cp.estimate); if (_est) merged.estimate = _est;
   if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
+  const _pm = _mergeEstimate(local.planModel, cp.planModel); if (_pm) merged.planModel = _pm;
+  if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
   if (Array.isArray(local.floorplanEditedImages) && local.floorplanEditedImages.some(Boolean)) {
@@ -15034,6 +15200,7 @@ function _syncProjToCloud(proj) {
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
     { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
+    { const _p = _mergeEstimate(proj.planModel, cloudData.planModel); if (_p) projData.planModel = _p; if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
@@ -15381,6 +15548,7 @@ function _startCollabListener(cloudId) {
     const localMaterialItems = proj.materialItems || []; // 스펙북 자재 보존
     const localMatSelections = proj.materialSelections || {}; // 자재선택 보존
     const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
+    const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -15445,6 +15613,7 @@ function _startCollabListener(cloudId) {
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
     { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
+    { const _p = _mergeEstimate(localPlan, remote.planModel); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
