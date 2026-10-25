@@ -14096,20 +14096,20 @@ const PLAN_DEFAULT = {
     { id: 'z2', name: '주방·식당', poly: [[3300,0],[6300,0],[6300,5000],[3300,5000]], floor: '02 WF 스퀘어마루', light: { 'L-01 매입등': 5, 'L-03 펜던트': 1, 'L-04 LED BAR': 1 } },
     { id: 'z3', name: '다용도·세탁실', poly: [[6300,0],[9300,0],[9300,1700],[6300,1700]], floor: '03 TL 포세린타일 · PT 탄성코트', light: { 'L-07 직부등': 1 } },
     { id: 'z4', name: '작은방2', alias: '유나방', poly: [[6300,1700],[9300,1700],[9300,5000],[6300,5000]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 4 }, fan: 1 },
-    { id: 'z5', name: '드레스룸', alias: '헹거옷장', poly: [[0,3800],[1300,3800],[1300,4400],[0,4400]], floor: '01 WF 합판마루', light: { 'L-08 센서등': 1 } },
-    { id: 'z6', name: '부부욕실', poly: [[0,4400],[1300,4400],[1300,6100],[0,6100]], floor: '01 TL 포세린타일 600×600', light: { 'L-02 방습등': 2 } },
-    { id: 'z7', name: '공용욕실', poly: [[1300,3800],[3000,3800],[3000,6100],[1300,6100]], floor: '01·02 TL 포세린타일', light: { 'L-02 방습등': 3, 'L-04 LED BAR': 1, 'L-06 벽등': 1 } },
-    { id: 'z8', name: '복도', poly: [[3300,5000],[7500,5000],[7500,6400],[4500,6400],[4500,6100],[3300,6100]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 1 } },
-    { id: 'z9', name: '현관', poly: [[7500,5000],[9300,5000],[9300,6400],[7500,6400]], floor: '04 TL 모자이크 타일', light: { 'L-05 벽등': 1, 'L-04 LED BAR': 1, '센서': 2 } },
+    { id: 'z5', name: '드레스룸', alias: '헹거옷장', poly: [[500,3800],[1250,3800],[1250,4450],[500,4450]], floor: '01 WF 합판마루', light: { 'L-08 센서등': 1 } },
+    { id: 'z6', name: '부부욕실', poly: [[0,4450],[1550,4450],[1550,6100],[0,6100]], floor: '01 TL 포세린타일 600×600', light: { 'L-02 방습등': 2 } },
+    { id: 'z7', name: '공용욕실', poly: [[1600,3800],[3250,3800],[3250,6100],[1600,6100]], floor: '01·02 TL 포세린타일', light: { 'L-02 방습등': 3, 'L-04 LED BAR': 1, 'L-06 벽등': 1 } },
+    { id: 'z8', name: '복도', poly: [[3300,5000],[7500,5000],[7500,6100],[3300,6100]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 1 } },
+    { id: 'z9', name: '현관', poly: [[7500,5000],[9300,5000],[9300,6900],[7500,6900]], floor: '04 TL 모자이크 타일', light: { 'L-05 벽등': 1, 'L-04 LED BAR': 1, '센서': 2 } },
     { id: 'z10', name: '안방', poly: [[0,6100],[4500,6100],[4500,10000],[0,10000]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 4, 'L-04 LED BAR': 1 }, fan: 1 },
-    { id: 'z11', name: '거실', poly: [[4500,6400],[9300,6400],[9300,11500],[4500,11500]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 11, 'L-04 LED BAR': 1 }, fan: 1 },
+    { id: 'z11', name: '거실', poly: [[4500,6100],[7500,6100],[7500,6900],[9300,6900],[9300,11500],[4500,11500]], floor: '01 WF 합판마루', light: { 'L-01 매입등': 11, 'L-04 LED BAR': 1 }, fan: 1 },
     { id: 'z12', name: '안방 발코니', poly: [[0,10000],[4500,10000],[4500,11500],[0,11500]], floor: '03 TL 포세린타일 · PT 탄성코트', light: { 'L-07 직부등': 1 } },
   ],
   // 신설 벽(도면 빨간선) — 나머지 외곽·기존 벽은 구조벽
   walls: [
     { a: [4500,6100], b: [4500,10000], type: '신설', note: '안방–거실 가벽' },
-    { a: [7500,5000], b: [7500,6400], type: '신설', note: '현관 벽체' },
-    { a: [7500,6400], b: [9300,6400], type: '신설', note: '현관 벽체' },
+    { a: [7500,5000], b: [7500,6900], type: '신설', note: '현관 벽체' },
+    { a: [7500,6900], b: [9300,6900], type: '신설', note: '현관 벽체' },
     { a: [6900,0], b: [7700,0], type: '신설', note: '다용도실 단열 + 창호' },
   ],
   doors: [
@@ -14133,6 +14133,16 @@ const PLAN_DEFAULT = {
     { t: 'sw', x: 1480, y: 6300 }, { t: 'tv', x: 2410, y: 6300, h: 900 }, { t: 'outlet', x: 2700, y: 6300, h: 900 }, { t: 'sw', x: 3270, y: 6300 }, { t: 'outlet', x: 3270, y: 6510 }, { t: 'tv', x: 4350, y: 8060 }, { t: 'outlet', x: 4350, y: 8350 }, { t: 'outlet', x: 4330, y: 9600, h: 1600 },
     { t: 'outlet', x: 5160, y: 9820 }, { t: 'outlet', x: 5160, y: 10110 }, { t: 'outlet', x: 9100, y: 10720 }, { t: 'panel', x: 4700, y: 6600 }, { t: 'sw', x: 4700, y: 6900 },
   ],
+  // 원본 도면 레이어(1/100 PDF 450dpi) — imgBox는 mm 좌표계에서 이미지가 차지하는 영역
+  layers: [
+    { id: 'plan', label: '평면도', src: 'assets/plans/jungja311-205/plan.jpg' },
+    { id: 'finish', label: '마감도', src: 'assets/plans/jungja311-205/finish.jpg' },
+    { id: 'elec', label: '전기도', src: 'assets/plans/jungja311-205/elec.jpg' },
+    { id: 'ceiling', label: '천장도', src: 'assets/plans/jungja311-205/ceiling.jpg' },
+    { id: 'mep', label: '설비도', src: 'assets/plans/jungja311-205/mep.jpg' },
+  ],
+  imgBox: { x: -593, y: -593, w: 10825, h: 12694 },
+  version: 2,
   updatedAt: 0,
 };
 const PLAN_PT = { outlet: { l: '콘센트', c: '#2a5bd7' }, wet: { l: '방우·특수 콘센트', c: '#d9541e' }, tv: { l: 'TV·통신', c: '#7b3fbf' }, sw: { l: '스위치', c: '#2e7d32' }, panel: { l: '분전반', c: '#555' } };
@@ -14149,36 +14159,38 @@ function _planZoneStats(pm, z) {
 }
 function _planGet(proj) { return proj && proj.planModel && Array.isArray(proj.planModel.zones) ? proj.planModel : null; }
 function _planSeed(proj) {
-  if (!proj || proj.planModel || proj.planSeeded || proj.myRole === '뷰어' || !_estSeedAllowed(proj)) return false;
+  if (!proj || proj.myRole === '뷰어') return false;
+  const old = proj.planModel;
+  // 편집 기능이 없으므로 updatedAt 0인 기본값은 새 버전 기본값으로 교체
+  if (old && !(old.updatedAt === 0 && (old.version || 1) < PLAN_DEFAULT.version)) return false;
+  if (!old && (proj.planSeeded || !_estSeedAllowed(proj))) return false;
   proj.planSeeded = true;
   proj.planModel = JSON.parse(JSON.stringify(PLAN_DEFAULT));
   return true;
 }
 function _planSvg(pm, opts) {
   opts = opts || {};
-  const pad = opts.dims ? 1100 : 150, W = pm.width, H = pm.height;
-  let s = `<svg viewBox="${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2}" style="width:100%;height:100%;display:block;font-family:inherit;">`;
+  const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
+  const vb = layer && ib ? [ib.x, ib.y, ib.w, ib.h] : [-150, -150, W + 300, H + 300];
+  let s = `<svg viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;font-family:inherit;">`;
+  if (layer) s += `<image href="${layer.src}" x="${ib.x}" y="${ib.y}" width="${ib.w}" height="${ib.h}" preserveAspectRatio="none"/>`;
   (pm.zones || []).forEach((z, i) => {
     const sel = opts.sel === z.id, bb = _planBBox(z.poly), st = _planZoneStats(pm, z);
-    s += `<polygon points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]}" stroke="${sel ? '#111' : '#9a9a9a'}" stroke-width="${sel ? 60 : 30}" ${opts.click ? `style="cursor:pointer" onclick="_planSelect('${z.id}')"` : ''}/>`;
-    const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
-    s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
-    if (bb.w > 1200 && bb.h > 1200) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.2}" text-anchor="middle" font-size="${fs * .8}" fill="#777" pointer-events="none">${st.area.toFixed(1)}㎡</text>`;
+    const fill = layer ? (sel ? 'rgba(232,115,26,.28)' : 'rgba(255,255,255,0)') : (sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]);
+    const stroke = sel ? '#e8731a' : (layer ? 'rgba(0,0,0,0)' : '#9a9a9a');
+    s += `<polygon data-zone="${z.id}" points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 70 : 30}" ${opts.click ? 'style="cursor:pointer"' : ''}/>`;
+    if (!layer) {
+      const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
+      s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
+      if (bb.w > 1200 && bb.h > 1200) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.2}" text-anchor="middle" font-size="${fs * .8}" fill="#777" pointer-events="none">${st.area.toFixed(1)}㎡</text>`;
+    }
   });
-  s += `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#222" stroke-width="120"/>`;
-  if (opts.walls !== false) (pm.walls || []).forEach(w => { s += `<line x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}" stroke="${w.type === '신설' ? '#e53935' : '#222'}" stroke-width="140" stroke-linecap="square"><title>${esc(w.type + ' · ' + (w.note || ''))}</title></line>`; });
-  if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="130" fill="${m.c}" stroke="#fff" stroke-width="40" pointer-events="none"/>`; });
-  if (opts.dims) {
-    const dim = (vals, axis, off) => {
-      for (let i = 0; i < vals.length - 1; i++) {
-        const a = vals[i], b = vals[i + 1], mid = (a + b) / 2, t = (b - a).toLocaleString();
-        if (axis === 'x') s += `<line x1="${a}" y1="${off}" x2="${b}" y2="${off}" stroke="#888" stroke-width="20"/><line x1="${a}" y1="${off - 120}" x2="${a}" y2="${off + 120}" stroke="#888" stroke-width="20"/><line x1="${b}" y1="${off - 120}" x2="${b}" y2="${off + 120}" stroke="#888" stroke-width="20"/><text x="${mid}" y="${off - 80}" text-anchor="middle" font-size="200" fill="#555">${t}</text>`;
-        else s += `<line x1="${off}" y1="${a}" x2="${off}" y2="${b}" stroke="#888" stroke-width="20"/><line x1="${off - 120}" y1="${a}" x2="${off + 120}" y2="${a}" stroke="#888" stroke-width="20"/><line x1="${off - 120}" y1="${b}" x2="${off + 120}" y2="${b}" stroke="#888" stroke-width="20"/><text x="${off - 80}" y="${mid}" text-anchor="middle" font-size="200" fill="#555" transform="rotate(-90 ${off - 80} ${mid})">${t}</text>`;
-      }
-    };
-    dim(pm.gridX, 'x', -500); dim([0, W], 'x', -900);
-    dim(pm.gridXb, 'x', H + 500); dim(pm.gridY, 'y', -500); dim([0, H], 'y', -900); dim(pm.gridYr, 'y', W + 500);
+  if (!layer) {
+    s += `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#222" stroke-width="120"/>`;
+    (pm.walls || []).forEach(w => { s += `<line x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}" stroke="${w.type === '신설' ? '#e53935' : '#222'}" stroke-width="140" stroke-linecap="square"/>`; });
   }
+  if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="110" fill="${m.c}" stroke="#fff" stroke-width="35" opacity=".9" pointer-events="none"/>`; });
+  if (opts.sel && layer) { const z = pm.zones.find(q => q.id === opts.sel); if (z) { const bb = _planBBox(z.poly); s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="300" font-weight="800" fill="#e8731a" stroke="#fff" stroke-width="60" paint-order="stroke" pointer-events="none">${esc(z.name)}</text>`; } }
   return s + '</svg>';
 }
 function _renderPlanCard() {
@@ -14191,60 +14203,153 @@ function _renderPlanCard() {
   const total = pm.zones.reduce((a, z) => a + _planArea(z.poly), 0);
   const cnt = t => (pm.points || []).filter(p => p.t === t).length;
   const lights = pm.zones.reduce((a, z) => a + Object.values(z.light || {}).reduce((x, y) => x + y, 0), 0);
-  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:16px;font-weight:600;color:#111;">도면 정보</div><button class="est-btn" onclick="_openPlanView()">자세히 보기</button></div>
-    <div style="aspect-ratio:${pm.width + 300}/${pm.height + 300};max-height:340px;margin:0 auto 14px;cursor:pointer;" onclick="_openPlanView()">${_planSvg(pm, {})}</div>
+  const hasImg = (pm.layers || []).length && pm.imgBox;
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:16px;font-weight:600;color:#111;">도면 정보</div><button class="est-btn" onclick="_openPlanView()">도면 보기</button></div>
+    <div style="aspect-ratio:${hasImg ? pm.imgBox.w + '/' + pm.imgBox.h : (pm.width + 300) + '/' + (pm.height + 300)};max-height:360px;margin:0 auto 14px;cursor:pointer;background:#fff;border-radius:10px;overflow:hidden;" onclick="_openPlanView()">${_planSvg(pm, { layer: hasImg ? pm.layers[0].id : null })}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
       ${[['구역', pm.zones.length + '개'], ['면적 합계', total.toFixed(1) + '㎡'], ['콘센트', (cnt('outlet') + cnt('wet')) + '개'], ['조명', lights + '개']].map(([k, v]) => `<div style="background:#f7f8fa;border-radius:10px;padding:10px 4px;"><div style="font-size:12px;color:#888;">${k}</div><div style="font-size:15px;font-weight:700;color:#111;margin-top:2px;">${v}</div></div>`).join('')}
     </div>
-    <div style="font-size:12px;color:#aaa;margin-top:10px;">${esc(pm.source || '')} · 벽 중심선 기준</div>`;
+    <div style="font-size:12px;color:#aaa;margin-top:10px;">${esc(pm.source || '')}</div>`;
 }
-let _planSel = null, _planPtFilter = { outlet: true, wet: true, tv: true, sw: true, panel: true };
+let _planSel = null, _planLayer = null, _planPtFilter = { outlet: false, wet: false, tv: false, sw: false, panel: false }, _planZoom = { k: 1, x: 0, y: 0 };
+function _planInjectCss() {
+  if (document.getElementById('plan-view-css')) return;
+  const st = document.createElement('style'); st.id = 'plan-view-css';
+  st.textContent = `
+#plan-view{position:fixed;inset:0;background:#f7f8fa;z-index:8700;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);}
+#plan-view .pv-hd{background:#fff;border-bottom:1px solid #eef0f5;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#plan-view .pv-back{border:none;background:none;font-size:26px;line-height:1;cursor:pointer;padding:4px 10px;color:#111;}
+#plan-view .pv-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#plan-view .pv-left{display:flex;flex-direction:column;gap:8px;padding:10px 12px 0;}
+#plan-view .pv-right{padding:12px 12px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;}
+#plan-view .pv-chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+#plan-view .pv-chips::-webkit-scrollbar{display:none;}
+#plan-view .pv-chip{flex-shrink:0;border:1px solid #ddd;background:#fff;color:#444;border-radius:18px;padding:7px 13px;font-size:13px;cursor:pointer;white-space:nowrap;}
+#plan-view .pv-chip.on{background:#111;border-color:#111;color:#fff;}
+#plan-view .pv-chip.zone.on{background:#e8731a;border-color:#e8731a;}
+#plan-view .pv-stage{position:relative;background:#fff;border-radius:12px;overflow:hidden;height:62vh;min-height:320px;touch-action:none;user-select:none;-webkit-user-select:none;}
+#plan-view .pv-inner{position:absolute;inset:0;transform-origin:0 0;}
+#plan-view .pv-zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;}
+#plan-view .pv-zoom button{width:38px;height:38px;border-radius:10px;border:1px solid #ddd;background:rgba(255,255,255,.95);font-size:18px;cursor:pointer;color:#333;}
+#plan-view .pv-card{background:#fff;border-radius:12px;padding:16px 18px;}
+#plan-view .pv-row{display:flex;padding:9px 0;border-bottom:1px solid #f2f2f2;font-size:14px;line-height:1.45;}
+#plan-view .pv-row>span:first-child{width:84px;color:#888;flex-shrink:0;}
+#plan-view .pv-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 8px;}
+#plan-view .pv-kpi div{background:#f7f8fa;border-radius:10px;padding:10px 6px;text-align:center;}
+#plan-view .pv-kpi b{display:block;font-size:16px;color:#111;margin-top:2px;}
+#plan-view .pv-kpi small{font-size:12px;color:#888;}
+#plan-view table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
+#plan-view td,#plan-view th{padding:9px 8px;text-align:right;}
+#plan-view td:first-child,#plan-view th:first-child{text-align:left;padding-left:14px;}
+@media (min-width:900px){
+  #plan-view .pv-body{flex-direction:row;overflow:hidden;}
+  #plan-view .pv-left{flex:1 1 auto;min-width:0;padding:16px;}
+  #plan-view .pv-stage{flex:1;height:auto;}
+  #plan-view .pv-right{width:400px;flex-shrink:0;overflow-y:auto;padding:16px 16px 24px 0;}
+}`;
+  document.head.appendChild(st);
+}
 function _openPlanView() {
+  const pm = _planGet(getProject()); if (!pm) return;
+  _planInjectCss();
   let ov = document.getElementById('plan-view');
-  if (!ov) {
-    ov = document.createElement('div'); ov.id = 'plan-view';
-    ov.style.cssText = 'position:fixed;inset:0;background:#f7f8fa;z-index:8700;display:flex;flex-direction:column;';
-    document.body.appendChild(ov);
-  }
+  if (!ov) { ov = document.createElement('div'); ov.id = 'plan-view'; document.body.appendChild(ov); }
   ov.style.display = 'flex';
-  _planSel = _planSel || 'z11';
+  if (!_planSel || !pm.zones.find(z => z.id === _planSel)) _planSel = 'z11';
+  if (_planLayer === null) _planLayer = (pm.layers && pm.layers[0]) ? pm.layers[0].id : '';
+  _planZoom = { k: 1, x: 0, y: 0 };
+  (pm.layers || []).forEach(l => { const im = new Image(); im.src = l.src; });
   _renderPlanView();
 }
 function _closePlanView() { const ov = document.getElementById('plan-view'); if (ov) ov.style.display = 'none'; }
-function _planSelect(id) { _planSel = id; _renderPlanView(); }
-function _planTogglePt(t) { _planPtFilter[t] = !_planPtFilter[t]; _renderPlanView(); }
-function _renderPlanView() {
+function _planSelect(id) { _planSel = id; _renderPlanView(true); }
+function _planSetLayer(id) { _planLayer = id; _renderPlanView(true); }
+function _planTogglePt(t) { _planPtFilter[t] = !_planPtFilter[t]; _renderPlanView(true); }
+function _planApplyZoom() { const inner = document.querySelector('#plan-view .pv-inner'); if (inner) inner.style.transform = `translate(${_planZoom.x}px,${_planZoom.y}px) scale(${_planZoom.k})`; }
+function _planZoomBy(f, cx, cy) {
+  const stage = document.querySelector('#plan-view .pv-stage'); if (!stage) return;
+  const r = stage.getBoundingClientRect(); if (cx == null) { cx = r.width / 2; cy = r.height / 2; }
+  const k = Math.min(8, Math.max(1, _planZoom.k * f)), ratio = k / _planZoom.k;
+  _planZoom.x = cx - (cx - _planZoom.x) * ratio; _planZoom.y = cy - (cy - _planZoom.y) * ratio; _planZoom.k = k;
+  if (k === 1) { _planZoom.x = 0; _planZoom.y = 0; }
+  _planApplyZoom();
+}
+function _planZoomReset() { _planZoom = { k: 1, x: 0, y: 0 }; _planApplyZoom(); }
+function _planBindStage() {
+  const stage = document.querySelector('#plan-view .pv-stage'); if (!stage) return;
+  const pts = new Map(); let start = null, moved = false, pinch = null;
+  const local = e => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  stage.addEventListener('wheel', e => { e.preventDefault(); const [x, y] = local(e); _planZoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15, x, y); }, { passive: false });
+  stage.addEventListener('pointerdown', e => {
+    pts.set(e.pointerId, local(e)); stage.setPointerCapture(e.pointerId);
+    if (pts.size === 1) { start = { p: local(e), x: _planZoom.x, y: _planZoom.y }; moved = false; }
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), k: _planZoom.k }; moved = true; }
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, local(e));
+    if (pts.size === 2 && pinch) {
+      const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      _planZoomBy((pinch.k * d / pinch.d) / _planZoom.k, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    } else if (pts.size === 1 && start) {
+      const p = local(e), dx = p[0] - start.p[0], dy = p[1] - start.p[1];
+      if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
+      if (moved && _planZoom.k > 1) { _planZoom.x = start.x + dx; _planZoom.y = start.y + dy; _planApplyZoom(); }
+    }
+  });
+  const end = e => {
+    const wasTap = pts.size === 1 && !moved;
+    pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
+    if (wasTap && e.type === 'pointerup') {
+      const el = document.elementFromPoint(e.clientX, e.clientY), zid = el && el.getAttribute && el.getAttribute('data-zone');
+      if (zid) _planSelect(zid);
+    }
+    if (pts.size === 0) start = null;
+  };
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  stage.addEventListener('dblclick', () => _planZoomReset());
+}
+function _renderPlanView(keepScroll) {
   const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
+  const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
   const z = pm.zones.find(x => x.id === _planSel) || pm.zones[0], st = _planZoneStats(pm, z);
   const total = pm.zones.reduce((a, q) => a + _planArea(q.poly), 0);
-  const row = (k, v) => `<div style="display:flex;padding:9px 0;border-bottom:1px solid #f2f2f2;font-size:14px;"><span style="width:96px;color:#888;flex-shrink:0;">${k}</span><span style="color:#111;">${v}</span></div>`;
+  const row = (k, v) => `<div class="pv-row"><span>${k}</span><span>${v}</span></div>`;
   const doors = (pm.doors || []).filter(d => d.zone === z.id);
-  const ptRows = Object.keys(PLAN_PT).filter(t => st.counts[t]).map(t => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><i style="width:8px;height:8px;border-radius:50%;background:${PLAN_PT[t].c};display:inline-block;"></i>${PLAN_PT[t].l} ${st.counts[t]}</span>`).join('') || '—';
-  const lightRows = Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join(' · ') + (z.fan ? ` · 씰링팬 ${z.fan}` : '') || '—';
+  const ptRows = Object.keys(PLAN_PT).filter(t => st.counts[t]).map(t => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;"><i style="width:8px;height:8px;border-radius:50%;background:${PLAN_PT[t].c};display:inline-block;"></i>${PLAN_PT[t].l} ${st.counts[t]}</span>`).join('') || '—';
+  const lightRows = (Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join('<br>') + (z.fan ? `<br>씰링팬 ${z.fan}` : '')) || '—';
+  const layers = pm.layers || [], hasImg = layers.length && pm.imgBox;
   ov.innerHTML = `
-  <div style="background:#fff;border-bottom:1px solid #eef0f5;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
-    <button onclick="_closePlanView()" style="border:none;background:none;font-size:22px;cursor:pointer;padding:0 6px;">‹</button>
-    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;">도면 정보</div><div style="font-size:12px;color:#888;">${esc(pm.name)} · ${pm.width.toLocaleString()} × ${pm.height.toLocaleString()}mm · 합계 ${total.toFixed(1)}㎡ · 천장고 ${pm.ceiling.toLocaleString()}</div></div>
+  <div class="pv-hd">
+    <button class="pv-back" onclick="_closePlanView()" aria-label="닫기">‹</button>
+    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;">도면 정보</div><div style="font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(pm.name)} · ${pm.width.toLocaleString()}×${pm.height.toLocaleString()}mm · ${total.toFixed(1)}㎡</div></div>
   </div>
-  <div class="plan-view-body" style="flex:1;min-height:0;display:flex;flex-wrap:wrap;overflow-y:auto;">
-    <div style="flex:1 1 520px;min-width:0;padding:16px;display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">${Object.keys(PLAN_PT).map(t => `<button onclick="_planTogglePt('${t}')" style="border:1px solid ${_planPtFilter[t] ? PLAN_PT[t].c : '#ddd'};background:${_planPtFilter[t] ? PLAN_PT[t].c : '#fff'};color:${_planPtFilter[t] ? '#fff' : '#666'};border-radius:16px;padding:5px 11px;font-size:12px;cursor:pointer;">${PLAN_PT[t].l}</button>`).join('')}<span style="font-size:12px;color:#e53935;align-self:center;margin-left:4px;">━ 신설 벽</span></div>
-      <div style="background:#fff;border-radius:12px;padding:8px;aspect-ratio:${pm.width + 2200}/${pm.height + 2200};max-height:calc(100vh - 170px);">${_planSvg(pm, { dims: true, points: true, click: true, sel: z.id, ptFilter: _planPtFilter })}</div>
-    </div>
-    <div style="flex:1 1 340px;min-width:0;padding:16px;display:flex;flex-direction:column;gap:12px;">
-      <div style="background:#fff;border-radius:12px;padding:16px 18px;">
-        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">${esc(z.name)}${z.alias ? `<span style="font-size:13px;color:#888;font-weight:500;margin-left:6px;">${esc(z.alias)}</span>` : ''}</div>
-        ${row('크기', `${st.w.toLocaleString()} × ${st.h.toLocaleString()}mm`)}${row('바닥 면적', st.area.toFixed(2) + '㎡ (' + (st.area / 3.3058).toFixed(1) + '평)')}${row('둘레', st.perim.toFixed(1) + 'm')}${row('벽 면적', '약 ' + st.wall.toFixed(1) + '㎡ (천장고 ' + ((z.ceiling || pm.ceiling) / 1000) + 'm)')}${row('바닥 마감', esc(z.floor || '—'))}${row('전기', ptRows)}${row('조명', lightRows)}${row('문', doors.length ? doors.map(d => `${esc(d.type)} ${esc(d.size)}`).join('<br>') : '—')}
+  <div class="pv-body">
+    <div class="pv-left">
+      <div class="pv-chips">${pm.zones.map(q => `<button class="pv-chip zone${q.id === z.id ? ' on' : ''}" onclick="_planSelect('${q.id}')">${esc(q.name)}</button>`).join('')}</div>
+      <div class="pv-chips">${hasImg ? layers.map(l => `<button class="pv-chip${_planLayer === l.id ? ' on' : ''}" onclick="_planSetLayer('${l.id}')">${esc(l.label)}</button>`).join('') + `<button class="pv-chip${!_planLayer ? ' on' : ''}" onclick="_planSetLayer('')">구역도</button>` : ''}<span style="width:1px;background:#e5e5e5;flex-shrink:0;margin:4px 2px;"></span>${Object.keys(PLAN_PT).map(t => `<button class="pv-chip" onclick="_planTogglePt('${t}')" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};border-color:${PLAN_PT[t].c};color:#fff;` : ''}">${PLAN_PT[t].l}</button>`).join('')}</div>
+      <div class="pv-stage"><div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '' })}</div>
+        <div class="pv-zoom"><button onclick="_planZoomBy(1.4)" aria-label="확대">＋</button><button onclick="_planZoomBy(1/1.4)" aria-label="축소">－</button><button onclick="_planZoomReset()" aria-label="원래 크기" style="font-size:13px;">1:1</button></div>
       </div>
-      <div style="background:#fff;border-radius:12px;padding:6px 0;overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;">
-          <tr style="color:#888;text-align:right;"><th style="text-align:left;padding:8px 14px;font-weight:500;">구역</th><th style="font-weight:500;">면적㎡</th><th style="font-weight:500;">둘레m</th><th style="font-weight:500;">콘센트</th><th style="font-weight:500;">조명</th><th style="padding-right:14px;font-weight:500;">스위치</th></tr>
-          ${pm.zones.map(q => { const s = _planZoneStats(pm, q); return `<tr onclick="_planSelect('${q.id}')" style="cursor:pointer;text-align:right;border-top:1px solid #f2f2f2;${q.id === z.id ? 'background:#fff6ee;font-weight:600;' : ''}"><td style="text-align:left;padding:8px 14px;">${esc(q.name)}</td><td>${s.area.toFixed(1)}</td><td>${s.perim.toFixed(1)}</td><td>${(s.counts.outlet || 0) + (s.counts.wet || 0)}</td><td>${s.lights}</td><td style="padding-right:14px;">${s.counts.sw || 0}</td></tr>`; }).join('')}
+      <div style="font-size:12px;color:#999;">구역을 탭하면 정보가 바뀌어요 · 두 손가락으로 확대</div>
+    </div>
+    <div class="pv-right">
+      <div class="pv-card">
+        <div style="font-size:19px;font-weight:700;margin-bottom:10px;">${esc(z.name)}${z.alias ? `<span style="font-size:13px;color:#888;font-weight:500;margin-left:6px;">${esc(z.alias)}</span>` : ''}</div>
+        <div class="pv-kpi"><div><small>바닥 면적</small><b>${st.area.toFixed(1)}㎡</b><small>${(st.area / 3.3058).toFixed(1)}평</small></div><div><small>크기</small><b>${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}</b><small>m</small></div><div><small>둘레</small><b>${st.perim.toFixed(1)}m</b><small>벽 ${st.wall.toFixed(1)}㎡</small></div></div>
+        ${row('치수', `${st.w.toLocaleString()} × ${st.h.toLocaleString()}mm`)}${row('천장고', ((z.ceiling || pm.ceiling) / 1000) + 'm')}${row('바닥 마감', esc(z.floor || '—'))}${row('전기', ptRows)}${row('조명', lightRows)}${row('문', doors.length ? doors.map(d => `${esc(d.type)} ${esc(d.size)}<br><span style="color:#999;font-size:12px;">${esc(d.spec || '')}</span>`).join('<br>') : '—')}
+      </div>
+      <div class="pv-card" style="padding:4px 0;overflow-x:auto;">
+        <table>
+          <tr style="color:#888;"><th style="font-weight:500;">구역</th><th style="font-weight:500;">면적㎡</th><th style="font-weight:500;">둘레m</th><th style="font-weight:500;">콘센트</th><th style="font-weight:500;">조명</th><th style="font-weight:500;padding-right:14px;">스위치</th></tr>
+          ${pm.zones.map(q => { const s = _planZoneStats(pm, q); return `<tr onclick="_planSelect('${q.id}')" style="cursor:pointer;border-top:1px solid #f2f2f2;${q.id === z.id ? 'background:#fff6ee;font-weight:600;' : ''}"><td>${esc(q.name)}</td><td>${s.area.toFixed(1)}</td><td>${s.perim.toFixed(1)}</td><td>${(s.counts.outlet || 0) + (s.counts.wet || 0)}</td><td>${s.lights}</td><td style="padding-right:14px;">${s.counts.sw || 0}</td></tr>`; }).join('')}
+          <tr style="border-top:2px solid #eee;font-weight:700;"><td>합계</td><td>${total.toFixed(1)}</td><td></td><td>${(pm.points || []).filter(p => p.t === 'outlet' || p.t === 'wet').length}</td><td>${pm.zones.reduce((a, q) => a + _planZoneStats(pm, q).lights, 0)}</td><td style="padding-right:14px;">${(pm.points || []).filter(p => p.t === 'sw').length}</td></tr>
         </table>
       </div>
-      <div style="font-size:12px;color:#999;line-height:1.6;">치수는 도면 그리드(벽 중심선) 기준이라 실제 마감 면적과 차이가 있을 수 있어요. 전기 포인트 위치는 전기도 판독값이에요.</div>
+      <div style="font-size:12px;color:#999;line-height:1.6;padding:0 4px;">${esc(pm.source || '')}. 면적은 벽 중심선 기준이라 실제 마감 면적과 차이가 있을 수 있어요.</div>
     </div>
   </div>`;
+  _planBindStage(); _planApplyZoom();
+  if (keepScroll) { const r = ov.querySelector('.pv-right'); if (r) r.scrollTop = rightScroll; const b = ov.querySelector('.pv-body'); if (b) b.scrollTop = bodyScroll; }
 }
 function _renderEstimateCard() {
   const el = document.getElementById('iv-estimate-card'); if (!el) return;
