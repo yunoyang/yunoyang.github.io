@@ -1,0 +1,13 @@
+// 기존 firestore.rules의 match /databases/{database}/documents { ... } 안에 추가
+// 이메일 키 = 이메일의 '.'을 '_'로 바꾼 값 (앱의 _notifUserKey와 동일)
+match /vb_notifications/{id} {
+  function myKey() { return request.auth.token.email.lower().replace('\\.', '_'); }
+  // 로그인한 사용자는 다른 사람에게 알림을 만들 수 있음(본인이 actor일 때만)
+  allow create: if request.auth != null
+    && request.resource.data.actorEmail == request.auth.token.email.lower()
+    && request.resource.data.read == false;
+  // 받는 사람만 읽고, read 필드만 바꿀 수 있음
+  allow read: if request.auth != null && resource.data.to == myKey();
+  allow update: if request.auth != null && resource.data.to == myKey()
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+}

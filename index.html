@@ -3772,7 +3772,8 @@ button, input, textarea, select { font-family:var(--font); }
         <span class="pchev"><svg class="icon" width="15" height="15"><use href="#icon-chevron-down"/></svg></span>
       </button>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" style="display:flex;align-items:center;">
+      <button id="notif-btn" onclick="openNotifPanel()" title="알림" aria-label="알림" style="display:none;"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="white"/><path d="M14.5 24.5V18.5a5.5 5.5 0 0 1 11 0v6l1.5 1.5h-14l1.5-1.5Z" stroke="black" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 28.5a2.2 2.2 0 0 0 4 0" stroke="black" stroke-width="1.6" stroke-linecap="round"/></svg><span class="notif-badge" style="display:none;"></span></button>
       <button id="project-menu-btn" onclick="toggleProjectMenu(event)" title="메뉴" style="background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z" fill="white"/>
@@ -6414,6 +6415,229 @@ function _showIabTopBanner() {
   document.body.prepend(div);
 }
 
+// ===== 알림 (앱 안 알림함 + 푸시) =====
+// 클라이언트는 이벤트가 생기면 받는 사람마다 vb_notifications 문서를 만든다.
+// 푸시 발송(APNs/FCM), 묶음·방해금지 처리는 functions/ 의 Cloud Function이 이 문서 생성을 트리거로 수행.
+const NOTIF_CATS = {
+  collab:   { label: '협업', desc: '초대 · 초대 수락 · 권한 변경' },
+  activity: { label: '현장 사진 · 기록', desc: '공동작업자가 사진이나 미팅 기록을 올렸을 때' },
+  reminder: { label: '일정 리마인더', desc: '공정 시작 전날 · 발주 마감' },
+  estimate: { label: '견적 · 스펙북', desc: '견적 수정 · 선택이 필요한 품목' },
+};
+const NOTIF_TYPES = {
+  invite:          { cat: 'collab',   icon: '✉️' },
+  invite_accepted: { cat: 'collab',   icon: '🤝' },
+  photo:           { cat: 'activity', icon: '📷' },
+  meeting:         { cat: 'activity', icon: '📝' },
+};
+let _notifItems = [], _notifUnsub = null, _notifKey = null, _notifPrefs = null;
+function _notifUserKey(email) { return String(email || '').toLowerCase().replace(/\./g, '_'); }
+function _projMemberEmails(proj) {
+  const s = new Set();
+  if (proj?.owner?.email) s.add(proj.owner.email.toLowerCase());
+  (proj?.collaborators || []).forEach(c => { if (c?.email) s.add(c.email.toLowerCase()); });
+  return [...s];
+}
+async function _vbNotify(type, toEmails, data) {
+  try {
+    const me = String(state.user?.email || '').toLowerCase();
+    const to = [...new Set((toEmails || []).map(e => String(e || '').toLowerCase()).filter(e => e && e !== me))];
+    if (!to.length || !state.loggedIn) return;
+    if (!_db) { const ok = await _initFirebase(); if (!ok || !_db) return; }
+    const batch = _db.batch();
+    to.forEach(email => {
+      batch.set(_db.collection('vb_notifications').doc(), {
+        to: _notifUserKey(email), toEmail: email, type, cat: (NOTIF_TYPES[type] || {}).cat || 'activity',
+        title: data.title || '', body: data.body || '',
+        projectId: data.projectId || '', projectName: data.projectName || '', tab: data.tab || '', refId: data.refId || '',
+        groupKey: data.groupKey || '', count: data.count || 1,
+        actorEmail: me, actorName: state.user?.name || me.split('@')[0],
+        read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    await batch.commit();
+  } catch (e) { console.warn('[notify]', type, e.code || e.message); }
+}
+function _notifProjInfo(proj) { return { projectId: proj?.cloudId || '', projectName: proj?.name || '시공 프로젝트' }; }
+function _notifPhotoUploaded(proj, proc, n) {
+  if (!proj?.cloudId) return;
+  const actor = state.user?.name || '공동작업자';
+  _vbNotify('photo', _projMemberEmails(proj), { ..._notifProjInfo(proj), title: proj.name || '현장 사진', body: `${actor}님이 현장 사진 ${n}장을 올렸어요 · ${proc.type || proc.name}`, tab: 'sitephotos', refId: proc.type || proc.name, count: n, groupKey: `photo:${proj.cloudId}:${state.user?.email || ''}` });
+}
+function _notifMeetingAdded(proj, meeting) {
+  if (!proj?.cloudId) return;
+  const actor = state.user?.name || '공동작업자';
+  _vbNotify('meeting', _projMemberEmails(proj), { ..._notifProjInfo(proj), title: proj.name || '미팅 기록', body: `${actor}님이 기록을 남겼어요 · ${meeting.title || '새 기록'}`, tab: 'meeting', refId: meeting.id, groupKey: `meeting:${proj.cloudId}:${state.user?.email || ''}` });
+}
+async function _notifInit() {
+  if (!state.loggedIn || !state.user?.email) return;
+  const key = _notifUserKey(state.user.email);
+  if (_notifUnsub && _notifKey === key) return;
+  try {
+    const ok = await _initFirebase(); if (!ok || !_db) return;
+    await _waitForFirebaseUser(4000);
+    if (_notifUnsub) _notifUnsub();
+    _notifKey = key;
+    // where + orderBy는 복합 색인이 필요해서 정렬은 클라이언트에서
+    _notifUnsub = _db.collection('vb_notifications').where('to', '==', key).limit(100).onSnapshot(snap => {
+      _notifItems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      _renderNotifBadge();
+      if (document.getElementById('notif-panel')?.style.display === 'flex') _renderNotifPanel();
+    }, e => console.warn('[notif] listen', e.code || e.message));
+    _db.collection('vb_users').doc(key).get().then(d => { _notifPrefs = (d.exists && d.data().notifPrefs) || null; }).catch(() => {});
+    _pushRegisterIfGranted();
+  } catch (e) { console.warn('[notif] init', e); }
+}
+function _notifStop() { if (_notifUnsub) _notifUnsub(); _notifUnsub = null; _notifKey = null; _notifItems = []; _renderNotifBadge(); }
+function _renderNotifBadge() {
+  const btn = document.getElementById('notif-btn'); if (!btn) return;
+  btn.style.display = state.loggedIn ? '' : 'none';
+  const n = _notifItems.filter(x => !x.read).length, b = btn.querySelector('.notif-badge');
+  if (b) { b.textContent = n > 99 ? '99+' : n; b.style.display = n ? '' : 'none'; }
+}
+function _notifTimeAgo(ts) {
+  const t = ts?.toMillis?.() || 0; if (!t) return '방금';
+  const m = Math.floor((Date.now() - t) / 60000);
+  if (m < 1) return '방금'; if (m < 60) return m + '분 전';
+  const h = Math.floor(m / 60); if (h < 24) return h + '시간 전';
+  const d = Math.floor(h / 24); return d < 7 ? d + '일 전' : new Date(t).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+}
+function _notifInjectCss() {
+  if (document.getElementById('notif-css')) return;
+  const st = document.createElement('style'); st.id = 'notif-css';
+  st.textContent = `
+#notif-btn{position:relative;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;margin-right:6px;}
+#notif-btn .notif-badge{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e8731a;color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;box-sizing:border-box;}
+#notif-panel{position:fixed;inset:0;z-index:9200;display:none;flex-direction:column;background:#f7f8fa;padding-top:env(safe-area-inset-top);}
+#notif-panel .np-hd{background:#fff;border-bottom:1px solid #eef0f5;display:flex;align-items:center;gap:6px;padding:10px 12px;flex-shrink:0;}
+#notif-panel .np-hd b{flex:1;font-size:17px;}
+#notif-panel .np-hd button{border:none;background:none;cursor:pointer;color:#555;font-size:13px;padding:8px;}
+#notif-panel .np-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(24px + env(safe-area-inset-bottom));max-width:640px;width:100%;margin:0 auto;box-sizing:border-box;}
+#notif-panel .np-item{display:flex;gap:12px;background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;align-items:flex-start;}
+#notif-panel .np-item.unread{box-shadow:inset 3px 0 0 #e8731a;}
+#notif-panel .np-ic{width:36px;height:36px;border-radius:50%;background:#f4f4f4;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+#notif-panel .np-t{font-size:14px;color:#111;line-height:1.45;}
+#notif-panel .np-m{font-size:12px;color:#999;margin-top:4px;}
+#notif-panel .np-push{background:#111;color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:13.5px;line-height:1.45;}
+#notif-panel .np-push button{background:#fff;color:#111;border:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;}
+#notif-panel .np-set{background:#fff;border-radius:12px;padding:4px 16px;margin-bottom:12px;}
+#notif-panel .np-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #f2f2f2;}
+#notif-panel .np-row:last-child{border-bottom:none;}
+#notif-panel .np-row div{flex:1;}
+#notif-panel .np-row small{display:block;color:#999;font-size:12px;margin-top:2px;}
+#notif-panel .np-sw{width:46px;height:28px;border-radius:14px;background:#ddd;position:relative;border:none;cursor:pointer;flex-shrink:0;transition:background .15s;}
+#notif-panel .np-sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+#notif-panel .np-sw.on{background:#e8731a;}
+#notif-panel .np-sw.on::after{left:21px;}`;
+  document.head.appendChild(st);
+}
+let _notifView = 'list';
+function openNotifPanel() {
+  _notifInjectCss();
+  let p = document.getElementById('notif-panel');
+  if (!p) { p = document.createElement('div'); p.id = 'notif-panel'; document.body.appendChild(p); }
+  _notifView = 'list'; p.style.display = 'flex'; _renderNotifPanel();
+}
+function closeNotifPanel() { const p = document.getElementById('notif-panel'); if (p) p.style.display = 'none'; }
+function _notifPrefsGet() {
+  const d = { collab: true, activity: true, reminder: true, estimate: true, quiet: true };
+  return { ...d, ...(_notifPrefs || {}) };
+}
+async function _notifTogglePref(k) {
+  const p = _notifPrefsGet(); p[k] = !p[k]; _notifPrefs = p; _renderNotifPanel();
+  try { await _db.collection('vb_users').doc(_notifUserKey(state.user.email)).set({ notifPrefs: p }, { merge: true }); }
+  catch (e) { showToastMessage('⚠️ 알림 설정 저장 실패'); }
+}
+function _renderNotifPanel() {
+  const p = document.getElementById('notif-panel'); if (!p) return;
+  const pushBanner = _isNativeApp() && _pushState !== 'granted'
+    ? `<div class="np-push"><div style="flex:1;">${_pushState === 'denied' ? '푸시 알림이 꺼져 있어요. 설정 앱 → 바이브스페이스 → 알림에서 켤 수 있어요.' : '초대·현장 사진 소식을 푸시로 받아보세요.'}</div>${_pushState === 'denied' ? '' : '<button onclick="_pushRequest(true)">알림 켜기</button>'}</div>` : '';
+  if (_notifView === 'settings') {
+    const pr = _notifPrefsGet();
+    p.innerHTML = `<div class="np-hd"><button onclick="_notifView='list';_renderNotifPanel()" style="font-size:24px;color:#111;">‹</button><b>알림 설정</b></div>
+      <div class="np-body">${pushBanner}
+        <div class="np-set">${Object.entries(NOTIF_CATS).map(([k, c]) => `<div class="np-row"><div>${c.label}<small>${c.desc}</small></div><button class="np-sw${pr[k] ? ' on' : ''}" onclick="_notifTogglePref('${k}')" aria-label="${c.label}"></button></div>`).join('')}</div>
+        <div class="np-set"><div class="np-row"><div>방해 금지 (밤 10시 ~ 오전 8시)<small>이 시간의 푸시는 아침에 모아서 보내요. 초대 알림은 바로 보내요.</small></div><button class="np-sw${pr.quiet ? ' on' : ''}" onclick="_notifTogglePref('quiet')" aria-label="방해 금지"></button></div></div>
+        <div style="font-size:12px;color:#999;padding:0 4px;line-height:1.6;">앱 안 알림함에는 설정과 관계없이 모든 소식이 쌓여요.</div>
+      </div>`;
+    return;
+  }
+  const items = _notifItems;
+  p.innerHTML = `<div class="np-hd"><button onclick="closeNotifPanel()" style="font-size:24px;color:#111;">‹</button><b>알림</b>
+      ${items.some(x => !x.read) ? '<button onclick="_notifMarkAllRead()">모두 읽음</button>' : ''}<button onclick="_notifView=\'settings\';_renderNotifPanel()">설정</button></div>
+    <div class="np-body">${pushBanner}
+      ${items.length ? items.map(n => `<div class="np-item${n.read ? '' : ' unread'}" onclick="_notifOpen('${n.id}')"><div class="np-ic">${(NOTIF_TYPES[n.type] || {}).icon || '🔔'}</div><div style="flex:1;min-width:0;"><div class="np-t">${esc(n.body || n.title)}</div><div class="np-m">${esc(n.projectName || '')} · ${_notifTimeAgo(n.createdAt)}</div></div></div>`).join('')
+      : '<div style="text-align:center;color:#999;font-size:14px;padding:60px 0;">아직 알림이 없어요</div>'}
+    </div>`;
+}
+async function _notifMarkRead(ids) {
+  if (!ids.length || !_db) return;
+  const batch = _db.batch(); ids.forEach(id => batch.update(_db.collection('vb_notifications').doc(id), { read: true }));
+  try { await batch.commit(); } catch (e) { console.warn('[notif] read', e.code || e.message); }
+}
+function _notifMarkAllRead() { _notifMarkRead(_notifItems.filter(x => !x.read).map(x => x.id)); }
+function _notifOpen(id) {
+  const n = _notifItems.find(x => x.id === id); if (!n) return;
+  if (!n.read) _notifMarkRead([id]);
+  closeNotifPanel();
+  _notifRoute(n);
+}
+function _notifRoute(n) {
+  if (n.type === 'invite') { if (n.refId) _processInviteToken(n.refId); return; }
+  const proj = state.projects.find(p => p.cloudId && p.cloudId === n.projectId);
+  if (!proj) { showToastMessage('프로젝트를 찾을 수 없어요'); return; }
+  state.currentProjectId = proj.id; save(); goTo('main'); renderAll();
+  if (n.tab) { const btn = document.getElementById('tab-btn-' + n.tab); if (btn) switchMainTab(n.tab, btn); }
+}
+// ── 푸시 토큰 (Capacitor PushNotifications) ──
+// iOS는 APNs 토큰, Android는 FCM 토큰이 온다. vb_users/{key}.pushTokens 에 저장.
+let _pushState = 'unknown', _pushListenersOn = false;
+function _pushPlugin() { return _isNativeApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications; }
+async function _pushRegisterIfGranted() {
+  const P = _pushPlugin(); if (!P) return;
+  try { const s = await P.checkPermissions(); _pushState = s.receive; if (s.receive === 'granted') _pushRegister(); } catch (e) {}
+}
+// 맥락 요청: 초대를 보내거나 받았을 때, 알림함 배너에서. 한 번 묻고 나면 다시 묻지 않음.
+async function _pushRequest(force) {
+  const P = _pushPlugin(); if (!P) return;
+  try {
+    let s = await P.checkPermissions(); _pushState = s.receive;
+    if (s.receive === 'prompt' || s.receive === 'prompt-with-rationale') {
+      if (!force && localStorage.getItem('vb_push_asked')) return;
+      localStorage.setItem('vb_push_asked', '1');
+      s = await P.requestPermissions(); _pushState = s.receive;
+    }
+    if (s.receive === 'granted') _pushRegister();
+  } catch (e) { console.warn('[push] permission', e); }
+  if (document.getElementById('notif-panel')?.style.display === 'flex') _renderNotifPanel();
+}
+async function _pushRegister() {
+  const P = _pushPlugin(); if (!P) return;
+  if (!_pushListenersOn) {
+    _pushListenersOn = true;
+    P.addListener('registration', async t => {
+      try {
+        if (!_db || !state.user?.email) return;
+        const platform = window.Capacitor.getPlatform();
+        await _db.collection('vb_users').doc(_notifUserKey(state.user.email)).set({
+          pushTokens: firebase.firestore.FieldValue.arrayUnion({ token: t.value, platform, kind: platform === 'ios' ? 'apns' : 'fcm' }),
+          pushUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      } catch (e) { console.warn('[push] token save', e.code || e.message); }
+    });
+    P.addListener('registrationError', e => console.warn('[push] registration error', e && e.error));
+    // 앱이 켜져 있을 때 온 푸시 → 알림함이 실시간으로 갱신되므로 토스트만
+    P.addListener('pushNotificationReceived', n => { if (n && (n.body || n.title)) showToastMessage('🔔 ' + (n.body || n.title)); });
+    P.addListener('pushNotificationActionPerformed', a => {
+      const d = (a && a.notification && a.notification.data) || {};
+      _notifRoute({ type: d.type, projectId: d.projectId, tab: d.tab, refId: d.refId });
+      if (d.notifId) _notifMarkRead([d.notifId]);
+    });
+  }
+  try { await P.register(); } catch (e) { console.warn('[push] register', e); }
+}
+
 // Capacitor 네이티브 쉘(iOS/Android 앱) 안에서 실행 중인지 확인
 function _isNativeApp() {
   return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -6608,6 +6832,7 @@ function handleGoogleResponse(response) {
       await _checkWithdrawRecovery();
       await _autoUploadOnLogin();
       _loadContractors(); // 로그인 후 업체 DB 재로드 (Firestore 권한 확보 후)
+      _notifInit();
     });
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
   } catch(e) { alert('로그인 오류가 발생했습니다.'); }
@@ -7445,6 +7670,7 @@ function handleMenuLogin() {
 function updateLoginUI() {
   // 프로필 아바타 버튼
   _renderProfileAvatar();
+  if (typeof _renderNotifBadge === 'function') _renderNotifBadge();
   _updateAdminMenuVisibility();
   // 계정 카드 (데스크탑 드롭다운 + 모바일 시트)
   _updateMenuAccountCard();
@@ -7572,6 +7798,7 @@ function _avatarColor(str) {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 function doLogout() {
+  _notifStop();
   state.loggedIn = false;
   state.user = {email:'', name:''};
   localStorage.removeItem('vibespace_session'); // 세션 완전 삭제
@@ -14732,6 +14959,7 @@ async function _handleFirebaseUser(user) {
     await _checkWithdrawRecovery();
     await _autoUploadOnLogin();
     _loadContractors();
+    _notifInit();
     if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
   } catch(e) { console.warn('_handleFirebaseUser err:', e); }
 }
@@ -15995,6 +16223,8 @@ async function generateInviteLink() {
 
   try {
     await _db.collection('vb_invites').doc(token).set(inviteData);
+    _vbNotify('invite', [email], { projectId: proj.cloudId, projectName: inviteData.projectName, title: '공동작업 초대', body: `${state.user.name || ''}님이 '${inviteData.projectName}'에 ${_normalizeRole(role)}로 초대했어요`, refId: token });
+    _pushRequest();
     if (!proj.invites) proj.invites = [];
     proj.invites.push({ token, email, role, createdAt: new Date().toISOString(), expiresAt });
     save();
@@ -16234,6 +16464,8 @@ async function _acceptInvite(token, invite, cloudProjData) {
       'meta.collaborators': firebase.firestore.FieldValue.arrayUnion(collaboratorEntry),
     });
     await _db.collection('vb_invites').doc(token).update({ used: true });
+    _vbNotify('invite_accepted', [invite.ownerEmail], { projectId: invite.projectId, projectName: invite.projectName, title: '초대 수락', body: `${state.user.name || state.user.email}님이 '${invite.projectName}' 초대를 수락했어요`, tab: 'info' });
+    _pushRequest();
     _saveUserIndex(invite.projectId); // 협업자도 vb_users 인덱스에 등록 — 안 하면 새 기기/재접속 시 프로젝트를 못 찾을 수 있음
 
     const remoteProj = cloudProjData.projectData || {};
@@ -16825,6 +17057,7 @@ window.addEventListener('load', () => {
   _checkInviteOnLoad();
   _loadBrandLogo(); // Firestore 최신 로고 적용
   _loadContractors(); // 업체 DB 로드
+  _notifInjectCss(); _renderNotifBadge(); _notifInit();
   // 앱 시작 시 클라우드 동기화 (로그인 상태면 항상 실행)
   _syncFromCloudOnStartup();
   // Instagram IAB 감지 → 상단 배너 표시
@@ -17889,6 +18122,7 @@ function _onSitePhotoFile(input, key) {
       proc.updatedAt = Date.now();
       save();
       _syncProcessesToCloud(proj);
+      _notifPhotoUploaded(proj, proc, uploaded.length);
       showToastMessage(`✅ 사진 ${uploaded.length > 1 ? uploaded.length + '장' : ''}추가됐습니다`);
     }
     _renderSitePhotosTab();
@@ -19006,6 +19240,7 @@ async function saveMeeting() {
     };
     proj.meetings.push(meeting);
     _saveMeetingImgLocal(meeting.id, imgSnapshot);
+    _notifMeetingAdded(proj, meeting);
     save();
     if (proj.cloudId) { try { await _syncMeetingsToCloud(proj); } catch(e) { console.warn('[saveMeeting] cloud sync wait failed:', e); } }
     closeMeetingAdd();

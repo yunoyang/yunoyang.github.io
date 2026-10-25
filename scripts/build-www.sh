@@ -11,6 +11,7 @@ rsync -a --delete \
   --exclude 'android' \
   --exclude 'www' \
   --exclude 'scripts' \
+  --exclude 'functions' \
   --exclude 'package.json' \
   --exclude 'package-lock.json' \
   --exclude 'capacitor.config.json' \
