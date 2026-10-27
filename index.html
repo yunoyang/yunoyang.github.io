@@ -3598,6 +3598,16 @@ button, input, textarea, select { font-family:var(--font); }
 .vs2-step.done .vs2-step-d { color:#9aa3ad; }
 .vs2-pill { align-self:flex-start; font-size:12px; font-weight:500; color:#333d4b; background:#f2f4f6; border-radius:6px; padding:4px 8px; }
 .vs2-step.sel .vs2-step-t > span { text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:2px; }
+#tab-plan:not(.vs2-detail) #work-cards, #tab-plan:not(.vs2-detail) #vs2-phase-head, #tab-plan:not(.vs2-detail) #vs2-detail-hd { display:none !important; }
+body.vs2-detail-on #vs2-overview, body.vs2-detail-on #vs2-seg, #tab-plan.vs2-detail #vs2-timeline, #tab-plan.vs2-detail #vs2-phase-head { display:none !important; }
+#vs2-detail-hd { background:#fff; padding:8px 12px 16px; border-bottom:8px solid #f6f7f9; }
+#vs2-detail-hd .vs2-back { display:flex; align-items:center; gap:2px; border:none; background:none; font-size:15px; color:#333; padding:8px 4px; cursor:pointer; font-family:inherit; }
+#vs2-detail-hd .vs2-dt { font-size:22px; font-weight:700; color:#111; padding:6px 8px 0; letter-spacing:-.02em; }
+#vs2-detail-hd .vs2-dd { font-size:14px; color:#6b7684; padding:4px 8px 0; }
+#vs2-detail-hd .vs2-dk { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:14px 8px 0; }
+#vs2-detail-hd .vs2-dk div { background:#f8f8f8; border-radius:12px; padding:12px 10px; }
+#vs2-detail-hd .vs2-dk small { display:block; font-size:12px; color:#8b95a1; }
+#vs2-detail-hd .vs2-dk b { display:block; font-size:15px; color:#111; margin-top:3px; }
 #vs2-phase-head { padding:12px 20px 0; font-size:15px; font-weight:700; color:#111; background:#fff; scroll-margin-top:56px; }
 #vs2-phase-head span { color:#8b95a1; font-weight:500; margin-left:4px; }
 #vs2-nav { display:none; position:fixed; left:0; right:0; bottom:0; z-index:250; background:#fff; border-top:0.5px solid #dbdbdb; padding-bottom:env(safe-area-inset-bottom); }
@@ -3909,6 +3919,7 @@ body.vs2-on .floating-group { bottom:calc(84px + env(safe-area-inset-bottom,0px)
         </div>
       </div>
       <div id="vs2-timeline"></div>
+      <div id="vs2-detail-hd"></div>
       <div id="vs2-phase-head"></div>
       <div class="cards-area" id="work-cards"></div>
     </div>
@@ -10928,6 +10939,7 @@ function _vs2Go(tab) {
 // switchMainTab 끝에서 호출 — 하단 메뉴·공정|일정 탭·개요 카드 표시 동기화
 function _vs2Sync(tab) {
   _vs2Tab = tab;
+  if (tab !== 'plan' && document.body.classList.contains('vs2-detail-on')) _vs2ClosePhase();
   const navKey = (tab === 'plan' || tab === 'calendar') ? 'plan' : tab;
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
     const on = b.dataset.tab === navKey; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
@@ -10990,24 +11002,45 @@ function _vs2RenderTimeline() {
       const idx = ph.states.findIndex(s => s !== 'done'); const p = ph.procs[idx >= 0 ? idx : 0];
       pill = `<span class="vs2-pill">진행 중 · ${esc(p.name || p.type)} ${(idx >= 0 ? idx : 0) + 1}/${ph.procs.length}</span>`;
     }
-    const sel = _planPhase === ph.id;
+    const sel = false;
     return `<button class="vs2-step ${ph.status}${sel ? ' sel' : ''}" onclick="_vs2OpenPhase('${ph.id}')">
       <span class="vs2-rail"><span class="vs2-dot">${ph.status === 'done' ? check : ''}</span>${i < phases.length - 1 ? '<span class="vs2-line"></span>' : ''}</span>
-      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(ph.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${sel ? 90 : 0}deg);transition:transform .15s"><polyline points="9 6 15 12 9 18"/></svg></span>
+      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(ph.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
         <span class="vs2-step-d">${esc(names.join(' · ')) || '등록된 공정 없음'}</span>${pill}</span></button>`;
   }).join('');
   const hd = document.getElementById('vs2-phase-head');
   if (hd) { const ph = phases.find(x => x.id === _planPhase); hd.innerHTML = ph ? `${esc(ph.label)} 공정 <span>${ph.procs.length}개</span>` : ''; }
 }
+// 단계를 누르면 공정 상세 페이지(해당 단계의 공정 카드)로 이동
 function _vs2OpenPhase(id) {
   const btn = document.querySelector(`.phase-step[data-phase="${id}"]`);
   setPlanPhase(id, btn);
-  const hd = document.getElementById('vs2-phase-head');
-  if (hd) hd.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('tab-plan').classList.add('vs2-detail');
+  document.body.classList.add('vs2-detail-on');
+  _vs2RenderDetailHead();
+  const sc = document.getElementById('main-scroll'); if (sc) sc.scrollTop = 0;
+}
+function _vs2ClosePhase() {
+  document.getElementById('tab-plan')?.classList.remove('vs2-detail');
+  document.body.classList.remove('vs2-detail-on');
+  const sc = document.getElementById('main-scroll'); if (sc) sc.scrollTop = 0;
+}
+function _vs2RenderDetailHead() {
+  const el = document.getElementById('vs2-detail-hd'); const proj = getProject(); if (!el || !proj) return;
+  const ph = _vs2Phases(proj).find(x => x.id === _planPhase); if (!ph) return;
+  const cost = ph.procs.reduce((a, p) => a + _procCost(p), 0);
+  const starts = ph.procs.map(p => p.scheduleStart).filter(Boolean).sort();
+  const ends = ph.procs.map(p => p.scheduleEnd || p.scheduleStart).filter(Boolean).sort();
+  const period = starts.length ? `${_vs2Fmt(starts[0])} - ${_vs2Fmt(ends[ends.length - 1])}` : '미정';
+  const doneN = ph.states.filter(x => x === 'done').length;
+  const stLabel = { done: '완료', current: '진행 중', todo: '예정' }[ph.status];
+  el.innerHTML = `<button class="vs2-back" onclick="_vs2ClosePhase()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>공정 진행</button>
+    <div class="vs2-dt">${esc(ph.label)}</div><div class="vs2-dd">${stLabel} · 공정 ${ph.procs.length}개</div>
+    <div class="vs2-dk"><div><small>기간</small><b>${period}</b></div><div><small>비용</small><b>${cost ? (cost >= 1e8 ? (cost / 1e8).toFixed(1).replace(/\.0$/, '') + '억원' : Math.round(cost / 1e4).toLocaleString() + '만원') : '-'}</b></div><div><small>진행</small><b>${doneN}/${ph.procs.length}</b></div></div>`;
 }
 function _vs2Render() {
   try {
-    _vs2RenderOverview(); _vs2RenderTimeline();
+    _vs2RenderOverview(); _vs2RenderTimeline(); if (document.body.classList.contains('vs2-detail-on')) _vs2RenderDetailHead();
     document.body.classList.toggle('vs2-on', !!document.querySelector('#screen-main.active'));
     if (!document.querySelector('#vs2-nav .vs2-nav-btn svg')) _vs2Sync(_vs2Tab);
   } catch (e) { console.warn('[vs2]', e); }
