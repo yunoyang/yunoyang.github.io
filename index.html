@@ -3569,6 +3569,47 @@ button, input, textarea, select { font-family:var(--font); }
 .export-footer-logo img { height:16px; opacity:.25; filter:grayscale(100%); }
 .export-footer-logo span { font-size:13px; font-weight:600; color:#ccc; letter-spacing:-.3px; }
 </style>
+<style id="vs2-css">
+/* ===== 메인 화면 v2 ===== */
+#screen-main .summary-wrap, #screen-main .tab-section, #plan-phase-bar { display:none !important; }
+.vs2-h { font-size:16px; font-weight:700; color:#111; letter-spacing:-.02em; margin:0 0 8px; }
+#vs2-overview { padding:16px 20px 20px; background:#fff; }
+.vs2-ov-card { display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; background:#f8f8f8; border:none; border-radius:16px; padding:20px; cursor:pointer; font-family:inherit; }
+.vs2-ov-top { display:flex; justify-content:space-between; align-items:center; font-size:16px; color:#111; margin-bottom:10px; }
+.vs2-ov-total { display:flex; align-items:center; gap:4px; font-size:18px; font-weight:700; letter-spacing:-.02em; }
+.vs2-ov-row { display:flex; justify-content:space-between; font-size:14px; color:#62676d; line-height:1.45; }
+.vs2-ov-row b { font-weight:600; color:#3a3f45; }
+#vs2-seg { display:flex; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
+#vs2-seg button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
+#vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
+#vs2-timeline { padding:20px 20px 8px; background:#fff; }
+.vs2-step { display:flex; gap:14px; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; font-family:inherit; }
+.vs2-rail { display:flex; flex-direction:column; align-items:center; width:18px; flex-shrink:0; padding-top:4px; }
+.vs2-dot { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-sizing:border-box; }
+.vs2-step.done .vs2-dot { background:#8b95a1; }
+.vs2-step.current .vs2-dot { background:linear-gradient(135deg,#5084ff,#7b61ff); box-shadow:0 0 0 4px rgba(80,132,255,.15); }
+.vs2-step.todo .vs2-dot { background:#fff; border:1.6px solid #c5ced8; }
+.vs2-line { flex:1; width:0; border-left:1.5px dashed #c5ced8; margin-top:4px; min-height:20px; }
+.vs2-step-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; padding:2px 0 24px; }
+.vs2-step-t { display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:600; color:#111; }
+.vs2-step.done .vs2-step-t > span { color:#8b95a1; }
+.vs2-step.current .vs2-step-t > span { font-weight:700; }
+.vs2-step-d { font-size:14px; color:#6b7684; line-height:1.5; }
+.vs2-step.done .vs2-step-d { color:#9aa3ad; }
+.vs2-pill { align-self:flex-start; font-size:12px; font-weight:500; color:#333d4b; background:#f2f4f6; border-radius:6px; padding:4px 8px; }
+.vs2-step.sel .vs2-step-t > span { text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:2px; }
+#vs2-phase-head { padding:12px 20px 0; font-size:15px; font-weight:700; color:#111; background:#fff; scroll-margin-top:56px; }
+#vs2-phase-head span { color:#8b95a1; font-weight:500; margin-left:4px; }
+#vs2-nav { display:none; position:fixed; left:0; right:0; bottom:0; z-index:250; background:#fff; border-top:0.5px solid #dbdbdb; padding-bottom:env(safe-area-inset-bottom); }
+body.vs2-on #vs2-nav { display:block; }
+#vs2-nav .vs2-nav-in { display:flex; justify-content:space-between; align-items:center; max-width:640px; margin:0 auto; padding:10px 22px; }
+#vs2-nav .vs2-nav-btn { width:44px; height:36px; border:none; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; }
+#vs2-nav .vs2-avatar { width:28px; height:28px; border-radius:50%; background:#e9e3da; border:1px solid #dbdbdb; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#111; overflow:hidden; box-sizing:border-box; }
+#vs2-nav .vs2-avatar img { width:100%; height:100%; object-fit:cover; }
+.vs2-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+body.vs2-on #main-scroll { padding-bottom:calc(68px + env(safe-area-inset-bottom)); }
+body.vs2-on .floating-group { bottom:calc(84px + env(safe-area-inset-bottom,0px)); }
+</style>
 </head>
 <body>
 
@@ -3791,6 +3832,8 @@ button, input, textarea, select { font-family:var(--font); }
     <div class="collab-bar-text" id="collab-bar-text"></div>
   </div>
 
+  <!-- 공사 개요 (v2) -->
+  <div id="vs2-overview"></div>
   <!-- 공사정보 요약 카드 -->
   <div class="summary-wrap">
     <div class="summary-unified">
@@ -3851,6 +3894,9 @@ button, input, textarea, select { font-family:var(--font); }
       </div>
     </div>
 
+    <!-- 공정 | 일정 (v2) -->
+    <div id="vs2-seg"><button data-tab="plan" class="on" onclick="_vs2Go('plan')">공정</button><button data-tab="calendar" onclick="_vs2Go('calendar')">일정</button></div>
+
     <!-- Plan Tab -->
     <div id="tab-plan" style="background:#fff; display:flex; flex-direction:column; flex:1;">
       <!-- 공정 단계 필터 (세그먼트 컨트롤) -->
@@ -3862,6 +3908,8 @@ button, input, textarea, select { font-family:var(--font); }
           <button class="phase-step" data-phase="after" onclick="setPlanPhase('after',this)"><span class="phase-label">공사후</span></button>
         </div>
       </div>
+      <div id="vs2-timeline"></div>
+      <div id="vs2-phase-head"></div>
       <div class="cards-area" id="work-cards"></div>
     </div>
 
@@ -5492,6 +5540,10 @@ button, input, textarea, select { font-family:var(--font); }
       </span>
       <span id="collab-menu-badge-mobile" style="font-size:13px;font-weight:400;color:#333;"></span>
     </button>
+    <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('sitephotos');"><span style="display:flex;align-items:center;gap:8px;">📷&nbsp; 현장 사진</span></button>
+    <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('meeting');"><span style="display:flex;align-items:center;gap:8px;">📝&nbsp; 기록</span></button>
+    <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('matselect');"><span style="display:flex;align-items:center;gap:8px;">🧱&nbsp; 자재 선택</span></button>
+    <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('furniture');"><span style="display:flex;align-items:center;gap:8px;">🛋️&nbsp; 가구 · 가전</span></button>
     <button class="mobile-sheet-item" onclick="goTo('consulting');closeAllMenus();" style="justify-content:space-between;">
       <span style="display:flex;align-items:center;gap:8px;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
@@ -5500,6 +5552,15 @@ button, input, textarea, select { font-family:var(--font); }
     </button>
   </div>
 </div>
+
+<!-- ===== 하단 메뉴 (v2) — body 직속: transform 걸린 .screen 안에서는 position:fixed가 깨짐 ===== -->
+<nav id="vs2-nav" aria-label="주 메뉴"><div class="vs2-nav-in">
+  <button class="vs2-nav-btn on" data-tab="plan" aria-label="공정" onclick="_vs2Go('plan')"></button>
+  <button class="vs2-nav-btn" data-tab="style" aria-label="스타일" onclick="_vs2Go('style')"></button>
+  <button class="vs2-nav-btn" data-tab="specbook" aria-label="스펙" onclick="_vs2Go('specbook')"></button>
+  <button class="vs2-nav-btn" data-tab="content" aria-label="블로그" onclick="_vs2Go('content')"></button>
+  <button class="vs2-nav-btn" aria-label="프로필" onclick="toggleLandingMenu(event)"><span class="vs2-avatar" id="vs2-avatar"></span></button>
+</div></nav>
 
 <!-- ===== BOTTOM SHEET: 서비스 전체 메뉴 (랜딩 프로필) ===== -->
 <div class="overlay" id="landing-menu-sheet">
@@ -7880,6 +7941,7 @@ function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
   document.body.classList.toggle('consulting-bg', screen === 'consulting');
+  document.body.classList.toggle('vs2-on', screen === 'main');
   closeAllMenus();
   // 플로팅 버튼: 메인 화면에서만 표시 (다른 화면에서는 전체 숨김)
   const fab = document.getElementById('floating-add-process');
@@ -8089,6 +8151,7 @@ function updateSummary() {
     else ddEl.style.display = 'none';
   }
   if (menuDdEl) menuDdEl.textContent = ddText;
+  _vs2Render(); _vs2RenderAvatar();
   const menuDdMobileEl = document.getElementById('menu-dday-mobile');
   if (menuDdMobileEl) menuDdMobileEl.textContent = ddText;
   const durationDetailEl = document.getElementById('sum-duration-detail');
@@ -8183,6 +8246,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-sitephotos').style.display = (tab === 'sitephotos' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-specbook').style.display = (tab === 'specbook' && canEdit()) ? '' : 'none';
+  _vs2Sync(tab);
   gtag('event', 'tab_view', { tab_name: tab });
   if (tab === 'specbook') { _renderSpecbookTab(); }
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
@@ -10842,11 +10906,124 @@ function _getProcPhase(proc) {
   return 'finish'; // 어디에도 안 맞는 공정은 플래닝이 아니라 마감공사 쪽에 둠(플래닝에 잘못 섞여 보이는 것 방지)
 }
 
+// ===== 메인 화면 v2 (Figma VSD: 공사 개요 · 공정|일정 · 단계 타임라인 · 하단 메뉴) =====
+const VS2_PHASE_LABEL = { planning: '플래닝', structure: '구조공사', finish: '마감공사', after: '입주' };
+const VS2_ICONS = {
+  plan: { d: ['M 4 11.8 C 4 11.1 4.3 10.5 4.8 10.1 L 12.7 4 C 13.5 3.4 14.5 3.4 15.3 4 L 23.2 10.1 C 23.7 10.5 24 11.1 24 11.8 L 24 22 C 24 23.1 23.1 24 22 24 L 17.5 24 L 17.5 18.5 C 17.5 17.1 16.4 16 15 16 L 13 16 C 11.6 16 10.5 17.1 10.5 18.5 L 10.5 24 L 6 24 C 4.9 24 4 23.1 4 22 Z'], fill: [0] },
+  style: { d: ['M 7 12 L 7 9.5 C 7 7.6 8.6 6 10.5 6 L 17.5 6 C 19.4 6 21 7.6 21 9.5 L 21 12', 'M 4 14.5 C 4 13.1 5.1 12 6.5 12 C 7.9 12 9 13.1 9 14.5 L 9 16 L 19 16 L 19 14.5 C 19 13.1 20.1 12 21.5 12 C 22.9 12 24 13.1 24 14.5 L 24 20 C 24 21.1 23.1 22 22 22 L 6 22 C 4.9 22 4 21.1 4 20 Z', 'M 7 22 L 7 24.5', 'M 21 22 L 21 24.5'], fill: [0, 1] },
+  specbook: { d: ['M 9.5 3.5 L 18.5 3.5 C 20.4 3.5 22 5.1 22 7 L 22 21 C 22 22.9 20.4 24.5 18.5 24.5 L 9.5 24.5 C 7.6 24.5 6 22.9 6 21 L 6 7 C 6 5.1 7.6 3.5 9.5 3.5 Z', 'M 10.5 10 L 17.5 10', 'M 10.5 14 L 17.5 14', 'M 10.5 18 L 14.5 18'], fill: [] },
+  content: { d: ['M 7.5 4 L 20.5 4 C 22.4 4 24 5.6 24 7.5 L 24 20.5 C 24 22.4 22.4 24 20.5 24 L 7.5 24 C 5.6 24 4 22.4 4 20.5 L 4 7.5 C 4 5.6 5.6 4 7.5 4 Z', 'M 9.5 8 L 18.5 8 C 19.3 8 20 8.7 20 9.5 L 20 12 C 20 12.8 19.3 13.5 18.5 13.5 L 9.5 13.5 C 8.7 13.5 8 12.8 8 12 L 8 9.5 C 8 8.7 8.7 8 9.5 8 Z', 'M 8 17.5 L 20 17.5', 'M 8 20.5 L 15 20.5'], fill: [1] },
+};
+function _vs2Icon(key, active) {
+  const ic = VS2_ICONS[key];
+  return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
+}
+let _vs2Tab = 'plan';
+function _vs2Go(tab) {
+  const btn = document.querySelector(`.tab-toggle .tab-btn[onclick*="'${tab}'"]`);
+  switchMainTab(tab, btn);
+  const sc = document.getElementById('main-scroll'); if (sc) sc.scrollTop = 0;
+}
+// switchMainTab 끝에서 호출 — 하단 메뉴·공정|일정 탭·개요 카드 표시 동기화
+function _vs2Sync(tab) {
+  _vs2Tab = tab;
+  const navKey = (tab === 'plan' || tab === 'calendar') ? 'plan' : tab;
+  document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
+    const on = b.dataset.tab === navKey; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
+  });
+  const isPlanGroup = tab === 'plan' || tab === 'calendar';
+  ['vs2-overview', 'vs2-seg'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = isPlanGroup ? '' : 'none'; });
+  document.querySelectorAll('#vs2-seg button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+}
+function _vs2Today() { const t = new Date(); t.setHours(0, 0, 0, 0); return t; }
+function _vs2D(s) { return s ? new Date(s + 'T00:00:00') : null; }
+function _vs2Fmt(s) { const d = _vs2D(s); return d ? `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : ''; }
+function _vs2ProcState(p, today) {
+  const s = _vs2D(p.scheduleStart), e = _vs2D(p.scheduleEnd || p.scheduleStart);
+  if (e && e < today) return 'done';
+  if (s && s <= today && (!e || e >= today)) return 'now';
+  return 'todo';
+}
+function _vs2Phases(proj) {
+  const today = _vs2Today();
+  const procs = (proj.processes || []).filter(p => !p.deleted);
+  const list = PROCESS_CATEGORIES.map(c => {
+    const ps = procs.filter(p => _getProcPhase(p) === c.id)
+      .sort((a, b) => (a.scheduleStart || '9999').localeCompare(b.scheduleStart || '9999'));
+    const st = ps.map(p => _vs2ProcState(p, today));
+    const done = ps.length > 0 && st.every(x => x === 'done');
+    return { id: c.id, label: VS2_PHASE_LABEL[c.id] || c.label, procs: ps, states: st, done, now: st.includes('now') };
+  });
+  // 진행 중 단계: 오늘 진행 중인 공정이 있는 단계, 없으면 아직 끝나지 않은 첫 단계
+  let cur = list.find(x => x.now) || list.find(x => !x.done && x.procs.length);
+  list.forEach(x => { x.status = x === cur ? 'current' : (x.done ? 'done' : 'todo'); });
+  return list;
+}
+function _vs2RenderOverview() {
+  const el = document.getElementById('vs2-overview'); const proj = getProject(); if (!el || !proj) return;
+  let total = 0; const companies = new Set();
+  (proj.processes || []).forEach(p => { if (p.deleted) return; total += _procCost(p); if (p.company) companies.add(p.company); });
+  const ex = _estExtra(proj); total += ex.unlinked + ex.indirect;
+  const furn = _getFurnitureItems().filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  const totalAll = total + (proj.costExcludeFurniture ? 0 : furn);
+  const e = _estGet(proj), c = e ? _estCalc(e) : null;
+  const sub = c ? ['관리비·조정 포함', `직접공사비 <b>${Math.round(c.direct).toLocaleString()}원</b>`]
+    : [`공정 ${(proj.processes || []).filter(p => !p.deleted).length}개`, companies.size ? `참여 업체 <b>${companies.size}곳</b>` : ''];
+  const f = proj.form || {};
+  const period = f.startDate ? `${_vs2Fmt(f.startDate)} - ${f.endDate ? _vs2Fmt(f.endDate) : '미정'}` : '미정';
+  el.innerHTML = `<div class="vs2-h">공사 개요</div>
+    <button class="vs2-ov-card" onclick="goTo('form')">
+      <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span></div>
+      <div class="vs2-ov-row"><span>${sub[0]}</span><span>${sub[1]}</span></div>
+      <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
+    </button>`;
+}
+function _vs2RenderTimeline() {
+  const el = document.getElementById('vs2-timeline'); const proj = getProject(); if (!el || !proj) return;
+  const phases = _vs2Phases(proj);
+  const check = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7"/></svg>';
+  el.innerHTML = `<div class="vs2-h">공정 진행</div>` + phases.map((ph, i) => {
+    const names = ph.procs.length ? ph.procs.map(p => p.name || p.type) : (PROCESS_CATEGORIES.find(c => c.id === ph.id)?.items || []);
+    let pill = '';
+    if (ph.status === 'current' && ph.procs.length) {
+      const idx = ph.states.findIndex(s => s !== 'done'); const p = ph.procs[idx >= 0 ? idx : 0];
+      pill = `<span class="vs2-pill">진행 중 · ${esc(p.name || p.type)} ${(idx >= 0 ? idx : 0) + 1}/${ph.procs.length}</span>`;
+    }
+    const sel = _planPhase === ph.id;
+    return `<button class="vs2-step ${ph.status}${sel ? ' sel' : ''}" onclick="_vs2OpenPhase('${ph.id}')">
+      <span class="vs2-rail"><span class="vs2-dot">${ph.status === 'done' ? check : ''}</span>${i < phases.length - 1 ? '<span class="vs2-line"></span>' : ''}</span>
+      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(ph.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${sel ? 90 : 0}deg);transition:transform .15s"><polyline points="9 6 15 12 9 18"/></svg></span>
+        <span class="vs2-step-d">${esc(names.join(' · ')) || '등록된 공정 없음'}</span>${pill}</span></button>`;
+  }).join('');
+  const hd = document.getElementById('vs2-phase-head');
+  if (hd) { const ph = phases.find(x => x.id === _planPhase); hd.innerHTML = ph ? `${esc(ph.label)} 공정 <span>${ph.procs.length}개</span>` : ''; }
+}
+function _vs2OpenPhase(id) {
+  const btn = document.querySelector(`.phase-step[data-phase="${id}"]`);
+  setPlanPhase(id, btn);
+  const hd = document.getElementById('vs2-phase-head');
+  if (hd) hd.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function _vs2Render() {
+  try {
+    _vs2RenderOverview(); _vs2RenderTimeline();
+    document.body.classList.toggle('vs2-on', !!document.querySelector('#screen-main.active'));
+    if (!document.querySelector('#vs2-nav .vs2-nav-btn svg')) _vs2Sync(_vs2Tab);
+  } catch (e) { console.warn('[vs2]', e); }
+}
+function _vs2RenderAvatar() {
+  const el = document.getElementById('vs2-avatar'); if (!el) return;
+  const url = state.loggedIn && typeof _getUserAvatarUrl === 'function' ? _getUserAvatarUrl() : '';
+  const ini = state.loggedIn && typeof _getUserInitial === 'function' ? _getUserInitial() : '';
+  el.innerHTML = url ? '<img src="' + url + '" alt="">' : esc(ini || '');
+}
+
 function setPlanPhase(phase, btn) {
   _planPhase = phase;
   document.querySelectorAll('.phase-step').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderWorkCards();
+  _vs2RenderTimeline();
 }
 
 function renderWorkCards() {
