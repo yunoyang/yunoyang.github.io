@@ -3590,7 +3590,7 @@ button, input, textarea, select { font-family:var(--font); }
 .vs2-step.current .vs2-dot { background:linear-gradient(135deg,#5084ff,#7b61ff); box-shadow:0 0 0 4px rgba(80,132,255,.15); }
 .vs2-step.todo .vs2-dot { background:#fff; border:1.6px solid #c5ced8; }
 .vs2-line { flex:1; width:0; border-left:1.5px dashed #c5ced8; margin-top:4px; min-height:20px; }
-.vs2-step-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; padding:2px 0 24px; }
+.vs2-step-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; padding:2px 0 20px; }
 .vs2-step-t { display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:600; color:#111; }
 .vs2-step.done .vs2-step-t > span { color:#8b95a1; }
 .vs2-step.current .vs2-step-t > span { font-weight:700; }
@@ -10991,25 +10991,31 @@ function _vs2RenderOverview() {
       <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
     </button>`;
 }
+// 첫 화면 공정 진행: 단계로 나누지 않고 모든 공정을 일정 순으로 펼쳐 보여줌. 누르면 공정 상세 화면.
 function _vs2RenderTimeline() {
   const el = document.getElementById('vs2-timeline'); const proj = getProject(); if (!el || !proj) return;
-  const phases = _vs2Phases(proj);
+  const today = _vs2Today();
+  const procs = (proj.processes || []).map((p, i) => ({ p, i })).filter(x => !x.p.deleted)
+    .sort((a, b) => (a.p.scheduleStart || '9999').localeCompare(b.p.scheduleStart || '9999') || a.i - b.i).map(x => x.p);
+  if (!procs.length) {
+    el.innerHTML = `<div class="vs2-h">공정 진행</div><div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">등록된 공정이 없어요<br><button onclick="addDefaultProcesses()" style="margin-top:16px;background:#111;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;">기본 공정 불러오기</button></div>`;
+    return;
+  }
+  const st = procs.map(p => p.completed ? 'done' : _vs2ProcState(p, today));
+  let cur = st.indexOf('now'); if (cur < 0) cur = st.findIndex(s => s !== 'done');
   const check = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7"/></svg>';
-  el.innerHTML = `<div class="vs2-h">공정 진행</div>` + phases.map((ph, i) => {
-    const names = ph.procs.length ? ph.procs.map(p => p.name || p.type) : (PROCESS_CATEGORIES.find(c => c.id === ph.id)?.items || []);
-    let pill = '';
-    if (ph.status === 'current' && ph.procs.length) {
-      const idx = ph.states.findIndex(s => s !== 'done'); const p = ph.procs[idx >= 0 ? idx : 0];
-      pill = `<span class="vs2-pill">진행 중 · ${esc(p.name || p.type)} ${(idx >= 0 ? idx : 0) + 1}/${ph.procs.length}</span>`;
-    }
-    const sel = false;
-    return `<button class="vs2-step ${ph.status}${sel ? ' sel' : ''}" onclick="_vs2OpenPhase('${ph.id}')">
-      <span class="vs2-rail"><span class="vs2-dot">${ph.status === 'done' ? check : ''}</span>${i < phases.length - 1 ? '<span class="vs2-line"></span>' : ''}</span>
-      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(ph.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
-        <span class="vs2-step-d">${esc(names.join(' · ')) || '등록된 공정 없음'}</span>${pill}</span></button>`;
+  el.innerHTML = `<div class="vs2-h">공정 진행 <span style="color:#8b95a1;font-weight:500;">${procs.length}</span></div>` + procs.map((p, i) => {
+    const status = i === cur ? 'current' : (st[i] === 'done' ? 'done' : 'todo');
+    const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
+    const period = s ? (e && e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
+    const cost = _procCost(p);
+    const meta = [period, p.company, cost ? (cost >= 1e8 ? (cost / 1e8).toFixed(1).replace(/\.0$/, '') + '억원' : Math.round(cost / 1e4).toLocaleString() + '만원') : ''].filter(Boolean).join(' · ');
+    const pill = status === 'current' ? `<span class="vs2-pill">${st[i] === 'now' ? '진행 중' : '다음 공정'}</span>` : '';
+    return `<button class="vs2-step ${status}" onclick="openProcDetailScreen('${p.id}')">
+      <span class="vs2-rail"><span class="vs2-dot">${status === 'done' ? check : ''}</span>${i < procs.length - 1 ? '<span class="vs2-line"></span>' : ''}</span>
+      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(p.name || p.type)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+        <span class="vs2-step-d">${esc(meta)}</span>${pill}</span></button>`;
   }).join('');
-  const hd = document.getElementById('vs2-phase-head');
-  if (hd) { const ph = phases.find(x => x.id === _planPhase); hd.innerHTML = ph ? `${esc(ph.label)} 공정 <span>${ph.procs.length}개</span>` : ''; }
 }
 // 단계를 누르면 공정 상세 페이지(해당 단계의 공정 카드)로 이동
 function _vs2OpenPhase(id) {
