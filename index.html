@@ -3815,7 +3815,7 @@ body.vs2-on .floating-group { bottom:calc(84px + env(safe-area-inset-bottom,0px)
     </div>
     <div class="header-actions" style="display:flex;align-items:center;">
       <button id="notif-btn" onclick="openNotifPanel()" title="알림" aria-label="알림" style="display:none;"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="white"/><path d="M14.5 24.5V18.5a5.5 5.5 0 0 1 11 0v6l1.5 1.5h-14l1.5-1.5Z" stroke="black" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 28.5a2.2 2.2 0 0 0 4 0" stroke="black" stroke-width="1.6" stroke-linecap="round"/></svg><span class="notif-badge" style="display:none;"></span></button>
-      <button id="project-menu-btn" onclick="toggleProjectMenu(event)" title="메뉴" style="background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;">
+      <button id="project-menu-btn" onclick="toggleProjectMenu(event)" title="메뉴" style="display:none;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z" fill="white"/>
           <path d="M12 14H28" stroke="black" stroke-width="1.6" stroke-linecap="round"/>
@@ -5550,6 +5550,7 @@ body.vs2-on .floating-group { bottom:calc(84px + env(safe-area-inset-bottom,0px)
       </span>
       <span style="font-size:10px;font-weight:600;color:#111;background:#ffcc33;border-radius:4px;padding:2px 7px;letter-spacing:.02em;">오픈준비중</span>
     </button>
+    <button class="mobile-sheet-item" onclick="closeAllMenus();setTimeout(()=>toggleLandingMenu({stopPropagation(){}}),0);"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 계정 · 설정</span></button>
   </div>
 </div>
 
@@ -5559,7 +5560,7 @@ body.vs2-on .floating-group { bottom:calc(84px + env(safe-area-inset-bottom,0px)
   <button class="vs2-nav-btn" data-tab="style" aria-label="스타일" onclick="_vs2Go('style')"></button>
   <button class="vs2-nav-btn" data-tab="specbook" aria-label="스펙" onclick="_vs2Go('specbook')"></button>
   <button class="vs2-nav-btn" data-tab="content" aria-label="블로그" onclick="_vs2Go('content')"></button>
-  <button class="vs2-nav-btn" aria-label="프로필" onclick="toggleLandingMenu(event)"><span class="vs2-avatar" id="vs2-avatar"></span></button>
+  <button class="vs2-nav-btn" aria-label="프로필" onclick="toggleProjectMenu(event)"><span class="vs2-avatar" id="vs2-avatar"></span></button>
 </div></nav>
 
 <!-- ===== BOTTOM SHEET: 서비스 전체 메뉴 (랜딩 프로필) ===== -->
