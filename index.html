@@ -3609,7 +3609,11 @@ button, input, textarea, select { font-family:var(--font); }
 #vs2-seg button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
 #vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #vs2-timeline { padding:20px 20px 8px; background:#fff; }
-#vs2-timeline .vs2-h { font-size:14px; margin-bottom:16px; }
+#vs2-timeline .vs2-h { font-size:14px; margin-bottom:28px; }
+.vs2-grp { display:flex; flex-direction:column; gap:8px; width:100%; text-align:left; background:none; border:none; padding:0 0 46px; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+.vs2-grp-t { display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:600; color:#111; }
+.vs2-grp-d { font-size:14px; font-weight:300; color:#6b7684; line-height:1.45; }
+.vs2-grp.done .vs2-grp-t > span { color:#8b95a1; }
 .vs2-step { display:flex; gap:14px; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; font-family:inherit; }
 .vs2-rail { display:flex; flex-direction:column; align-items:center; width:18px; flex-shrink:0; padding-top:4px; }
 .vs2-dot { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-sizing:border-box; }
@@ -11008,7 +11012,7 @@ function _vs2RenderOverview() {
   const furn = _getFurnitureItems().filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const totalAll = total + (proj.costExcludeFurniture ? 0 : furn);
   const e = _estGet(proj), c = e ? _estCalc(e) : null;
-  const sub = c ? ['관리비·조정 포함', `직접공사비 <b>${Math.round(c.direct).toLocaleString()}원</b>`]
+  const sub = c ? ['관리비·조정 포함', `구조 공사비 <b>${Math.round(c.direct).toLocaleString()}원</b>`]
     : [`공정 ${(proj.processes || []).filter(p => !p.deleted).length}개`, companies.size ? `참여 업체 <b>${companies.size}곳</b>` : ''];
   const f = proj.form || {};
   const period = f.startDate ? `${_vs2Fmt(f.startDate)} - ${f.endDate ? _vs2Fmt(f.endDate) : '미정'}` : '미정';
@@ -11023,26 +11027,29 @@ function _vs2RenderOverview() {
 function _vs2RenderTimeline() {
   const el = document.getElementById('vs2-timeline'); const proj = getProject(); if (!el || !proj) return;
   const today = _vs2Today();
-  const procs = (proj.processes || []).map((p, i) => ({ p, i })).filter(x => !x.p.deleted)
-    .sort((a, b) => (a.p.scheduleStart || '9999').localeCompare(b.p.scheduleStart || '9999') || a.i - b.i).map(x => x.p);
+  const procs = (proj.processes || []).filter(p => !p.deleted);
   if (!procs.length) {
-    el.innerHTML = `<div class="vs2-h">공정 진행</div><div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">등록된 공정이 없어요<br><button onclick="addDefaultProcesses()" style="margin-top:16px;background:#111;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;">기본 공정 불러오기</button></div>`;
+    el.innerHTML = `<div class="vs2-h">공정 0</div><div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">등록된 공정이 없어요<br><button onclick="addDefaultProcesses()" style="margin-top:16px;background:#111;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;">기본 공정 불러오기</button></div>`;
     return;
   }
-  const st = procs.map(p => p.completed ? 'done' : _vs2ProcState(p, today));
-  let cur = st.indexOf('now'); if (cur < 0) cur = st.findIndex(s => s !== 'done');
-  const check = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7"/></svg>';
-  el.innerHTML = `<div class="vs2-h">공정 진행 <span style="color:#8b95a1;font-weight:500;">${procs.length}</span></div>` + procs.map((p, i) => {
-    const status = i === cur ? 'current' : (st[i] === 'done' ? 'done' : 'todo');
-    const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
-    const period = s ? (e && e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
-    const cost = _procCost(p);
-    const meta = [period, p.company, cost ? (cost >= 1e8 ? (cost / 1e8).toFixed(1).replace(/\.0$/, '') + '억원' : Math.round(cost / 1e4).toLocaleString() + '만원') : ''].filter(Boolean).join(' · ');
-    const pill = status === 'current' ? `<span class="vs2-pill">${st[i] === 'now' ? '진행 중' : '다음 공정'}</span>` : '';
-    return `<button class="vs2-step ${status}" onclick="openProcDetailScreen('${p.id}')">
-      <span class="vs2-rail"><span class="vs2-dot">${status === 'done' ? check : ''}</span>${i < procs.length - 1 ? '<span class="vs2-line"></span>' : ''}</span>
-      <span class="vs2-step-body"><span class="vs2-step-t"><span>${esc(p.name || p.type)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
-        <span class="vs2-step-d">${esc(meta)}</span>${pill}</span></button>`;
+  // Figma VSD 1-113: 플래닝 · 철거 · 구조공사 · 마감공사 · 입주 그룹 (철거는 구조공사에서 따로 분리)
+  const isDemo = p => /철거/.test(p.type || p.name || '');
+  const byStart = (a, b) => (a.scheduleStart || '9999').localeCompare(b.scheduleStart || '9999');
+  const groups = [
+    { id: 'planning', label: '플래닝', ps: procs.filter(p => _getProcPhase(p) === 'planning') },
+    { id: 'demo', label: '철거', ps: procs.filter(p => _getProcPhase(p) === 'structure' && isDemo(p)), desc: '바닥·욕실·벽체 철거와 폐기물 반출' },
+    { id: 'structure', label: '구조공사', ps: procs.filter(p => _getProcPhase(p) === 'structure' && !isDemo(p)) },
+    { id: 'finish', label: '마감공사', ps: procs.filter(p => _getProcPhase(p) === 'finish') },
+    { id: 'after', label: '입주', ps: procs.filter(p => _getProcPhase(p) === 'after'), desc: '입주청소 후 이삿짐 정리' },
+  ].filter(g => g.ps.length);
+  el.innerHTML = `<div class="vs2-h">공정 ${procs.length}</div>` + groups.map(g => {
+    g.ps.sort(byStart);
+    const done = g.ps.every(p => p.completed || _vs2ProcState(p, today) === 'done');
+    const desc = g.desc || g.ps.map(p => p.name || p.type).join(' · ');
+    const click = g.id === 'demo' ? `openProcDetailScreen('${g.ps[0].id}')` : `_vs2OpenPhase('${g.id}')`;
+    return `<button class="vs2-grp${done ? ' done' : ''}" onclick="${click}">
+      <span class="vs2-grp-t"><span>${esc(g.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+      <span class="vs2-grp-d">${esc(desc)}</span></button>`;
   }).join('');
 }
 // 단계를 누르면 공정 상세 페이지(해당 단계의 공정 카드)로 이동
