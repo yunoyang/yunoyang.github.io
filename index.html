@@ -1920,6 +1920,32 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== MONTHLY CALENDAR TABLE ===== */
 #calendar-container { padding:0; background:#fff; }
+.cal2 { background:#fff; }
+.cal2-head { display:flex; justify-content:space-between; align-items:center; padding:20px 20px 12px; }
+.cal2-title { font-size:16px; font-weight:700; color:#111; letter-spacing:-.02em; }
+.cal2-mode { display:flex; align-items:center; gap:8px; }
+.cal2-mode button { border:none; background:none; padding:4px 0; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; }
+.cal2-mode button.on { color:#111; font-weight:700; }
+.cal2-mode i { width:1.5px; height:12px; background:#111; }
+.cal2-grid { display:grid; grid-template-columns:repeat(7,1fr); padding:0 8px 8px; row-gap:4px; touch-action:pan-y; }
+.cal2-dow { text-align:center; font-size:12px; color:#8b95a1; padding:4px 0 10px; }
+.cal2-dow.sun { color:#f04452; }
+.cal2-cell { display:flex; flex-direction:column; align-items:center; gap:4px; border:none; background:none; padding:2px 0 6px; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+.cal2-num { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; color:#111; }
+.cal2-cell.dim .cal2-num { color:#c5ced8; }
+.cal2-cell.today .cal2-num { font-weight:700; box-shadow:inset 0 0 0 1.5px #e5e8eb; }
+.cal2-cell.sel .cal2-num { background:#111; color:#fff; font-weight:700; box-shadow:none; }
+.cal2-dot { width:4px; height:4px; border-radius:50%; }
+.cal2-dot.on { background:#ff7a00; }
+.cal2-list { border-top:8px solid #f4f5f7; padding:20px 20px 24px; min-height:140px; }
+.cal2-date { font-size:14px; font-weight:700; color:#ff7a00; margin-bottom:12px; }
+.cal2-proc { display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:none; background:none; padding:12px 0; cursor:pointer; font-family:inherit; }
+.cal2-proc-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.cal2-proc-t { display:flex; align-items:center; gap:8px; font-size:18px; font-weight:700; color:#111; }
+.cal2-pill { font-size:12px; font-weight:500; color:#333d4b; background:#f2f4f6; border-radius:6px; padding:3px 7px; }
+.cal2-proc-s { font-size:13px; color:#8b95a1; }
+.cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
+
 
 /* Table structure */
 .cal-month-table {
@@ -12799,13 +12825,6 @@ function deleteDayDetail(procId, detailId) {
   if (m) openDayPopup(calMonth.year, parseInt(m[1])-1, parseInt(m[2]));
 }
 
-// ===== MONTHLY CALENDAR =====
-function calMonthNav(delta) {
-  calMonth.month += delta;
-  if (calMonth.month < 0)  { calMonth.month = 11; calMonth.year--; }
-  if (calMonth.month > 11) { calMonth.month = 0;  calMonth.year++; }
-  renderCalendar();
-}
 // ===== KOREAN HOLIDAYS =====
 const KOREAN_HOLIDAYS = {
   // 고정 공휴일 (MM-DD)
@@ -12839,132 +12858,70 @@ function _getHoliday(year, month1, day) {
   return KOREAN_HOLIDAYS[`${year}-${mm}-${dd}`] || KOREAN_HOLIDAYS[`${mm}-${dd}`] || null;
 }
 
+// ===== 일정 탭 v2 (Figma VSD: 주간 | 월간 · 날짜 점 · 선택일 공정 목록) =====
+let _calMode = 'week', _calSel = null;
+function _calKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function _calActive(proj, d) {
+  const k = _calKey(d);
+  return (proj.processes || []).filter(p => !p.deleted && p.scheduleStart && k >= p.scheduleStart && k <= (p.scheduleEnd || p.scheduleStart))
+    .sort((a, b) => a.scheduleStart.localeCompare(b.scheduleStart));
+}
+function calSetMode(m) { _calMode = m; renderCalendar(); }
+function calSelect(k) { _calSel = new Date(k + 'T00:00:00'); calMonth = { year: _calSel.getFullYear(), month: _calSel.getMonth() }; renderCalendar(); }
+function calMonthNav(delta) {
+  const s = _calSel || new Date();
+  if (_calMode === 'week') _calSel = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7 * delta);
+  else { const dim = new Date(calMonth.year, calMonth.month + delta + 1, 0).getDate(); _calSel = new Date(calMonth.year, calMonth.month + delta, Math.min(s.getDate(), dim)); }
+  calMonth = { year: _calSel.getFullYear(), month: _calSel.getMonth() };
+  renderCalendar();
+}
 function renderCalendar() {
   const proj = getProject(); if (!proj) return;
   const container = document.getElementById('calendar-container');
-  const { year, month } = calMonth;
-  const firstDay   = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month+1, 0).getDate();
-  const today = new Date(); today.setHours(0,0,0,0);
-  const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const DOW    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-
-  // Build weeks (array of 7-slot arrays with day numbers or null)
-  const weeks = [];
-  let dayNum = 1;
-  let week = Array(7).fill(null);
-  for (let i = firstDay; i < 7 && dayNum <= daysInMonth; i++) week[i] = dayNum++;
-  weeks.push(week);
-  while (dayNum <= daysInMonth) {
-    week = Array(7).fill(null);
-    for (let i = 0; i < 7 && dayNum <= daysInMonth; i++) week[i] = dayNum++;
-    weeks.push(week);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (!_calSel || _calSel.getFullYear() !== calMonth.year || _calSel.getMonth() !== calMonth.month) {
+    _calSel = (today.getFullYear() === calMonth.year && today.getMonth() === calMonth.month) ? new Date(today) : new Date(calMonth.year, calMonth.month, 1);
+    const f = proj.form || {};
+    if (f.startDate && f.startDate.slice(0, 7) === `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}` && _calSel < new Date(f.startDate + 'T00:00:00')) _calSel = new Date(f.startDate + 'T00:00:00');
   }
-
-  // Get content HTML + bg color for a given day
-  function getDayInfo(d, col) {
-    if (d === null) return { html: '', bg: '' };
-    const dateD = new Date(year, month, d);
-    const active = proj.processes.filter(p => {
-      if (!p.scheduleStart || !p.scheduleEnd) return false;
-      return dateD >= new Date(p.scheduleStart+'T00:00:00') && dateD <= new Date(p.scheduleEnd+'T23:59:59');
-    });
-    if (!active.length) return { html: '', bg: '' };
-    const html = active.map(p => {
-      const cls = PROCESS_COLORS[p.type] || ('c'+(Math.abs(hashCode(p.name))%8));
-      // 2일 이상 이어지는 일정은 시작일(또는 주 첫 칸)에만 공정명 텍스트 노출
-      const isStart = dateD.getTime() === new Date(p.scheduleStart+'T00:00:00').getTime();
-      const isMultiDay = p.scheduleStart !== p.scheduleEnd;
-      const showName = !isMultiDay || isStart || col === 0;
-      const nameHtml = showName ? `<div class="cal-day-pname">${esc(p.name)}</div>` : '';
-      return `<div class="cal-day-proc ${cls}">${nameHtml}</div>`;
-    }).join('');
-    const firstCls = PROCESS_COLORS[active[0].type] || ('c'+(Math.abs(hashCode(active[0].name))%8));
-    const hex = COLOR_HEX[firstCls] || '#3176ff';
-    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-    const bg = `rgba(${r},${g},${b},0.06)`;
-    return { html, bg, hex };
+  const sel = _calSel, selK = _calKey(sel), todayK = _calKey(today);
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  // 표시할 날짜: 주간 = 선택일이 속한 주, 월간 = 그 달 전체(앞뒤 빈칸)
+  let days = [];
+  if (_calMode === 'week') {
+    const s = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate() - sel.getDay());
+    for (let i = 0; i < 7; i++) days.push(new Date(s.getFullYear(), s.getMonth(), s.getDate() + i));
+  } else {
+    const first = new Date(sel.getFullYear(), sel.getMonth(), 1), dim = new Date(sel.getFullYear(), sel.getMonth() + 1, 0).getDate();
+    for (let i = 0; i < first.getDay(); i++) days.push(null);
+    for (let d = 1; d <= dim; d++) days.push(new Date(sel.getFullYear(), sel.getMonth(), d));
+    while (days.length % 7) days.push(null);
   }
-
-  // DOW header row
-  const dowHtml = DOW.map((d,i) =>
-    `<th class="cal-dow-th${i===0?' sun':i===6?' sat':''}">${d}</th>`
-  ).join('');
-
-  // Week rows (date row + content row pairs)
-  let weeksHtml = '';
-  weeks.forEach(wk => {
-    // Pre-compute day info for this week
-    const dayInfos = wk.map((d, i) => getDayInfo(d, i));
-
-    // Date number row
-    let dateRow = '<tr>';
-    wk.forEach((d, i) => {
-      const isSun = i===0, isSat = i===6;
-      const isToday = d && new Date(year,month,d).getTime()===today.getTime();
-      const isEmpty = d === null;
-      const holiday = d !== null ? _getHoliday(year, month+1, d) : null;
-      let cls = isSun?'sun':isSat?'sat':'';
-      if (isEmpty) cls += (cls?' ':'')+'out';
-      if (isToday) cls += (cls?' ':'')+'today-num';
-      if (holiday) cls += (cls?' ':'')+'holiday';
-      const bg = dayInfos[i].bg;
-      const hex = dayInfos[i].hex || '';
-      const bgStyle = bg && !isEmpty ? ` style="background:${bg};border-top:2px solid ${hex}"` : '';
-      const click = d !== null ? ` onclick="openDayPopup(${year},${month},${d})"` : '';
-      const inner = d !== null ? `${d}${holiday ? `<span class="cal-holiday-name">${holiday}</span>` : ''}` : '';
-      dateRow += `<td class="cal-date-td${cls?' '+cls:''}"${bgStyle}${click}>${inner}</td>`;
-    });
-    dateRow += '</tr>';
-
-    // Content row
-    let contentRow = '<tr>';
-    wk.forEach((d, i) => {
-      const isSun = i===0, isSat = i===6;
-      const isEmpty = d === null;
-      let cls = isSun?'sun':isSat?'sat':'';
-      if (isEmpty) cls += (cls?' ':'')+'out';
-      const bg = dayInfos[i].bg;
-      const bgStyle = bg && !isEmpty ? ` style="background:${bg};cursor:pointer"` : (d!==null ? ' style="cursor:pointer"' : '');
-      const click = d !== null ? ` onclick="openDayPopup(${year},${month},${d})"` : '';
-      contentRow += `<td class="cal-content-td${cls?' '+cls:''}"${bgStyle}${click}>${dayInfos[i].html}</td>`;
-    });
-    contentRow += '</tr>';
-
-    weeksHtml += dateRow + contentRow;
-  });
-
-  const nowM = new Date();
-  const isCurrentMonth = year===nowM.getFullYear() && month===nowM.getMonth();
-  const todayBtnHtml = !isCurrentMonth
-    ? `<button class="cal-today-btn" onclick="(()=>{const n=new Date();calMonth={year:n.getFullYear(),month:n.getMonth()};renderCalendar();})()">오늘</button>`
-    : '';
-
-  const hasProcs = proj.processes.some(p=>p.scheduleStart&&p.scheduleEnd);
-
-  container.innerHTML = `
-  <table class="cal-month-table">
-    <thead>
-      <tr>
-        <td colspan="7" class="cal-nav-td">
-          <div class="cal-nav-inner">
-            <button class="cal-nav-btn" onclick="calMonthNav(-1)">
-              <svg class="icon" width="14" height="14" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg>
-            </button>
-            <span style="display:flex;align-items:center;gap:8px;">
-              <span class="cal-th-title">${MONTHS[month]}</span>${todayBtnHtml}
-            </span>
-            <button class="cal-nav-btn" onclick="calMonthNav(1)">
-              <svg class="icon" width="14" height="14" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-right"/></svg>
-            </button>
-          </div>
-        </td>
-      </tr>
-      <tr>${dowHtml}</tr>
-    </thead>
-    <tbody>${weeksHtml}</tbody>
-  </table>
-  ${!hasProcs ? `<div class="cal-empty-full">공정 일정을 입력하면 여기에 표시됩니다</div>` : ''}`;
+  const weekNo = Math.floor((sel.getDate() - 1 + new Date(sel.getFullYear(), sel.getMonth(), 1).getDay()) / 7) + 1;
+  const title = `${sel.getFullYear()}년 ${sel.getMonth() + 1}월${_calMode === 'week' ? ` ${weekNo}주` : ''}`;
+  const cells = days.map((d, i) => {
+    if (!d) return '<div class="cal2-cell"></div>';
+    const k = _calKey(d), has = _calActive(proj, d).length > 0, hol = _getHoliday(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    const cls = ['cal2-cell', k === selK ? 'sel' : '', k === todayK ? 'today' : '', (i % 7 === 0 || hol) ? 'sun' : '', _calMode === 'week' && d.getMonth() !== sel.getMonth() ? 'dim' : ''].filter(Boolean).join(' ');
+    return `<button class="${cls}" onclick="calSelect('${k}')"${hol ? ` title="${hol}"` : ''}><span class="cal2-num">${d.getDate()}</span><span class="cal2-dot${has ? ' on' : ''}"></span></button>`;
+  }).join('');
+  const act = _calActive(proj, sel);
+  const fmt = s => s ? `${s.slice(5, 7)}.${s.slice(8, 10)}` : '';
+  const dur = p => Math.round((new Date((p.scheduleEnd || p.scheduleStart) + 'T00:00:00') - new Date(p.scheduleStart + 'T00:00:00')) / 864e5) + 1;
+  const list = act.length ? act.map(p => `<button class="cal2-proc" onclick="openProcDetailScreen('${p.id}')">
+      <span class="cal2-proc-body"><span class="cal2-proc-t">${esc(p.name || p.type)}<span class="cal2-pill">${dur(p)}일</span></span>
+      <span class="cal2-proc-s">${p.company ? esc(p.company) + ' · ' : ''}${fmt(p.scheduleStart)} ~ ${fmt(p.scheduleEnd || p.scheduleStart)}</span></span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>`).join('')
+    : '<div class="cal2-empty">이 날은 예정된 공정이 없어요</div>';
+  container.innerHTML = `<div class="cal2">
+    <div class="cal2-head"><span class="cal2-title">${title}</span>
+      <span class="cal2-mode"><button class="${_calMode === 'week' ? 'on' : ''}" onclick="calSetMode('week')">주간</button><i></i><button class="${_calMode === 'month' ? 'on' : ''}" onclick="calSetMode('month')">월간</button></span></div>
+    <div class="cal2-grid" id="cal2-grid">${DOW.map((w, i) => `<div class="cal2-dow${i === 0 ? ' sun' : ''}">${w}</div>`).join('')}${cells}</div>
+    <div class="cal2-list"><div class="cal2-date">${fmt(selK)} (${DOW[sel.getDay()]})</div>${list}</div></div>`;
+  // 좌우 스와이프로 이전/다음 주(월) 이동
+  const g = document.getElementById('cal2-grid'); let sx = null, sy = null;
+  g.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  g.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy; sx = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) calMonthNav(dx < 0 ? 1 : -1); });
 }
 function parseKorDate(s) {
   const m = s.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
