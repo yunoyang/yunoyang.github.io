@@ -11050,14 +11050,15 @@ function _vs2RenderTimeline() {
   ].filter(g => g.ps.length);
   const TABS = [['all', 'ALL'], ['planning', '플래닝'], ['structure', '구조공사'], ['finish', '마감공사']];
   const tabOf = g => g.id === 'demo' ? 'structure' : g.id === 'after' ? 'finish' : g.id;
-  const shown = _vs2Filter === 'all' ? groups : groups.filter(g => tabOf(g) === _vs2Filter);
-  el.innerHTML = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>` + shown.map(g => {
-    g.ps.sort(byStart);
-    const done = g.ps.every(p => p.completed || _vs2ProcState(p, today) === 'done');
-    const desc = g.desc || g.ps.map(p => p.name || p.type).join(' · ');
-    const click = g.id === 'demo' ? `openProcDetailScreen('${g.ps[0].id}')` : `_vs2OpenPhase('${g.id}')`;
-    return `<button class="vs2-grp${done ? ' done' : ''}" onclick="${click}">
-      <span class="vs2-grp-t"><span>${esc(g.label)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+  // 모든 공정을 한 장씩 풀어서 보여주고, 탭으로 단계 필터
+  const list = groups.filter(g => _vs2Filter === 'all' || tabOf(g) === _vs2Filter).flatMap(g => g.ps);
+  el.innerHTML = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>` + list.map(p => {
+    const done = p.completed || _vs2ProcState(p, today) === 'done';
+    const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
+    const period = s ? (e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
+    const desc = [period, p.company].filter(Boolean).join(' · ');
+    return `<button class="vs2-grp${done ? ' done' : ''}" onclick="openProcDetailScreen('${p.id}')">
+      <span class="vs2-grp-t"><span>${esc(p.name || p.type)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
       <span class="vs2-grp-d">${esc(desc)}</span></button>`;
   }).join('');
 }
