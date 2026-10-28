@@ -8121,6 +8121,7 @@ function _applyDdayBadge(el, startDateStr, endDateStr) {
 function updateSummary() {
   const proj = getProject(); if (!proj) return;
   if (proj.myRole !== '뷰어' && typeof _estSeedDefault === 'function' && _estSeedDefault(proj)) { save(); _estSyncCloud(proj); }
+  if (typeof _applyHaumentSchedule === 'function' && _applyHaumentSchedule(proj)) { _applyHaumentScheduleSync(proj); if (typeof renderWorkCards === 'function') renderWorkCards(); }
   let totalCost = 0;
   const companies = new Set();
   proj.processes.forEach(p => {
@@ -14512,6 +14513,55 @@ function _estSeedAllowed(proj) {
   if (/정자동|우성/.test(proj.name || '')) return true;
   return !!proj.cloudId && EST_SEED_OWNERS.includes(String(state.user?.email || '').toLowerCase());
 }
+// 하우먼트 예상 공정표(ver.261019, 11/4 착공 · 12/8 완공) — 정자동 프로젝트에 처음 한 번 일정 적용
+// 같은 공종이 두 번 나오는 경우(전기 배선/기구 취부, 설비 배관/위생도기)는 앱 공정 단위로 나눠 넣음
+const SCHED_HAUMENT = {
+  ver: '261019', start: '2026-11-04', end: '2026-12-08',
+  items: [
+    { keys: ['동의서및보양', '보양'], s: '2026-11-03', e: '2026-11-03' },
+    { keys: ['가설'], s: '2026-11-03', e: '2026-11-03', create: '가설공사' },
+    { keys: ['철거'], s: '2026-11-04', e: '2026-11-09' },
+    { keys: ['설비', '방수'], s: '2026-11-09', e: '2026-11-17', create: '설비' },
+    { keys: ['전기'], s: '2026-11-10', e: '2026-11-11' },
+    { keys: ['시스템에어컨', '냉난방', '에어컨'], s: '2026-11-10', e: '2026-11-11' },
+    { keys: ['목공', '경량'], s: '2026-11-12', e: '2026-11-21' },
+    { keys: ['타일'], s: '2026-11-19', e: '2026-11-24' },
+    { keys: ['도배'], s: '2026-11-24', e: '2026-11-27' },
+    { keys: ['욕실', '위생도기'], s: '2026-11-27', e: '2026-11-30', create: '위생도기' },
+    { keys: ['페인트', '도장', '탄성코트'], s: '2026-11-30', e: '2026-12-01', create: '페인트' },
+    { keys: ['조명'], s: '2026-11-30', e: '2026-12-02', create: '조명' },
+    { keys: ['마루'], s: '2026-12-01', e: '2026-12-01' },
+    { keys: ['가구', '싱크'], s: '2026-12-02', e: '2026-12-07' },
+    { keys: ['필름'], s: '2026-12-07', e: '2026-12-07' },
+    { keys: ['기타'], s: '2026-12-07', e: '2026-12-07' },
+    { keys: ['입주청소', '청소'], s: '2026-12-08', e: '2026-12-08' },
+  ],
+};
+function _schedNorm(n) { return String(n || '').replace(/\s+/g, '').replace(/공사$/, ''); }
+function _applyHaumentSchedule(proj, force) {
+  if (!proj || proj.myRole === '뷰어') return false;
+  if (!force && (proj.scheduleApplied === SCHED_HAUMENT.ver || !_estSeedAllowed(proj))) return false;
+  // updatedAt을 고정 시각으로: 다른 기기에서 이후에 고친 공정이 있으면 그쪽이 병합에서 이기도록
+  const now = Date.parse('2026-10-28T00:00:00+09:00'); let n = 0;
+  const procs = (proj.processes = proj.processes || []);
+  SCHED_HAUMENT.items.forEach(it => {
+    const hits = procs.filter(p => !p.deleted && it.keys.some(k => { const a = _schedNorm(p.type), b = _schedNorm(p.name); return a === k || b === k || (k.length >= 2 && (a.startsWith(k) || b.startsWith(k))); }));
+    if (!hits.length && it.create) {
+      const p = { id: 'p_' + (now + n) + Math.random().toString(36).slice(2, 6), name: it.create, type: it.create, scheduleStart: '', scheduleEnd: '', company: '', details: [] };
+      procs.push(p); hits.push(p);
+    }
+    hits.forEach(p => { p.scheduleStart = it.s; p.scheduleEnd = it.e; p.updatedAt = now; n++; });
+  });
+  proj.form = proj.form || {};
+  proj.form.startDate = SCHED_HAUMENT.start; proj.form.endDate = SCHED_HAUMENT.end;
+  proj.scheduleApplied = SCHED_HAUMENT.ver;
+  return n > 0;
+}
+function _applyHaumentScheduleSync(proj) {
+  save();
+  if (!proj.cloudId) return;
+  if (_isProjOwner(proj)) _syncProjToCloud(proj); else _syncProcessesToCloud(proj);
+}
 function _estSeedDefault(proj, force) {
   if (!proj || proj.estimate || (!force && proj.estimateSeeded) || (!force && !_estSeedAllowed(proj))) return false;
   proj.estimateSeeded = true;
@@ -15497,6 +15547,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   merged.materialSelections = _mergeMatSelectionsObj(local.materialSelections, cp.materialSelections);
   const _est = _mergeEstimate(local.estimate, cp.estimate); if (_est) merged.estimate = _est;
   if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
+  if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
   const _pm = _mergeEstimate(local.planModel, cp.planModel); if (_pm) merged.planModel = _pm;
   if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
@@ -15751,6 +15802,7 @@ function _syncProjToCloud(proj) {
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
     { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
+    if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
     { const _p = _mergeEstimate(proj.planModel, cloudData.planModel); if (_p) projData.planModel = _p; if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
@@ -16099,6 +16151,7 @@ function _startCollabListener(cloudId) {
     const localMaterialItems = proj.materialItems || []; // 스펙북 자재 보존
     const localMatSelections = proj.materialSelections || {}; // 자재선택 보존
     const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
+    const localSchedApplied = proj.scheduleApplied; // 공정표 적용 플래그 보존
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
@@ -16164,6 +16217,7 @@ function _startCollabListener(cloudId) {
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
     { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
+    if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
     { const _p = _mergeEstimate(localPlan, remote.planModel); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
