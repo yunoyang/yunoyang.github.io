@@ -6644,7 +6644,8 @@ function _notifInjectCss() {
   const st = document.createElement('style'); st.id = 'notif-css';
   st.textContent = `
 #notif-btn{position:relative;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;margin-right:6px;}
-#notif-btn .notif-badge{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e8731a;color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;box-sizing:border-box;}
+/* 알림 상태 (VSD 27-1156): 안 읽은 알림이 있으면 종 우상단에 빨간 점 */
+#notif-btn .notif-badge{position:absolute;top:9px;left:22px;width:7px;height:7px;padding:0;border-radius:50%;background:#ff4e4e;box-shadow:0 0 0 1.5px #fff;font-size:0;color:transparent;overflow:hidden;}
 #notif-panel{position:fixed;inset:0;z-index:9200;display:none;flex-direction:column;background:#f7f8fa;padding-top:env(safe-area-inset-top);}
 #notif-panel .np-hd{background:#fff;border-bottom:1px solid #eef0f5;display:flex;align-items:center;gap:6px;padding:10px 12px;flex-shrink:0;}
 #notif-panel .np-hd b{flex:1;font-size:17px;}
