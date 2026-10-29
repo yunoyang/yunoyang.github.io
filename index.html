@@ -7708,6 +7708,7 @@ async function _fetchAllMyCloudProjects() {
     const data = doc.data();
     const pd = data.projectData;
     if (!pd) return;
+    if (pd.planModel) pd.planModel = _planDec(pd.planModel);
     pd.cloudId = doc.id;
     pd.isCloud = true;
     pd.collaborators = data.meta?.collaborators || [];
@@ -15504,6 +15505,9 @@ function _mergeProcessesArr(localArr, cloudArr) {
 // 방금 기록한 다른 공간의 선택이 사라짐
 // 견적(estimate)은 통째로 한 덩어리 — 둘 다 있으면 updatedAt이 최신인 쪽, 한쪽만 있으면 그쪽을 유지
 // (이 병합이 없으면 클라우드 문서에 estimate가 없을 때 새로고침/실시간 갱신으로 로컬 견적이 사라짐)
+// Firestore는 중첩 배열(poly: [[x,y],...])을 거부 → planModel은 JSON 문자열로 감싸 저장
+function _planEnc(pm) { return pm && !pm._json ? { _json: JSON.stringify(pm), updatedAt: pm.updatedAt || 0 } : pm; }
+function _planDec(pm) { if (pm && typeof pm._json === 'string') { try { return JSON.parse(pm._json); } catch (e) { return undefined; } } return pm; }
 function _mergeEstimate(localEst, cloudEst) {
   if (!localEst) return cloudEst || undefined;
   if (!cloudEst) return localEst;
@@ -15556,7 +15560,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   const _est = _mergeEstimate(local.estimate, cp.estimate); if (_est) merged.estimate = _est;
   if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
   if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
-  const _pm = _mergeEstimate(local.planModel, cp.planModel); if (_pm) merged.planModel = _pm;
+  const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
   if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
   if (local.floorplanEditedImage) merged.floorplanEditedImage = local.floorplanEditedImage;
@@ -15772,6 +15776,7 @@ async function _pushProjToCloud(proj) {
   if (!proj.cloudId) proj.cloudId = _genToken(16);
   const projData = JSON.parse(JSON.stringify(proj));
   delete projData.myRole; // myRole은 각 클라이언트에서 결정 — Firestore에 저장 안 함
+  if (projData.planModel) projData.planModel = _planEnc(projData.planModel);
   const payload = {
     projectData: projData,
     ownerEmail: state.user.email,          // top-level: 인덱스 없이 쿼리 가능
@@ -15811,7 +15816,7 @@ function _syncProjToCloud(proj) {
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
     { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
     if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
-    { const _p = _mergeEstimate(proj.planModel, cloudData.planModel); if (_p) projData.planModel = _p; if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
+    { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
@@ -16226,7 +16231,7 @@ function _startCollabListener(cloudId) {
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
     { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
     if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
-    { const _p = _mergeEstimate(localPlan, remote.planModel); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
+    { const _p = _mergeEstimate(localPlan, _planDec(remote.planModel)); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
     _refreshProcDetailIfOpen(); // 공정 상세 화면이 열려 있으면 공정기록·체크리스트 사진도 실시간 반영
@@ -16749,6 +16754,7 @@ async function _acceptInvite(token, invite, cloudProjData) {
     _saveUserIndex(invite.projectId); // 협업자도 vb_users 인덱스에 등록 — 안 하면 새 기기/재접속 시 프로젝트를 못 찾을 수 있음
 
     const remoteProj = cloudProjData.projectData || {};
+    if (remoteProj.planModel) remoteProj.planModel = _planDec(remoteProj.planModel);
     const localProj = { ...remoteProj, cloudId: invite.projectId, isCloud: true, myRole: acceptedRole,
       owner: cloudProjData.meta?.owner || { email: invite.ownerEmail, name: invite.ownerName },
       collaborators: [...(cloudProjData.meta?.collaborators || []), collaboratorEntry],
