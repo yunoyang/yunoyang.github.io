@@ -1946,6 +1946,21 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-proc-s { font-size:13px; color:#8b95a1; }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
+/* 첫 화면 (VSD 1-67): 밝은 배경 · 중앙 로고 · 프로젝트 카드 목록 */
+#screen-landing { background:#f6f5f5 !important; }
+#screen-landing .landing-bg-img, #screen-landing > div[style*="linear-gradient"], #screen-landing > div[style*="bottom:calc(env(safe-area-inset-bottom,0px) + 10px)"] { display:none !important; }
+#screen-landing .landing-mid { top:calc(env(safe-area-inset-top,0px) + 180px); gap:10px; }
+#screen-landing .landing-logo-wrap svg path { fill:#2b2523; }
+#screen-landing .landing-main-copy { color:#4d3f3f; font-size:16px; }
+#screen-landing .landing-bottom { top:calc(env(safe-area-inset-top,0px) + 375px); bottom:auto; padding:0 55px; }
+.landing-plist { display:flex; flex-direction:column; gap:4px; width:100%; max-width:280px; max-height:calc(100vh - 520px); overflow-y:auto; }
+.landing-plist:empty { display:none; }
+.lp-card { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; height:72px; padding:0 18px 0 20px; background:#fff; border:none; border-radius:12px; font-family:inherit; font-size:15px; font-weight:600; color:#111; text-align:left; cursor:pointer; box-sizing:border-box; flex-shrink:0; -webkit-tap-highlight-color:transparent; }
+.lp-card span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lp-card:active { transform:scale(.98); }
+#screen-landing .landing-bottom > div[style*="text-align:center"] { position:fixed; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 24px); margin:0 !important; }
+#screen-landing .landing-bottom > div[style*="text-align:center"] span { color:#4d3f3f !important; font-size:12px !important; }
+
 /* 헤더 (VSD 1-163): 프로젝트명 왼쪽 · 알림 오른쪽 */
 body.vs2-on #screen-main .header { display:flex; justify-content:space-between; align-items:center; padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; }
 body.vs2-on #screen-main .header-home-btn { display:none !important; }
@@ -3743,8 +3758,10 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
   <!-- 하단 버튼 그룹 -->
   <div class="landing-bottom">
-    <!-- 로그인: 프로젝트 선택(좌) + 공정보기(우) 한 줄 -->
-    <div class="landing-row">
+    <!-- 로그인: 프로젝트 카드 목록 (VSD 1-67) -->
+    <div class="landing-plist" id="landing-plist"></div>
+    <!-- 로그인: 프로젝트 선택(좌) + 공정보기(우) 한 줄 (구버전, 숨김) -->
+    <div class="landing-row" style="display:none !important;">
     <button class="landing-proj-card" id="landing-proj-card-btn" onclick="toggleLandingProjDD(event)" style="display:none;">
       <div style="display:flex;align-items:center;min-width:0;flex:1;">
         <span class="landing-proj-card-name" id="landing-proj-name">프로젝트</span>
@@ -3881,7 +3898,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </svg>
     </button>
     <div class="project-selector" id="project-selector">
-      <button class="project-badge" id="project-badge-btn" onclick="toggleProjectDropdown(event)">
+      <button class="project-badge" id="project-badge-btn" onclick="document.body.classList.contains('vs2-on') ? goTo('landing') : toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
         <span class="pchev"><svg class="icon" width="15" height="15"><use href="#icon-chevron-down"/></svg></span>
       </button>
@@ -7826,7 +7843,9 @@ function updateLoginUI() {
     const proj = state.projects?.find(p => p.id === state.currentProjectId) || state.projects?.[0];
     if (projCard) projCard.style.display = proj ? '' : 'none';
     if (projName && proj) projName.textContent = proj.name || '내 프로젝트';
+    _renderLandingProjects();
   } else {
+    const pl = document.getElementById('landing-plist'); if (pl) pl.innerHTML = '';
     // 비로그인: 구글 로그인 버튼만
     if (googleBtn) googleBtn.style.display = '';
     if (newBtn)    newBtn.style.display = 'none';
@@ -7978,6 +7997,14 @@ function selectLandingProject(id) {
   state.currentProjectId = id; save();
   updateLoginUI();
 }
+function _renderLandingProjects() {
+  const el = document.getElementById('landing-plist'); if (!el) return;
+  const chev = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+  const plus = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  el.innerHTML = (state.projects || []).map(p => `<button class="lp-card" onclick="_landingOpenProject('${p.id}')"><span>${esc(p.name || '내 프로젝트')}</span>${chev}</button>`).join('')
+    + `<button class="lp-card" onclick="startNewProject()"><span>새 프로젝트</span>${plus}</button>`;
+}
+function _landingOpenProject(id) { state.currentProjectId = id; save(); goTo('main'); renderAll(); }
 function landingStartPlanning() {
   if (!state.projects.length) { startNewProject(); return; }
   if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0].id;
