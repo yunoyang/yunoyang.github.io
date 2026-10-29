@@ -3659,6 +3659,9 @@ body.vs2-detail-on #vs2-overview, body.vs2-detail-on #vs2-seg, #tab-plan.vs2-det
   background:rgba(255,255,255,.72); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%);
   border:0.5px solid rgba(0,0,0,.08); box-shadow:0 8px 28px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.06), inset 0 0.5px 0 rgba(255,255,255,.8); }
 body.vs2-on #vs2-nav { display:block; }
+#vs2-nav { transform-origin:50% 100%; transition:transform .35s cubic-bezier(.2,.9,.3,1.2), box-shadow .3s; will-change:transform; }
+body.vs2-nav-mini #vs2-nav { transform:scale(.84) translateY(6px); box-shadow:0 4px 16px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.05); }
+@media (prefers-reduced-motion: reduce) { #vs2-nav { transition:none; } }
 #vs2-nav .vs2-nav-in { display:flex; justify-content:space-between; align-items:center; padding:6px; }
 #vs2-nav .vs2-nav-btn { flex:1; height:52px; border:none; background:none; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; transition:background .2s, transform .15s; }
 #vs2-nav .vs2-nav-btn.on { background:rgba(0,0,0,.06); }
@@ -11103,6 +11106,20 @@ function _vs2RenderDetailHead() {
     <div class="vs2-dt">${esc(ph.label)}</div><div class="vs2-dd">${stLabel} · 공정 ${ph.procs.length}개</div>
     <div class="vs2-dk"><div><small>기간</small><b>${period}</b></div><div><small>비용</small><b>${cost ? (cost >= 1e8 ? (cost / 1e8).toFixed(1).replace(/\.0$/, '') + '억원' : Math.round(cost / 1e4).toLocaleString() + '만원') : '-'}</b></div><div><small>진행</small><b>${doneN}/${ph.procs.length}</b></div></div>`;
 }
+// 스크롤 내리면 하단 캡슐 메뉴 축소, 올리거나 맨 위면 원래 크기
+(function () {
+  let lastY = 0, ticking = false;
+  document.addEventListener('scroll', e => {
+    const el = e.target === document ? document.scrollingElement : e.target;
+    if (!el || ticking) return; ticking = true;
+    requestAnimationFrame(() => {
+      const y = el.scrollTop, dy = y - lastY;
+      if (y < 40 || dy < -6) document.body.classList.remove('vs2-nav-mini');
+      else if (dy > 6) document.body.classList.add('vs2-nav-mini');
+      lastY = y; ticking = false;
+    });
+  }, { capture: true, passive: true });
+})();
 function _vs2Render() {
   try {
     _vs2RenderOverview(); _vs2RenderTimeline(); if (document.body.classList.contains('vs2-detail-on')) _vs2RenderDetailHead();
