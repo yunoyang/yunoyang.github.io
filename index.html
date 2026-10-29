@@ -1946,6 +1946,14 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-proc-s { font-size:13px; color:#8b95a1; }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
+/* 헤더 (VSD 1-163): 프로젝트명 왼쪽 · 알림 오른쪽 */
+body.vs2-on #screen-main .header { display:flex; justify-content:space-between; align-items:center; padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; }
+body.vs2-on #screen-main .header-home-btn { display:none !important; }
+body.vs2-on #screen-main .project-badge { padding:6px 0; gap:4px; }
+body.vs2-on #screen-main .project-badge .name { font-size:16px; font-weight:600; letter-spacing:-.02em; }
+body.vs2-on #screen-main .project-badge .pchev { display:none; }
+body.vs2-on #screen-main #notif-btn { margin-right:-6px; }
+
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
