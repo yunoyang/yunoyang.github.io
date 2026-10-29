@@ -1946,6 +1946,10 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-proc-s { font-size:13px; color:#8b95a1; }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
+/* 스크롤 시 헤더 + 공정|일정 탭 상단 고정 */
+body.vs2-on #screen-main .header { position:sticky; top:0; z-index:30; }
+body.vs2-on #vs2-seg { top:var(--vs2-hd, 0px); z-index:29; }
+
 /* 첫 화면 (VSD 1-67): 밝은 배경 · 중앙 로고 · 프로젝트 카드 목록 */
 #screen-landing { background:#f6f5f5 !important; }
 #screen-landing .landing-bg-img, #screen-landing > div[style*="linear-gradient"], #screen-landing > div[style*="bottom:calc(env(safe-area-inset-bottom,0px) + 10px)"] { display:none !important; }
@@ -11160,7 +11164,10 @@ function _vs2RenderDetailHead() {
     });
   }, { capture: true, passive: true });
 })();
-function _vs2Render() {
+// 헤더 높이(세이프에어리어 포함)를 탭 sticky 오프셋으로 사용
+function _vs2SetHdVar() { const h = document.querySelector('#screen-main .header'); if (h && h.offsetHeight) document.documentElement.style.setProperty('--vs2-hd', h.offsetHeight + 'px'); }
+window.addEventListener('resize', _vs2SetHdVar);
+function _vs2Render() { _vs2SetHdVar();
   try {
     _vs2RenderOverview(); _vs2RenderTimeline(); if (document.body.classList.contains('vs2-detail-on')) _vs2RenderDetailHead();
     document.body.classList.toggle('vs2-on', !!document.querySelector('#screen-main.active'));
@@ -15806,6 +15813,16 @@ async function _recoverStyleImagesFromStorage() {
   return false;
 }
 
+// Firestore 쓰기 실패 진단: 문서 크기 + 중첩 배열 경로 + 큰 필드
+function _fsDiag(proj) {
+  try {
+    const d = JSON.parse(JSON.stringify(proj)); if (d.planModel) d.planModel = _planEnc(d.planModel);
+    const nested = []; const walk = (v, p, inArr) => { if (Array.isArray(v)) { if (inArr) nested.push(p); v.forEach((x, i) => walk(x, p + '[' + i + ']', true)); } else if (v && typeof v === 'object') Object.entries(v).forEach(([k, x]) => walk(x, p + '.' + k, false)); };
+    walk(d, '', false);
+    const big = Object.entries(d).map(([k, v]) => [k, JSON.stringify(v || '').length]).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    return JSON.stringify({ bytes: JSON.stringify(d).length, nested: nested.slice(0, 5), big });
+  } catch (e) { return 'diag fail ' + e.message; }
+}
 // ===== CLOUD SYNC =====
 async function _pushProjToCloud(proj) {
   if (!_db) return null;
@@ -15923,7 +15940,7 @@ function _syncProjToCloud(proj) {
       }
       return;
     }
-    console.error('sync err', e);
+    console.error('sync err', e.code, e.message, _fsDiag(proj));
     showToastMessage('⚠️ 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
   });
 }
