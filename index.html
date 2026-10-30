@@ -11362,7 +11362,7 @@ function _vs2RenderTimeline() {
   // 모든 공정을 한 장씩 풀어서 보여주고, 탭으로 단계 필터
   const list = groups.filter(g => _vs2Filter === 'all' || tabOf(g) === _vs2Filter).flatMap(g => g.ps);
   el.innerHTML = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>` + list.map(p => {
-    const done = p.completed || _vs2ProcState(p, today) === 'done';
+    const done = _vs2ProcState(p, today) === 'done';
     const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
     const period = s ? (e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
     const desc = [period, p.company].filter(Boolean).join(' · ');
@@ -11493,8 +11493,8 @@ function renderWorkCards() {
     <div class="work-card${isExpanded ? ' expanded' : ''}${isUpcoming ? ' upcoming' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row" onclick="toggleCardExpand('${p.id}')">
         <div class="work-card-name-area">
-          <span class="work-card-title" style="font-size:16px;font-weight:400;color:${p.completed?'#999':'#000'};">${esc(p.name)}</span>
-          ${p.completed ? `<span style="font-size:12px;font-weight:600;color:#999;background:#f0f2f5;padding:3px 8px;border-radius:999px;">완료</span>` : ddayBadge}
+          <span class="work-card-title" style="font-size:16px;font-weight:400;color:#000;">${esc(p.name)}</span>
+          ${ddayBadge}
         </div>
         <div class="work-card-fold-area">
           ${totalCost > 0 ? `<span class="work-card-cost-sm">${totalCost.toLocaleString()}원</span>` : ''}
@@ -11808,25 +11808,10 @@ function _isProcOverdue(p) {
   const end = new Date(p.scheduleEnd + 'T00:00:00');
   return end < today;
 }
+// 공정 완료 / 다시 수정 기능 삭제 — 완료 여부는 일정 기준으로만 판단
 function _renderProcCompleteFab(p) {
   const fab = document.getElementById('proc-detail-complete-btn');
-  if (!fab) return;
-  if (p.completed) {
-    fab.style.display = '';
-    fab.innerHTML = `<button onclick="_setProcCompleted('${p.id}', false)" style="display:flex;align-items:center;gap:7px;padding:15px 26px;border-radius:26px;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.15);border:1.5px solid #E4E9F2;cursor:pointer;font-size:15px;font-weight:600;color:#555;font-family:var(--font);letter-spacing:-.3px;white-space:nowrap;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      다시 수정
-    </button>`;
-  } else if (_isProcOverdue(p)) {
-    fab.style.display = '';
-    fab.innerHTML = `<button onclick="_setProcCompleted('${p.id}', true)" style="display:flex;align-items:center;gap:7px;padding:15px 26px;border-radius:26px;background:#222;box-shadow:0 4px 18px rgba(0,0,0,0.25);border:none;cursor:pointer;font-size:15px;font-weight:600;color:#fff;font-family:var(--font);letter-spacing:-.3px;white-space:nowrap;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      완료
-    </button>`;
-  } else {
-    fab.style.display = 'none';
-    fab.innerHTML = '';
-  }
+  if (fab) { fab.style.display = 'none'; fab.innerHTML = ''; }
 }
 function _setProcCompleted(procId, completed) {
   const proj = getProject();
