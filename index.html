@@ -5033,6 +5033,12 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     <input id="meeting-title-input" placeholder="제목을 입력하세요"
       style="width:100%;box-sizing:border-box;border:none;border-bottom:1px solid #f0f2f5;padding:18px 20px 14px;font-size:22px;font-weight:600;color:#111;font-family:var(--font);outline:none;background:transparent;">
 
+    <!-- 공정 카테고리 — 선택하면 해당 공정 상세의 '공정 기록'에도 표시 -->
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #f0f2f5;">
+      <span style="font-size:14px;color:#8b95a1;flex-shrink:0;">공정</span>
+      <select id="meeting-proc-select" style="flex:1;min-width:0;border:none;background:#f2f4f6;border-radius:8px;padding:8px 10px;font-size:14px;color:#111;font-family:var(--font);outline:none;"></select>
+    </div>
+
     <!-- 멘션 칩 영역 -->
     <div id="meeting-mention-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 20px;min-height:0;"></div>
 
@@ -5112,7 +5118,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 </div>
 
 <!-- Meeting Detail Screen -->
-<div id="screen-meeting-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
+<div id="screen-meeting-detail" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:8600;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.64,1);display:flex;flex-direction:column;overflow:hidden;pointer-events:none;">
   <!-- 상단 헤더: 뒤로 + 블로그 발행 + ··· -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 10px 0;padding-top:max(env(safe-area-inset-top,0px),10px);flex-shrink:0;">
     <button class="back-btn" onclick="closeMeetingDetail()">
@@ -12117,7 +12123,8 @@ function _renderProcRecords(procId) {
   const proj = getProject();
   const proc = proj?.processes.find(p => p.id === procId);
   if (!proc) return;
-  const records = (proc.records || []).slice().sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
+  const records = [...(proc.records || []), ...(proj.meetings || []).filter(m => m.procId === procId && !m.deleted).map(m => ({ ...m, _meeting: true }))]
+    .sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
   const addBtn = `<div style="padding:16px 16px 0;"><button onclick="openProcRecord()" style="width:100%;padding:14px;background:#fff;border:1.5px dashed #d0d6e8;border-radius:14px;cursor:pointer;font-size:14px;font-weight:500;color:#5084ff;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 기록 추가
   </button></div>`;
@@ -12127,6 +12134,16 @@ function _renderProcRecords(procId) {
   }
   const listHtml = records.map(r => {
     const d = new Date(r.createdAt||0);
+    if (r._meeting) {
+      const ds = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      const thumb = (r.images||[])[0];
+      return `<button onclick="openMeetingDetail('${r.id}')" style="display:flex;gap:12px;align-items:center;width:calc(100% - 32px);text-align:left;background:#fff;border:none;border-radius:14px;margin:12px 16px 0;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;font-family:var(--font);">
+        <span style="flex:1;min-width:0;"><span style="display:inline-block;font-size:11px;font-weight:600;color:#5084ff;background:#eef3ff;border-radius:6px;padding:2px 6px;margin-bottom:6px;">기록</span>
+        <span style="display:block;font-size:15px;font-weight:600;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.title||'(제목 없음)')}</span>
+        <span style="display:block;font-size:12px;color:#bbb;margin-top:4px;">${ds} · ${esc(r.createdByName || r.createdBy?.split('@')[0] || '')}</span></span>
+        ${thumb ? `<img src="${esc(thumb)}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;">` : ''}
+      </button>`;
+    }
     const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const { decoded, type } = _normalizeMeetingContent(r.content||'');
     const contentHtml = type === 'html' ? decoded
@@ -17869,6 +17886,7 @@ function renderMeetingTab() {
     return `<div onclick="openMeetingDetail('${m.id}')" style="background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:20px 24px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.title||'(제목 없음)')}${publishedBadge}</div>
+        ${(() => { const pp = m.procId && (proj.processes||[]).find(x => x.id === m.procId); return pp ? `<span style="display:inline-block;font-size:12px;font-weight:500;color:#333d4b;background:#f2f4f6;border-radius:6px;padding:2px 7px;margin-bottom:4px;">${esc(pp.name || pp.type || '')}</span>` : ''; })()}
         <div style="font-size:15px;font-weight:400;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${(()=>{const {decoded,type}=_normalizeMeetingContent(m.content||'');const stripHtmlEntities=s=>s.replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");return type==='html'?esc(stripHtmlEntities(decoded.replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,'')).trim()):esc(decoded);})()}</div>
         ${mentionHtml}
         <div style="margin-top:6px;font-size:12px;color:#bbb;">${dateStr} · ${esc(m.createdByName||m.createdBy||'')}</div>
@@ -19137,8 +19155,17 @@ function closeMeetingWrite() {
 // 하위호환: closeMeetingAdd → closeMeetingWrite
 function closeMeetingAdd() { closeMeetingWrite(); }
 
-function openAddMeeting() {
+function _mwFillProcSelect(procId) {
+  const sel = document.getElementById('meeting-proc-select');
+  if (!sel) return;
+  const procs = getProject()?.processes || [];
+  sel.innerHTML = '<option value="">선택 안 함</option>' + procs.map(p => `<option value="${p.id}">${esc(p.name || p.type || '')}</option>`).join('');
+  sel.value = procs.some(p => p.id === procId) ? procId : '';
+}
+
+function openAddMeeting(procId) {
   _editingMeetingId = null;
+  _mwFillProcSelect(typeof procId === 'string' ? procId : '');
   _meetingMentions = [];
   _meetingImages = [];
   document.getElementById('meeting-title-input').value = '';
@@ -19159,6 +19186,7 @@ function openEditMeeting() {
   _meetingImages = [...(m.images||[])];
   // 제목
   document.getElementById('meeting-title-input').value = m.title || '';
+  _mwFillProcSelect(m.procId || '');
   // 본문 (HTML or plain)
   const { decoded: rawNorm, type: rawType } = _normalizeMeetingContent(m.content || '');
   const editor = document.getElementById('meeting-editor');
@@ -19718,6 +19746,7 @@ async function saveMeeting() {
     });
   }
   if (!proj.meetings) proj.meetings = [];
+  const procId = document.getElementById('meeting-proc-select')?.value || '';
 
   // 인라인 이미지 추출 — 에디터 HTML에서 base64 img를 Firebase Storage로 업로드 후 URL 교체
   const tmpDiv = document.createElement('div');
@@ -19780,6 +19809,7 @@ async function saveMeeting() {
       proj.meetings[idx] = {
         ...proj.meetings[idx],
         title, content: finalContent,
+        procId,
         images: imgSnapshot,
         mentions: mentionEmails,
         updatedAt: Date.now(),
@@ -19793,6 +19823,7 @@ async function saveMeeting() {
     if (proj.cloudId) { try { await _syncMeetingsToCloud(proj); } catch(e) { console.warn('[saveMeeting] cloud sync wait failed:', e); } }
     closeMeetingAdd();
     renderMeetingTab();
+    if (_currentProcDetailId) _renderProcRecords(_currentProcDetailId);
     if (_currentMeetingId) openMeetingDetail(_currentMeetingId);
     showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요' + (_mwUploadErr ? '(' + _mwUploadErr + ')' : '') + ' (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 수정됐습니다');
     // 수정 시 새로 추가된 멘션에만 알림 발송
@@ -19803,6 +19834,7 @@ async function saveMeeting() {
     const meeting = {
       id: 'meet_' + Date.now() + Math.random().toString(36).slice(2,6),
       title, content: finalContent,
+      procId,
       images: imgSnapshot,
       mentions: mentionEmails,
       createdAt: Date.now(),
@@ -19816,6 +19848,7 @@ async function saveMeeting() {
     if (proj.cloudId) { try { await _syncMeetingsToCloud(proj); } catch(e) { console.warn('[saveMeeting] cloud sync wait failed:', e); } }
     closeMeetingAdd();
     renderMeetingTab();
+    if (_currentProcDetailId) _renderProcRecords(_currentProcDetailId);
     showToastMessage(_mwUploadFailed ? '⚠️ 이미지가 이 기기에만 저장됐어요' + (_mwUploadErr ? '(' + _mwUploadErr + ')' : '') + ' (다른 기기에선 안 보일 수 있음)' : '✅ 기록이 저장됐습니다');
     if (mentionEmails.length) _sendMentionNotifications(meeting, mentionEmails, proj);
   }
