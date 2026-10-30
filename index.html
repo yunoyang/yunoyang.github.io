@@ -2093,8 +2093,12 @@ body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(1
   body.vs2-info #screen-form .form-header { padding-left:32px; padding-right:32px; }
   /* PC: 다른 메뉴(공정|일정, 스타일|제품)처럼 탭이 콘텐츠 영역 좌우 끝까지, 본문은 한 칼럼 */
   body.vs2-info #form-view-panel[style*="display: block"] { display:block !important; }
-  body.vs2-info #form-view-panel { padding-left:32px !important; padding-right:32px !important; }
+  body.vs2-info #form-view-panel { padding-left:32px !important; padding-right:32px !important; max-width:1440px !important; margin:0 auto; box-sizing:border-box; }
   body.vs2-info #iv-tabs { margin:0 -32px 24px; padding:0 32px; }
+}
+/* PC 상세 화면도 홈과 같은 간격: 콘텐츠 최대 1440px 가운데, 좌우 32px */
+@media (min-width:1024px) {
+  #screen-proc-detail > *, #screen-furniture-detail > * { width:100%; max-width:1440px; margin-left:auto !important; margin-right:auto !important; padding-left:32px !important; padding-right:32px !important; box-sizing:border-box; }
 }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
