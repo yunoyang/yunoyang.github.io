@@ -3749,6 +3749,32 @@ body.vs2-nav-mini #vs2-nav { transform:scale(.84) translateY(6px); box-shadow:0 
 .vs2-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
 body.vs2-on #main-scroll { padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
 body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)); }
+/* ===== PC(1024px+) vs2 레이아웃: 좌측 세로 사이드바 + 넓은 콘텐츠(최대 1440px) ===== */
+@media (min-width:1024px) {
+  body.vs2-on { --vs2-side:96px; }
+  body.vs2-on .app { max-width:100% !important; }
+  body.vs2-on #screen-main { padding-left:var(--vs2-side); box-sizing:border-box; }
+  body.vs2-on #vs2-nav { left:16px; right:auto; top:50%; bottom:auto; width:64px; max-width:none; margin:0; border-radius:32px; transform:translateY(-50%) !important; }
+  body.vs2-on #vs2-nav .vs2-nav-in { flex-direction:column; gap:6px; padding:8px 6px; }
+  body.vs2-on #vs2-nav .vs2-nav-btn { flex:none; width:52px; height:52px; }
+  body.vs2-on #main-scroll { padding-bottom:48px; }
+  body.vs2-on .floating-group { bottom:24px; }
+  body.vs2-on #main-scroll > *:not(.header) { max-width:1440px !important; padding-left:32px; padding-right:32px; box-sizing:border-box; }
+  body.vs2-on #main-scroll > #vs2-seg { padding-left:32px; padding-right:32px; }
+  body.vs2-on #screen-main .header { padding-left:32px; padding-right:32px; }
+  /* 공정: 카드 3열 그리드 */
+  body.vs2-on #vs2-timeline { display:grid !important; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:12px; align-content:start; padding:24px 0 !important; background:transparent !important; }
+  body.vs2-on #vs2-timeline > :not(.vs2-grp) { grid-column:1 / -1; }
+  body.vs2-on #vs2-timeline .vs2-grp { margin-bottom:0; height:100%; box-shadow:0 0 0 1px #eef0f3; }
+  body.vs2-on #tab-plan { background:#f6f7f9; }
+  /* 일정: 좌 캘린더 / 우 선택일 목록 */
+  body.vs2-on .cal2 { display:grid; grid-template-columns:minmax(0, 3fr) minmax(300px, 2fr); grid-template-areas:'head list' 'grid list'; column-gap:32px; align-items:start; padding-top:8px; }
+  body.vs2-on .cal2-head { grid-area:head; padding:20px 8px 12px; }
+  body.vs2-on .cal2-grid { grid-area:grid; padding:0 0 24px; row-gap:10px; }
+  body.vs2-on .cal2-num { width:44px; height:44px; }
+  body.vs2-on .cal2-list { grid-area:list; border-top:none; border-left:1px solid #eef0f3; margin-top:20px; padding:0 0 0 32px; position:sticky; top:calc(var(--vs2-hd, 0px) + 60px); }
+}
+
 </style>
 </head>
 <body>
