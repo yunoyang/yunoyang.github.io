@@ -15389,10 +15389,7 @@ function _applyHaumentSchedule(proj, force) {
   const procs = (proj.processes = proj.processes || []);
   SCHED_HAUMENT.items.forEach(it => {
     const hits = procs.filter(p => !p.deleted && it.keys.some(k => { const a = _schedNorm(p.type), b = _schedNorm(p.name); return a === k || b === k || (k.length >= 2 && (a.startsWith(k) || b.startsWith(k))); }));
-    if (!hits.length && it.create) {
-      const p = { id: 'p_' + (now + n) + Math.random().toString(36).slice(2, 6), name: it.create, type: it.create, scheduleStart: '', scheduleEnd: '', company: '', details: [] };
-      procs.push(p); hits.push(p);
-    }
+    // 없는 공정을 새로 만들지 않음 — 만들면 사용자가 삭제한 공정이 새 id로 되살아남
     hits.forEach(p => { p.scheduleStart = it.s; p.scheduleEnd = it.e; p.updatedAt = now; n++; });
   });
   proj.form = proj.form || {};
@@ -15421,7 +15418,7 @@ function _applyFurniQuote(proj) {
   const procs = (proj.processes = proj.processes || []);
   let p = procs.find(x => !x.deleted && /가구/.test(_schedNorm(x.type) + _schedNorm(x.name)));
   const now = Date.parse('2026-10-30T00:00:00+09:00');
-  if (!p) { p = { id: 'p_' + now + Math.random().toString(36).slice(2, 6), name: '가구', type: '가구', scheduleStart: '2026-12-02', scheduleEnd: '2026-12-07', company: '', details: [] }; procs.push(p); }
+  if (!p) { proj.furniQuoteApplied = QUOTE_FURNIFLOW.ver; return true; } // 삭제한 가구 공정을 되살리지 않음
   const Q = QUOTE_FURNIFLOW;
   p.company = Q.vendor;
   p.details = Q.items.map((it, i) => ({ id: 'd_fq' + i, desc: `${it.place === '기타' || it.place === it.name ? '' : it.place + ' · '}${it.name}`,
