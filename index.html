@@ -2008,6 +2008,24 @@ button, input, textarea, select { font-family:var(--font); }
 .iv-tabs button { flex:1 0 auto; padding-left:10px !important; padding-right:10px !important; white-space:nowrap; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
 .iv-tabs button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #form-view-panel[data-ivtab] .iv-col-r { display:contents; }
+#form-view-panel[data-ivtab]:not([data-ivtab="fp"]) .iv-fp-only { display:none !important; }
+.iv-fp-sub { display:flex; gap:4px; margin:0 0 12px; }
+.iv-fp-sub button { border:none; background:none; padding:8px 14px; border-radius:8px; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; }
+.iv-fp-sub button.on { background:#e7e9ed; color:#111; font-weight:600; }
+#form-view-panel .iv-fp-tabs { display:none !important; }
+#iv-floorplan-card .iv-fp-3d-wrap { display:none !important; }
+#form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card,#plan-view) { display:none !important; }
+#form-view-panel:not([data-fpsub="3d"]) #iv-fp-3d-wrap { display:none !important; }
+#form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:calc(100dvh - 200px); }
+@media (min-width:1024px) { body.vs2-info #form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { margin:0; width:100%; border-radius:12px; } }
+#form-view-panel #iv-plan-card { display:none !important; }
+#plan-view.pv-inline { position:static !important; inset:auto; z-index:auto; padding-top:0 !important; background:transparent !important; margin:0 0 16px; }
+#plan-view.pv-inline .pv-hd { display:none; }
+#plan-view.pv-inline .pv-body { overflow:visible !important; }
+#plan-view.pv-inline .pv-left, #plan-view.pv-inline .pv-right { padding-left:0 !important; padding-right:0 !important; }
+#plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
+#plan-view.pv-inline .pv-stage { height:56vh; }
+#plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
 #form-view-panel[data-ivtab="fp"] :is(#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="est"] :is(#iv-floorplan-card,#iv-plan-card,#iv-companies-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="co"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-workers-section,#iv-team-card),
@@ -4300,6 +4318,8 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         </div>
       </div>
 
+      <!-- 도면 탭 하위: 평면 / 3D -->
+      <div class="iv-fp-sub iv-fp-only" id="iv-fp-sub"><button data-k="plan" class="on" onclick="_ivFpSub('plan')">평면</button><button data-k="3d" onclick="_ivFpSub('3d')">3D</button></div>
       <!-- 도면 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card" style="padding:24px;">
         <div class="fp-edit-row">
@@ -4316,11 +4336,12 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
           <button class="iv-fp-tab-btn" id="iv-fp-tab-3d" onclick="_ivSwitchFpTab('3d')">3D</button>
         </div>
         <div class="iv-floorplan-scroll" id="iv-floorplan-scroll"></div>
-        <div class="iv-fp-3d-wrap" id="iv-fp-3d-wrap" style="display:none;"></div>
       </div>
 
-      <!-- 도면 정보 (싱글소스) -->
+      <!-- 도면 정보 (싱글소스) — 평면 탭에 '도면 보기' 내용을 바로 펼침 -->
       <div class="info-view-card" id="iv-plan-card" style="padding:22px 24px;display:none;"></div>
+      <div id="plan-view" class="pv-inline iv-fp-only" style="display:none;"></div>
+      <div class="iv-fp-3d-wrap iv-fp-only" id="iv-fp-3d-wrap" style="display:none;"></div>
       </div><!-- /iv-col-l -->
       <div class="iv-col iv-col-r">
       <!-- 견적 -->
@@ -15157,6 +15178,21 @@ function _planSvg(pm, opts) {
 }
 function _renderPlanCard() {
   const el = document.getElementById('iv-plan-card'); if (!el) return;
+  // 공사정보 > 도면 > 평면: '도면 보기' 내용을 카드 밖으로 펼쳐서 바로 보여줌
+  const host = document.getElementById('plan-view');
+  if (host && host.classList.contains('pv-inline')) {
+    const proj0 = getProject();
+    if (_planSeed(proj0)) { save(); if (_isProjOwner(proj0)) _syncProjToCloud(proj0); }
+    const pm0 = _planGet(proj0);
+    if (!pm0) { host.style.display = 'none'; el.style.display = 'none'; return; }
+    _planInjectCss();
+    host.style.display = 'flex';
+    if (!_planSel || !pm0.zones.find(z => z.id === _planSel)) _planSel = pm0.zones[0]?.id;
+    if (_planLayer === null) _planLayer = (pm0.layers && pm0.layers[0]) ? pm0.layers[0].id : '';
+    _planZoom = { k: 1, x: 0, y: 0 };
+    _renderPlanView();
+    return;
+  }
   const proj = getProject();
   if (_planSeed(proj)) { save(); if (_isProjOwner(proj)) _syncProjToCloud(proj); }
   const pm = _planGet(proj);
@@ -16783,6 +16819,22 @@ function updateCollabIndicator(collaborators, owner) {
   }
 }
 
+// 공사정보 > 도면 하위 탭: 평면(도면 이미지 + 도면 정보 펼침) / 3D(화면 꽉 차게 3D 뷰)
+function _ivFpSub(k) {
+  const panel = document.getElementById('form-view-panel'); if (!panel) return;
+  panel.dataset.fpsub = k;
+  document.querySelectorAll('#iv-fp-sub button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  if (k !== '3d') _ivSwitchFpTab('2d');
+  if (k === '3d') {
+    _ivSwitchFpTab('3d');
+    const wrap = document.getElementById('iv-fp-3d-wrap');
+    requestAnimationFrame(() => {
+      if (!wrap) return;
+      const top = wrap.getBoundingClientRect().top;
+      wrap.style.height = Math.max(320, window.innerHeight - top) + 'px';
+    });
+  }
+}
 // 공사정보 탭 전환 — 섹션 표시는 CSS(data-ivtab)로, 비어 있는 탭엔 안내 문구
 function _ivTab(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
