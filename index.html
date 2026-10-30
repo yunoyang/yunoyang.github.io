@@ -6306,6 +6306,7 @@ async function openUserProfile(email, fallbackName, role) {
   emailEl.textContent = email || '';
   bizCard.innerHTML = '';
   tabs.style.display = 'none';
+  const pBtn = document.querySelector('.up-tab-btn[data-tab="profile"]'); if (pBtn) pBtn.style.display = '';
   _switchProfileTab('profile');
   _renderPortfolioGrid();
   if (!email) return;
@@ -14839,7 +14840,38 @@ async function _openCompanyDetail(cId, name, phone, area) {
       }
     } catch(e) { console.warn('_openCompanyDetail lookup failed:', e); }
   }
-  _openContractorDetail(cId || name, { name, phone, area });
+  // 전문가 계정이 없는 업체도 단한스튜디오와 같은 프로필 페이지 구조로 보여줌
+  const c = _contractors.find(x => (cId && x.id === cId) || x.name === name) || { id: cId, name, phone, area };
+  _openContractorProfile({ ...c, name: c.name || name, phone: c.phone || phone, area: c.area || area });
+}
+
+// 업체 프로필 (vb_contractors 기반) — openUserProfile과 같은 화면·탭(프로필/업체정보/포트폴리오)
+function _openContractorProfile(c) {
+  goTo('user-profile');
+  _upCurrentEmail = '';
+  _upIsOwnProfile = false;
+  const av = document.getElementById('up-avatar');
+  av.style.background = '#000';
+  av.innerHTML = `<span style="color:#fff;">${esc((c.name || '?').charAt(0))}</span>`;
+  document.getElementById('up-name').innerHTML = esc(c.name || '');
+  document.getElementById('up-role').textContent = '업체';
+  document.getElementById('up-email').textContent = '';
+  const pBtn = document.querySelector('.up-tab-btn[data-tab="profile"]'); if (pBtn) pBtn.style.display = 'none'; // 이메일 없는 업체는 프로필 탭 숨김
+  document.getElementById('up-business-card').innerHTML = `
+    <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">${esc(c.bizName || c.name || '')}</div>
+    <div style="font-size:13px;color:#666;line-height:2;">
+      시공 업체${(c.originalCategory || c.category) ? ' · ' + esc(c.originalCategory || c.category) : ''}<br>
+      ${c.area ? `📍 ${esc(c.area)}<br>` : ''}
+      ${c.address ? `🏠 ${esc(c.address)}<br>` : ''}
+      ${c.phone ? `📞 <a href="tel:${esc(String(c.phone).replace(/[^0-9+]/g, ''))}" style="color:#5084ff;">${esc(c.phone)}</a><br>` : ''}
+      ${c.bizNo ? `🧾 사업자 ${esc(c.bizNo)}<br>` : ''}
+      ${c.description ? `💬 ${esc(c.description)}` : ''}
+    </div>`;
+  document.getElementById('up-tabs').style.display = 'flex';
+  const imgs = [...(c.media || []).filter(m => m && m.url && m.type !== 'video').map(m => m.url), ...(c.photos || [])];
+  _upPortfolio = imgs.map(u => ({ url: u, thumb: u }));
+  _renderPortfolioGrid();
+  _switchProfileTab('business');
 }
 
 // fallback: DB/전문가 계정 어디에도 없는 업체(직접 입력)는 저장된 정보만으로 시트를 채운다
