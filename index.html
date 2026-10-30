@@ -11440,7 +11440,7 @@ function _getProcPhase(proc) {
 // ===== 메인 화면 v2 (Figma VSD: 공사 개요 · 공정|일정 · 단계 타임라인 · 하단 메뉴) =====
 const VS2_PHASE_LABEL = { planning: '플래닝', structure: '구조공사', finish: '마감공사', after: '입주' };
 const VS2_ICONS = {
-  info: { d: ['M 9.5 3.5 L 18.5 3.5 C 20.4 3.5 22 5.1 22 7 L 22 21 C 22 22.9 20.4 24.5 18.5 24.5 L 9.5 24.5 C 7.6 24.5 6 22.9 6 21 L 6 7 C 6 5.1 7.6 3.5 9.5 3.5 Z', 'M 10.5 10 L 17.5 10', 'M 10.5 14 L 17.5 14', 'M 10.5 18 L 14.5 18'], fill: [] },
+  info: { d: ['M 9.5 3.5 L 18.5 3.5 C 20.4 3.5 22 5.1 22 7 L 22 21 C 22 22.9 20.4 24.5 18.5 24.5 L 9.5 24.5 C 7.6 24.5 6 22.9 6 21 L 6 7 C 6 5.1 7.6 3.5 9.5 3.5 Z', 'M 10.5 10 L 17.5 10', 'M 10.5 14 L 17.5 14', 'M 10.5 18 L 14.5 18'], fill: [0], inv: [1, 2, 3] },
   meeting: { d: ['M 16.2 5.8 Q 17.5 4.5 18.8 5.8 L 21.2 8.2 Q 22.5 9.5 21.2 10.8 L 11 21 L 6.9 22.1 Q 5.5 22.5 5.9 21.1 L 7 17 Z', 'M 15.5 6.5 L 20.5 11.5', 'M 14 23.5 L 23 23.5'], fill: [0] },
   more: { d: ['M 4.5 8.5 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0 Z', 'M 15.5 8.5 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0 Z', 'M 4.5 19.5 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0 Z', 'M 15.5 19.5 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0 Z'], fill: [0, 1, 2, 3] },
   plan: { d: ['M 4 11.8 C 4 11.1 4.3 10.5 4.8 10.1 L 12.7 4 C 13.5 3.4 14.5 3.4 15.3 4 L 23.2 10.1 C 23.7 10.5 24 11.1 24 11.8 L 24 22 C 24 23.1 23.1 24 22 24 L 17.5 24 L 17.5 18.5 C 17.5 17.1 16.4 16 15 16 L 13 16 C 11.6 16 10.5 17.1 10.5 18.5 L 10.5 24 L 6 24 C 4.9 24 4 23.1 4 22 Z'], fill: [0] },
@@ -11450,7 +11450,7 @@ const VS2_ICONS = {
 };
 function _vs2Icon(key, active) {
   const ic = VS2_ICONS[key];
-  return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
+  return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="${active && (ic.inv || []).includes(i) ? '#fff' : '#111'}" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
 // 첫 화면 로고: 손글씨를 쓰듯 글자 조각을 쓰는 순서(윗줄 → 아랫줄, 왼쪽 → 오른쪽)대로 왼쪽부터 드러냄
