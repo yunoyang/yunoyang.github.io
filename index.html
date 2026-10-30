@@ -11419,7 +11419,7 @@ function _renderMoreTab() {
   const soon = t => `<span class="mr-soon">${t}</span>`;
   const row = (ic, label, on, right = '') => `<button class="mr-row" onclick="${on}"><span class="mr-ic">${ic}</span><span class="mr-l">${label}</span>${right}${chev}</button>`;
   const isAdmin = state.loggedIn && u.email === _ADMIN_EMAIL;
-  const L = d => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333d4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const L = d => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const I = {
     camera: L('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
     layers: L('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
