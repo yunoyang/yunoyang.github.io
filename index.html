@@ -2019,6 +2019,8 @@ button, input, textarea, select { font-family:var(--font); }
 #form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:calc(100dvh - 200px); }
 @media (min-width:1024px) { body.vs2-info #form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { margin:0; width:100%; border-radius:12px; } }
 #form-view-panel #iv-plan-card { display:none !important; }
+/* 평면 탭: 도면 정보가 펼쳐져 있으면 위의 도면 이미지 카드는 숨김 */
+#form-view-panel:has(#plan-view[style*="flex"]) #iv-floorplan-card { display:none !important; }
 #plan-view.pv-inline { position:static !important; inset:auto; z-index:auto; padding-top:0 !important; background:transparent !important; margin:0 0 16px; }
 #plan-view.pv-inline .pv-hd { display:none; }
 #plan-view.pv-inline .pv-body { overflow:visible !important; }
