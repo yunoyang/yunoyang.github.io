@@ -2197,8 +2197,8 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .mr-proj > span:first-child { display:flex; flex-direction:column; min-width:0; }
 .mr-proj small { font-size:12px; color:#8b95a1; }
 .mr-proj b { font-size:16px; font-weight:600; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.mr-proj-more { display:flex; align-items:center; justify-content:center; width:32px; height:32px; margin-right:-8px; flex-shrink:0; }
-.mr-proj-btn { margin-left:auto; font-size:13px; font-weight:600; color:#333d4b; background:#f2f4f6; border-radius:8px; padding:6px 12px; flex-shrink:0; }
+.mr-proj-more { margin-left:auto; display:flex; align-items:center; justify-content:center; width:32px; height:32px; margin-right:-8px; flex-shrink:0; }
+.mr-proj-btn { font-size:13px; font-weight:600; color:#333d4b; background:#f2f4f6; border-radius:8px; padding:6px 12px; flex-shrink:0; }
 .mr-sec { background:#fff; border-radius:16px; margin-top:12px; padding:8px 0; }
 .mr-h { font-size:13px; font-weight:600; color:#8b95a1; padding:10px 20px 4px; }
 .mr-row { padding:14px 20px; }
@@ -11551,7 +11551,7 @@ function _renderMoreTab() {
       <span class="mr-av">${av}</span>
       <span class="mr-pt"><b>${esc(state.loggedIn ? (u.name || u.email?.split('@')[0] || '사용자') : '로그인하기')}</b><small>${esc(state.loggedIn ? (u.email || '') : '로그인하고 프로젝트를 저장하세요')}</small></span>${chev}
     </button>
-    ${proj ? `<button class="mr-proj" onclick="goTo('landing')"><span><small>현재 프로젝트</small><b>${esc(proj.name || '')}</b></span><span class="mr-proj-btn">변경</span>${_isProjOwner(proj) ? `<span class="mr-proj-more" role="button" aria-label="프로젝트 더보기" onclick="_mrProjMenu(event)"><svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7684"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>` : ''}</button>` : ''}
+    ${proj ? `<button class="mr-proj" onclick="goTo('landing')"><span><small>현재 프로젝트</small><b>${esc(proj.name || '')}</b></span>${_isProjOwner(proj) ? `<span class="mr-proj-more" role="button" aria-label="프로젝트 더보기" onclick="_mrProjMenu(event)"><svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7684"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>` : ''}</button>` : ''}
     <div class="mr-sec"><div class="mr-h">프로젝트</div>
       ${row(I.camera, '현장 사진', "_vs2Go('sitephotos')")}
       ${row(I.layers, '자재 선택', "_vs2Go('matselect')")}
