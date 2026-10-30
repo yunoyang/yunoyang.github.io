@@ -11673,7 +11673,7 @@ function _vs2Phases(proj) {
   list.forEach(x => { x.status = x === cur ? 'current' : (x.done ? 'done' : 'todo'); });
   return list;
 }
-function _vs2GoEstimate() { const fp = document.getElementById('form-view-panel'); if (fp) fp.dataset.ivtab = 'est'; _vs2Go('info'); setTimeout(() => _ivTab('est'), 60); }
+function _vs2GoEstimate() { const fp = document.getElementById('form-view-panel'); if (fp) fp.dataset.ivtab = 'est'; goTo('form'); setTimeout(() => _ivTab('est'), 60); }
 function _vs2RenderOverview() {
   const el = document.getElementById('vs2-overview'); const proj = getProject(); if (!el || !proj) return;
   let total = 0; const companies = new Set();
