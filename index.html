@@ -1949,6 +1949,16 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-proc-s { font-size:13px; color:#8b95a1; }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
+/* 공사정보 탭 (도면 / 견적 / 업체 / 팀) */
+.iv-tabs { margin:4px 0 12px; }
+#form-view-panel[data-ivtab] .iv-col-r { display:contents; }
+#form-view-panel[data-ivtab="fp"] :is(#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card),
+#form-view-panel[data-ivtab="est"] :is(#iv-floorplan-card,#iv-plan-card,#iv-companies-section,#iv-workers-section,#iv-team-card),
+#form-view-panel[data-ivtab="co"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-workers-section,#iv-team-card),
+#form-view-panel[data-ivtab="team"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-companies-section) { display:none !important; }
+#form-view-panel[data-ivtab="team"] #iv-team-card { display:block !important; }
+.iv-empty { padding:32px 24px; text-align:center; font-size:14px; color:#8b95a1; }
+
 /* 업체 페이지 관리 */
 #pro-mgr { display:none; position:fixed; inset:0; z-index:400; background:#f6f7f9; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .pro-mgr-in { max-width:640px; margin:0 auto; padding-bottom:calc(40px + env(safe-area-inset-bottom,0px)); }
@@ -4173,6 +4183,10 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         </div>
       </div>
 
+      <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
+      <div class="vs2-ftab iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button></div>
+      <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
+      <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
       <!-- 도면 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card" style="padding:24px;">
         <div class="fp-edit-row">
@@ -13276,6 +13290,7 @@ function switchToFormEdit() { _showInfoViewPanel(false); }
 
 function _loadInfoView() {
   const proj = getProject(); if (!proj) return;
+  setTimeout(() => _ivTab(document.getElementById('form-view-panel')?.dataset.ivtab || 'fp'), 0);
   const f = proj.form || {};
   const set = (id, val) => {
     const el = document.getElementById(id); if (!el) return;
@@ -13404,7 +13419,7 @@ function _loadInfoView() {
   if (costCard && costRows && costTotal) {
     // 공정별 비용
     const _ex2 = _estExtra(proj);
-    const procCost = proj.processes.reduce((s,p) => s + _procCost(p), 0) + _ex2.unlinked + _ex2.indirect;
+    const procCost = Math.round(proj.processes.reduce((s,p) => s + _procCost(p), 0) + _ex2.unlinked + _ex2.indirect);
     // 공정 세부 항목
     const procDetails = proj.processes
       .filter(p => _procCost(p) > 0)
@@ -16521,6 +16536,16 @@ function updateCollabIndicator(collaborators, owner) {
   }
 }
 
+// 공사정보 탭 전환 — 섹션 표시는 CSS(data-ivtab)로, 비어 있는 탭엔 안내 문구
+function _ivTab(k) {
+  const panel = document.getElementById('form-view-panel'); if (!panel) return;
+  panel.dataset.ivtab = k;
+  document.querySelectorAll('#iv-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  const empty = document.getElementById('iv-tab-empty');
+  const vis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.innerHTML.trim(); };
+  const msg = k === 'co' && !vis('iv-companies-section') ? '공정에 등록된 업체가 아직 없어요' : '';
+  if (empty) { empty.style.display = msg ? '' : 'none'; empty.textContent = msg; }
+}
 function openCollabFromHeader() {
   openShareDialog();
   setTimeout(() => switchShareTab('collab'), 50);
