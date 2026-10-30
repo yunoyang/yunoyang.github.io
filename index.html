@@ -11860,8 +11860,11 @@ function deleteProcess(procId) {
   // save()가 유발하는 owner 전체 sync(_syncProjToCloud)가 삭제 직전 클라우드 스냅샷과
   // union하면서 방금 지운 공정을 되살리지 못하도록, save() 호출보다 먼저 tombstone 등록
   _markIdDeleted('process', procId);
+  proj.deletedProcIds = _mergeDelIds(proj.deletedProcIds, [procId]);
   _closeProcDetailScreen();
   save(); renderAll();
+  // 전체 sync가 실패해도 삭제는 반드시 클라우드에 반영되도록 공정만 따로 저장
+  if (proj.cloudId) _syncProcessesToCloud(proj);
 }
 function deleteDetail(procId, detailId) {
   const proc = getProject()?.processes.find(p => p.id === procId);
@@ -16250,6 +16253,13 @@ function _mergeStyleRoomsArr(localRooms, cloudRooms) {
 }
 
 // processes: id 기준 병합, 없는 로컬 항목은 신규(local-only)로 보존
+// 공정 영구 삭제 기록: proj.deletedProcIds(문자열 배열)를 클라우드에도 저장·합집합 병합.
+// 60초 tombstone만으로는 클라우드 저장이 실패한 동안 삭제가 반영되지 않아, 시간이 지나면
+// 클라우드에 남은 공정이 union 병합으로 되살아나던 문제('실측' 등 삭제해도 다시 나옴)를 막음
+const _procTombs = new Set();
+function _procTombAdd(arr) { (arr || []).forEach(id => id && _procTombs.add(id)); }
+function _mergeDelIds(a, b) { _procTombAdd(a); _procTombAdd(b); return [...new Set([...(a || []), ...(b || [])])]; }
+try { (JSON.parse(localStorage.getItem('vibespace') || '{}').projects || []).forEach(p => _procTombAdd(p.deletedProcIds)); } catch (e) {}
 function _mergeProcessesArr(localArr, cloudArr) {
   localArr = localArr || [];
   cloudArr = cloudArr || [];
@@ -16260,7 +16270,7 @@ function _mergeProcessesArr(localArr, cloudArr) {
     return lp ? _mergeOneProcess(lp, cp) : cp;
   });
   // 로컬에서 완전히 삭제된 공정(deleteProcess)이 union 병합으로 되살아나지 않도록 tombstone 필터링
-  return [...merged, ...localOnly].filter(p => !_isRecentlyDeletedId('process', p.id));
+  return [...merged, ...localOnly].filter(p => !_isRecentlyDeletedId('process', p.id) && !_procTombs.has(p.id));
 }
 
 // materialSelections(자재선택): { [공간명]: { picks, wall, floor, ..., updatedAt } } —
@@ -16316,6 +16326,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   merged.contentLinks = _mergeListById(local.contentLinks, cp.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
   merged.furnitureItems = _mergeListById(local.furnitureItems, cp.furnitureItems, { newFirst: true, type: 'furnitureItem' });
   merged.meetings = _mergeListById(local.meetings, cp.meetings, { sortByTsDesc: true, type: 'meeting' });
+  merged.deletedProcIds = _mergeDelIds(local.deletedProcIds, cp.deletedProcIds);
   merged.processes = _mergeProcessesArr(local.processes, cp.processes);
   // 스펙북 자재: 이 필드만 병합에서 빠져 있으면 새로고침 시 클라우드 값으로 통째로 덮어써져
   // 아직 동기화 안 된 로컬 자재가 사라짐 (삭제는 soft-delete(.deleted)라 union 병합으로 안전)
@@ -16588,6 +16599,7 @@ function _syncProjToCloud(proj) {
     // 구현돼 있어서 필드 하나가 통째로 누락되는 사고가 반복됐음)
     projData.contentLinks = _mergeListById(proj.contentLinks, cloudData.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     projData.furnitureItems = _mergeListById(proj.furnitureItems, cloudData.furnitureItems, { newFirst: true, type: 'furnitureItem' });
+    projData.deletedProcIds = proj.deletedProcIds = _mergeDelIds(proj.deletedProcIds, cloudData.deletedProcIds);
     projData.processes = _mergeProcessesArr(proj.processes, cloudData.processes);
     projData.materialItems = _mergeListById(proj.materialItems, cloudData.materialItems, { newFirst: true, type: 'materialItem' });
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
@@ -16683,6 +16695,8 @@ function _syncProjToCloud(proj) {
     }
     const diag = _fsDiag(proj);
     console.error('sync err', e.code, e.message, diag);
+    // 전체 문서 저장이 실패해도 공정 추가·수정·삭제는 공정 필드만 따로 저장해 반영되게 함
+    _syncProcessesToCloud(proj).catch(() => {});
     // 원인 파악용: 마지막 실패 정보를 남기고, 알림에 에러 코드를 함께 표시
     try { localStorage.setItem('vb_last_sync_err', JSON.stringify({ at: new Date().toISOString(), code: e.code, msg: String(e.message || '').slice(0, 300), diag })); } catch (_) {}
     let kb = ''; try { kb = Math.round(JSON.parse(diag).bytes / 1024) + 'KB'; } catch (_) {}
@@ -16773,12 +16787,14 @@ async function _syncProcessesToCloud(proj) {
   try {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudProcesses = snap.data()?.projectData?.processes || [];
+    proj.deletedProcIds = _mergeDelIds(proj.deletedProcIds, snap.data()?.projectData?.deletedProcIds);
     // 다른 sync 경로들과 동일한 공용 헬퍼로 병합 (updatedAt 기준, records는 항상 합집합)
     const finalProcesses = _mergeProcessesArr(proj.processes, cloudProcesses);
     // 체크리스트 사진 + 공정기록 사진 base64는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
     const finalForCloud = finalProcesses.map(_stripProcessBase64);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.processes': finalForCloud,
+      'projectData.deletedProcIds': proj.deletedProcIds || [],
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
       'meta.updatedBySessionId': _sessionId,
@@ -17026,6 +17042,7 @@ function _startCollabListener(cloudId) {
     proj.styleRooms = _mergeStyleRoomsArr(localStyleRooms, remote.styleRooms);
     proj.contentLinks = _mergeListById(localContentLinks, remote.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     proj.furnitureItems = _mergeListById(localFurnitureItems, remote.furnitureItems, { newFirst: true, type: 'furnitureItem' });
+    proj.deletedProcIds = _mergeDelIds(proj.deletedProcIds, remote.deletedProcIds);
     proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
