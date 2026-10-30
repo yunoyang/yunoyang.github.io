@@ -2067,7 +2067,7 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-body { overflow:visible !important; }
 #plan-view.pv-inline .pv-left, #plan-view.pv-inline .pv-right { padding-left:0 !important; padding-right:0 !important; }
 #plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
-#plan-view.pv-inline .pv-stage { height:56vh; }
+#plan-view.pv-inline .pv-stage { height:56vh; touch-action:pan-y; }
 #plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
 .pv-dds { display:flex; gap:8px; }
 .pv-dd { flex:1; min-width:0; display:flex; align-items:center; gap:6px; height:44px; padding:0 12px; border:1px solid #e5e8eb; border-radius:10px; background:#fff; font-family:inherit; cursor:pointer; color:#333d4b; }
@@ -15655,7 +15655,10 @@ function _closePlanView() { const ov = document.getElementById('plan-view'); if 
 function _planSelect(id) { _planSel = id; _renderPlanView(true); }
 function _planSetLayer(id) { _planLayer = id; _renderPlanView(true); }
 function _planTogglePt(t) { _planPtFilter[t] = !_planPtFilter[t]; _renderPlanView(true); }
-function _planApplyZoom() { const inner = document.querySelector('#plan-view .pv-inner'); if (inner) inner.style.transform = `translate(${_planZoom.x}px,${_planZoom.y}px) scale(${_planZoom.k})`; }
+function _planApplyZoom() {
+  // 공사정보 안 도면: 확대 전엔 세로 드래그를 페이지 스크롤로 넘김, 확대하면 도면 이동
+  const _st = document.querySelector('#plan-view.pv-inline .pv-stage'); if (_st) _st.style.touchAction = _planZoom.k > 1 ? 'none' : 'pan-y';
+  const inner = document.querySelector('#plan-view .pv-inner'); if (inner) inner.style.transform = `translate(${_planZoom.x}px,${_planZoom.y}px) scale(${_planZoom.k})`; }
 function _planZoomBy(f, cx, cy) {
   const stage = document.querySelector('#plan-view .pv-stage'); if (!stage) return;
   const r = stage.getBoundingClientRect(); if (cx == null) { cx = r.width / 2; cy = r.height / 2; }
@@ -15669,9 +15672,9 @@ function _planBindStage() {
   const stage = document.querySelector('#plan-view .pv-stage'); if (!stage) return;
   const pts = new Map(); let start = null, moved = false, pinch = null;
   const local = e => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  stage.addEventListener('wheel', e => { e.preventDefault(); const [x, y] = local(e); _planZoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15, x, y); }, { passive: false });
+  stage.addEventListener('wheel', e => { if (stage.closest('.pv-inline') && !e.ctrlKey) return; e.preventDefault(); const [x, y] = local(e); _planZoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15, x, y); }, { passive: false });
   stage.addEventListener('pointerdown', e => {
-    pts.set(e.pointerId, local(e)); stage.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, local(e)); if (!(stage.closest('.pv-inline') && _planZoom.k <= 1)) stage.setPointerCapture(e.pointerId);
     if (pts.size === 1) { start = { p: local(e), x: _planZoom.x, y: _planZoom.y }; moved = false; }
     if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), k: _planZoom.k }; moved = true; }
   });
