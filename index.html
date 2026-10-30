@@ -6978,9 +6978,10 @@ function _notifInjectCss() {
 #notif-btn{position:relative;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;margin-right:6px;}
 /* 알림 상태 (VSD 27-1156): 안 읽은 알림이 있으면 종 우상단에 빨간 점 */
 #notif-btn .notif-badge{position:absolute;top:9px;left:22px;width:7px;height:7px;padding:0;border-radius:50%;background:#ff4e4e;box-shadow:0 0 0 1.5px #fff;font-size:0;color:transparent;overflow:hidden;}
-#notif-panel{position:fixed;inset:0;z-index:9200;display:none;flex-direction:column;background:#f7f8fa;padding-top:env(safe-area-inset-top);}
-#notif-panel .np-hd{background:#fff;border-bottom:1px solid #eef0f5;display:flex;align-items:center;gap:6px;padding:10px 12px;flex-shrink:0;}
-#notif-panel .np-hd b{flex:1;font-size:17px;}
+#notif-panel{position:fixed;inset:0;z-index:9200;display:none;flex-direction:column;background:#f7f8fa;}
+#notif-panel .np-hd{background:#fff;border-bottom:1px solid var(--divider,#eef0f5);display:flex;align-items:center;gap:8px;padding:10px 10px 8px 9px;padding-top:max(env(safe-area-inset-top,0px),10px);flex-shrink:0;}
+#notif-panel .np-hd b{flex:1;font-size:20px;font-weight:600;}
+#notif-panel .np-hd .back-btn{padding:4px;color:#222;}
 #notif-panel .np-hd button{border:none;background:none;cursor:pointer;color:#555;font-size:13px;padding:8px;}
 #notif-panel .np-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(24px + env(safe-area-inset-bottom));max-width:640px;width:100%;margin:0 auto;box-sizing:border-box;}
 #notif-panel .np-item{display:flex;gap:12px;background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;align-items:flex-start;}
@@ -7024,7 +7025,7 @@ function _renderNotifPanel() {
     ? `<div class="np-push"><div style="flex:1;">${_pushState === 'denied' ? '푸시 알림이 꺼져 있어요. 설정 앱 → 바이브스페이스 → 알림에서 켤 수 있어요.' : '초대·현장 사진 소식을 푸시로 받아보세요.'}</div>${_pushState === 'denied' ? '' : '<button onclick="_pushRequest(true)">알림 켜기</button>'}</div>` : '';
   if (_notifView === 'settings') {
     const pr = _notifPrefsGet();
-    p.innerHTML = `<div class="np-hd"><button onclick="_notifView='list';_renderNotifPanel()" style="font-size:24px;color:#111;">‹</button><b>알림 설정</b></div>
+    p.innerHTML = `<div class="np-hd"><button class="back-btn" onclick="_notifView='list';_renderNotifPanel()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button><b>알림 설정</b></div>
       <div class="np-body">${pushBanner}
         <div class="np-set">${Object.entries(NOTIF_CATS).map(([k, c]) => `<div class="np-row"><div>${c.label}<small>${c.desc}</small></div><button class="np-sw${pr[k] ? ' on' : ''}" onclick="_notifTogglePref('${k}')" aria-label="${c.label}"></button></div>`).join('')}</div>
         <div class="np-set"><div class="np-row"><div>방해 금지 (밤 10시 ~ 오전 8시)<small>이 시간의 푸시는 아침에 모아서 보내요. 초대 알림은 바로 보내요.</small></div><button class="np-sw${pr.quiet ? ' on' : ''}" onclick="_notifTogglePref('quiet')" aria-label="방해 금지"></button></div></div>
@@ -7033,7 +7034,7 @@ function _renderNotifPanel() {
     return;
   }
   const items = _notifItems;
-  p.innerHTML = `<div class="np-hd"><button onclick="closeNotifPanel()" style="font-size:24px;color:#111;">‹</button><b>알림</b>
+  p.innerHTML = `<div class="np-hd"><button class="back-btn" onclick="closeNotifPanel()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button><b>알림</b>
       ${items.some(x => !x.read) ? '<button onclick="_notifMarkAllRead()">모두 읽음</button>' : ''}<button onclick="_notifView=\'settings\';_renderNotifPanel()">설정</button></div>
     <div class="np-body">${pushBanner}
       ${items.length ? items.map(n => `<div class="np-item${n.read ? '' : ' unread'}" onclick="_notifOpen('${n.id}')"><div class="np-ic">${(NOTIF_TYPES[n.type] || {}).icon || '🔔'}</div><div style="flex:1;min-width:0;"><div class="np-t">${esc(n.body || n.title)}</div><div class="np-m">${esc(n.projectName || '')} · ${_notifTimeAgo(n.createdAt)}</div></div></div>`).join('')
@@ -15472,7 +15473,7 @@ function _planInjectCss() {
   st.textContent = `
 #plan-view{position:fixed;inset:0;background:#f7f8fa;z-index:8700;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);}
 #plan-view .pv-hd{background:#fff;border-bottom:1px solid #eef0f5;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
-#plan-view .pv-back{border:none;background:none;font-size:26px;line-height:1;cursor:pointer;padding:4px 10px;color:#111;}
+#plan-view .pv-back{padding:4px;color:#222;}
 #plan-view .pv-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 #plan-view .pv-left{display:flex;flex-direction:column;gap:8px;padding:10px 12px 0;}
 #plan-view .pv-right{padding:12px 12px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;}
@@ -15587,7 +15588,7 @@ function _renderPlanView(keepScroll) {
   const layers = pm.layers || [], hasImg = layers.length && pm.imgBox;
   ov.innerHTML = `
   <div class="pv-hd">
-    <button class="pv-back" onclick="_closePlanView()" aria-label="닫기">‹</button>
+    <button class="back-btn pv-back" onclick="_closePlanView()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
     <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;">도면 정보</div><div style="font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(pm.name)} · ${pm.width.toLocaleString()}×${pm.height.toLocaleString()}mm · ${total.toFixed(1)}㎡</div></div>
   </div>
   <div class="pv-body">
