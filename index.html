@@ -1921,6 +1921,29 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== MONTHLY CALENDAR TABLE ===== */
 #calendar-container { padding:0; background:#fff; }
 .cal2 { background:#fff; }
+.pr-feed { padding:0 16px; }
+.pr-day { font-size:13px; font-weight:700; color:#333d4b; padding:22px 4px 10px; }
+.pr-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,.06); cursor:default; }
+.pr-card[onclick] { cursor:pointer; }
+.pr-top { display:flex; align-items:center; gap:10px; }
+.pr-av { width:32px; height:32px; border-radius:50%; background:#e9e3da; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#111; flex-shrink:0; }
+.pr-who { flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.3; }
+.pr-who b { font-size:14px; font-weight:600; color:#111; }
+.pr-who small { font-size:12px; color:#8b95a1; }
+.pr-tag { font-size:11px; font-weight:600; color:#5084ff; background:#eef3ff; border-radius:6px; padding:3px 7px; }
+.pr-acts { display:flex; gap:2px; }
+.pr-acts button { border:none; background:none; padding:6px; color:#aab1ba; cursor:pointer; }
+.pr-gal { display:grid; gap:4px; margin-top:12px; border-radius:12px; overflow:hidden; }
+.pr-gal.n2, .pr-gal.n4 { grid-template-columns:1fr 1fr; }
+.pr-gal.n3 { grid-template-columns:2fr 1fr; grid-template-rows:1fr 1fr; }
+.pr-gal.n3 .pr-ph:first-child { grid-row:1 / 3; }
+.pr-ph { position:relative; background:#f2f4f6; aspect-ratio:1; }
+.pr-gal.n1 .pr-ph { aspect-ratio:4/3; }
+.pr-gal.n3 .pr-ph:first-child { aspect-ratio:auto; }
+.pr-ph img { width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
+.pr-ph span { position:absolute; inset:0; background:rgba(0,0,0,.45); color:#fff; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.pr-title { font-size:15px; font-weight:700; color:#111; margin-top:12px; }
+.pr-text { font-size:14px; color:#333; line-height:1.65; margin-top:8px; white-space:pre-line; word-break:break-word; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
 .cal2-head { display:flex; justify-content:space-between; align-items:center; padding:20px 20px 12px; }
 .cal2-tw { display:flex; align-items:center; gap:2px; margin-left:-8px; }
 .cal2-nav { width:32px; height:32px; border:none; background:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -12132,42 +12155,38 @@ function _renderProcRecords(procId) {
     el.innerHTML = `${addBtn}<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:#bbb;">아직 공정 기록이 없습니다</div>`;
     return;
   }
+  // 날짜별 피드: 날짜 헤더 + 카드(작성자·시간 / 사진 / 제목·본문)
+  const DOW = ['일','월','화','수','목','금','토'];
+  const p2 = n => String(n).padStart(2,'0');
+  let lastDay = '';
   const listHtml = records.map(r => {
     const d = new Date(r.createdAt||0);
-    if (r._meeting) {
-      const ds = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-      const thumb = (r.images||[])[0];
-      return `<button onclick="openMeetingDetail('${r.id}')" style="display:flex;gap:12px;align-items:center;width:calc(100% - 32px);text-align:left;background:#fff;border:none;border-radius:14px;margin:12px 16px 0;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;font-family:var(--font);">
-        <span style="flex:1;min-width:0;"><span style="display:inline-block;font-size:11px;font-weight:600;color:#5084ff;background:#eef3ff;border-radius:6px;padding:2px 6px;margin-bottom:6px;">기록</span>
-        <span style="display:block;font-size:15px;font-weight:600;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.title||'(제목 없음)')}</span>
-        <span style="display:block;font-size:12px;color:#bbb;margin-top:4px;">${ds} · ${esc(r.createdByName || r.createdBy?.split('@')[0] || '')}</span></span>
-        ${thumb ? `<img src="${esc(thumb)}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;">` : ''}
-      </button>`;
-    }
-    const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const day = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())} (${DOW[d.getDay()]})`;
+    const head = day !== lastDay ? `<div class="pr-day">${day}</div>` : '';
+    lastDay = day;
+    const who = esc(r.createdByName || r.createdBy?.split('@')[0] || '');
+    const time = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
     const { decoded, type } = _normalizeMeetingContent(r.content||'');
-    const contentHtml = type === 'html' ? decoded
-      : esc(decoded).replace(/\n/g,'<br>');
-    const imgsHtml = (r.images||[]).map(src =>
-      `<img src="${src}" style="width:100%;border-radius:10px;margin-bottom:8px;display:block;cursor:zoom-in;" onclick="_zoomFromImg(this)">`
-    ).join('');
-    return `<div style="background:#fff;border-radius:14px;margin:12px 16px 0;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:12px;color:#bbb;">${dateStr} · ${esc(r.createdByName || r.createdBy?.split('@')[0] || '')}</span>
-        <div style="display:flex;gap:4px;">
-          <button onclick="openProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;">
-            <svg width="14" height="14" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <button onclick="_deleteProcRecord('${r.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:#e53935;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-          </button>
-        </div>
-      </div>
-      ${imgsHtml ? `<div style="margin-bottom:10px;">${imgsHtml}</div>` : ''}
-      <div style="font-size:14px;color:#333;line-height:1.8;word-break:break-word;">${contentHtml}</div>
+    const tmp = document.createElement('div');
+    tmp.innerHTML = type === 'html' ? decoded : esc(decoded).replace(/\n/g,'<br>');
+    const imgs = [...(r.images||[]), ...[...tmp.querySelectorAll('img')].map(i => i.getAttribute('src'))].filter((v, i, a) => v && a.indexOf(v) === i);
+    tmp.querySelectorAll('img').forEach(i => i.remove());
+    tmp.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+    tmp.querySelectorAll('p,div,li').forEach(b => b.append('\n'));
+    const text = esc(tmp.textContent.replace(/\n{3,}/g, '\n\n').trim());
+    const shown = imgs.slice(0, 4);
+    const gal = shown.length ? `<div class="pr-gal n${shown.length}">${shown.map((src, i) => `<div class="pr-ph"><img src="${esc(src)}" loading="lazy" onclick="event.stopPropagation();_zoomFromImg(this)">${i === 3 && imgs.length > 4 ? `<span>+${imgs.length - 4}</span>` : ''}</div>`).join('')}</div>` : '';
+    const acts = r._meeting
+      ? `<span class="pr-tag">기록</span>`
+      : `<span class="pr-acts"><button onclick="event.stopPropagation();openProcRecord('${r.id}')" aria-label="수정"><svg width="15" height="15" viewBox="0 0 22 22" fill="none"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button onclick="event.stopPropagation();_deleteProcRecord('${r.id}')" aria-label="삭제"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></span>`;
+    return `${head}<div class="pr-card"${r._meeting ? ` onclick="openMeetingDetail('${r.id}')"` : ''}>
+      <div class="pr-top"><span class="pr-av">${(who || '?').slice(0,1)}</span><span class="pr-who"><b>${who}</b><small>${time}</small></span>${acts}</div>
+      ${gal}
+      ${r._meeting && r.title ? `<div class="pr-title">${esc(r.title)}</div>` : ''}
+      ${text ? `<div class="pr-text">${text}</div>` : ''}
     </div>`;
   }).join('');
-  el.innerHTML = `${addBtn}${listHtml}<div style="height:40px;"></div>`;
+  el.innerHTML = `${addBtn}<div class="pr-feed">${listHtml}</div><div style="height:40px;"></div>`;
 }
 
 function _prFmt(cmd) {
