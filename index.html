@@ -2144,6 +2144,16 @@ body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(1
 .vs2-menu-title { display:none; }
 body.vs2-on.vs2-menu-titled #screen-main #current-project-name { display:none; }
 body.vs2-on.vs2-menu-titled #screen-main .vs2-menu-title { display:inline; }
+/* 공사정보 업체 카드 */
+#iv-companies-card > div:first-child { display:none !important; }
+#iv-companies-section.info-view-card { background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
+.co-grid .style-room-card { border:1px solid #eef0f3; }
+.co-empty { flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#f6f7f9 !important; }
+.co-ini { width:56px; height:56px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; color:#4e5968; }
+.co-empty small { font-size:12px; color:#8b95a1; }
+.co-title { font-size:16px !important; font-weight:600 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.co-meta { display:block !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#6b7684 !important; }
+.co-chip { display:inline-block; margin-top:8px; font-size:12px; color:#4e5968; background:#f2f4f6; border-radius:6px; padding:3px 8px; }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -13616,7 +13626,7 @@ function _loadInfoView() {
   const companiesList = document.getElementById('iv-companies-list');
   if (companiesCard && companiesList) {
     const compMap = new Map();
-    (proj.processes || []).forEach(p => {
+    (proj.processes || []).filter(p => !p.deleted).forEach(p => {
       if (p.company) {
         if (!compMap.has(p.company)) {
           const cId = p.companyData?.contractorId || p.companyData?.id || '';
@@ -13625,19 +13635,12 @@ function _loadInfoView() {
           compMap.set(p.company, { procs: [], cId, phone, area });
         }
         compMap.get(p.company).procs.push(p.name || '');
+        compMap.get(p.company).cost = (compMap.get(p.company).cost || 0) + (typeof _procCost === 'function' ? (_procCost(p) || 0) : 0);
       }
     });
     if (compMap.size > 0) {
-      companiesList.innerHTML = [...compMap.entries()].map(([name, { procs, cId, phone, area }], i, arr) => {
-        return `
-        <div onclick="_openCompanyDetail('${esc(cId)}','${esc(name)}','${esc(phone)}','${esc(area)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;${i < arr.length-1 ? 'border-bottom:1px solid #f0f2f5;' : ''}cursor:pointer;">
-          <div>
-            <div style="font-size:15px;font-weight:500;color:#222;margin-bottom:2px;">${esc(name)}</div>
-            <div style="font-size:13px;color:#aaa;">${procs.map(esc).join(', ')}</div>
-          </div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>`;
-      }).join('');
+      companiesList.innerHTML = _ivCompanyCards(proj, compMap);
+      companiesList.style.display = '';
       companiesCard.style.display = 'block';
     } else {
       companiesCard.style.display = 'none';
@@ -13783,6 +13786,32 @@ function _toggleProjectInfoDetail() {
 }
 
 // 함께하는 업체/작업자 카드 접기·펴기 ('companies' | 'workers')
+// 공사정보 > 업체: 스타일·제품과 같은 카드 구조 (업체 사진 콜라주 / 없으면 이니셜 썸네일)
+function _ivCompanyCards(proj, compMap) {
+  if (!_contractors.length && !window._ivCoLoading) {
+    window._ivCoLoading = true;
+    _loadContractors().then(() => { window._ivCoLoading = false; const l = document.getElementById('iv-companies-list'); if (l && _contractors.length) _loadInfoView(); });
+  }
+  const cards = [...compMap.entries()].map(([name, { procs, cId, phone, area, cost }]) => {
+    const c = _contractors.find(x => (cId && x.id === cId) || x.name === name) || {};
+    const imgs = (c.media || []).filter(m => m && m.url && m.type !== 'video').map(m => m.url);
+    const cat = (c.category && c.category !== '기타') ? c.category : (procs[0] || '');
+    const thumb = imgs.length ? _cardCollage(imgs.slice(0, 3))
+      : `<div class="style-card-collage co-empty"><span class="co-ini">${esc((name || '?').slice(0, 1))}</span><small>${esc(cat)}</small></div>`;
+    const procTxt = procs.length > 1 ? `${procs[0]} 외 ${procs.length - 1}개 공정` : (procs[0] || '');
+    const id = c.id || cId || '';
+    return `<div class="style-room-card" onclick="_openCompanyDetail('${esc(id)}','${esc(name)}','${esc(phone || c.phone || '')}','${esc(area || c.area || '')}')">
+      ${thumb}
+      <div class="style-card-info">
+        <div class="style-card-top-row"><span class="style-card-title co-title">${esc(name)}</span></div>
+        <div class="style-card-meta co-meta">${esc([cat !== procs[0] ? cat : '', procTxt].filter(Boolean).join(' · '))}</div>
+        ${cost ? `<span class="co-chip">계약 ${_won(cost)}원</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="furniture-cat-grid co-grid">${cards}</div>`;
+}
+
 function _toggleIvSection(name) {
   const list = document.getElementById(`iv-${name}-list`);
   const arrow = document.getElementById(`iv-${name}-arrow`);
