@@ -1906,6 +1906,8 @@ button, input, textarea, select { font-family:var(--font); }
   letter-spacing:-.3px;
 }
 .floating-btn svg { width:18px; height:18px; }
+.floating-group .floating-btn { width:56px; height:56px; padding:0 !important; border-radius:50% !important; justify-content:center; gap:0 !important; }
+.floating-group .floating-btn svg { width:24px; height:24px; }
 .floating-btn:hover { box-shadow:0 6px 22px rgba(0,0,0,0.2); }
 
 /* ===== ADD BTN BOTTOM ===== */
@@ -4890,38 +4892,38 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
 <!-- Floating: + 공정추가 (main screen only, fixed outside screen transform) -->
 <div class="floating-group" id="floating-add-process">
-  <button class="floating-btn" onclick="openAddProcess()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 공정 단계 추가
+  <button class="floating-btn" onclick="openAddProcess()" aria-label="공정 단계 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-style" style="display:none;">
-  <button class="floating-btn" onclick="openStyleNewSpace()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 스타일 추가
+  <button class="floating-btn" onclick="openStyleNewSpace()" aria-label="스타일 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-meeting" style="display:none;">
-  <button class="floating-btn" onclick="openAddMeeting()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 기록 추가
+  <button class="floating-btn" onclick="openAddMeeting()" aria-label="기록 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-content" style="display:none;">
-  <button class="floating-btn" onclick="openAddContent()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 컨텐츠 추가
+  <button class="floating-btn" onclick="openAddContent()" aria-label="컨텐츠 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-furniture" style="display:none;">
-  <button class="floating-btn" onclick="openAddFurnitureItem()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 제품 추가
+  <button class="floating-btn" onclick="openAddFurnitureItem()" aria-label="제품 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-sitephotos" style="display:none;">
-  <button class="floating-btn" onclick="openAddSitePhoto()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 현장사진 추가
+  <button class="floating-btn" onclick="openAddSitePhoto()" aria-label="현장사진 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 <div class="floating-group" id="floating-add-specbook" style="display:none;">
-  <button class="floating-btn" onclick="openAddSpecbookItem()">
-    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg> 자재 추가
+  <button class="floating-btn" onclick="openAddSpecbookItem()" aria-label="자재 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
 
