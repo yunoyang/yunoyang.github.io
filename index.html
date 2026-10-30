@@ -9090,6 +9090,15 @@ function _msFieldSave(elm) {
 
 let _styleRecoveryAttempted = false;
 
+// 스타일·제품 공통 썸네일 콜라주: 1장이면 한 장 꽉 차게, 여러 장이면 큰 이미지 + 오른쪽 2칸(3등분)
+function _cardCollage(urls) {
+  const u = (urls || []).filter(Boolean);
+  const img = x => `<img src="${esc(x)}" loading="eager" decoding="async" alt="" onerror="this.style.opacity=0">`;
+  if (!u.length) return '<div class="style-card-collage style-card-collage-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+  if (u.length === 1) return `<div class="style-card-collage"><div class="style-card-col-main">${img(u[0])}</div></div>`;
+  return `<div class="style-card-collage"><div class="style-card-col-main">${img(u[0])}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${img(u[1])}</div><div class="style-card-col-side-item">${u[2] ? img(u[2]) : ''}</div></div></div>`;
+}
+
 function renderStyleTab() {
   const data = getStyleData();
   // 방어적 보강: styleRooms 목록에 없어도 실제로 이미지가 있는 방(예: 협업자가 만든
@@ -9121,14 +9130,7 @@ function renderStyleTab() {
     const thumb = (i) => items[i]
       ? `<img src="${items[i].url}" loading="eager" fetchpriority="high" decoding="sync" alt="" onerror="this.style.opacity=0">`
       : '';
-    let collage = '';
-    if (items.length === 1) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main" style="flex:2">${thumb(0)}</div></div>`;
-    } else if (items.length === 2) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div></div></div>`;
-    } else if (items.length >= 3) {
-      collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(0)}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(1)}</div><div class="style-card-col-side-item">${thumb(2)}</div></div></div>`;
-    }
+    const collage = items.length ? _cardCollage(items.slice(0, 3).map(x => x.url)) : '';
     const onclick = items.length > 0 ? `openStyleViewer('${r}',0)` : `openStyleAddMenu('${r}')`;
     const linkCount  = items.reduce((acc, img) => acc + (img.productPins||[]).filter(p=>p.url).length, 0);
     const memoCount  = items.reduce((acc, img) => acc + (img.memos||[]).length, 0);
@@ -18106,8 +18108,6 @@ function _renderFurnitureCategoryGrid() {
 
   const catCardHtml = (cat) => {
     const catItems = catMap[cat];
-    const withImg = [...catItems].reverse().find(it => it.imageUrl && _getFurnitureStatus(it) === '구매예정')
-                 || [...catItems].reverse().find(it => it.imageUrl);
     const pendingCount = catItems.filter(it => _getFurnitureStatus(it) === '구매예정').length;
     const totalCount = catItems.length;
 
@@ -18116,9 +18116,9 @@ function _renderFurnitureCategoryGrid() {
     if (pendingCount > 0) metaParts.push(`<span style="color:#2e7d32;">구매예정 ${pendingCount}개</span>`);
     const meta = metaParts.join(sep);
 
-    const collage = withImg
-      ? `<div style="display:flex;aspect-ratio:4/3;background:#e8e8ec;overflow:hidden;border-radius:12px;margin:8px 8px 0;"><div style="flex:1;min-width:0;overflow:hidden;"><img src="${withImg.imageUrl}" alt="${esc(cat)}" style="width:100%;height:100%;object-fit:cover;display:block;background:#e8e8ec;"></div></div>`
-      : `<div style="display:flex;aspect-ratio:4/3;background:#e8e8ec;overflow:hidden;border-radius:12px;margin:8px 8px 0;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c8cad0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    const imgItems = [...catItems].reverse().filter(it => it.imageUrl);
+    const ordered = [...imgItems.filter(it => _getFurnitureStatus(it) === '구매예정'), ...imgItems.filter(it => _getFurnitureStatus(it) !== '구매예정')];
+    const collage = _cardCollage(ordered.slice(0, 3).map(it => it.imageUrl));
 
     return `
       <div onclick="_openFurnitureCategoryDetail('${esc(cat)}')" style="background:#fff;border-radius:14px;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;">
