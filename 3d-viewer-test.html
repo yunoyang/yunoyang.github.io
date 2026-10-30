@@ -897,7 +897,9 @@ function outermostGroupId(mesh) {
 }
 
 const loader = new THREE.GLTFLoader();
-loader.load('assets/models/jeongja-woosung.glb', (gltf) => {
+// 앱에서 올린 3D 버전(GLB)이 있으면 ?model= 로 받아서 그 파일을 불러옴
+const _modelUrl = new URLSearchParams(location.search).get('model') || 'assets/models/jeongja-woosung.glb';
+loader.load(_modelUrl, (gltf) => {
   const model = gltf.scene;
   // 원본 메시 목록을 먼저 스냅샷 — traverse 도중 obj.add()로 자식(엣지·오버레이)을 추가하면
   // 그 자식도 traverse 대상에 걸려 무한 재귀(오버레이 안에 오버레이…)로 스택오버플로우가 났음

@@ -2012,6 +2012,26 @@ button, input, textarea, select { font-family:var(--font); }
 .iv-fp-sub { display:flex; gap:4px; margin:0 0 12px; }
 .iv-fp-sub button { border:none; background:none; padding:8px 14px; border-radius:8px; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; }
 .iv-fp-sub button.on { background:#e7e9ed; color:#111; font-weight:600; }
+.iv-fp-sub { align-items:center; }
+.iv-fp-sub .iv-fpv-meta { margin-left:auto; font-size:12px; color:#8b95a1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.iv-fp-sub .iv-fpv-btn { width:36px; height:36px; padding:0 !important; display:flex; align-items:center; justify-content:center; color:#333d4b; border-radius:50% !important; flex-shrink:0; }
+#form-view-panel[data-fpsub="3d"] #iv-fpv-plan { display:none !important; }
+#iv-fpv-plan:empty { display:none; }
+.fpv-cur { background:#fff; border:1px solid #eef0f3; border-radius:14px; overflow:hidden; margin-bottom:16px; }
+.fpv-cur img { width:100%; display:block; cursor:zoom-in; background:#f6f7f9; }
+.fpv-cur .fpv-pdf { display:flex; align-items:center; gap:10px; padding:16px; font-size:14px; color:#111; text-decoration:none; }
+#fpv-sheet { position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,.4); display:flex; align-items:flex-end; justify-content:center; }
+#fpv-sheet .fpv-in { background:#fff; width:100%; max-width:560px; max-height:80vh; overflow-y:auto; border-radius:24px 24px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px)); box-sizing:border-box; }
+#fpv-sheet .fpv-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+#fpv-sheet .fpv-hd b { font-size:17px; }
+#fpv-sheet .fpv-up { border:none; background:#111; color:#fff; border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+#fpv-sheet .fpv-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid #f2f4f6; }
+#fpv-sheet .fpv-row .fpv-t { flex:1; min-width:0; }
+#fpv-sheet .fpv-row .fpv-t b { font-size:15px; }
+#fpv-sheet .fpv-row .fpv-t small { display:block; font-size:12px; color:#8b95a1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#fpv-sheet .fpv-row button { border:1px solid #e1e5ef; background:#fff; border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer; font-family:inherit; color:#333; flex-shrink:0; }
+#fpv-sheet .fpv-now { font-size:11px; font-weight:600; color:#5084ff; background:#eef3ff; border-radius:6px; padding:2px 6px; margin-left:6px; }
+
 #form-view-panel .iv-fp-tabs { display:none !important; }
 #iv-floorplan-card .iv-fp-3d-wrap { display:none !important; }
 #form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card,#plan-view) { display:none !important; }
@@ -4322,7 +4342,10 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </div>
 
       <!-- 도면 탭 하위: 평면 / 3D -->
-      <div class="iv-fp-sub iv-fp-only" id="iv-fp-sub"><button data-k="plan" class="on" onclick="_ivFpSub('plan')">평면</button><button data-k="3d" onclick="_ivFpSub('3d')">3D</button></div>
+      <div class="iv-fp-sub iv-fp-only" id="iv-fp-sub"><button data-k="plan" class="on" onclick="_ivFpSub('plan')">평면</button><button data-k="3d" onclick="_ivFpSub('3d')">3D</button>
+        <span class="iv-fpv-meta" id="iv-fpv-meta"></span>
+        <button class="iv-fpv-btn" onclick="_fpvOpen()" aria-label="버전 확인"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button></div>
+      <div id="iv-fpv-plan" class="iv-fp-only"></div>
       <!-- 도면 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card" style="padding:24px;">
         <div class="fp-edit-row">
@@ -13660,6 +13683,7 @@ function _loadInfoView() {
     // 2D/3D 탭 — 프로젝트가 바뀔 때마다 2D 탭으로 리셋하고, 이 프로젝트의 3D 링크를 기억해둠
     // (링크가 없으면 뷰어 쇼케이스로 대체)
     window._ivFp3dLink = proj.floorplanLink || '3d-viewer-test.html';
+    _fpvRender();
     const fp3dWrap = document.getElementById('iv-fp-3d-wrap');
     if (fp3dWrap) fp3dWrap.innerHTML = '';
     _ivSwitchFpTab('2d');
@@ -13799,7 +13823,7 @@ function _ivSwitchFpTab(tab) {
 function _ivFp3dSrc(link, full) {
   if (!/3d-viewer-test\.html/.test(link)) return link;
   // 공사정보 3D 탭에선 전체 UI(재질·가구·조명)를 모바일 최적화 레이아웃으로 바로 보여줌
-  return link.split('?')[0] + (full ? '' : '?embed=app');
+  return link.split('?')[0] + (full ? '?x=1' : '?embed=app') + _fpv3dModelParam();
 }
 function _ivToggleFp3dFull(force) {
   const wrap = document.getElementById('iv-fp-3d-wrap');
@@ -16059,6 +16083,8 @@ function _mergeLocalPreserve(cp, localProjs) {
   if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
   if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
   if (local.furniQuoteApplied || cp.furniQuoteApplied) merged.furniQuoteApplied = local.furniQuoteApplied || cp.furniQuoteApplied;
+  merged.fpVersions = _mergeListById(local.fpVersions, cp.fpVersions, { type: 'fpVersion' });
+  merged.fpCurrent = _fpvMergeCur(local.fpCurrent, cp.fpCurrent);
   const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
   if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
@@ -16326,6 +16352,8 @@ function _syncProjToCloud(proj) {
     { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
     if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
     if (proj.furniQuoteApplied || cloudData.furniQuoteApplied) projData.furniQuoteApplied = proj.furniQuoteApplied || cloudData.furniQuoteApplied;
+    projData.fpVersions = _mergeListById(proj.fpVersions, cloudData.fpVersions, { type: 'fpVersion' });
+    projData.fpCurrent = _fpvMergeCur(proj.fpCurrent, cloudData.fpCurrent);
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
@@ -16694,6 +16722,7 @@ function _startCollabListener(cloudId) {
     const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
     const localSchedApplied = proj.scheduleApplied; // 공정표 적용 플래그 보존
     const localFurniApplied = proj.furniQuoteApplied;
+    const localFpv = proj.fpVersions, localFpCur = proj.fpCurrent; // 도면 버전 보존
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
@@ -16761,6 +16790,8 @@ function _startCollabListener(cloudId) {
     { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
     if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
     if (localFurniApplied || remote.furniQuoteApplied) proj.furniQuoteApplied = localFurniApplied || remote.furniQuoteApplied;
+    proj.fpVersions = _mergeListById(localFpv, remote.fpVersions, { type: 'fpVersion' });
+    proj.fpCurrent = _fpvMergeCur(localFpCur, remote.fpCurrent);
     { const _p = _mergeEstimate(localPlan, _planDec(remote.planModel)); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
@@ -16823,11 +16854,119 @@ function updateCollabIndicator(collaborators, owner) {
   }
 }
 
+// ===== 평면도·3D 버전 관리 — 편집자 이상(컨설팅 업체 포함)이 파일을 올려 최신화 =====
+// proj.fpVersions: [{id, kind:'plan'|'3d', url, name, ftype:'image'|'pdf'|'glb', at, by, byName}]
+// proj.fpCurrent: { plan:{id,at}, '3d':{id,at} } — 되돌리기는 포인터만 바꿈(파일은 그대로 보존)
+function _fpvList(proj, kind) { return (proj?.fpVersions || []).filter(v => v.kind === kind && !v.deleted).sort((a, b) => (a.at || 0) - (b.at || 0)); }
+function _fpvCur(proj, kind) {
+  const list = _fpvList(proj, kind); if (!list.length) return null;
+  const id = proj.fpCurrent?.[kind]?.id;
+  return list.find(v => v.id === id) || list[list.length - 1];
+}
+function _fpvMergeCur(a, b) {
+  const out = { ...(b || {}) };
+  Object.entries(a || {}).forEach(([k, v]) => { if (!out[k] || (v?.at || 0) >= (out[k]?.at || 0)) out[k] = v; });
+  return out;
+}
+function _fpvFmt(t) { const d = new Date(t || 0); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+function _fpvRender() {
+  const proj = getProject(); if (!proj) return;
+  const kind = document.getElementById('form-view-panel')?.dataset.fpsub === '3d' ? '3d' : 'plan';
+  const cur = _fpvCur(proj, kind), list = _fpvList(proj, kind);
+  const meta = document.getElementById('iv-fpv-meta');
+  if (meta) meta.textContent = cur ? `v${list.indexOf(cur) + 1} · ${_fpvFmt(cur.at).slice(2, 10)}` : '';
+  const host = document.getElementById('iv-fpv-plan');
+  if (host) {
+    const pc = _fpvCur(proj, 'plan');
+    host.innerHTML = !pc ? '' : pc.ftype === 'pdf'
+      ? `<div class="fpv-cur"><a class="fpv-pdf" href="${esc(pc.url)}" target="_blank" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(pc.name || '평면도.pdf')}</span><span style="color:#5084ff;font-size:13px;">열기</span></a></div>`
+      : `<div class="fpv-cur"><img src="${esc(pc.url)}" alt="평면도" onclick="_openSwipeViewer(['${esc(pc.url)}'],0)"></div>`;
+  }
+}
+// 3D 탭 iframe에 현재 3D 버전(GLB)을 반영
+function _fpv3dModelParam() { const c = _fpvCur(getProject(), '3d'); return c ? '&model=' + encodeURIComponent(c.url) : ''; }
+function _fpvReload3d() {
+  const wrap = document.getElementById('iv-fp-3d-wrap'); if (wrap) wrap.innerHTML = '';
+  if (document.getElementById('form-view-panel')?.dataset.fpsub === '3d') _ivSwitchFpTab('3d');
+}
+function _fpvOpen() {
+  const proj = getProject(); if (!proj) return;
+  const kind = document.getElementById('form-view-panel')?.dataset.fpsub === '3d' ? '3d' : 'plan';
+  const list = _fpvList(proj, kind).slice().reverse(), cur = _fpvCur(proj, kind), n = list.length, editable = canEdit();
+  document.getElementById('fpv-sheet')?.remove();
+  const ov = document.createElement('div'); ov.id = 'fpv-sheet';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  const accept = kind === '3d' ? '.glb,model/gltf-binary' : 'image/*,application/pdf';
+  ov.innerHTML = `<div class="fpv-in">
+    <div class="fpv-hd"><b>${kind === '3d' ? '3D' : '평면도'} 버전</b>${editable ? `<label class="fpv-up">새 버전 올리기<input type="file" accept="${accept}" style="display:none" onchange="_fpvUpload('${kind}', this)"></label>` : ''}</div>
+    <div style="font-size:13px;color:#8b95a1;margin-bottom:8px;">${kind === '3d' ? 'GLB 파일' : '이미지 또는 PDF'} · 편집자 이상이 올릴 수 있어요</div>
+    ${list.length ? list.map((v, i) => `<div class="fpv-row"><div class="fpv-t"><b>v${n - i}</b>${cur && v.id === cur.id ? '<span class="fpv-now">현재</span>' : ''}<small>${_fpvFmt(v.at)} · ${esc(v.byName || v.by || '')} · ${esc(v.name || '')}</small></div>
+      <button onclick="_fpvPreview('${v.id}')">보기</button>${editable && !(cur && v.id === cur.id) ? `<button onclick="_fpvSetCur('${kind}','${v.id}')">이 버전으로</button>` : ''}</div>`).join('')
+      : '<div style="padding:24px 0;text-align:center;font-size:14px;color:#aaa;">아직 올린 파일이 없어요</div>'}
+  </div>`;
+  document.body.appendChild(ov);
+}
+function _fpvPreview(id) {
+  const v = (getProject()?.fpVersions || []).find(x => x.id === id); if (!v) return;
+  if (v.ftype === 'image') _openSwipeViewer([v.url], 0);
+  else if (v.ftype === 'glb') window.open('3d-viewer-test.html?model=' + encodeURIComponent(v.url), '_blank');
+  else window.open(v.url, '_blank');
+}
+async function _fpvUpload(kind, input) {
+  const file = input.files && input.files[0]; if (!file) return;
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const ftype = kind === '3d' ? 'glb' : (ext === 'pdf' || file.type === 'application/pdf') ? 'pdf' : 'image';
+  if (kind === '3d' && ext !== 'glb') { showToastMessage('⚠️ 3D는 GLB 파일만 올릴 수 있어요'); return; }
+  if (kind === 'plan' && ftype === 'image' && !file.type.startsWith('image/')) { showToastMessage('⚠️ 이미지 또는 PDF 파일을 올려주세요'); return; }
+  showToastMessage('업로드 중…');
+  try {
+    await _initFirebase(); await _waitForFirebaseUser(4000);
+    if (!_fbStorage || !firebase.auth().currentUser) throw new Error('로그인 필요');
+    const projId = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const ref = _fbStorage.ref(`styleImages/${projId}/fpv_${kind}_${Date.now()}.${ext || 'bin'}`);
+    await ref.put(file, { contentType: kind === '3d' ? 'model/gltf-binary' : (file.type || 'application/octet-stream') });
+    const url = await ref.getDownloadURL();
+    const v = { id: 'fpv_' + Date.now() + Math.random().toString(36).slice(2, 5), kind, url, name: file.name, ftype, at: Date.now(), by: state.user?.email || '', byName: state.user?.name || state.user?.email?.split('@')[0] || '' };
+    proj.fpVersions = [...(proj.fpVersions || []), v];
+    proj.fpCurrent = { ...(proj.fpCurrent || {}), [kind]: { id: v.id, at: v.at } };
+    save(); await _syncFpVersionsToCloud(proj);
+    document.getElementById('fpv-sheet')?.remove();
+    _fpvRender(); if (kind === '3d') _fpvReload3d();
+    showToastMessage('✅ 새 버전을 올렸어요');
+  } catch (e) {
+    console.warn('[fpv upload]', e);
+    showToastMessage('⚠️ 업로드 실패 (' + (e.code || e.message || '') + ')');
+  }
+}
+async function _fpvSetCur(kind, id) {
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  proj.fpCurrent = { ...(proj.fpCurrent || {}), [kind]: { id, at: Date.now() } };
+  save(); await _syncFpVersionsToCloud(proj);
+  document.getElementById('fpv-sheet')?.remove();
+  _fpvRender(); if (kind === '3d') _fpvReload3d();
+  showToastMessage('✅ 선택한 버전으로 바꿨어요');
+}
+// 편집자도 반영되도록 버전 목록만 read-merge-write
+async function _syncFpVersionsToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const ok = await _initFirebase(); if (!ok || !_db) return;
+  try {
+    const ref = _db.collection('vb_projects').doc(proj.cloudId);
+    const cd = (await ref.get()).data()?.projectData || {};
+    proj.fpVersions = _mergeListById(proj.fpVersions, cd.fpVersions, { type: 'fpVersion' });
+    proj.fpCurrent = _fpvMergeCur(proj.fpCurrent, cd.fpCurrent);
+    await ref.update({ 'projectData.fpVersions': proj.fpVersions, 'projectData.fpCurrent': proj.fpCurrent, 'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(), 'meta.updatedBy': state.user?.email || '', 'meta.updatedBySessionId': _sessionId });
+    localStorage.setItem('vibespace', JSON.stringify(state));
+  } catch (e) { console.error('[fpvSync]', e.code, e.message); showToastMessage('⚠️ 도면 버전 동기화 실패'); }
+}
+
 // 공사정보 > 도면 하위 탭: 평면(도면 이미지 + 도면 정보 펼침) / 3D(화면 꽉 차게 3D 뷰)
 function _ivFpSub(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
   panel.dataset.fpsub = k;
-  document.querySelectorAll('#iv-fp-sub button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  document.querySelectorAll('#iv-fp-sub button[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  _fpvRender();
   if (k !== '3d') _ivSwitchFpTab('2d');
   if (k === '3d') {
     _ivSwitchFpTab('3d');
