@@ -1352,6 +1352,23 @@ button, input, textarea, select { font-family:var(--font); }
 .iv-col { display:contents; }
 /* ===== 견적 ===== */
 .est-wrap { max-width:1100px; margin:0 auto; padding:20px 16px 90px; }
+.ev-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.ev-sub { font-size:13px; color:#6b7684; }
+.ev-total { font-size:24px; font-weight:600; color:#111; margin-top:4px; font-variant-numeric:tabular-nums; }
+.ev-actions { display:flex; justify-content:space-between; align-items:center; margin:14px 0 8px; font-size:12px; color:#8b95a1; }
+.ev-actions button { border:none; background:none; padding:0; font:inherit; font-size:13px; font-weight:600; color:#333d4b; cursor:pointer; }
+.ev-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -24px; border-top:1px solid #e5e8eb; border-bottom:1px solid #e5e8eb; }
+.ev-tbl { border-collapse:separate; border-spacing:0; font-size:13px; font-variant-numeric:tabular-nums; min-width:100%; }
+.ev-tbl th, .ev-tbl td { padding:9px 10px; text-align:right; white-space:nowrap; border-bottom:1px solid #f2f4f6; background:#fff; color:#333d4b; }
+.ev-tbl th { background:#f9fafb; font-size:12px; font-weight:600; color:#6b7684; text-align:center; }
+.ev-tbl th:first-child, .ev-tbl td:first-child { position:sticky; left:0; z-index:1; width:132px; min-width:132px; max-width:132px; white-space:normal; word-break:keep-all; text-align:left; border-right:1px solid #e5e8eb; }
+.ev-tbl tr.ev-grp td { background:#f9fafb; font-weight:600; color:#111; cursor:pointer; }
+.ev-tbl tr.ev-head td { font-weight:600; color:#111; }
+.ev-foot { margin-top:12px; }
+.ev-foot div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; font-size:14px; color:#6b7684; }
+.ev-foot b { font-weight:500; color:#333d4b; font-variant-numeric:tabular-nums; }
+.ev-foot .t { margin-top:4px; padding-top:10px; border-top:1px solid #e5e8eb; font-weight:600; color:#111; }
+.ev-foot .t b { font-weight:700; color:#111; }
 .est-tab { padding:14px 4px; margin-right:20px; background:none; border:none; border-bottom:2px solid transparent; font-size:15px; font-weight:500; color:#999; cursor:pointer; font-family:var(--font); }
 .est-tab.on { color:#111; border-bottom-color:#111; }
 .est-card { background:#fff; border:1px solid #eef0f5; border-radius:16px; overflow:hidden; margin-bottom:14px; }
@@ -11656,6 +11673,7 @@ function _vs2Phases(proj) {
   list.forEach(x => { x.status = x === cur ? 'current' : (x.done ? 'done' : 'todo'); });
   return list;
 }
+function _vs2GoEstimate() { const fp = document.getElementById('form-view-panel'); if (fp) fp.dataset.ivtab = 'est'; _vs2Go('info'); setTimeout(() => _ivTab('est'), 60); }
 function _vs2RenderOverview() {
   const el = document.getElementById('vs2-overview'); const proj = getProject(); if (!el || !proj) return;
   let total = 0; const companies = new Set();
@@ -11668,8 +11686,7 @@ function _vs2RenderOverview() {
     : [`공정 ${(proj.processes || []).filter(p => !p.deleted).length}개`, companies.size ? `참여 업체 <b>${companies.size}곳</b>` : ''];
   const f = proj.form || {};
   const period = f.startDate ? `${_vs2Fmt(f.startDate)} - ${f.endDate ? _vs2Fmt(f.endDate) : '미정'}` : '미정';
-  el.innerHTML = `<div class="vs2-h">공사 개요</div>
-    <button class="vs2-ov-card" onclick="goTo('form')">
+  el.innerHTML = `<button class="vs2-ov-card" onclick="_vs2GoEstimate()">
       <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span></div>
       <div class="vs2-ov-row"><span>${sub[0]}</span><span>${sub[1]}</span></div>
       <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
@@ -15708,12 +15725,24 @@ function _renderEstimateCard() {
     return;
   }
   const c = _estCalc(e);
-  const linked = e.groups.filter(g => g.procId).length;
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:16px;font-weight:600;color:#111;">견적</span><span style="font-size:13px;color:#aaa;">' + esc(e.vendor || e.name || '') + '</span></div>' +
-    '<div style="font-size:28px;font-weight:600;color:#111;margin:10px 0 4px;font-variant-numeric:tabular-nums;">' + _won(c.total) + '<span style="font-size:16px;font-weight:400;color:#888;"> 원</span></div>' +
-    '<div style="font-size:13px;color:#888;margin-bottom:16px;">공정 ' + e.groups.length + '개 · 공정 연동 ' + linked + '개 · 직접공사비 ' + _won(c.direct) + '원</div>' +
-    '<button class="est-btn dark" onclick="openEstimate()">견적 보기 →</button>';
+  const sum = (g, f) => (g.items || []).reduce((a, it) => a + (it.type === 'head' ? 0 : (it.qty || 0) * (it[f] || 0)), 0);
+  const w = v => v ? _won(v) : '-';
+  const rows = e.groups.map((g, i) => {
+    const open = _estCardOpen.has(g.id), m = sum(g, 'mat'), l = sum(g, 'labor');
+    const items = open ? (g.items || []).map(it => it.type === 'head'
+      ? '<tr class="ev-head"><td>' + esc(it.name || '') + '</td><td colspan="6"></td></tr>'
+      : '<tr><td>' + esc(it.name || '') + '</td><td>' + (it.qty || 0).toLocaleString() + '</td><td>' + w(it.mat) + '</td><td>' + w((it.qty || 0) * (it.mat || 0)) + '</td><td>' + w(it.labor) + '</td><td>' + w((it.qty || 0) * (it.labor || 0)) + '</td><td>' + w(_estItemAmt(it)) + '</td></tr>').join('') : '';
+    return '<tr class="ev-grp" onclick="_estCardToggle(\'' + g.id + '\')"><td>' + (open ? '▾ ' : '▸ ') + (i + 1) + '. ' + esc(g.name) + '</td><td></td><td></td><td>' + w(m) + '</td><td></td><td>' + w(l) + '</td><td>' + w(m + l) + '</td></tr>' + items;
+  }).join('');
+  el.innerHTML = '<div class="ev-top"><div><div class="ev-sub">공사비 총계' + (e.vendor ? ' · ' + esc(e.vendor) : '') + '</div><div class="ev-total">' + _won(c.total) + '원</div></div>' +
+    (editable ? '<button class="est-btn" onclick="openEstimate()">편집</button>' : '') + '</div>' +
+    '<div class="ev-actions"><button onclick="_estCardAll()">' + (_estCardOpen.size >= e.groups.length && e.groups.length ? '모두 접기' : '모두 펼치기') + '</button><span>좌우로 밀어서 보기</span></div>' +
+    '<div class="ev-scroll"><table class="ev-tbl"><thead><tr><th rowspan="2">공종 / 품명</th><th rowspan="2">수량</th><th colspan="2">재료비</th><th colspan="2">노무비</th><th rowspan="2">합계</th></tr><tr><th>단가</th><th>금액</th><th>단가</th><th>금액</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="ev-foot"><div><span>직접공사비</span><b>' + _won(c.direct) + '</b></div><div><span>일반관리비 및 공과잡비 ' + (e.mgmtPct || 0) + '%</span><b>' + _won(c.mgmt) + '</b></div>' + (e.adjust ? '<div><span>단수정리 · 조정</span><b>' + _won(e.adjust) + '</b></div>' : '') + '<div class="t"><span>공사비 총계</span><b>' + _won(c.total) + '</b></div></div>';
 }
+let _estCardOpen = new Set();
+function _estCardToggle(id) { const sc = document.querySelector('.ev-scroll')?.scrollLeft || 0; if (_estCardOpen.has(id)) _estCardOpen.delete(id); else _estCardOpen.add(id); _renderEstimateCard(); const n = document.querySelector('.ev-scroll'); if (n) n.scrollLeft = sc; }
+function _estCardAll() { const e = _estGet(getProject()); if (!e) return; _estCardOpen = _estCardOpen.size >= e.groups.length ? new Set() : new Set(e.groups.map(g => g.id)); _renderEstimateCard(); }
 function _estCreate(importXlsx) {
   requireLogin(() => {
     const proj = getProject(); if (!proj) return;
