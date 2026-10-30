@@ -8217,6 +8217,7 @@ function updateSummary() {
   const proj = getProject(); if (!proj) return;
   if (proj.myRole !== '뷰어' && typeof _estSeedDefault === 'function' && _estSeedDefault(proj)) { save(); _estSyncCloud(proj); }
   if (typeof _applyHaumentSchedule === 'function' && _applyHaumentSchedule(proj)) { _applyHaumentScheduleSync(proj); if (typeof renderWorkCards === 'function') renderWorkCards(); }
+  if (typeof _applyFurniQuote === 'function' && _applyFurniQuote(proj)) { _applyHaumentScheduleSync(proj); if (typeof renderWorkCards === 'function') renderWorkCards(); }
   let totalCost = 0;
   const companies = new Set();
   proj.processes.forEach(p => {
@@ -10757,6 +10758,7 @@ async function _loadContractors() {
       if (!snap.empty) {
         _contractors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         console.log(`[Contractors] Firestore에서 ${_contractors.length}개 로드`);
+        setTimeout(_ensureFurniflowContractor, 3000);
         return;
       }
       // Firestore에 없으면 seed 데이터만 로컬 사용 (admin에서 별도 추가 가능)
@@ -10767,6 +10769,22 @@ async function _loadContractors() {
   console.log(`[Contractors] 로컬 seed ${_contractors.length}개 사용`);
 }
 
+// 업체 DB에 퍼니플로우(가구) 1회 등록 — 이름으로 중복 확인 후 없을 때만 추가 (쓰기는 로그인 필요)
+async function _ensureFurniflowContractor() {
+  try {
+    if (!state.loggedIn || !_db || !firebase.auth().currentUser) return;
+    if (_contractors.some(c => c.name === '퍼니플로우')) return;
+    const dup = await _db.collection('vb_contractors').where('name', '==', '퍼니플로우').limit(1).get();
+    if (!dup.empty) return;
+    const doc = { name: '퍼니플로우', category: '가구', originalCategory: '주방가구/신발장 제작·시공', area: '모현읍',
+      address: '용인시 처인구 모현읍 곡현로 812-1', bizNo: '296-07-03266',
+      description: '주방가구(상/하부장·스테인레스 상판·세라믹 벽판)와 신발장 제작·시공. 정자동 우성아파트 견적(2026.10.20)',
+      rating: 0, reviews: 0, source: 'quote', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const ref = await _db.collection('vb_contractors').add(doc);
+    _contractors.push({ id: ref.id, ...doc });
+    console.log('[Contractors] 퍼니플로우 등록');
+  } catch (e) { console.warn('[Contractors] 퍼니플로우 등록 실패', e); }
+}
 async function _seedContractors() {
   if (!_db) return;
   const batch = _db.batch();
@@ -14609,6 +14627,37 @@ function _applyHaumentSchedule(proj, force) {
   proj.scheduleApplied = SCHED_HAUMENT.ver;
   return n > 0;
 }
+// ===== 퍼니플로우 가구 견적(ver.261020) → 정자동 가구 공정 상세 =====
+const QUOTE_FURNIFLOW = { ver: '261020', vendor: '퍼니플로우', date: '2026-10-20', total: 21100000,
+  items: [
+    { place: '주방가구', name: '상/하부장, 조명', spec: '5800*650/600/900', qty: 1, unit: 'EA', price: 5600000, note: '나왕합판/포그그레이' },
+    { place: '주방가구', name: '싱크볼', spec: '캄뽀르떼830', qty: 1, unit: 'EA', price: 900000, note: '엠보 / 올스텐배수구' },
+    { place: '주방가구', name: '수전', spec: '', qty: 1, unit: 'EA', price: 400000, note: '그로헤 크롬 거위목' },
+    { place: '주방가구', name: '5T 스테인레스 상판', spec: '5800*650/600/900', qty: 1, unit: 'EA', price: 5800000, note: '5T 바이브 절단형' },
+    { place: '주방가구', name: '세라믹 벽판', spec: '2170/1650*650', qty: 1, unit: 'EA', price: 2800000, note: '퓨어 화이트' },
+    { place: '신발장', name: '신발장', spec: '1650*350*2030', qty: 1, unit: 'EA', price: 900000, note: '한솔 포그그레이' },
+    { place: '신발장', name: '신발장', spec: '1650*350*1100', qty: 1, unit: 'EA', price: 580000, note: '한솔 포그그레이' },
+    { place: '시공', name: '가구/상판 운송 및 양중', spec: '', qty: 1, unit: 'EA', price: 200000, note: '' },
+    { place: '시공', name: '가구 시공 인건비', spec: '', qty: 4, unit: 'EA', price: 350000, note: '' },
+    { place: '시공', name: '상판 시공 인건비', spec: '', qty: 1, unit: 'EA', price: 650000, note: '' },
+    { place: '기타', name: '부가가치세', spec: '10%', qty: 1, unit: '식', price: 1923000, note: '' },
+    { place: '기타', name: '단수정리', spec: '', qty: 1, unit: '식', price: -53000, note: '' },
+  ] };
+function _applyFurniQuote(proj) {
+  if (!proj || proj.myRole === '뷰어' || proj.furniQuoteApplied === QUOTE_FURNIFLOW.ver || !_estSeedAllowed(proj)) return false;
+  const procs = (proj.processes = proj.processes || []);
+  let p = procs.find(x => !x.deleted && /가구/.test(_schedNorm(x.type) + _schedNorm(x.name)));
+  const now = Date.parse('2026-10-30T00:00:00+09:00');
+  if (!p) { p = { id: 'p_' + now + Math.random().toString(36).slice(2, 6), name: '가구', type: '가구', scheduleStart: '2026-12-02', scheduleEnd: '2026-12-07', company: '', details: [] }; procs.push(p); }
+  const Q = QUOTE_FURNIFLOW;
+  p.company = Q.vendor;
+  p.details = Q.items.map((it, i) => ({ id: 'd_fq' + i, desc: `${it.place === '기타' || it.place === it.name ? '' : it.place + ' · '}${it.name}`,
+    subDesc: [it.spec, it.qty > 1 ? `${it.price.toLocaleString()}원 × ${it.qty}` : '', it.note].filter(Boolean).join(' · '), cost: it.price * it.qty, date: Q.date }));
+  p.vendorQuote = { vendor: Q.vendor, ver: Q.ver, date: Q.date, total: Q.total, items: Q.items.map(it => ({ ...it })) };
+  p.updatedAt = now;
+  proj.furniQuoteApplied = Q.ver;
+  return true;
+}
 function _applyHaumentScheduleSync(proj) {
   save();
   if (!proj.cloudId) return;
@@ -15603,6 +15652,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   const _est = _mergeEstimate(local.estimate, cp.estimate); if (_est) merged.estimate = _est;
   if (local.estimateSeeded || cp.estimateSeeded) merged.estimateSeeded = true;
   if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
+  if (local.furniQuoteApplied || cp.furniQuoteApplied) merged.furniQuoteApplied = local.furniQuoteApplied || cp.furniQuoteApplied;
   const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
   if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
   // 도면: 클라우드 우선 (base64 직접 저장 방식으로 변경됨)
@@ -15869,6 +15919,7 @@ function _syncProjToCloud(proj) {
     projData.materialSelections = _mergeMatSelectionsObj(proj.materialSelections, cloudData.materialSelections);
     { const _e = _mergeEstimate(proj.estimate, cloudData.estimate); if (_e) projData.estimate = _e; if (proj.estimateSeeded || cloudData.estimateSeeded) projData.estimateSeeded = true; }
     if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
+    if (proj.furniQuoteApplied || cloudData.furniQuoteApplied) projData.furniQuoteApplied = proj.furniQuoteApplied || cloudData.furniQuoteApplied;
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
@@ -16218,6 +16269,7 @@ function _startCollabListener(cloudId) {
     const localMatSelections = proj.materialSelections || {}; // 자재선택 보존
     const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
     const localSchedApplied = proj.scheduleApplied; // 공정표 적용 플래그 보존
+    const localFurniApplied = proj.furniQuoteApplied;
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
@@ -16284,6 +16336,7 @@ function _startCollabListener(cloudId) {
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
     { const _e = _mergeEstimate(localEstimate, remote.estimate); if (_e) proj.estimate = _e; if (localEstSeeded || remote.estimateSeeded) proj.estimateSeeded = true; }
     if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
+    if (localFurniApplied || remote.furniQuoteApplied) proj.furniQuoteApplied = localFurniApplied || remote.furniQuoteApplied;
     { const _p = _mergeEstimate(localPlan, _planDec(remote.planModel)); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
     renderAll();
