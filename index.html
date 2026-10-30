@@ -5685,11 +5685,11 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
 <!-- ===== 하단 메뉴 (v2) — body 직속: transform 걸린 .screen 안에서는 position:fixed가 깨짐 ===== -->
 <nav id="vs2-nav" aria-label="주 메뉴"><div class="vs2-nav-in">
-  <button class="vs2-nav-btn on" data-tab="plan" aria-label="공정" onclick="_vs2Go('plan')"></button>
+  <button class="vs2-nav-btn on" data-tab="plan" aria-label="홈" onclick="_vs2Go('plan')"></button>
   <button class="vs2-nav-btn" data-tab="style" aria-label="스타일" onclick="_vs2Go('style')"></button>
-  <button class="vs2-nav-btn" data-tab="specbook" aria-label="스펙" onclick="_vs2Go('specbook')"></button>
-  <button class="vs2-nav-btn" data-tab="content" aria-label="블로그" onclick="_vs2Go('content')"></button>
-  <button class="vs2-nav-btn" aria-label="프로필" onclick="toggleProjectMenu(event)"><span class="vs2-avatar" id="vs2-avatar"></span></button>
+  <button class="vs2-nav-btn" data-tab="info" aria-label="공사정보" onclick="goTo('form')"></button>
+  <button class="vs2-nav-btn" data-tab="meeting" aria-label="기록" onclick="_vs2Go('meeting')"></button>
+  <button class="vs2-nav-btn" data-tab="more" aria-label="전체" onclick="toggleProjectMenu(event)"></button>
 </div></nav>
 
 <!-- ===== BOTTOM SHEET: 서비스 전체 메뉴 (랜딩 프로필) ===== -->
@@ -11153,6 +11153,9 @@ function _getProcPhase(proc) {
 // ===== 메인 화면 v2 (Figma VSD: 공사 개요 · 공정|일정 · 단계 타임라인 · 하단 메뉴) =====
 const VS2_PHASE_LABEL = { planning: '플래닝', structure: '구조공사', finish: '마감공사', after: '입주' };
 const VS2_ICONS = {
+  info: { d: ['M 9.5 3.5 L 18.5 3.5 C 20.4 3.5 22 5.1 22 7 L 22 21 C 22 22.9 20.4 24.5 18.5 24.5 L 9.5 24.5 C 7.6 24.5 6 22.9 6 21 L 6 7 C 6 5.1 7.6 3.5 9.5 3.5 Z', 'M 10.5 10 L 17.5 10', 'M 10.5 14 L 17.5 14', 'M 10.5 18 L 14.5 18'], fill: [] },
+  meeting: { d: ['M 17.5 4.5 L 22.5 9.5 L 11 21 L 5.5 22.5 L 7 17 Z', 'M 15.5 6.5 L 20.5 11.5', 'M 14 23.5 L 23 23.5'], fill: [0] },
+  more: { d: ['M 6.5 4.5 L 10.5 4.5 C 11.6 4.5 12.5 5.4 12.5 6.5 L 12.5 10.5 C 12.5 11.6 11.6 12.5 10.5 12.5 L 6.5 12.5 C 5.4 12.5 4.5 11.6 4.5 10.5 L 4.5 6.5 C 4.5 5.4 5.4 4.5 6.5 4.5 Z', 'M 17.5 4.5 L 21.5 4.5 C 22.6 4.5 23.5 5.4 23.5 6.5 L 23.5 10.5 C 23.5 11.6 22.6 12.5 21.5 12.5 L 17.5 12.5 C 16.4 12.5 15.5 11.6 15.5 10.5 L 15.5 6.5 C 15.5 5.4 16.4 4.5 17.5 4.5 Z', 'M 6.5 15.5 L 10.5 15.5 C 11.6 15.5 12.5 16.4 12.5 17.5 L 12.5 21.5 C 12.5 22.6 11.6 23.5 10.5 23.5 L 6.5 23.5 C 5.4 23.5 4.5 22.6 4.5 21.5 L 4.5 17.5 C 4.5 16.4 5.4 15.5 6.5 15.5 Z', 'M 17.5 15.5 L 21.5 15.5 C 22.6 15.5 23.5 16.4 23.5 17.5 L 23.5 21.5 C 23.5 22.6 22.6 23.5 21.5 23.5 L 17.5 23.5 C 16.4 23.5 15.5 22.6 15.5 21.5 L 15.5 17.5 C 15.5 16.4 16.4 15.5 17.5 15.5 Z'], fill: [0, 1, 2, 3] },
   plan: { d: ['M 4 11.8 C 4 11.1 4.3 10.5 4.8 10.1 L 12.7 4 C 13.5 3.4 14.5 3.4 15.3 4 L 23.2 10.1 C 23.7 10.5 24 11.1 24 11.8 L 24 22 C 24 23.1 23.1 24 22 24 L 17.5 24 L 17.5 18.5 C 17.5 17.1 16.4 16 15 16 L 13 16 C 11.6 16 10.5 17.1 10.5 18.5 L 10.5 24 L 6 24 C 4.9 24 4 23.1 4 22 Z'], fill: [0] },
   style: { d: ['M 7 12 L 7 9.5 C 7 7.6 8.6 6 10.5 6 L 17.5 6 C 19.4 6 21 7.6 21 9.5 L 21 12', 'M 4 14.5 C 4 13.1 5.1 12 6.5 12 C 7.9 12 9 13.1 9 14.5 L 9 16 L 19 16 L 19 14.5 C 19 13.1 20.1 12 21.5 12 C 22.9 12 24 13.1 24 14.5 L 24 20 C 24 21.1 23.1 22 22 22 L 6 22 C 4.9 22 4 21.1 4 20 Z', 'M 7 22 L 7 24.5', 'M 21 22 L 21 24.5'], fill: [0, 1] },
   specbook: { d: ['M 9.5 3.5 L 18.5 3.5 C 20.4 3.5 22 5.1 22 7 L 22 21 C 22 22.9 20.4 24.5 18.5 24.5 L 9.5 24.5 C 7.6 24.5 6 22.9 6 21 L 6 7 C 6 5.1 7.6 3.5 9.5 3.5 Z', 'M 10.5 10 L 17.5 10', 'M 10.5 14 L 17.5 14', 'M 10.5 18 L 14.5 18'], fill: [] },
@@ -11172,13 +11175,15 @@ function _vs2Go(tab) {
 function _vs2Sync(tab) {
   _vs2Tab = tab;
   if (tab !== 'plan' && document.body.classList.contains('vs2-detail-on')) _vs2ClosePhase();
-  const navKey = (tab === 'plan' || tab === 'calendar') ? 'plan' : tab;
+  // 하단 메뉴: 홈(공정·일정) / 스타일(스타일·제품) / 공사정보 / 기록 / 전체
+  const group = (tab === 'plan' || tab === 'calendar') ? 'plan' : (tab === 'style' || tab === 'furniture') ? 'style' : tab;
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
-    const on = b.dataset.tab === navKey; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
+    const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
-  const isPlanGroup = tab === 'plan' || tab === 'calendar';
-  ['vs2-overview', 'vs2-seg'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = isPlanGroup ? '' : 'none'; });
-  document.querySelectorAll('#vs2-seg button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '스타일'], ['furniture', '제품']] }[group];
+  const seg = document.getElementById('vs2-seg');
+  if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
+  const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
 }
 function _vs2Today() { const t = new Date(); t.setHours(0, 0, 0, 0); return t; }
 function _vs2D(s) { return s ? new Date(s + 'T00:00:00') : null; }
