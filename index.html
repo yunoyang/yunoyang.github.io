@@ -2210,6 +2210,10 @@ body.vs2-info #screen-form #form-title { order:1; }
 /* 첫 화면 우측 상단 프로필/로그인 버튼 숨김 (계정은 전체 탭에서) */
 #landing-avatar-btn { display:none !important; }
 /* ===== 인터랙션 애니메이션 ===== */
+@keyframes vsLogoDraw { to { stroke-dashoffset:0; } }
+@keyframes vsLogoFill { from { fill-opacity:0; } to { fill-opacity:1; } }
+#screen-landing .landing-logo-wrap svg path { stroke:#2b2523; stroke-width:.8; fill-opacity:1; }
+#screen-landing .landing-logo-wrap svg path[style*="vsLogoDraw"] { fill-opacity:0; }
 @keyframes vsFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @keyframes vsLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
 @keyframes vsPop { 0% { transform:scale(.82); } 60% { transform:scale(1.12); } 100% { transform:scale(1); } }
@@ -8445,6 +8449,7 @@ function goTo(screen) {
   document.body.classList.toggle('consulting-bg', screen === 'consulting');
   document.body.classList.toggle('vs2-on', screen === 'main');
   if (screen !== 'form') document.body.classList.remove('vs2-info');
+  if (screen === 'landing') _drawLandingLogo();
   requestAnimationFrame(() => typeof _vs2MoveInd === 'function' && _vs2MoveInd());
   closeAllMenus();
   // 플로팅 버튼: 메인 화면에서만 표시 (다른 화면에서는 전체 숨김)
@@ -11450,6 +11455,21 @@ function _vs2Icon(key, active) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
+// 첫 화면 로고: 펜으로 그리듯 외곽선이 그려진 뒤 채워짐
+function _drawLandingLogo() {
+  const svg = document.querySelector('#screen-landing .landing-logo-wrap svg'); if (!svg) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const paths = [...svg.querySelectorAll('path')];
+  paths.forEach((p, i) => {
+    let len = 0; try { len = p.getTotalLength(); } catch (e) {}
+    if (!len) return;
+    p.style.animation = 'none';
+    p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+    void p.getBBox();
+    p.style.animation = `vsLogoDraw 1.4s cubic-bezier(.45,0,.2,1) ${i * 0.08}s forwards, vsLogoFill .5s ease ${1.1 + i * 0.08}s forwards`;
+  });
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(() => { if (document.getElementById('screen-landing')?.classList.contains('active')) _drawLandingLogo(); }, 50));
 // 하단 메뉴 선택 배경이 인스타그램처럼 선택한 메뉴로 미끄러지듯 이동
 function _vs2MoveInd() {
   const ind = document.getElementById('vs2-nav-ind'); if (!ind) return;
