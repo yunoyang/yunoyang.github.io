@@ -2217,7 +2217,8 @@ body.vs2-info #screen-form #form-title { order:1; }
 /* 탭 이동: 선택 밑줄이 가운데서 펼쳐지고, 내용은 살짝 올라오며 나타남 */
 #vs2-seg button, #iv-tabs button { position:relative; transition:color .2s; }
 #vs2-seg button.on, #iv-tabs button.on { border-bottom-color:transparent !important; }
-#vs2-seg button.on::after, #iv-tabs button.on::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:#111; transform-origin:50% 50%; animation:vsLine .28s cubic-bezier(.2,.9,.3,1); }
+#vs2-seg, #iv-tabs { position:relative; }
+.tab-ind { position:absolute; left:0; bottom:0; height:2px; background:#111; pointer-events:none; z-index:2; transition:transform .32s cubic-bezier(.3,.9,.3,1), width .32s cubic-bezier(.3,.9,.3,1); }
 .vs-enter { animation:vsFadeUp .32s cubic-bezier(.2,.9,.3,1) both; }
 /* 하위 필터 탭(ALL/플래닝…, 평면/3D, 주간/월간) */
 .vs2-ftab button, .iv-fp-sub button, .cal2-mode button { transition:background .2s, color .2s; }
@@ -2227,7 +2228,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 /* 카드·리스트 누름 피드백 */
 .vs2-grp, .style-room-card, .co-card, .mr-row, .lp-card { transition:transform .15s, opacity .15s; }
 .vs2-grp:active, .style-room-card:active, .co-card:active, .lp-card:active { transform:scale(.98); }
-@media (prefers-reduced-motion: reduce) { .vs-enter, #vs2-nav .vs2-nav-btn.on svg, #vs2-seg button.on::after, #iv-tabs button.on::after { animation:none !important; } }
+@media (prefers-reduced-motion: reduce) { .vs-enter, #vs2-nav .vs2-nav-btn.on svg { animation:none !important; } .tab-ind { transition:none !important; } }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -11453,6 +11454,21 @@ function _vs2Icon(key, active) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="${active && (ic.inv || []).includes(i) ? '#fff' : '#111'}" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
+// 상단 탭 밑줄: 선택한 탭으로 좌우로 미끄러지며 이동 (탭 버튼이 다시 그려져도 이전 위치에서 출발)
+const _tabIndPos = {};
+function _moveTabInd(el) {
+  if (!el) return;
+  const on = el.querySelector('button.on');
+  let ind = el.querySelector(':scope > .tab-ind');
+  if (!ind) { ind = document.createElement('span'); ind.className = 'tab-ind'; el.appendChild(ind); const pv = _tabIndPos[el.id]; if (pv) { ind.style.transition = 'none'; ind.style.width = pv.w + 'px'; ind.style.transform = `translateX(${pv.x}px)`; void ind.offsetWidth; ind.style.transition = ''; } }
+  if (!on || !on.offsetWidth) { ind.style.opacity = '0'; return; }
+  ind.style.opacity = '1';
+  const x = on.offsetLeft, w = on.offsetWidth;
+  void ind.offsetWidth; // 이전 위치를 확정한 뒤 바꿔야 transition이 실행됨
+  ind.style.width = w + 'px'; ind.style.transform = `translateX(${x}px)`;
+  _tabIndPos[el.id] = { x, w };
+}
+window.addEventListener('resize', () => { _moveTabInd(document.getElementById('vs2-seg')); _moveTabInd(document.getElementById('iv-tabs')); });
 // 첫 화면 로고: 손글씨를 쓰듯 글자 조각을 쓰는 순서(윗줄 → 아랫줄, 왼쪽 → 오른쪽)대로 왼쪽부터 드러냄
 function _drawLandingLogo() {
   const svg = document.querySelector('#screen-landing .landing-logo-wrap svg'); if (!svg) return;
@@ -11548,7 +11564,7 @@ function _vs2Sync(tab) {
   _vs2MoveInd();
   const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '이미지'], ['furniture', '제품']] }[group];
   const seg = document.getElementById('vs2-seg');
-  if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
+  if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
   // 상단 제목: 메뉴명 (홈은 '공정')
   const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북', content: '컨텐츠' }[group] || '';
@@ -17249,6 +17265,7 @@ function _ivTab(k) {
   // 기본정보 탭에선 상세 항목을 펼친 상태로
   if (k === 'basic') { const b = document.getElementById('iv-project-detail-body'); if (b && b.style.display === 'none') _toggleProjectInfoDetail(); }
   document.querySelectorAll('#iv-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  _moveTabInd(document.getElementById('iv-tabs'));
   const empty = document.getElementById('iv-tab-empty');
   const vis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.innerHTML.trim(); };
   const msg = k === 'co' && !vis('iv-companies-section') ? '공정에 등록된 업체가 아직 없어요' : '';
