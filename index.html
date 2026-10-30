@@ -1921,6 +1921,14 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== MONTHLY CALENDAR TABLE ===== */
 #calendar-container { padding:0; background:#fff; }
 .cal2 { background:#fff; }
+#pr-day-viewer { position:fixed; inset:0; z-index:9000; background:#fff; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,1,.64,1); pointer-events:none; }
+#pr-day-viewer.on { transform:none; pointer-events:all; }
+.prv-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.prv-grid { columns:2; column-gap:6px; padding:8px 8px 40px; max-width:1200px; margin:0 auto; }
+@media (min-width:660px) { .prv-grid { columns:3; column-gap:16px; padding:16px 24px 48px; } .prv-item { margin-bottom:16px !important; } }
+@media (min-width:1000px) { .prv-grid { columns:4; } }
+.prv-item { display:block; width:100%; border:none; padding:0; margin:0 0 6px; background:#f2f4f6; border-radius:12px; overflow:hidden; cursor:zoom-in; break-inside:avoid; }
+.prv-item img { width:100%; display:block; }
 .pr-kind { display:flex; gap:4px; padding:12px 20px 4px; }
 .pr-kind button { border:none; background:none; padding:6px 12px; border-radius:8px; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:var(--font); }
 .pr-kind button.on { background:#e7e9ed; color:#111; font-weight:700; }
@@ -12187,12 +12195,27 @@ function _renderProcRecords(procId) {
   const sep = '<span class="style-card-meta-sep">|</span>';
   const thumb = src => src ? `<img src="${esc(src)}" loading="lazy" alt="" onerror="this.style.opacity=0">` : '';
   window._prCardImgs = {};
-  const cards = records.map(r => {
+  // 포토는 같은 날 찍은 사진을 하나의 카드로 묶음
+  const _ymdKey = t => { const x = new Date(t||0); return `${x.getFullYear()}-${x.getMonth()+1}-${x.getDate()}`; };
+  const _days = {};
+  const items = [];
+  records.forEach(r => {
+    if (!r._meeting && _prKindOf(r) === 'photo') {
+      const k = _ymdKey(r.createdAt);
+      if (!_days[k]) { _days[k] = { id: 'day_' + k, _day: k, kind: 'photo', images: [], who: [], createdAt: r.createdAt }; items.push(_days[k]); }
+      const g = _days[k];
+      g.images.push(...(r.images || []));
+      const w = r.createdByName || r.createdBy?.split('@')[0] || '';
+      if (w && !g.who.includes(w)) g.who.push(w);
+      g.createdAt = Math.max(g.createdAt || 0, r.createdAt || 0);
+    } else items.push(r);
+  });
+  const cards = items.map(r => {
     const kind = _prKindOf(r);
     const d = new Date(r.createdAt||0);
     const dayTitle = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;
     const ymd = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-    const who = esc(r.createdByName || r.createdBy?.split('@')[0] || '');
+    const who = esc(r._day ? (r.who.length > 1 ? `${r.who[0]} 외 ${r.who.length - 1}명` : (r.who[0] || '')) : (r.createdByName || r.createdBy?.split('@')[0] || ''));
     const { decoded, type } = _normalizeMeetingContent(r.content||'');
     const tmp = document.createElement('div');
     tmp.innerHTML = type === 'html' ? decoded : esc(decoded).replace(/\n/g,'<br>');
@@ -12213,9 +12236,9 @@ function _renderProcRecords(procId) {
       ? [`<span>사진 ${imgs.length}장</span>`, `<span>${who}</span>`]
       : [`<span>${ymd}</span>`, `<span>${who}</span>`, ...(imgs.length ? [`<span>사진 ${imgs.length}장</span>`] : [])];
     const onclick = r._meeting ? `openMeetingDetail('${r.id}')`
-      : kind === 'photo' ? `_openSwipeViewer(window._prCardImgs['${r.id}'],0)`
+      : r._day ? `_prOpenDay('${r._day}')`
       : `openProcRecord('${r.id}')`;
-    const more = r._meeting ? '' : `<span class="sr-more-wrap"><button class="sr-more pr-more" onclick="_prToggleMenu(event,'${r.id}')" aria-label="더보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="#666"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></span>`;
+    const more = (r._meeting || r._day) ? '' : `<span class="sr-more-wrap"><button class="sr-more pr-more" onclick="_prToggleMenu(event,'${r.id}')" aria-label="더보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="#666"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></span>`;
     return `<div class="style-room-card" onclick="${onclick}">
       ${collage}
       <div class="style-card-info">
@@ -12225,6 +12248,50 @@ function _renderProcRecords(procId) {
     </div>`;
   }).join('');
   el.innerHTML = `${addBtn}<div class="pr-grid">${cards}</div><div style="height:40px;"></div>`;
+}
+
+// 포토 날짜 묶음 상세: 스타일처럼 이미지 그리드(메이슨리) → 탭하면 크게 보기·삭제
+let _prDayKey = null;
+function _prDayPhotos(key) {
+  const proc = getProject()?.processes.find(p => p.id === _currentProcDetailId);
+  const out = [];
+  (proc?.records || []).filter(r => _prKindOf(r) === 'photo' && (() => { const x = new Date(r.createdAt||0); return `${x.getFullYear()}-${x.getMonth()+1}-${x.getDate()}`; })() === key)
+    .sort((a, b) => (a.createdAt||0) - (b.createdAt||0))
+    .forEach(r => (r.images || []).forEach(u => out.push({ url: u, rec: r })));
+  return { proc, out };
+}
+function _prOpenDay(key) {
+  _prDayKey = key;
+  const { out } = _prDayPhotos(key);
+  if (!out.length) { _prCloseDay(); return; }
+  const [y, m, d] = key.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  let ov = document.getElementById('pr-day-viewer');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'pr-day-viewer'; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="form-header"><button class="back-btn" onclick="_prCloseDay()"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
+    <span style="flex:1;font-size:16px;font-weight:600;color:#111;">${m}월 ${d}일 (${'일월화수목금토'[dt.getDay()]}) <span style="color:#8b95a1;font-weight:500;font-size:14px;margin-left:4px;">${out.length}장</span></span>
+    ${canEdit() ? `<button onclick="_prCloseDay();openProcRecord(null,'photo')" style="padding:8px 14px;background:#222;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">사진 추가</button>` : ''}</div>
+    <div class="prv-scroll"><div class="prv-grid">${out.map((o, i) => `<button class="prv-item" onclick="_prDayZoom(${i})"><img src="${esc(o.url)}" loading="lazy" alt=""></button>`).join('')}</div></div>`;
+  ov.classList.add('on');
+}
+function _prCloseDay() { document.getElementById('pr-day-viewer')?.classList.remove('on'); _prDayKey = null; }
+function _prDayZoom(i) {
+  const { out } = _prDayPhotos(_prDayKey);
+  _openSwipeViewer(out.map(o => o.url), i, canEdit() ? (url, idx) => {
+    if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+    const { proc, out: cur } = _prDayPhotos(_prDayKey);
+    const hit = cur[idx]?.url === url ? cur[idx] : cur.find(o => o.url === url);
+    if (!proc || !hit) return;
+    const rec = hit.rec;
+    rec.images = (rec.images || []).filter(u => u !== url);
+    if (!rec.images.length) { proc.records = proc.records.filter(r => r.id !== rec.id); _markIdDeleted('record', rec.id); }
+    else rec.updatedAt = Date.now();
+    proc.updatedAt = Date.now();
+    save();
+    _renderProcRecords(_currentProcDetailId);
+    _prOpenDay(_prDayKey);
+    showToastMessage('🗑️ 사진이 삭제됐습니다');
+  } : null);
 }
 
 function _prToggleMenu(ev, id) {
