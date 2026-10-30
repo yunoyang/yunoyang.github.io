@@ -16286,6 +16286,20 @@ function _syncProjToCloud(proj) {
     // floorplanCanvasJSON: 500KB 초과 시 Firestore 저장 제외 (localStorage에만 유지)
     if (projData.floorplanCanvasJSON && projData.floorplanCanvasJSON.length > 500000) delete projData.floorplanCanvasJSON;
     // floorplanImages/floorplanImage는 소형 압축 base64로 Firestore에 직접 저장 (기기 간 공유)
+    // Firestore 문서 1MB 제한 가드: 넘을 것 같으면 로컬에도 남아 있는 큰 필드부터 클라우드 저장에서 제외
+    // (한 필드 때문에 문서 전체 update가 invalid-argument로 실패해 '클라우드 동기화 실패'가 반복되던 원인)
+    {
+      const LIMIT = 900000;
+      const size = () => new Blob([JSON.stringify(projData)]).size;
+      if (size() > LIMIT) {
+        delete projData.floorplanCanvasJSON;
+        const dropB64 = v => (typeof v === 'string' && v.startsWith('data:')) ? null : v;
+        if (size() > LIMIT && Array.isArray(projData.floorplanImages)) projData.floorplanImages = projData.floorplanImages.map(dropB64);
+        if (size() > LIMIT) projData.floorplanImage = dropB64(projData.floorplanImage);
+        if (size() > LIMIT) (projData.processes || []).forEach(p => (p.records || []).forEach(r => { r.content = _stripBase64FromHtml(r.content); }));
+        console.warn('[sync] 문서 크기 초과로 일부 필드 제외, 현재', size(), 'bytes');
+      }
+    }
     const payload = {
       projectData: projData,
       ownerEmail: state.user.email,
@@ -16316,8 +16330,12 @@ function _syncProjToCloud(proj) {
       }
       return;
     }
-    console.error('sync err', e.code, e.message, _fsDiag(proj));
-    showToastMessage('⚠️ 클라우드 동기화 실패 — 다른 기기에 반영되지 않았습니다');
+    const diag = _fsDiag(proj);
+    console.error('sync err', e.code, e.message, diag);
+    // 원인 파악용: 마지막 실패 정보를 남기고, 알림에 에러 코드를 함께 표시
+    try { localStorage.setItem('vb_last_sync_err', JSON.stringify({ at: new Date().toISOString(), code: e.code, msg: String(e.message || '').slice(0, 300), diag })); } catch (_) {}
+    let kb = ''; try { kb = Math.round(JSON.parse(diag).bytes / 1024) + 'KB'; } catch (_) {}
+    showToastMessage('⚠️ 클라우드 동기화 실패 (' + (e.code || 'unknown') + (kb ? ' · ' + kb : '') + ') — 다른 기기에 반영되지 않았습니다');
   });
 }
 
