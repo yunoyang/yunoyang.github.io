@@ -1228,8 +1228,8 @@ button, input, textarea, select { font-family:var(--font); }
 #style-rooms-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 12px 12px 80px;
+  gap: 8px;
+  padding: 12px 14px 80px;
 }
 @media (min-width: 660px) {
   #style-rooms-container { grid-template-columns: 1fr 1fr; }
@@ -1403,7 +1403,7 @@ button, input, textarea, select { font-family:var(--font); }
 #ph-selbar .cancel { background:rgba(255,255,255,.18); color:#fff; }
 /* 가구&가전 탭: 카테고리 카드 그리드 (모바일 2열 → PC로 갈수록 더 많은 열) */
 /* 제품 카테고리 카드: 스타일 카드(#style-rooms-container)와 같은 열 수·크기 */
-.furniture-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.furniture-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (min-width: 660px) { .furniture-cat-grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
 @media (min-width: 1000px) { .furniture-cat-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1300px) { .furniture-cat-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -1426,7 +1426,7 @@ button, input, textarea, select { font-family:var(--font); }
 .style-card-collage {
   display: flex;
   gap: 2px;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 4 / 3;
   background: #e8e8ec;
   overflow: hidden;
   border-radius: 16px;     /* 이미지 프레임 radius */
@@ -4301,7 +4301,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
     <!-- Furniture & Appliances Tab -->
     <div id="tab-furniture" style="display:none; background:#fff;">
-      <div id="furniture-list" style="padding:12px 12px 100px;"></div>
+      <div id="furniture-list" style="padding:12px 14px 100px;"></div>
     </div>
 
     <!-- Site Photos Tab -->
