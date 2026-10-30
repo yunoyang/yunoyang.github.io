@@ -11497,7 +11497,7 @@ function _vs2MoveInd() {
 }
 window.addEventListener('resize', () => requestAnimationFrame(_vs2MoveInd));
 // 더보기에서 들어가는 하위 페이지: 상단에 뒤로가기 → 들어오기 전 탭으로 복귀
-const _VS2_SUB = ['sitephotos', 'matselect', 'specbook', 'content'];
+const _VS2_SUB = ['sitephotos', 'matselect', 'specbook'];
 let _vs2BackTab = 'plan';
 function _vs2Back() { _vs2Go(_VS2_SUB.includes(_vs2BackTab) ? 'more' : _vs2BackTab); }
 
@@ -11557,17 +11557,17 @@ function _vs2Sync(tab) {
   _vs2Tab = tab;
   if (tab !== 'plan' && document.body.classList.contains('vs2-detail-on')) _vs2ClosePhase();
   // 하단 메뉴: 홈(공정·일정) / 스타일(스타일·제품) / 공사정보 / 기록 / 전체
-  const group = (tab === 'plan' || tab === 'calendar') ? 'plan' : (tab === 'style' || tab === 'furniture') ? 'style' : tab;
+  const group = (tab === 'plan' || tab === 'calendar') ? 'plan' : (tab === 'style' || tab === 'furniture') ? 'style' : (tab === 'meeting' || tab === 'content') ? 'meeting' : tab;
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
     const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
   _vs2MoveInd();
-  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '이미지'], ['furniture', '제품']] }[group];
+  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '이미지'], ['furniture', '제품']], meeting: [['meeting', '기록'], ['content', '컨텐츠']] }[group];
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
   // 상단 제목: 메뉴명 (홈은 '공정')
-  const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북', content: '컨텐츠' }[group] || '';
+  const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북' }[group] || '';
   document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
   _vs2MoveInd();
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
