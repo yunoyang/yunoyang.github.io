@@ -1950,8 +1950,8 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
 /* 공사정보 탭 (도면 / 견적 / 업체 / 팀) */
-.iv-tabs { display:flex; margin:0 -20px 12px; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
-.iv-tabs button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.iv-tabs { display:flex; margin:0 -20px 12px; overflow-x:auto; scrollbar-width:none; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
+.iv-tabs button { flex:1 0 auto; padding-left:10px !important; padding-right:10px !important; white-space:nowrap; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
 .iv-tabs button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #form-view-panel[data-ivtab] .iv-col-r { display:contents; }
 #form-view-panel[data-ivtab="fp"] :is(#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card),
@@ -1959,6 +1959,8 @@ button, input, textarea, select { font-family:var(--font); }
 #form-view-panel[data-ivtab="co"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="team"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-companies-section) { display:none !important; }
 #form-view-panel[data-ivtab="team"] #iv-team-card { display:block !important; }
+#form-view-panel[data-ivtab]:not([data-ivtab="basic"]) #iv-basic-card,
+#form-view-panel[data-ivtab="basic"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card) { display:none !important; }
 .iv-empty { padding:32px 24px; text-align:center; font-size:14px; color:#8b95a1; }
 
 /* 업체 페이지 관리 */
@@ -4138,7 +4140,11 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       <div class="iv-col iv-col-l">
 
       <!-- 프로젝트명 (클릭 시 상세정보 접기/펴기) — 상세정보 전체를 카드 하나로, 섹션 사이는 구분선만 -->
-      <div class="info-view-card" style="overflow:visible;">
+      <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
+      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button><button data-k="basic" onclick="_ivTab('basic')">기본정보</button></div>
+      <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
+      <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
+      <div class="info-view-card" id="iv-basic-card" style="overflow:visible;">
         <div onclick="_toggleProjectInfoDetail()" style="padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
           <div style="font-size:14px;font-weight:500;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -4185,10 +4191,6 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         </div>
       </div>
 
-      <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
-      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button></div>
-      <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
-      <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
       <!-- 도면 (항상 표시) -->
       <div class="info-view-card" id="iv-floorplan-card" style="padding:24px;">
         <div class="fp-edit-row">
@@ -16542,6 +16544,8 @@ function updateCollabIndicator(collaborators, owner) {
 function _ivTab(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
   panel.dataset.ivtab = k;
+  // 기본정보 탭에선 상세 항목을 펼친 상태로
+  if (k === 'basic') { const b = document.getElementById('iv-project-detail-body'); if (b && b.style.display === 'none') _toggleProjectInfoDetail(); }
   document.querySelectorAll('#iv-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
   const empty = document.getElementById('iv-tab-empty');
   const vis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.innerHTML.trim(); };
