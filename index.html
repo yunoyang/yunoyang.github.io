@@ -11387,7 +11387,7 @@ function _vs2Sync(tab) {
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
     const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
-  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '스타일'], ['furniture', '제품']] }[group];
+  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '이미지'], ['furniture', '제품']] }[group];
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
