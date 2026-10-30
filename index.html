@@ -2081,6 +2081,7 @@ body.vs2-info #vs2-nav { display:block; }
 body.vs2-info #screen-form .form-header { padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; gap:4px; }
 body.vs2-info #screen-form .form-header .back-btn { display:none; }
 body.vs2-info #screen-form #form-title { font-size:16px; font-weight:600; letter-spacing:-.02em; padding:6px 0; cursor:pointer; }
+body.vs2-info #form-view-panel { padding-left:16px !important; padding-right:16px !important; }
 body.vs2-info #iv-tabs { margin:0 -16px 16px; }
 body.vs2-info #iv-tabs button { flex:1 1 0; min-width:0; padding-left:4px !important; padding-right:4px !important; }
 body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -2090,6 +2091,10 @@ body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(1
   body.vs2-info #vs2-nav .vs2-nav-in { flex-direction:column; gap:6px; padding:8px 6px; }
   body.vs2-info #vs2-nav .vs2-nav-btn { flex:none; width:52px; height:52px; }
   body.vs2-info #screen-form .form-header { padding-left:32px; padding-right:32px; }
+  /* PC: 다른 메뉴(공정|일정, 스타일|제품)처럼 탭이 콘텐츠 영역 좌우 끝까지, 본문은 한 칼럼 */
+  body.vs2-info #form-view-panel[style*="display: block"] { display:block !important; }
+  body.vs2-info #form-view-panel { padding-left:32px !important; padding-right:32px !important; }
+  body.vs2-info #iv-tabs { margin:0 -32px 24px; padding:0 32px; }
 }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
