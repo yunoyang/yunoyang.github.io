@@ -2197,6 +2197,13 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .mr-l { flex:1; font-size:16px; color:#111; }
 .mr-soon { font-size:11px; font-weight:600; color:#111; background:#ffcc33; border-radius:4px; padding:2px 7px; }
 .mr-chev { flex-shrink:0; }
+/* 공사정보 헤더: 수정·내보내기 숨기고 알림만 (오른쪽 끝) */
+.iv-basic-edit { display:none; width:100%; height:52px; margin-top:12px; border:none; border-radius:16px; background:#111; color:#fff; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; }
+#form-view-panel[data-ivtab="basic"] .iv-basic-edit { display:block; }
+#form-notif-btn { display:none; }
+body.vs2-info #screen-form #form-view-actions { display:none !important; }
+body.vs2-info #form-notif-btn[data-on="1"] { display:block; position:relative; order:9; margin-left:auto; margin-right:-6px; background:none; border:none; padding:0; width:40px; height:40px; cursor:pointer; }
+body.vs2-info #screen-form #form-title { order:1; }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -4338,6 +4345,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <div class="form-screen-inner">
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <button id="form-notif-btn" class="notif-btn2" onclick="openNotifPanel()" title="알림" aria-label="알림"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="white"/><path d="M14.5 24.5V18.5a5.5 5.5 0 0 1 11 0v6l1.5 1.5h-14l1.5-1.5Z" stroke="black" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 28.5a2.2 2.2 0 0 0 4 0" stroke="black" stroke-width="1.6" stroke-linecap="round"/></svg><span class="notif-badge" style="display:none;"></span></button>
       <h2 id="form-title" onclick="if(document.body.classList.contains('vs2-info'))goTo('landing')">공사 정보</h2>
       <div id="form-view-actions" style="display:none;align-items:center;gap:2px;margin-left:auto;">
         <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정" style="margin-left:0;">
@@ -4405,6 +4413,8 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
           </div>
         </div>
       </div>
+      <!-- 기본정보 탭: 헤더의 수정 아이콘 대신 여기서 수정 -->
+      <button class="iv-basic-edit" id="iv-basic-edit" onclick="switchToFormEdit()">공사정보 수정하기</button>
 
       <!-- 도면 탭 하위: 평면 / 3D -->
       <div class="iv-fp-sub iv-fp-only" id="iv-fp-sub"><button data-k="plan" class="on" onclick="_ivFpSub('plan')">평면</button><button data-k="3d" onclick="_ivFpSub('3d')">3D</button>
@@ -6916,10 +6926,14 @@ async function _notifInit() {
 }
 function _notifStop() { if (_notifUnsub) _notifUnsub(); _notifUnsub = null; _notifKey = null; _notifItems = []; _renderNotifBadge(); }
 function _renderNotifBadge() {
-  const btn = document.getElementById('notif-btn'); if (!btn) return;
-  btn.style.display = state.loggedIn ? '' : 'none';
-  const n = _notifItems.filter(x => !x.read).length, b = btn.querySelector('.notif-badge');
-  if (b) { b.textContent = n > 99 ? '99+' : n; b.style.display = n ? '' : 'none'; }
+  const n = _notifItems.filter(x => !x.read).length;
+  ['notif-btn', 'form-notif-btn'].forEach(id => {
+    const btn = document.getElementById(id); if (!btn) return;
+    if (id === 'notif-btn') btn.style.display = state.loggedIn ? '' : 'none';
+    else btn.dataset.on = state.loggedIn ? '1' : '';
+    const b = btn.querySelector('.notif-badge');
+    if (b) { b.textContent = n > 99 ? '99+' : n; b.style.display = n ? '' : 'none'; }
+  });
 }
 function _notifTimeAgo(ts) {
   const t = ts?.toMillis?.() || 0; if (!t) return '방금';
@@ -6932,6 +6946,7 @@ function _notifInjectCss() {
   if (document.getElementById('notif-css')) return;
   const st = document.createElement('style'); st.id = 'notif-css';
   st.textContent = `
+#form-notif-btn .notif-badge{position:absolute;top:9px;left:22px;width:7px;height:7px;padding:0;border-radius:50%;background:#ff4e4e;box-shadow:0 0 0 1.5px #fff;font-size:0;color:transparent;overflow:hidden;}
 #notif-btn{position:relative;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;margin-right:6px;}
 /* 알림 상태 (VSD 27-1156): 안 읽은 알림이 있으면 종 우상단에 빨간 점 */
 #notif-btn .notif-badge{position:absolute;top:9px;left:22px;width:7px;height:7px;padding:0;border-radius:50%;background:#ff4e4e;box-shadow:0 0 0 1.5px #fff;font-size:0;color:transparent;overflow:hidden;}
