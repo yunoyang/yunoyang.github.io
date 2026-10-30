@@ -5969,7 +5969,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <button class="vs2-nav-btn on" data-tab="plan" aria-label="홈" onclick="_vs2Go('plan')"></button>
   <button class="vs2-nav-btn" data-tab="style" aria-label="스타일" onclick="_vs2Go('style')"></button>
   <button class="vs2-nav-btn" data-tab="info" aria-label="공사정보" onclick="goTo('form')"></button>
-  <button class="vs2-nav-btn" data-tab="meeting" aria-label="기록" onclick="_vs2Go('meeting')"></button>
+  <button class="vs2-nav-btn" data-tab="meeting" aria-label="아카이브" onclick="_vs2Go('meeting')"></button>
   <button class="vs2-nav-btn" data-tab="more" aria-label="전체" onclick="_vs2Go('more')"></button>
 </div></nav>
 
@@ -11567,7 +11567,7 @@ function _vs2Sync(tab) {
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
   // 상단 제목: 메뉴명 (홈은 '공정')
-  const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북' }[group] || '';
+  const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '아카이브', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북' }[group] || '';
   document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
   _vs2MoveInd();
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
