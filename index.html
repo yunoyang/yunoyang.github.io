@@ -2171,6 +2171,9 @@ body.vs2-on.vs2-menu-titled #screen-main .vs2-menu-title { display:inline; }
 .co-st.yes { background:#e8f3ff; color:#1b64da; }
 .co-st.part { background:#fff3e6; color:#c25f00; }
 .co-st.no { background:#f2f4f6; color:#6b7684; }
+.vs2-back { display:none !important; }
+body.vs2-on.vs2-sub #screen-main .vs2-back { display:flex !important; margin-left:-8px; }
+body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -4134,6 +4137,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </svg>
     </button>
     <div class="project-selector" id="project-selector">
+      <button class="back-btn vs2-back" id="vs2-back" onclick="_vs2Back()" aria-label="뒤로"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <button class="project-badge" id="project-badge-btn" onclick="document.body.classList.contains('vs2-on') ? goTo('landing') : toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
         <span class="name vs2-menu-title" id="vs2-menu-title"></span>
@@ -4711,7 +4715,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 <div class="screen" id="screen-consulting">
   <div class="form-screen-inner" style="background:#f5f5f5;">
     <div class="form-header" style="background:#f5f5f5;border-bottom:none;">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <button class="back-btn" onclick="goTo(_prevScreen||'main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>전문가 컨설팅</h2>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 0 48px;">
@@ -4910,7 +4914,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 <div class="screen" id="screen-tip">
   <div class="form-screen-inner">
     <div class="form-header" id="tip-page-header">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <button class="back-btn" onclick="goTo(_prevScreen||'main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2 id="tip-page-title">공정팁</h2>
     </div>
     <div class="screen-scroll" id="tip-page-content">
@@ -4923,7 +4927,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 <div class="screen" id="screen-notice">
   <div class="form-screen-inner">
     <div class="form-header">
-      <button class="back-btn" onclick="goTo('main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
+      <button class="back-btn" onclick="goTo(_prevScreen||'main')"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
       <h2>인테리어 양해 안내문</h2>
       <button onclick="downloadNoticeImage()" id="notice-download-btn" style="
         margin-left:auto; display:flex; align-items:center; gap:5px;
@@ -11373,7 +11377,12 @@ function _vs2Icon(key, active) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
+// 더보기에서 들어가는 하위 페이지: 상단에 뒤로가기 → 들어오기 전 탭으로 복귀
+const _VS2_SUB = ['sitephotos', 'matselect', 'specbook', 'content'];
+let _vs2BackTab = 'plan';
+function _vs2Back() { _vs2Go(_VS2_SUB.includes(_vs2BackTab) ? 'plan' : _vs2BackTab); }
 function _vs2Go(tab) {
+  if (_VS2_SUB.includes(tab) && !_VS2_SUB.includes(_vs2Tab)) _vs2BackTab = _vs2Tab || 'plan';
   if (!document.getElementById('screen-main')?.classList.contains('active')) goTo('main');
   const btn = document.querySelector(`.tab-toggle .tab-btn[onclick*="'${tab}'"]`);
   switchMainTab(tab, btn);
@@ -11393,7 +11402,8 @@ function _vs2Sync(tab) {
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
   // 상단 제목: 메뉴명 (홈은 '공정')
-  const mt = { plan: '공정', style: '스타일', meeting: '기록', info: '공사정보' }[group] || '';
+  const mt = { plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북', content: '컨텐츠' }[group] || '';
+  document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
   document.body.classList.toggle('vs2-menu-titled', !!mt);
 }
