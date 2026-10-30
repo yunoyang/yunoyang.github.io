@@ -11682,14 +11682,14 @@ function _vs2RenderOverview() {
   const furn = _getFurnitureItems().filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const totalAll = total + (proj.costExcludeFurniture ? 0 : furn);
   const e = _estGet(proj), c = e ? _estCalc(e) : null;
-  const sub = c ? ['관리비·조정 포함', `구조 공사비 <b>${Math.round(c.direct).toLocaleString()}원</b>`]
-    : [`공정 ${(proj.processes || []).filter(p => !p.deleted).length}개`, companies.size ? `참여 업체 <b>${companies.size}곳</b>` : ''];
   const f = proj.form || {};
+  const _today = _vs2Today(), _ps = (proj.processes || []).filter(p => !p.deleted);
+  const progress = _ps.length ? Math.round(_ps.filter(p => _vs2ProcState(p, _today) === 'done').length / _ps.length * 100) : 0;
   const period = f.startDate ? `${_vs2Fmt(f.startDate)} - ${f.endDate ? _vs2Fmt(f.endDate) : '미정'}` : '미정';
   el.innerHTML = `<button class="vs2-ov-card" onclick="_vs2GoEstimate()">
-      <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span></div>
-      <div class="vs2-ov-row"><span>${sub[0]}</span><span>${sub[1]}</span></div>
+      <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}</span></div>
       <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
+      <div class="vs2-ov-row"><span>진행상황</span><span><b>${progress}%</b></span></div>
     </button>`;
 }
 // 첫 화면 공정 진행: 단계로 나누지 않고 모든 공정을 일정 순으로 펼쳐 보여줌. 누르면 공정 상세 화면.
