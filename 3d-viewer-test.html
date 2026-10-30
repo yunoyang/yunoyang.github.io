@@ -67,12 +67,12 @@
 
   /* ===== embed=app: 앱 안 3D 탭용 모바일 최적화 ===== */
   body.embed-app { height: 100vh; height: 100dvh; background: #fff; }
-  body.embed-app #topbar, body.embed-app #controls-guide, body.embed-app #btn-firstperson, body.embed-app #fp-overlay, body.embed-app #crosshair { display: none !important; }
+  body.embed-app #topbar, body.embed-app #controls-guide, body.embed-app #fp-overlay, body.embed-app #crosshair { display: none !important; }
   body.embed-app #main { flex-direction: column; }
   body.embed-app #canvas-wrap { flex: 0 0 auto; height: 56%; }
   body.embed-app #click-hint { top: auto; bottom: 12px; left: 12px; right: auto; max-width: calc(100% - 24px); font-size: 12px; background: rgba(17,17,17,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   body.embed-app #view-toggle { top: 12px; right: 12px; left: 12px; justify-content: flex-end; flex-wrap: nowrap; }
-  body.embed-app #view-toggle button { padding: 8px 12px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.92); color: #111; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  body.embed-app #view-toggle button { padding: 8px 12px; font-size: 14px; font-weight: 600; background: rgba(255,255,255,.92); color: #111; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
   body.embed-app #view-toggle button.active { background: #111; color: #fff; }
   body.embed-app #lighting-panel { top: 56px; right: 12px; left: auto; bottom: auto; width: 140px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.92); color: #111; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
   body.embed-app #lighting-panel .row-label { margin-bottom: 2px; font-weight: 600; }
@@ -88,6 +88,8 @@
   body.embed-app .preset-category-title { font-size: 13px; color: #111; }
   body.embed-app.view-only #canvas-wrap { flex: 1; height: 100%; }
   body.embed-app.view-only #click-hint { display: none; }
+  #fp-stick { display: none; position: absolute; left: 20px; bottom: 20px; width: 112px; height: 112px; border-radius: 50%; background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7); touch-action: none; }
+  #fp-stick i { position: absolute; left: 34px; top: 34px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.95); box-shadow: 0 1px 4px rgba(0,0,0,.25); }
   @media (min-width: 900px) {
     body.embed-app #main { flex-direction: row; }
     body.embed-app #canvas-wrap { flex: 1; height: 100%; }
@@ -108,6 +110,7 @@
       <button id="save-btn">💾 저장</button>
     </div>
     <div id="crosshair"></div>
+    <div id="fp-stick"><i></i></div>
     <div id="fp-overlay">
       <div class="big">클릭해서 1인칭 시점 시작</div>
       <div class="small">W A S D로 이동, 마우스로 둘러보고, ESC로 나갈 수 있어요</div>
@@ -682,19 +685,60 @@ plControls.addEventListener('unlock', () => {
 });
 updateControlsGuide();
 
+// 앱 안에서는 포인터 락이 안 되므로 드래그로 둘러보고 조이스틱으로 이동
+const fpDragMode = document.body.classList.contains('embed-app');
+const fpStick = document.getElementById('fp-stick'), fpStickKnob = fpStick.firstElementChild;
+const fpTouchMove = { x: 0, z: 0 };
+function enterDragFirstPerson() {
+  if (fpActive) return;
+  controls.enabled = false;
+  if (fpBounds) { camera.position.x = (fpBounds.minX + fpBounds.maxX) / 2; camera.position.z = (fpBounds.minZ + fpBounds.maxZ) / 2; }
+  camera.position.y = fpFloorY + fpEyeHeight;
+  camera.rotation.set(0, camera.rotation.y, 0, 'YXZ');
+  fpStick.style.display = 'block';
+  plControls.dispatchEvent({ type: 'lock' });
+}
+function exitDragFirstPerson() {
+  controls.enabled = true;
+  fpStick.style.display = 'none';
+  plControls.dispatchEvent({ type: 'unlock' });
+}
+let fpLook = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { if (fpDragMode && fpActive) { fpLook = { id: e.pointerId, x: e.clientX, y: e.clientY }; renderer.domElement.setPointerCapture(e.pointerId); } });
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (!fpLook || e.pointerId !== fpLook.id) return;
+  const eu = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
+  eu.y += (e.clientX - fpLook.x) * 0.004;
+  eu.x = Math.max(-1.4, Math.min(1.4, eu.x + (e.clientY - fpLook.y) * 0.004));
+  camera.quaternion.setFromEuler(eu);
+  fpLook.x = e.clientX; fpLook.y = e.clientY;
+});
+['pointerup', 'pointercancel'].forEach(t => renderer.domElement.addEventListener(t, () => { fpLook = null; }));
+fpStick.addEventListener('pointerdown', (e) => { fpStick.setPointerCapture(e.pointerId); });
+fpStick.addEventListener('pointermove', (e) => {
+  if (!fpStick.hasPointerCapture(e.pointerId)) return;
+  const r = fpStick.getBoundingClientRect();
+  let dx = e.clientX - r.left - 56, dy = e.clientY - r.top - 56;
+  const d = Math.hypot(dx, dy); if (d > 34) { dx *= 34 / d; dy *= 34 / d; }
+  fpStickKnob.style.transform = `translate(${dx}px,${dy}px)`;
+  fpTouchMove.x = dx / 34; fpTouchMove.z = -dy / 34;
+});
+['pointerup', 'pointercancel'].forEach(t => fpStick.addEventListener(t, () => { fpStickKnob.style.transform = ''; fpTouchMove.x = fpTouchMove.z = 0; }));
+
 document.getElementById('btn-firstperson').addEventListener('click', () => {
+  if (fpDragMode) { enterDragFirstPerson(); return; }
   document.getElementById('fp-overlay').style.display = 'flex';
 });
 document.getElementById('fp-overlay').addEventListener('click', enterFirstPerson);
 document.getElementById('btn-orbit').addEventListener('click', () => {
-  if (fpActive) exitFirstPerson();
+  if (fpActive) { if (fpDragMode) exitDragFirstPerson(); else exitFirstPerson(); }
 });
 
 function updateFirstPersonMovement(dt) {
   fpVelocity.x -= fpVelocity.x * 10 * dt;
   fpVelocity.z -= fpVelocity.z * 10 * dt;
-  const moveX = (fpKeys.d ? 1 : 0) - (fpKeys.a ? 1 : 0);
-  const moveZ = (fpKeys.w ? 1 : 0) - (fpKeys.s ? 1 : 0);
+  const moveX = (fpKeys.d ? 1 : 0) - (fpKeys.a ? 1 : 0) + fpTouchMove.x;
+  const moveZ = (fpKeys.w ? 1 : 0) - (fpKeys.s ? 1 : 0) + fpTouchMove.z;
   if (moveX !== 0 || moveZ !== 0) {
     fpVelocity.x += moveX * fpMoveSpeed * dt * 10;
     fpVelocity.z += moveZ * fpMoveSpeed * dt * 10;
