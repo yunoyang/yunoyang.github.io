@@ -12136,9 +12136,9 @@ function _renderProcDetailContent(procId) {
     <div style="background:#fff;padding:0 20px;">
       <div class="detail-header">
         <span class="d-label">상세내역</span>
-        <button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
+        ${_estGroupForProc(getProject(), p.id)?.items?.length ? '' : `<button class="detail-add-btn" onclick="openAddDetail('${p.id}')">
           <svg class="icon" width="17" height="17" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
-        </button>
+        </button>`}
       </div>
       ${_estGroupForProc(getProject(), p.id)?.items?.length ? `<div class="details-list">${_procDetails(p).map(d => `
         <div class="detail-item" style="cursor:default;">
@@ -15283,6 +15283,19 @@ function _estExtra(proj) {
   return { unlinked, indirect: c.mgmt + c.adjust };
 }
 function _estNormName(n) { return String(n || '').replace(/공사$/,'').replace(/\s+/g,'').trim(); }
+// 공정을 지웠다 다시 만들면 견적 그룹의 procId가 끊어짐 — 이름이 같은 공정에 다시 연결
+function _estRelink(proj) {
+  const e = _estGet(proj); if (!e) return false;
+  const alive = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.id));
+  const used = new Set(e.groups.map(g => g.procId).filter(id => alive.has(id)));
+  let n = 0;
+  e.groups.forEach(g => {
+    if (alive.has(g.procId)) return;
+    const p = _estMatchProc(proj, g.name);
+    if (p && !used.has(p.id)) { g.procId = p.id; used.add(p.id); n++; }
+  });
+  return n > 0;
+}
 function _estMatchProc(proj, gname) {
   const k = _estNormName(gname), alias = EST_ALIAS[k] || '';
   const procs = (proj.processes || []).filter(p => !p.deleted);
@@ -15947,6 +15960,7 @@ function _estApplyImport(groups, meta) {
 
 function renderAll() {
   try { const _p = getProject(); if (_p && _p.myRole !== '뷰어' && _estSeedDefault(_p)) { save(); _estSyncCloud(_p); } } catch(e) {}
+  try { const _p = getProject(); if (_p && _estRelink(_p) && _p.myRole !== '뷰어') { _p.estimate.updatedAt = Date.now(); save(); _estSyncCloud(_p); } } catch(e) {}
   const proj = getProject();
   if (proj) {
     document.getElementById('current-project-name').textContent = proj.name;
