@@ -1950,7 +1950,9 @@ button, input, textarea, select { font-family:var(--font); }
 .cal2-empty { font-size:14px; color:#8b95a1; padding:12px 0; }
 
 /* 공사정보 탭 (도면 / 견적 / 업체 / 팀) */
-.iv-tabs { margin:4px 0 12px; }
+.iv-tabs { display:flex; margin:0 -20px 12px; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
+.iv-tabs button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.iv-tabs button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #form-view-panel[data-ivtab] .iv-col-r { display:contents; }
 #form-view-panel[data-ivtab="fp"] :is(#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="est"] :is(#iv-floorplan-card,#iv-plan-card,#iv-companies-section,#iv-workers-section,#iv-team-card),
@@ -4184,7 +4186,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </div>
 
       <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
-      <div class="vs2-ftab iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button></div>
+      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button></div>
       <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
       <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
       <!-- 도면 (항상 표시) -->
