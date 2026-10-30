@@ -9030,7 +9030,9 @@ function openContentViewer(id) {
     playerWrap.style.display = '';
     // youtube-nocookie.com: 서드파티 쿠키/스토리지 접근이 막힌 WKWebView(iOS 앱)에서
     // 일반 youtube.com 임베드가 "오류가 발생했습니다"로 실패하는 경우가 많아 이걸로 대체
-    playerWrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${item.videoId}?playsinline=1&rel=0" title="${esc(item.title || 'YouTube video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" webkit-playsinline allowfullscreen></iframe>`;
+    // iOS 앱은 capacitor:// 출처라 Referer가 없어 유튜브가 '오류 153'으로 재생을 막음 → https 래퍼 페이지(yt.html) 경유
+    const ytSrc = _isNativeApp() ? `https://vibespacekorea.com/yt.html?v=${encodeURIComponent(item.videoId)}` : `https://www.youtube-nocookie.com/embed/${item.videoId}?playsinline=1&rel=0`;
+    playerWrap.innerHTML = `<iframe src="${ytSrc}" title="${esc(item.title || 'YouTube video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" webkit-playsinline allowfullscreen></iframe>`;
     channelEl.textContent = item.channel || '';
   } else {
     playerWrap.style.display = 'none';
