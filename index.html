@@ -3952,7 +3952,11 @@ body.vs2-nav-mini #vs2-nav { transform:scale(.84) translateY(6px); box-shadow:0 
 @media (prefers-reduced-motion: reduce) { #vs2-nav { transition:none; } }
 #vs2-nav .vs2-nav-in { display:flex; justify-content:space-between; align-items:center; padding:6px; }
 #vs2-nav .vs2-nav-btn { flex:1; height:52px; border:none; background:none; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; transition:background .2s, transform .15s; }
-#vs2-nav .vs2-nav-btn.on { background:rgba(0,0,0,.06); }
+#vs2-nav .vs2-nav-btn.on { background:none; }
+#vs2-nav .vs2-nav-in { position:relative; }
+#vs2-nav .vs2-nav-btn { position:relative; z-index:1; }
+.vs2-nav-ind { position:absolute; left:0; top:0; border-radius:999px; background:rgba(0,0,0,.07); pointer-events:none; transition:transform .38s cubic-bezier(.3,1.25,.5,1), width .3s, height .3s, opacity .2s; will-change:transform; }
+@media (prefers-reduced-motion: reduce) { .vs2-nav-ind { transition:none; } }
 #vs2-nav .vs2-nav-btn:active { transform:scale(.92); }
 @media (prefers-reduced-transparency: reduce) { #vs2-nav { background:#fff; -webkit-backdrop-filter:none; backdrop-filter:none; } }
 #vs2-nav .vs2-avatar { width:28px; height:28px; border-radius:50%; background:#e9e3da; border:1px solid #dbdbdb; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#111; overflow:hidden; box-sizing:border-box; }
@@ -5956,7 +5960,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 </div>
 
 <!-- ===== 하단 메뉴 (v2) — body 직속: transform 걸린 .screen 안에서는 position:fixed가 깨짐 ===== -->
-<nav id="vs2-nav" aria-label="주 메뉴"><div class="vs2-nav-in">
+<nav id="vs2-nav" aria-label="주 메뉴"><div class="vs2-nav-in"><span class="vs2-nav-ind" id="vs2-nav-ind" aria-hidden="true"></span>
   <button class="vs2-nav-btn on" data-tab="plan" aria-label="홈" onclick="_vs2Go('plan')"></button>
   <button class="vs2-nav-btn" data-tab="style" aria-label="스타일" onclick="_vs2Go('style')"></button>
   <button class="vs2-nav-btn" data-tab="info" aria-label="공사정보" onclick="goTo('form')"></button>
@@ -8438,6 +8442,7 @@ function goTo(screen) {
   document.body.classList.toggle('consulting-bg', screen === 'consulting');
   document.body.classList.toggle('vs2-on', screen === 'main');
   if (screen !== 'form') document.body.classList.remove('vs2-info');
+  requestAnimationFrame(() => typeof _vs2MoveInd === 'function' && _vs2MoveInd());
   closeAllMenus();
   // 플로팅 버튼: 메인 화면에서만 표시 (다른 화면에서는 전체 숨김)
   const fab = document.getElementById('floating-add-process');
@@ -11442,6 +11447,16 @@ function _vs2Icon(key, active) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
+// 하단 메뉴 선택 배경이 인스타그램처럼 선택한 메뉴로 미끄러지듯 이동
+function _vs2MoveInd() {
+  const ind = document.getElementById('vs2-nav-ind'); if (!ind) return;
+  const on = document.querySelector('#vs2-nav .vs2-nav-btn.on');
+  if (!on || !on.offsetWidth || document.body.classList.contains('vs2-sub')) { ind.style.opacity = '0'; return; }
+  ind.style.opacity = '1';
+  ind.style.width = on.offsetWidth + 'px'; ind.style.height = on.offsetHeight + 'px';
+  ind.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+}
+window.addEventListener('resize', () => requestAnimationFrame(_vs2MoveInd));
 // 더보기에서 들어가는 하위 페이지: 상단에 뒤로가기 → 들어오기 전 탭으로 복귀
 const _VS2_SUB = ['sitephotos', 'matselect', 'specbook', 'content'];
 let _vs2BackTab = 'plan';
@@ -11507,6 +11522,7 @@ function _vs2Sync(tab) {
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
     const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
+  _vs2MoveInd();
   const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['style', '이미지'], ['furniture', '제품']] }[group];
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
@@ -11514,6 +11530,7 @@ function _vs2Sync(tab) {
   // 상단 제목: 메뉴명 (홈은 '공정')
   const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '기록', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북', content: '컨텐츠' }[group] || '';
   document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
+  _vs2MoveInd();
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
   document.body.classList.toggle('vs2-menu-titled', !!mt);
 }
