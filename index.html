@@ -2210,10 +2210,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 /* 첫 화면 우측 상단 프로필/로그인 버튼 숨김 (계정은 전체 탭에서) */
 #landing-avatar-btn { display:none !important; }
 /* ===== 인터랙션 애니메이션 ===== */
-@keyframes vsLogoDraw { to { stroke-dashoffset:0; } }
-@keyframes vsLogoFill { from { fill-opacity:0; } to { fill-opacity:1; } }
-#screen-landing .landing-logo-wrap svg path { stroke:#2b2523; stroke-width:.8; fill-opacity:1; }
-#screen-landing .landing-logo-wrap svg path[style*="vsLogoDraw"] { fill-opacity:0; }
+@keyframes vsWrite { from { clip-path:inset(-10% 100% -10% -10%); } to { clip-path:inset(-10% -10% -10% -10%); } }
 @keyframes vsFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @keyframes vsLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
 @keyframes vsPop { 0% { transform:scale(.82); } 60% { transform:scale(1.12); } 100% { transform:scale(1); } }
@@ -11455,18 +11452,20 @@ function _vs2Icon(key, active) {
   return `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">${ic.d.map((d, i) => `<path d="${d}" stroke="#111" stroke-width="${active ? 2.4 : 1.9}" stroke-linecap="round" stroke-linejoin="round" fill="${active && ic.fill.includes(i) ? '#111' : 'none'}"/>`).join('')}${key === 'style' && active ? '<path d="M 10 13.8 L 18 13.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' : ''}</svg>`;
 }
 let _vs2Tab = 'plan';
-// 첫 화면 로고: 펜으로 그리듯 외곽선이 그려진 뒤 채워짐
+// 첫 화면 로고: 손글씨를 쓰듯 글자 조각을 쓰는 순서(윗줄 → 아랫줄, 왼쪽 → 오른쪽)대로 왼쪽부터 드러냄
 function _drawLandingLogo() {
   const svg = document.querySelector('#screen-landing .landing-logo-wrap svg'); if (!svg) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const paths = [...svg.querySelectorAll('path')];
-  paths.forEach((p, i) => {
-    let len = 0; try { len = p.getTotalLength(); } catch (e) {}
-    if (!len) return;
-    p.style.animation = 'none';
-    p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
-    void p.getBBox();
-    p.style.animation = `vsLogoDraw 1.4s cubic-bezier(.45,0,.2,1) ${i * 0.08}s forwards, vsLogoFill .5s ease ${1.1 + i * 0.08}s forwards`;
+  const items = [...svg.querySelectorAll('path')].map(p => { let b = { x: 0, y: 0, width: 1, height: 1 }; try { b = p.getBBox(); } catch (e) {} return { p, b }; });
+  const midY = svg.viewBox.baseVal.height / 2 || 42;
+  items.sort((a, c) => ((a.b.y + a.b.height / 2) > midY) - ((c.b.y + c.b.height / 2) > midY) || a.b.x - c.b.x);
+  const total = items.reduce((t, it) => t + it.b.width, 0) || 1, dur = 1.8;
+  let t = 0;
+  items.forEach(({ p, b }) => {
+    const d = Math.max(.12, dur * b.width / total);
+    p.style.animation = 'none'; void p.getBBox();
+    p.style.animation = `vsWrite ${d}s cubic-bezier(.4,0,.6,1) ${t}s both`;
+    t += d * .85;
   });
 }
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => { if (document.getElementById('screen-landing')?.classList.contains('active')) _drawLandingLogo(); }, 50));
