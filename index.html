@@ -2158,13 +2158,19 @@ body.vs2-on.vs2-menu-titled #screen-main .vs2-menu-title { display:inline; }
 /* 공사정보 업체 카드 */
 #iv-companies-card > div:first-child { display:none !important; }
 #iv-companies-section.info-view-card { background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
-.co-grid .style-room-card { border:1px solid #eef0f3; }
-.co-empty { flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#f6f7f9 !important; }
-.co-ini { width:56px; height:56px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; color:#4e5968; }
-.co-empty small { font-size:12px; color:#8b95a1; }
-.co-title { font-size:16px !important; font-weight:600 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.co-meta { display:block !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#6b7684 !important; }
-.co-chip { display:inline-block; margin-top:8px; font-size:12px; color:#4e5968; background:#f2f4f6; border-radius:6px; padding:3px 8px; }
+.co-list { display:grid; grid-template-columns:1fr; gap:8px; }
+@media (min-width:660px) { .co-list { grid-template-columns:1fr 1fr; gap:12px; } }
+@media (min-width:1000px) { .co-list { grid-template-columns:repeat(3, 1fr); } }
+.co-card { background:#fff; border:1px solid #eef0f3; border-radius:14px; padding:18px 20px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.co-card:active { opacity:.85; }
+.co-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.co-name { font-size:16px; font-weight:700; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.co-procs { font-size:14px; color:#6b7684; margin-top:6px; line-height:1.5; }
+.co-st { flex-shrink:0; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; }
+.co-st:disabled { cursor:default; }
+.co-st.yes { background:#e8f3ff; color:#1b64da; }
+.co-st.part { background:#fff3e6; color:#c25f00; }
+.co-st.no { background:#f2f4f6; color:#6b7684; }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -13634,7 +13640,6 @@ function _loadInfoView() {
           compMap.set(p.company, { procs: [], cId, phone, area });
         }
         compMap.get(p.company).procs.push(p.name || '');
-        compMap.get(p.company).cost = (compMap.get(p.company).cost || 0) + (typeof _procCost === 'function' ? (_procCost(p) || 0) : 0);
       }
     });
     if (compMap.size > 0) {
@@ -13785,30 +13790,34 @@ function _toggleProjectInfoDetail() {
 }
 
 // 함께하는 업체/작업자 카드 접기·펴기 ('companies' | 'workers')
-// 공사정보 > 업체: 스타일·제품과 같은 카드 구조 (업체 사진 콜라주 / 없으면 이니셜 썸네일)
+// 공사정보 > 업체: 업체명 · 공정명 · 계약 여부 카드 (이미지 영역은 우선 제외)
+// 계약 여부는 해당 업체 공정들의 p.contracted로 저장 — 편집자도 공정 sync로 반영됨
 function _ivCompanyCards(proj, compMap) {
-  if (!_contractors.length && !window._ivCoLoading) {
-    window._ivCoLoading = true;
-    _loadContractors().then(() => { window._ivCoLoading = false; const l = document.getElementById('iv-companies-list'); if (l && _contractors.length) _loadInfoView(); });
-  }
-  const cards = [...compMap.entries()].map(([name, { procs, cId, phone, area, cost }]) => {
+  const editable = canEdit();
+  const cards = [...compMap.entries()].map(([name, { procs, cId, phone, area }]) => {
+    const ps = (proj.processes || []).filter(p => !p.deleted && p.company === name);
+    const n = ps.filter(p => p.contracted).length;
+    const st = n === 0 ? ['미계약', 'no'] : n === ps.length ? ['계약완료', 'yes'] : ['일부 계약', 'part'];
     const c = _contractors.find(x => (cId && x.id === cId) || x.name === name) || {};
-    const imgs = (c.media || []).filter(m => m && m.url && m.type !== 'video').map(m => m.url);
-    const cat = (c.category && c.category !== '기타') ? c.category : (procs[0] || '');
-    const thumb = imgs.length ? _cardCollage(imgs.slice(0, 3))
-      : `<div class="style-card-collage co-empty"><span class="co-ini">${esc((name || '?').slice(0, 1))}</span><small>${esc(cat)}</small></div>`;
-    const procTxt = procs.length > 1 ? `${procs[0]} 외 ${procs.length - 1}개 공정` : (procs[0] || '');
     const id = c.id || cId || '';
-    return `<div class="style-room-card" onclick="_openCompanyDetail('${esc(id)}','${esc(name)}','${esc(phone || c.phone || '')}','${esc(area || c.area || '')}')">
-      ${thumb}
-      <div class="style-card-info">
-        <div class="style-card-top-row"><span class="style-card-title co-title">${esc(name)}</span></div>
-        <div class="style-card-meta co-meta">${esc([cat !== procs[0] ? cat : '', procTxt].filter(Boolean).join(' · '))}</div>
-        ${cost ? `<span class="co-chip">계약 ${_won(cost)}원</span>` : ''}
-      </div>
+    return `<div class="co-card" onclick="_openCompanyDetail('${esc(id)}','${esc(name)}','${esc(phone || c.phone || '')}','${esc(area || c.area || '')}')">
+      <div class="co-top"><span class="co-name">${esc(name)}</span>
+        <button class="co-st ${st[1]}" ${editable ? `onclick="event.stopPropagation();_ivToggleContract('${esc(name).replace(/'/g, "\\'")}')"` : 'disabled'}>${st[0]}</button></div>
+      <div class="co-procs">${procs.map(esc).join(' · ')}</div>
     </div>`;
   }).join('');
-  return `<div class="furniture-cat-grid co-grid">${cards}</div>`;
+  return `<div class="co-list">${cards}</div>`;
+}
+function _ivToggleContract(name) {
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  const ps = (proj.processes || []).filter(p => !p.deleted && p.company === name);
+  const allOn = ps.length && ps.every(p => p.contracted);
+  const now = Date.now();
+  ps.forEach(p => { p.contracted = !allOn; p.updatedAt = now; });
+  save();
+  if (proj.cloudId) { if (_isProjOwner(proj)) _syncProjToCloud(proj); else _syncProcessesToCloud(proj); }
+  _loadInfoView();
+  showToastMessage(allOn ? `${name} 미계약으로 바꿨어요` : `${name} 계약완료로 표시했어요`);
 }
 
 function _toggleIvSection(name) {
