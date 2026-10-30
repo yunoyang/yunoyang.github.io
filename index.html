@@ -2075,6 +2075,22 @@ body.vs2-on #screen-main .project-badge .name { font-size:16px; font-weight:600;
 body.vs2-on #screen-main .project-badge .pchev { display:none; }
 body.vs2-on #screen-main #notif-btn { margin-right:-6px; }
 
+
+/* 공사정보(보기 모드): 스타일 페이지와 같은 구조 — 프로젝트명 헤더 + 밑줄 탭 + 하단 캡슐 메뉴 */
+body.vs2-info #vs2-nav { display:block; }
+body.vs2-info #screen-form .form-header { padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; gap:4px; }
+body.vs2-info #screen-form .form-header .back-btn { display:none; }
+body.vs2-info #screen-form #form-title { font-size:16px; font-weight:600; letter-spacing:-.02em; padding:6px 0; cursor:pointer; }
+body.vs2-info #iv-tabs { margin:0 -20px 16px; }
+body.vs2-info #iv-tabs button { flex:1 1 0; min-width:0; padding-left:4px !important; padding-right:4px !important; }
+body.vs2-info #form-view-panel { padding-bottom:calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+@media (min-width:1024px) {
+  body.vs2-info #screen-form { padding-left:96px; box-sizing:border-box; }
+  body.vs2-info #vs2-nav { left:16px; right:auto; top:50%; bottom:auto; width:64px; max-width:none; margin:0; border-radius:32px; transform:translateY(-50%) !important; }
+  body.vs2-info #vs2-nav .vs2-nav-in { flex-direction:column; gap:6px; padding:8px 6px; }
+  body.vs2-info #vs2-nav .vs2-nav-btn { flex:none; width:52px; height:52px; }
+  body.vs2-info #screen-form .form-header { padding-left:32px; padding-right:32px; }
+}
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -4203,7 +4219,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <div class="form-screen-inner">
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
-      <h2 id="form-title">공사 정보</h2>
+      <h2 id="form-title" onclick="if(document.body.classList.contains('vs2-info'))goTo('landing')">공사 정보</h2>
       <div id="form-view-actions" style="display:none;align-items:center;gap:2px;margin-left:auto;">
         <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정" style="margin-left:0;">
           <svg width="28" height="28" viewBox="0 0 32 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6.25H12.25C8.93629 6.25 6.25 8.93629 6.25 12.25V19.75C6.25 23.0637 8.93629 25.75 12.25 25.75H19.75C23.0637 25.75 25.75 23.0637 25.75 19.75V16M16.481 15.4534L24.896 7.03838" stroke="#333" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
@@ -8279,6 +8295,7 @@ function goTo(screen) {
   document.getElementById('screen-' + screen).classList.add('active');
   document.body.classList.toggle('consulting-bg', screen === 'consulting');
   document.body.classList.toggle('vs2-on', screen === 'main');
+  if (screen !== 'form') document.body.classList.remove('vs2-info');
   closeAllMenus();
   // 플로팅 버튼: 메인 화면에서만 표시 (다른 화면에서는 전체 숨김)
   const fab = document.getElementById('floating-add-process');
@@ -11281,6 +11298,7 @@ function _vs2Icon(key, active) {
 }
 let _vs2Tab = 'plan';
 function _vs2Go(tab) {
+  if (!document.getElementById('screen-main')?.classList.contains('active')) goTo('main');
   const btn = document.querySelector(`.tab-toggle .tab-btn[onclick*="'${tab}'"]`);
   switchMainTab(tab, btn);
   const sc = document.getElementById('main-scroll'); if (sc) sc.scrollTop = 0;
@@ -13467,13 +13485,16 @@ function _showInfoViewPanel(visible) {
     if (vp) vp.style.display = 'block';
     if (ep) ep.style.display = 'none';
     if (actions) actions.style.display = 'flex';
-    if (title) title.textContent = '공사 정보';
+    if (title) title.textContent = getProject()?.name || '공사 정보';
+    document.body.classList.add('vs2-info');
+    if (typeof _vs2Sync === 'function') _vs2Sync('info');
     _loadInfoView();
   } else {
     if (vp) vp.style.display = 'none';
     if (ep) ep.style.display = 'contents';
     if (actions) actions.style.display = 'none';
     if (title) title.textContent = formMode === 'new' ? '내 공사 기본 정보' : '공사 정보 수정';
+    document.body.classList.remove('vs2-info');
     loadFormData();
   }
 }
