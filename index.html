@@ -1922,6 +1922,9 @@ button, input, textarea, select { font-family:var(--font); }
 #calendar-container { padding:0; background:#fff; }
 .cal2 { background:#fff; }
 .cal2-head { display:flex; justify-content:space-between; align-items:center; padding:20px 20px 12px; }
+.cal2-tw { display:flex; align-items:center; gap:2px; margin-left:-8px; }
+.cal2-nav { width:32px; height:32px; border:none; background:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.cal2-nav:active { background:#f2f4f6; }
 .cal2-title { font-size:16px; font-weight:700; color:#111; letter-spacing:-.02em; }
 .cal2-mode { display:flex; align-items:center; gap:8px; }
 .cal2-mode button { border:none; background:none; padding:4px 0; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; }
@@ -13141,7 +13144,7 @@ function renderCalendar() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>`).join('')
     : '<div class="cal2-empty">이 날은 예정된 공정이 없어요</div>';
   container.innerHTML = `<div class="cal2">
-    <div class="cal2-head"><span class="cal2-title">${title}</span>
+    <div class="cal2-head"><span class="cal2-tw"><button class="cal2-nav" onclick="calMonthNav(-1)" aria-label="이전"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg></button><span class="cal2-title">${title}</span><button class="cal2-nav" onclick="calMonthNav(1)" aria-label="다음"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button></span>
       <span class="cal2-mode"><button class="${_calMode === 'week' ? 'on' : ''}" onclick="calSetMode('week')">주간</button><i></i><button class="${_calMode === 'month' ? 'on' : ''}" onclick="calSetMode('month')">월간</button></span></div>
     <div class="cal2-grid" id="cal2-grid">${DOW.map((w, i) => `<div class="cal2-dow${i === 0 ? ' sun' : ''}">${w}</div>`).join('')}${cells}</div>
     <div class="cal2-list"><div class="cal2-date">${fmt(selK)} (${DOW[sel.getDay()]})</div>${list}</div></div>`;
