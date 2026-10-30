@@ -2112,7 +2112,7 @@ body.vs2-on #vs2-seg { top:var(--vs2-hd, 0px); z-index:29; }
 body.vs2-on #screen-main .header { display:flex; justify-content:space-between; align-items:center; padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; }
 body.vs2-on #screen-main .header-home-btn { display:none !important; }
 body.vs2-on #screen-main .project-badge { padding:6px 0; gap:4px; }
-body.vs2-on #screen-main .project-badge .name { font-size:16px; font-weight:600; letter-spacing:-.02em; }
+body.vs2-on #screen-main .project-badge .name { font-size:18px; font-weight:600; letter-spacing:-.02em; }
 body.vs2-on #screen-main .project-badge .pchev { display:none; }
 body.vs2-on #screen-main #notif-btn { margin-right:-6px; }
 
@@ -2121,7 +2121,7 @@ body.vs2-on #screen-main #notif-btn { margin-right:-6px; }
 body.vs2-info #vs2-nav { display:block; }
 body.vs2-info #screen-form .form-header { padding:0 16px 6px; padding-top:max(env(safe-area-inset-top, 0px), 46px); border-bottom:1px solid #eef0f3; gap:4px; }
 body.vs2-info #screen-form .form-header .back-btn { display:none; }
-body.vs2-info #screen-form #form-title { font-size:16px; font-weight:600; letter-spacing:-.02em; padding:6px 0; cursor:pointer; }
+body.vs2-info #screen-form #form-title { font-size:18px; font-weight:600; letter-spacing:-.02em; padding:6px 0; cursor:pointer; }
 body.vs2-info #form-view-panel { padding-left:16px !important; padding-right:16px !important; }
 body.vs2-info #iv-tabs { margin:0 -16px 16px; }
 body.vs2-info #iv-tabs button { flex:1 1 0; min-width:0; padding-left:4px !important; padding-right:4px !important; }
@@ -11378,8 +11378,8 @@ function _vs2Sync(tab) {
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
-  // 상단 제목: 홈은 프로젝트명, 나머지 메뉴는 메뉴명
-  const mt = { style: '스타일', meeting: '기록', info: '공사정보' }[group] || '';
+  // 상단 제목: 메뉴명 (홈은 '공정')
+  const mt = { plan: '공정', style: '스타일', meeting: '기록', info: '공사정보' }[group] || '';
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
   document.body.classList.toggle('vs2-menu-titled', !!mt);
 }
