@@ -2209,6 +2209,11 @@ body.vs2-info #form-notif-btn[data-on="1"] { display:block; position:relative; o
 body.vs2-info #screen-form #form-title { order:1; }
 /* 첫 화면 우측 상단 프로필/로그인 버튼 숨김 (계정은 전체 탭에서) */
 #landing-avatar-btn { display:none !important; }
+/* 앱 콘텐츠 뷰어: 유튜브 썸네일 → 유튜브 앱에서 재생 */
+.cv-yt-open { position:relative; display:block; width:100%; aspect-ratio:16/9; border:none; padding:0; background:#000; cursor:pointer; overflow:hidden; }
+.cv-yt-open img { width:100%; height:100%; object-fit:cover; display:block; opacity:.92; }
+.cv-yt-play { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+.cv-yt-hint { position:absolute; right:10px; bottom:10px; font-size:12px; color:#fff; background:rgba(0,0,0,.6); border-radius:6px; padding:4px 8px; }
 /* ===== 인터랙션 애니메이션 ===== */
 @keyframes vsWrite { from { clip-path:inset(-10% 100% -10% -10%); } to { clip-path:inset(-10% -10% -10% -10%); } }
 @keyframes vsFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
@@ -9030,9 +9035,18 @@ function openContentViewer(id) {
     playerWrap.style.display = '';
     // youtube-nocookie.com: 서드파티 쿠키/스토리지 접근이 막힌 WKWebView(iOS 앱)에서
     // 일반 youtube.com 임베드가 "오류가 발생했습니다"로 실패하는 경우가 많아 이걸로 대체
-    // iOS 앱은 capacitor:// 출처라 Referer가 없어 유튜브가 '오류 153'으로 재생을 막음 → https 래퍼 페이지(yt.html) 경유
-    const ytSrc = _isNativeApp() ? `https://vibespacekorea.com/yt.html?v=${encodeURIComponent(item.videoId)}` : `https://www.youtube-nocookie.com/embed/${item.videoId}?playsinline=1&rel=0`;
-    playerWrap.innerHTML = `<iframe src="${ytSrc}" title="${esc(item.title || 'YouTube video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" webkit-playsinline allowfullscreen></iframe>`;
+    if (_isNativeApp()) {
+      // iOS 앱(WKWebView) 안의 유튜브 임베드는 '로그인하여 봇이 아님을 확인하세요'로 막힘 →
+      // 썸네일을 보여주고 누르면 유튜브 앱(없으면 Safari)에서 재생
+      const vid = encodeURIComponent(item.videoId);
+      playerWrap.innerHTML = `<button class="cv-yt-open" onclick="window.open('https://www.youtube.com/watch?v=${vid}','_blank')" aria-label="유튜브에서 재생">
+        <img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="">
+        <span class="cv-yt-play"><svg width="68" height="48" viewBox="0 0 68 48"><path d="M66.5 7.7c-.8-2.9-2.5-5.4-5.4-6.2C55.8.1 34 0 34 0S12.2.1 6.9 1.6C4 2.4 2.3 4.8 1.5 7.7 0 13 0 24 0 24s0 11 1.5 16.3c.8 2.9 2.5 5.4 5.4 6.2C12.2 47.9 34 48 34 48s21.8-.1 27.1-1.6c2.9-.8 4.6-3.2 5.4-6.2C68 35 68 24 68 24s0-11-1.5-16.3z" fill="#f00"/><path d="M45 24 27 14v20" fill="#fff"/></svg></span>
+        <span class="cv-yt-hint">유튜브 앱에서 재생</span>
+      </button>`;
+    } else {
+      playerWrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${item.videoId}?playsinline=1&rel=0" title="${esc(item.title || 'YouTube video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" webkit-playsinline allowfullscreen></iframe>`;
+    }
     channelEl.textContent = item.channel || '';
   } else {
     playerWrap.style.display = 'none';
