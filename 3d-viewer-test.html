@@ -64,6 +64,33 @@
     #panel { width: 100%; height: 42%; border-left: none; border-top: 1px solid #eef0f5; }
     #canvas-wrap { height: 58%; }
   }
+
+  /* ===== embed=app: 앱 안 3D 탭용 모바일 최적화 ===== */
+  body.embed-app { height: 100vh; height: 100dvh; background: #fff; }
+  body.embed-app #topbar, body.embed-app #controls-guide, body.embed-app #btn-firstperson, body.embed-app #fp-overlay, body.embed-app #crosshair { display: none !important; }
+  body.embed-app #main { flex-direction: column; }
+  body.embed-app #canvas-wrap { flex: 0 0 auto; height: 56%; }
+  body.embed-app #click-hint { top: auto; bottom: 12px; left: 12px; right: auto; max-width: calc(100% - 24px); font-size: 12px; background: rgba(17,17,17,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.embed-app #view-toggle { top: 12px; right: 12px; left: 12px; justify-content: flex-end; flex-wrap: nowrap; }
+  body.embed-app #view-toggle button { padding: 8px 12px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.92); color: #111; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  body.embed-app #view-toggle button.active { background: #111; color: #fff; }
+  body.embed-app #lighting-panel { top: 56px; right: 12px; left: auto; bottom: auto; width: 140px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.92); color: #111; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  body.embed-app #lighting-panel .row-label { margin-bottom: 2px; font-weight: 600; }
+  body.embed-app #panel { flex: 1; width: 100%; height: auto; min-height: 0; border-left: none; border-top: 1px solid #eef0f3; padding: 14px 16px 24px; }
+  body.embed-app #panel-tabs { gap: 4px; margin-bottom: 12px; }
+  body.embed-app .panel-tab { flex: 0 0 auto; padding: 8px 14px; border-radius: 8px; background: none; color: #8b95a1; font-size: 14px; font-weight: 500; }
+  body.embed-app .panel-tab.active { background: #e7e9ed; color: #111; font-weight: 600; }
+  body.embed-app #panel .hint { font-size: 13px; color: #8b95a1; margin-bottom: 10px; }
+  body.embed-app #selected-info { font-size: 14px; border-radius: 12px; padding: 12px 14px; }
+  body.embed-app .preset-grid { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  body.embed-app #furniture-grid { grid-template-columns: repeat(4, 1fr); }
+  body.embed-app .preset-label, body.embed-app .furniture-label { font-size: 11px; color: #6b7684; }
+  body.embed-app .preset-category-title { font-size: 13px; color: #111; }
+  @media (min-width: 900px) {
+    body.embed-app #main { flex-direction: row; }
+    body.embed-app #canvas-wrap { flex: 1; height: 100%; }
+    body.embed-app #panel { flex: 0 0 340px; height: 100%; border-top: none; border-left: 1px solid #eef0f3; }
+  }
 </style>
 </head>
 <body>
@@ -119,9 +146,12 @@
 <script>
 const wrap = document.getElementById('canvas-wrap');
 if (new URLSearchParams(location.search).get('embed') === '1') document.body.classList.add('embed-min');
+// 앱 공사정보 > 도면 > 3D 탭: 전체 UI를 모바일에 맞게 (상단바·키보드 안내·1인칭 제외)
+if (new URLSearchParams(location.search).get('embed') === 'app') document.body.classList.add('embed-app');
 
 // 모바일(터치 기기)에서는 보기만 가능하고, PC에서만 재질/가구 편집·저장이 가능하게 함
-const isEditable = !(window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+// 단, 앱 3D 탭(embed=app)에서는 모바일에서도 재질·가구 패널을 그대로 보여줌
+const isEditable = document.body.classList.contains('embed-app') || !(window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 if (!isEditable) {
   const panel = document.getElementById('panel');
   const saveBtn = document.getElementById('save-btn');

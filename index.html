@@ -2016,7 +2016,8 @@ button, input, textarea, select { font-family:var(--font); }
 #iv-floorplan-card .iv-fp-3d-wrap { display:none !important; }
 #form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card,#plan-view) { display:none !important; }
 #form-view-panel:not([data-fpsub="3d"]) #iv-fp-3d-wrap { display:none !important; }
-#form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:calc(100dvh - 200px); }
+#form-view-panel[data-fpsub="3d"] .iv-fp-3d-full-btn { display:none !important; }
+#form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:420px; }
 @media (min-width:1024px) { body.vs2-info #form-view-panel[data-fpsub="3d"] #iv-fp-3d-wrap { margin:0; width:100%; border-radius:12px; } }
 #form-view-panel #iv-plan-card { display:none !important; }
 /* 평면 탭: 도면 정보가 펼쳐져 있으면 위의 도면 이미지 카드는 숨김 */
@@ -13797,7 +13798,8 @@ function _ivSwitchFpTab(tab) {
 // 임베드(비전체화면)일 땐 ?embed=1 로 불러와 3D 뷰어의 안내/패널 UI를 숨기고, 전체 화면일 때만 UI를 보여줌
 function _ivFp3dSrc(link, full) {
   if (!/3d-viewer-test\.html/.test(link)) return link;
-  return link.split('?')[0] + (full ? '' : '?embed=1');
+  // 공사정보 3D 탭에선 전체 UI(재질·가구·조명)를 모바일 최적화 레이아웃으로 바로 보여줌
+  return link.split('?')[0] + (full ? '' : '?embed=app');
 }
 function _ivToggleFp3dFull(force) {
   const wrap = document.getElementById('iv-fp-3d-wrap');
@@ -16830,11 +16832,15 @@ function _ivFpSub(k) {
   if (k === '3d') {
     _ivSwitchFpTab('3d');
     const wrap = document.getElementById('iv-fp-3d-wrap');
-    requestAnimationFrame(() => {
+    const fit = () => {
       if (!wrap) return;
       const top = wrap.getBoundingClientRect().top;
-      wrap.style.height = Math.max(320, window.innerHeight - top) + 'px';
-    });
+      // 하단 캡슐 메뉴에 가리지 않도록 그 위까지만 (PC는 사이드바라 화면 끝까지)
+      const nav = document.getElementById('vs2-nav');
+      const navTop = nav && window.innerWidth < 1024 ? nav.getBoundingClientRect().top - 8 : window.innerHeight;
+      wrap.style.height = Math.max(420, navTop - top) + 'px';
+    };
+    fit(); requestAnimationFrame(fit);
   }
 }
 // 공사정보 탭 전환 — 섹션 표시는 CSS(data-ivtab)로, 비어 있는 탭엔 안내 문구
