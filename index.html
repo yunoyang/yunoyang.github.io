@@ -2049,6 +2049,17 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
 #plan-view.pv-inline .pv-stage { height:56vh; }
 #plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
+.pv-dds { display:flex; gap:8px; }
+.pv-dd { flex:1; min-width:0; display:flex; align-items:center; gap:6px; height:44px; padding:0 12px; border:1px solid #e5e8eb; border-radius:10px; background:#fff; font-family:inherit; cursor:pointer; color:#333d4b; }
+.pv-dd small { font-size:12px; color:#8b95a1; flex-shrink:0; }
+.pv-dd b { flex:1; min-width:0; text-align:left; font-size:15px; font-weight:600; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#pv-pick { position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,.4); display:flex; align-items:flex-end; justify-content:center; }
+#pv-pick .pv-pick-in { background:#fff; width:100%; max-width:560px; max-height:70vh; overflow-y:auto; border-radius:24px 24px 0 0; padding:8px 0 calc(16px + env(safe-area-inset-bottom,0px)); }
+#pv-pick .pv-pick-hd { font-size:17px; font-weight:700; padding:16px 20px 8px; }
+#pv-pick .pv-pick-it { display:flex; align-items:center; gap:10px; width:100%; border:none; background:none; padding:14px 20px; font-size:16px; color:#111; text-align:left; cursor:pointer; font-family:inherit; }
+#pv-pick .pv-pick-it span { flex:1; }
+#pv-pick .pv-pick-it small { font-size:13px; color:#8b95a1; }
+#pv-pick .pv-pick-it.on span { font-weight:700; }
 #form-view-panel[data-ivtab="fp"] :is(#iv-estimate-card,#iv-cost-section,#iv-companies-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="est"] :is(#iv-floorplan-card,#iv-plan-card,#iv-companies-section,#iv-workers-section,#iv-team-card),
 #form-view-panel[data-ivtab="co"] :is(#iv-floorplan-card,#iv-plan-card,#iv-estimate-card,#iv-cost-section,#iv-workers-section,#iv-team-card),
@@ -15310,6 +15321,19 @@ function _openPlanView() {
   (pm.layers || []).forEach(l => { const im = new Image(); im.src = l.src; });
   _renderPlanView();
 }
+// 평면도: 구역·도면 종류 드롭다운 → 바텀시트에서 선택
+function _planPick(kind) {
+  const pm = _planGet(getProject()); if (!pm) return;
+  const layers = pm.layers || [];
+  const items = kind === 'zone'
+    ? pm.zones.map(q => ({ id: q.id, label: q.name, sub: _planArea(q.poly).toFixed(1) + '㎡', on: q.id === _planSel }))
+    : [...layers.map(l => ({ id: l.id, label: l.label, on: _planLayer === l.id })), { id: '', label: '구역도', on: !_planLayer }];
+  document.getElementById('pv-pick')?.remove();
+  const ov = document.createElement('div'); ov.id = 'pv-pick';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="pv-pick-in"><div class="pv-pick-hd">${kind === 'zone' ? '구역 선택' : '도면 종류'}</div>${items.map(it => `<button class="pv-pick-it${it.on ? ' on' : ''}" onclick="document.getElementById('pv-pick').remove();${kind === 'zone' ? `_planSelect('${it.id}')` : `_planSetLayer('${it.id}')`}"><span>${esc(it.label)}</span>${it.sub ? `<small>${it.sub}</small>` : ''}${it.on ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`).join('')}</div>`;
+  document.body.appendChild(ov);
+}
 function _closePlanView() { const ov = document.getElementById('plan-view'); if (ov) ov.style.display = 'none'; }
 function _planSelect(id) { _planSel = id; _renderPlanView(true); }
 function _planSetLayer(id) { _planLayer = id; _renderPlanView(true); }
@@ -15374,8 +15398,8 @@ function _renderPlanView(keepScroll) {
   </div>
   <div class="pv-body">
     <div class="pv-left">
-      <div class="pv-chips">${pm.zones.map(q => `<button class="pv-chip zone${q.id === z.id ? ' on' : ''}" onclick="_planSelect('${q.id}')">${esc(q.name)}</button>`).join('')}</div>
-      <div class="pv-chips">${hasImg ? layers.map(l => `<button class="pv-chip${_planLayer === l.id ? ' on' : ''}" onclick="_planSetLayer('${l.id}')">${esc(l.label)}</button>`).join('') + `<button class="pv-chip${!_planLayer ? ' on' : ''}" onclick="_planSetLayer('')">구역도</button>` : ''}<span style="width:1px;background:#e5e5e5;flex-shrink:0;margin:4px 2px;"></span>${Object.keys(PLAN_PT).map(t => `<button class="pv-chip" onclick="_planTogglePt('${t}')" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};border-color:${PLAN_PT[t].c};color:#fff;` : ''}">${PLAN_PT[t].l}</button>`).join('')}</div>
+      <div class="pv-dds"><button class="pv-dd" onclick="_planPick('zone')"><small>구역</small><b>${esc(z.name)}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>${hasImg ? `<button class="pv-dd" onclick="_planPick('layer')"><small>도면</small><b>${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>
+      <div class="pv-chips">${Object.keys(PLAN_PT).map(t => `<button class="pv-chip" onclick="_planTogglePt('${t}')" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};border-color:${PLAN_PT[t].c};color:#fff;` : ''}">${PLAN_PT[t].l}</button>`).join('')}</div>
       <div class="pv-stage"><div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '' })}</div>
         <div class="pv-zoom"><button onclick="_planZoomBy(1.4)" aria-label="확대">＋</button><button onclick="_planZoomBy(1/1.4)" aria-label="축소">－</button><button onclick="_planZoomReset()" aria-label="원래 크기" style="font-size:13px;">1:1</button></div>
       </div>
