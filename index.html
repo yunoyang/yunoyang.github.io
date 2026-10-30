@@ -2156,6 +2156,12 @@ body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(1
   #screen-proc-detail > *, #screen-furniture-detail > * { width:100%; max-width:1440px; margin-left:auto !important; margin-right:auto !important; padding-left:32px !important; padding-right:32px !important; box-sizing:border-box; }
 }
 .vs2-menu-title { display:none; }
+.vs2-title-chev { display:none; flex-shrink:0; margin-left:4px; }
+body.vs2-on.vs2-proj-titled #screen-main .vs2-title-chev { display:inline-block; }
+body.vs2-on.vs2-proj-titled #screen-main .vs2-menu-title { max-width:56vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#vs2-proj-menu { position:fixed; z-index:9000; min-width:168px; background:#fff; border-radius:16px; padding:6px; box-shadow:0 8px 28px rgba(0,0,0,.16); }
+#vs2-proj-menu button { display:block; width:100%; padding:12px 14px; border:0; background:none; border-radius:10px; font:inherit; font-size:15px; font-weight:500; color:#111; text-align:left; cursor:pointer; }
+#vs2-proj-menu button:active { background:#f2f4f6; }
 body.vs2-on.vs2-menu-titled #screen-main #current-project-name { display:none; }
 body.vs2-on.vs2-menu-titled #screen-main .vs2-menu-title { display:inline; }
 /* 공사정보 업체 카드 */
@@ -4202,9 +4208,9 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     </button>
     <div class="project-selector" id="project-selector">
       <button class="back-btn vs2-back" id="vs2-back" onclick="_vs2Back()" aria-label="뒤로"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
-      <button class="project-badge" id="project-badge-btn" onclick="document.body.classList.contains('vs2-on') ? goTo('landing') : toggleProjectDropdown(event)">
+      <button class="project-badge" id="project-badge-btn" onclick="document.body.classList.contains('vs2-on') ? _vs2TitleTap(event) : toggleProjectDropdown(event)">
         <span class="name" id="current-project-name">프로젝트명</span>
-        <span class="name vs2-menu-title" id="vs2-menu-title"></span>
+        <span class="name vs2-menu-title" id="vs2-menu-title"></span><svg class="vs2-title-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         <span class="pchev"><svg class="icon" width="15" height="15"><use href="#icon-chevron-down"/></svg></span>
       </button>
     </div>
@@ -11582,12 +11588,26 @@ function _vs2Sync(tab) {
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
-  // 상단 제목: 메뉴명 (홈은 '공정')
-  const mt = { more: '전체', plan: '공정', style: '스타일', meeting: '아카이브', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북' }[group] || '';
+  // 상단 제목: 메뉴명 (홈은 프로젝트명 + 꺽쇠, 누르면 프로젝트 메뉴)
+  const mt = { more: '전체', plan: getProject()?.name || '공정', style: '스타일', meeting: '아카이브', info: '공사정보', sitephotos: '현장 사진', matselect: '자재 선택', specbook: '스펙북' }[group] || '';
   document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
   _vs2MoveInd();
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
   document.body.classList.toggle('vs2-menu-titled', !!mt);
+  document.body.classList.toggle('vs2-proj-titled', group === 'plan');
+}
+function _vs2TitleTap(e) {
+  if (!document.body.classList.contains('vs2-proj-titled')) { goTo('landing'); return; }
+  e.stopPropagation();
+  const old = document.getElementById('vs2-proj-menu');
+  if (old) { old.remove(); return; }
+  const r = e.currentTarget.getBoundingClientRect();
+  const m = document.createElement('div');
+  m.id = 'vs2-proj-menu';
+  m.style.top = (r.bottom + 6) + 'px'; m.style.left = r.left + 'px';
+  m.innerHTML = `<button onclick="document.getElementById('vs2-proj-menu')?.remove();goTo('landing')">프로젝트 나가기</button>`;
+  document.body.appendChild(m);
+  setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }));
 }
 function _vs2Today() { const t = new Date(); t.setHours(0, 0, 0, 0); return t; }
 function _vs2D(s) { return s ? new Date(s + 'T00:00:00') : null; }
@@ -15864,6 +15884,7 @@ function renderAll() {
   const proj = getProject();
   if (proj) {
     document.getElementById('current-project-name').textContent = proj.name;
+    if (_vs2Tab === 'plan' || _vs2Tab === 'calendar') { const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = proj.name || '공정'; }
     renderWorkCards();
     updateSummary();
     renderCalendar();
