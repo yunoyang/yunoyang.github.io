@@ -1921,6 +1921,24 @@ button, input, textarea, select { font-family:var(--font); }
 /* ===== MONTHLY CALENDAR TABLE ===== */
 #calendar-container { padding:0; background:#fff; }
 .cal2 { background:#fff; }
+.pr-kind { display:flex; gap:4px; padding:12px 20px 4px; }
+.pr-kind button { border:none; background:none; padding:6px 12px; border-radius:8px; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:var(--font); }
+.pr-kind button.on { background:#e7e9ed; color:#111; font-weight:700; }
+#screen-proc-record-write.k-photo .pr-post-only { display:none !important; }
+#screen-proc-record-write:not(.k-photo) .pr-photo-only { display:none !important; }
+.pr-photo-add { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; margin:12px 20px 16px; height:120px; border:1.5px dashed #d0d6e0; border-radius:14px; font-size:14px; color:#333d4b; cursor:pointer; }
+#screen-proc-record-write.k-photo #proc-record-img-preview > div { width:calc((100% - 16px) / 3) !important; height:auto !important; aspect-ratio:1; }
+.pr-add2 { display:flex; gap:8px; padding:16px 16px 0; }
+.pr-add2 button { flex:1; height:48px; border:1.5px dashed #d0d6e8; border-radius:14px; background:#fff; font-size:14px; font-weight:500; color:#333d4b; cursor:pointer; font-family:var(--font); display:flex; align-items:center; justify-content:center; gap:6px; }
+.pr-grid { display:grid; grid-template-columns:1fr; gap:12px; padding:14px 14px 0; }
+@media (min-width:660px) { .pr-grid { grid-template-columns:1fr 1fr; } }
+@media (min-width:1000px) { .pr-grid { grid-template-columns:repeat(3, 1fr); } }
+.pr-grid .style-card-meta { flex-wrap:wrap; row-gap:2px; }
+.pr-kind-tag { font-size:11px; font-weight:600; border-radius:6px; padding:2px 6px; }
+.pr-kind-tag.photo { color:#ff7a00; background:#fff3e6; }
+.pr-kind-tag.post { color:#5084ff; background:#eef3ff; }
+.pr-snip { display:flex; align-items:flex-start; padding:16px; box-sizing:border-box; font-size:14px; line-height:1.6; color:#4e5968; background:#f6f7f9; white-space:pre-line; overflow:hidden; }
+.pr-more { border:none; background:none; padding:2px; cursor:pointer; }
 .pr-feed { padding:0 16px; }
 .pr-day { font-size:13px; font-weight:700; color:#333d4b; padding:22px 4px 10px; }
 .pr-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,.06); cursor:default; }
@@ -5397,8 +5415,16 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   </div>
   <!-- 스크롤 영역 -->
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;">
+    <!-- 기록 타입: 포토(사진 묶음, 날짜가 제목) / 포스팅(이미지 + 제목 + 본문) -->
+    <div class="pr-kind" id="pr-kind"><button data-k="photo" onclick="_prSetKind('photo')">포토</button><button data-k="post" onclick="_prSetKind('post')">포스팅</button></div>
+    <input id="proc-record-title" class="pr-post-only" placeholder="제목을 입력하세요" style="width:100%;box-sizing:border-box;border:none;border-bottom:1px solid #f0f2f5;padding:14px 20px;font-size:20px;font-weight:600;color:#111;font-family:var(--font);outline:none;background:transparent;">
+    <label class="pr-photo-only pr-photo-add">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333d4b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>사진 추가</span>
+      <input type="file" accept="image/*" multiple style="display:none;" onchange="_prImgPreview(this)">
+    </label>
     <!-- 툴바 -->
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
+    <div class="pr-post-only" style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #f0f2f5;background:#fafbfc;position:sticky;top:0;z-index:5;flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:4px;padding:8px 12px;min-width:max-content;">
         <button onclick="_prInsertHeading(2)" title="제목 (H2)" style="height:38px;padding:0 10px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;color:#333;font-family:serif;white-space:nowrap;">H2</button>
         <button onclick="_prInsertHeading(3)" title="소제목 (H3)" style="height:38px;padding:0 10px;border:none;background:none;cursor:pointer;border-radius:6px;font-size:11px;font-weight:600;color:#666;font-family:serif;white-space:nowrap;">H3</button>
@@ -5424,7 +5450,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </div>
     </div>
     <!-- contenteditable 에디터 -->
-    <div style="position:relative;flex:1;min-height:300px;">
+    <div class="pr-post-only" style="position:relative;flex:1;min-height:300px;">
       <div id="proc-record-editor"
         contenteditable="true" spellcheck="false"
         oninput="_prEditorInput()"
@@ -12148,45 +12174,69 @@ function _renderProcRecords(procId) {
   if (!proc) return;
   const records = [...(proc.records || []), ...(proj.meetings || []).filter(m => m.procId === procId && !m.deleted).map(m => ({ ...m, _meeting: true }))]
     .sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
-  const addBtn = `<div style="padding:16px 16px 0;"><button onclick="openProcRecord()" style="width:100%;padding:14px;background:#fff;border:1.5px dashed #d0d6e8;border-radius:14px;cursor:pointer;font-size:14px;font-weight:500;color:#5084ff;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 기록 추가
-  </button></div>`;
+  const ico = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  const addBtn = `<div class="pr-add2"><button onclick="openProcRecord(null,'photo')">${ico} 포토</button><button onclick="openProcRecord(null,'post')">${ico} 포스팅</button></div>`;
   if (!records.length) {
     el.innerHTML = `${addBtn}<div style="text-align:center;padding:48px 20px 20px;font-size:14px;color:#bbb;">아직 공정 기록이 없습니다</div>`;
     return;
   }
-  // 날짜별 피드: 날짜 헤더 + 카드(작성자·시간 / 사진 / 제목·본문)
+  // 스타일 카드와 같은 구조: 콜라주 + 제목 + 메타. 포토는 날짜가 제목, 포스팅은 글 제목
   const DOW = ['일','월','화','수','목','금','토'];
-  const p2 = n => String(n).padStart(2,'0');
-  let lastDay = '';
-  const listHtml = records.map(r => {
+  const sep = '<span class="style-card-meta-sep">|</span>';
+  const thumb = src => src ? `<img src="${esc(src)}" loading="lazy" alt="" onerror="this.style.opacity=0">` : '';
+  window._prCardImgs = {};
+  const cards = records.map(r => {
+    const kind = _prKindOf(r);
     const d = new Date(r.createdAt||0);
-    const day = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())} (${DOW[d.getDay()]})`;
-    const head = day !== lastDay ? `<div class="pr-day">${day}</div>` : '';
-    lastDay = day;
+    const dayTitle = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;
+    const ymd = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
     const who = esc(r.createdByName || r.createdBy?.split('@')[0] || '');
-    const time = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
     const { decoded, type } = _normalizeMeetingContent(r.content||'');
     const tmp = document.createElement('div');
     tmp.innerHTML = type === 'html' ? decoded : esc(decoded).replace(/\n/g,'<br>');
     const imgs = [...(r.images||[]), ...[...tmp.querySelectorAll('img')].map(i => i.getAttribute('src'))].filter((v, i, a) => v && a.indexOf(v) === i);
-    tmp.querySelectorAll('img').forEach(i => i.remove());
-    tmp.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
-    tmp.querySelectorAll('p,div,li').forEach(b => b.append('\n'));
-    const text = esc(tmp.textContent.replace(/\n{3,}/g, '\n\n').trim());
-    const shown = imgs.slice(0, 4);
-    const gal = shown.length ? `<div class="pr-gal n${shown.length}">${shown.map((src, i) => `<div class="pr-ph"><img src="${esc(src)}" loading="lazy" onclick="event.stopPropagation();_zoomFromImg(this)">${i === 3 && imgs.length > 4 ? `<span>+${imgs.length - 4}</span>` : ''}</div>`).join('')}</div>` : '';
-    const acts = r._meeting
-      ? `<span class="pr-tag">기록</span>`
-      : `<span class="pr-acts"><button onclick="event.stopPropagation();openProcRecord('${r.id}')" aria-label="수정"><svg width="15" height="15" viewBox="0 0 22 22" fill="none"><path d="M10.75 1H7C3.68629 1 1 3.68629 1 7V14.5C1 17.8137 3.68629 20.5 7 20.5H14.5C17.8137 20.5 20.5 17.8137 20.5 14.5V10.75M11.231 10.2034L19.646 1.78838" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button onclick="event.stopPropagation();_deleteProcRecord('${r.id}')" aria-label="삭제"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></span>`;
-    return `${head}<div class="pr-card"${r._meeting ? ` onclick="openMeetingDetail('${r.id}')"` : ''}>
-      <div class="pr-top"><span class="pr-av">${(who || '?').slice(0,1)}</span><span class="pr-who"><b>${who}</b><small>${time}</small></span>${acts}</div>
-      ${gal}
-      ${r._meeting && r.title ? `<div class="pr-title">${esc(r.title)}</div>` : ''}
-      ${text ? `<div class="pr-text">${text}</div>` : ''}
+    window._prCardImgs[r.id] = imgs;
+    let collage;
+    if (imgs.length === 1) collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs[0])}</div></div>`;
+    else if (imgs.length === 2) collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs[0])}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs[1])}</div></div></div>`;
+    else if (imgs.length >= 3) collage = `<div class="style-card-collage"><div class="style-card-col-main">${thumb(imgs[0])}</div><div class="style-card-col-side"><div class="style-card-col-side-item">${thumb(imgs[1])}</div><div class="style-card-col-side-item">${thumb(imgs[2])}</div></div></div>`;
+    else {
+      tmp.querySelectorAll('img').forEach(i => i.remove());
+      tmp.querySelectorAll('br').forEach(x => x.replaceWith('\n'));
+      tmp.querySelectorAll('p,div,li').forEach(x => x.append('\n'));
+      collage = `<div class="style-card-collage pr-snip">${esc(tmp.textContent.replace(/\n{2,}/g, '\n').trim().slice(0, 240))}</div>`;
+    }
+    const title = kind === 'photo' ? dayTitle : (r.title || '(제목 없음)');
+    const meta = kind === 'photo'
+      ? [`<span>사진 ${imgs.length}장</span>`, `<span>${who}</span>`]
+      : [`<span>${ymd}</span>`, `<span>${who}</span>`, ...(imgs.length ? [`<span>사진 ${imgs.length}장</span>`] : [])];
+    const onclick = r._meeting ? `openMeetingDetail('${r.id}')`
+      : kind === 'photo' ? `_openSwipeViewer(window._prCardImgs['${r.id}'],0)`
+      : `openProcRecord('${r.id}')`;
+    const more = r._meeting ? '' : `<span class="sr-more-wrap"><button class="sr-more pr-more" onclick="_prToggleMenu(event,'${r.id}')" aria-label="더보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="#666"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></span>`;
+    return `<div class="style-room-card" onclick="${onclick}">
+      ${collage}
+      <div class="style-card-info">
+        <div class="style-card-top-row"><span class="style-card-title">${esc(title)}</span>${more}</div>
+        <div class="style-card-meta"><span class="pr-kind-tag ${kind}">${kind === 'photo' ? '포토' : '포스팅'}</span>${meta.join(sep)}</div>
+      </div>
     </div>`;
   }).join('');
-  el.innerHTML = `${addBtn}<div class="pr-feed">${listHtml}</div><div style="height:40px;"></div>`;
+  el.innerHTML = `${addBtn}<div class="pr-grid">${cards}</div><div style="height:40px;"></div>`;
+}
+
+function _prToggleMenu(ev, id) {
+  ev.stopPropagation();
+  const had = document.getElementById('sr-menu'); _srCloseMenu();
+  if (had && had.dataset.room === 'pr:' + id) return;
+  const r = ev.currentTarget.getBoundingClientRect();
+  const m = document.createElement('div');
+  m.id = 'sr-menu'; m.dataset.room = 'pr:' + id;
+  m.style.top = (r.bottom + 4) + 'px';
+  m.style.left = Math.max(8, Math.min(innerWidth - 136, r.right - 120)) + 'px';
+  m.innerHTML = `<button onclick="_srCloseMenu();openProcRecord('${id}')">수정</button><button onclick="_srCloseMenu();_deleteProcRecord('${id}')">삭제</button>`;
+  document.body.appendChild(m);
+  setTimeout(() => document.addEventListener('click', _srCloseMenu, { once: true }), 0);
 }
 
 function _prFmt(cmd) {
@@ -12285,9 +12335,19 @@ function _prInsertMention(email, name) {
   document.getElementById('proc-record-mention-dropdown').style.display='none';
 }
 
-function openProcRecord(recordId) {
+let _prKind = 'post';
+function _prSetKind(k) {
+  _prKind = k === 'photo' ? 'photo' : 'post';
+  document.getElementById('screen-proc-record-write').classList.toggle('k-photo', _prKind === 'photo');
+  document.querySelectorAll('#pr-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === _prKind));
+  document.getElementById('proc-record-write-header').textContent = (_prEditingId ? '' : '') + (_prKind === 'photo' ? '포토' : '포스팅') + (_prEditingId ? ' 수정' : ' 작성');
+}
+function _prKindOf(r) { return r.kind || (r._meeting ? 'post' : ((r.title || (r.content || '').replace(/<[^>]+>|&nbsp;/g, '').trim()) ? 'post' : 'photo')); }
+
+function openProcRecord(recordId, kind) {
   _prImages = [];
   _prEditingId = recordId || null;
+  document.getElementById('proc-record-title').value = '';
   const editor = document.getElementById('proc-record-editor');
   const imgPrev = document.getElementById('proc-record-img-preview');
   const header = document.getElementById('proc-record-write-header');
@@ -12302,6 +12362,8 @@ function openProcRecord(recordId) {
       const { decoded, type } = _normalizeMeetingContent(rec.content||'');
       editor.innerHTML = type === 'html' ? decoded : esc(decoded).replace(/\n/g,'<br>');
       _prImages = [...(rec.images||[])];
+      document.getElementById('proc-record-title').value = rec.title || '';
+      kind = _prKindOf(rec);
       _prImages.forEach((src, idx) => {
         const div = document.createElement('div');
         div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;';
@@ -12312,11 +12374,12 @@ function openProcRecord(recordId) {
   } else {
     header.textContent = '공정 기록 작성';
   }
+  _prSetKind(kind || 'post');
   _prUpdatePlaceholder();
   const scr = document.getElementById('screen-proc-record-write');
   scr.style.transform = 'translateY(0)';
   scr.style.pointerEvents = 'all';
-  setTimeout(() => { editor.focus(); }, 380);
+  if (_prKind === 'post') setTimeout(() => { (recordId ? editor : document.getElementById('proc-record-title')).focus(); }, 380);
 }
 
 function closeProcRecord() {
@@ -12374,8 +12437,11 @@ function _prRemoveImg(idx, el) { _prImages.splice(idx, 1); el.remove(); }
 
 async function saveProcRecord() {
   const editor = document.getElementById('proc-record-editor');
-  const content = editor?.innerHTML.trim() || '';
-  if (!content && !_prImages.length) { showToastMessage('⚠️ 내용 또는 사진을 추가해주세요'); return; }
+  const kind = _prKind;
+  const title = kind === 'post' ? (document.getElementById('proc-record-title')?.value.trim() || '') : '';
+  const content = kind === 'post' ? (editor?.innerHTML.trim() || '') : '';
+  if (kind === 'photo' && !_prImages.length) { showToastMessage('⚠️ 사진을 추가해주세요'); return; }
+  if (kind === 'post' && !title) { showToastMessage('⚠️ 제목을 입력해주세요'); return; }
   // @멘션 추출 (data-email 스팬)
   const mentionEmails = [];
   editor?.querySelectorAll('[data-email]').forEach(span => {
@@ -12390,12 +12456,12 @@ async function saveProcRecord() {
   if (isEditing) {
     const idx = proc.records.findIndex(r => r.id === _prEditingId);
     if (idx !== -1) {
-      proc.records[idx] = { ...proc.records[idx], content, images: [..._prImages], mentions: mentionEmails, updatedAt: Date.now() };
+      proc.records[idx] = { ...proc.records[idx], kind, title, content, images: [..._prImages], mentions: mentionEmails, updatedAt: Date.now() };
     }
   } else {
     const record = {
       id: 'prec_' + Date.now() + Math.random().toString(36).slice(2,5),
-      content, images: [..._prImages], mentions: mentionEmails,
+      kind, title, content, images: [..._prImages], mentions: mentionEmails,
       createdAt: Date.now(),
       createdBy: state.user?.email || '',
       createdByName: state.user?.name || state.user?.email?.split('@')[0] || '',
