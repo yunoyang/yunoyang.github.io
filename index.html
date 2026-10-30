@@ -2206,6 +2206,24 @@ body.vs2-info #form-notif-btn[data-on="1"] { display:block; position:relative; o
 body.vs2-info #screen-form #form-title { order:1; }
 /* 첫 화면 우측 상단 프로필/로그인 버튼 숨김 (계정은 전체 탭에서) */
 #landing-avatar-btn { display:none !important; }
+/* ===== 인터랙션 애니메이션 ===== */
+@keyframes vsFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes vsLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@keyframes vsPop { 0% { transform:scale(.82); } 60% { transform:scale(1.12); } 100% { transform:scale(1); } }
+/* 탭 이동: 선택 밑줄이 가운데서 펼쳐지고, 내용은 살짝 올라오며 나타남 */
+#vs2-seg button, #iv-tabs button { position:relative; transition:color .2s; }
+#vs2-seg button.on, #iv-tabs button.on { border-bottom-color:transparent !important; }
+#vs2-seg button.on::after, #iv-tabs button.on::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:#111; transform-origin:50% 50%; animation:vsLine .28s cubic-bezier(.2,.9,.3,1); }
+.vs-enter { animation:vsFadeUp .32s cubic-bezier(.2,.9,.3,1) both; }
+/* 하위 필터 탭(ALL/플래닝…, 평면/3D, 주간/월간) */
+.vs2-ftab button, .iv-fp-sub button, .cal2-mode button { transition:background .2s, color .2s; }
+/* 하단 메뉴 이동: 선택 배경이 부드럽게, 아이콘은 톡 튀는 느낌 */
+#vs2-nav .vs2-nav-btn { transition:background .25s, transform .15s; }
+#vs2-nav .vs2-nav-btn.on svg { animation:vsPop .38s cubic-bezier(.3,1.4,.5,1); }
+/* 카드·리스트 누름 피드백 */
+.vs2-grp, .style-room-card, .co-card, .mr-row, .lp-card { transition:transform .15s, opacity .15s; }
+.vs2-grp:active, .style-room-card:active, .co-card:active, .lp-card:active { transform:scale(.98); }
+@media (prefers-reduced-motion: reduce) { .vs-enter, #vs2-nav .vs2-nav-btn.on svg, #vs2-seg button.on::after, #iv-tabs button.on::after { animation:none !important; } }
 /* 하위 탭: 스타일 3 (선택 탭에 연회색 라운드 배경, 밑줄 없음) */
 .vs2-ftab { gap:4px !important; border-bottom:none !important; }
 .vs2-ftab button { padding:8px 14px !important; border-radius:10px; border-bottom:none !important; margin-bottom:0 !important; }
@@ -8720,6 +8738,7 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-sitephotos').style.display = tab === 'sitephotos' ? '' : 'none';
   document.getElementById('tab-specbook').style.display = tab === 'specbook' ? '' : 'none';
   document.getElementById('tab-more').style.display = tab === 'more' ? '' : 'none';
+  { const sec = document.getElementById('tab-' + tab); if (sec) { sec.classList.remove('vs-enter'); void sec.offsetWidth; sec.classList.add('vs-enter'); } }
   if (tab === 'more') _renderMoreTab();
   document.getElementById('floating-add-process').style.display = (tab === 'more' || tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook' || tab === 'matselect') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = (tab === 'style' && canEdit()) ? '' : 'none';
@@ -17168,6 +17187,7 @@ function _ivFpSub(k) {
 // 공사정보 탭 전환 — 섹션 표시는 CSS(data-ivtab)로, 비어 있는 탭엔 안내 문구
 function _ivTab(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
+  if (panel.dataset.ivtab !== k) { panel.classList.remove('vs-enter'); void panel.offsetWidth; panel.classList.add('vs-enter'); }
   panel.dataset.ivtab = k;
   // 기본정보 탭에선 상세 항목을 펼친 상태로
   if (k === 'basic') { const b = document.getElementById('iv-project-detail-body'); if (b && b.style.display === 'none') _toggleProjectInfoDetail(); }
