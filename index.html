@@ -2077,7 +2077,8 @@ button, input, textarea, select { font-family:var(--font); }
   #plan-view.pv-inline .pv-stage { height:auto; flex:none; }
   #plan-view.pv-inline .pv-right { flex:1 1 0; width:auto; padding-top:0 !important; }
 }
-#form-view-panel #iv-fp-sub button[data-k] { display:none; }
+#form-view-panel #iv-fp-sub { display:none; }
+.pv-ov-ver { width:36px; padding:0; justify-content:center; }
 .pv-ov { position:absolute; top:10px; left:10px; z-index:4; display:flex; align-items:center; gap:6px; }
 .pv-mode { display:flex; padding:3px; background:rgba(255,255,255,.94); border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.12); }
 .pv-mode button { border:none; background:none; padding:6px 12px; border-radius:8px; font:inherit; font-size:13px; font-weight:500; color:#6b7684; cursor:pointer; }
@@ -15860,7 +15861,7 @@ async function _specSave() {
     localStorage.setItem('vibespace', JSON.stringify(state));
   } catch (e) { console.error('[specSync]', e.code, e.message); showToastMessage('⚠️ 제품 정보 동기화 실패'); }
 }
-function _ivFpModeHtml(k) { return `<div class="pv-mode"><button class="${k === 'plan' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('plan')">평면</button><button class="${k === '3d' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('3d')">3D</button></div>`; }
+function _ivFpModeHtml(k) { return `<div class="pv-mode"><button class="${k === 'plan' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('plan')">평면</button><button class="${k === '3d' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('3d')">3D</button></div><button class="pv-ov-dd pv-ov-ver" onclick="event.stopPropagation();_fpvOpen()" aria-label="버전 확인"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button>`; }
 function _renderPlanView(keepScroll) {
   const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
   const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
