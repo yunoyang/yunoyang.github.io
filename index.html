@@ -15278,11 +15278,15 @@ function _closeContractorDetail() {
   scr.style.pointerEvents = 'none';
 }
 
-function _contactContractorSMS() {
+async function _contactContractorSMS() {
   if (!_currentContractorDetail?.phone) return;
   const phone = _currentContractorDetail.phone.replace(/[^0-9+]/g, '');
   const name = _currentContractorDetail.name || '';
-  const text = encodeURIComponent(`안녕하세요, 바이브스페이스 앱을 통해 인테리어 공사 관련 문의드립니다. ${name} 업체 견적을 받아보고 싶습니다.`);
+  // 공사정보 공유 링크를 기본으로 첨부 — 실패해도 문의는 보낼 수 있게 링크 없이 진행
+  let link = '';
+  const proj = getProject();
+  if (proj && state.loggedIn) { showToastMessage('공사정보 링크 만드는 중…'); try { link = await _infoShareLink(proj); } catch (e) { console.error('inquiry link', e); } }
+  const text = encodeURIComponent(`안녕하세요, 바이브스페이스 앱을 통해 인테리어 공사 관련 문의드립니다. ${name} 업체 견적을 받아보고 싶습니다.${link ? `\n\n공사정보: ${link}` : ''}`);
   window.location.href = `sms:${phone}?body=${text}`;
 }
 
@@ -18904,19 +18908,21 @@ function _infoShareHtml(proj) {
   }
   return `<div style="max-width:720px;margin:0 auto;padding:24px 20px 60px;background:#fff;font-family:inherit;">${body}</div>`;
 }
+async function _infoShareLink(proj) {
+  const ok = await _initFirebase(); if (!ok || !_db) throw new Error('Firebase');
+  if (!firebase.auth().currentUser) { try { await firebase.auth().signInAnonymously(); } catch (e) {} }
+  const html = _infoShareHtml(proj);
+  if (html.length > 900000) throw new Error('too large');
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  await _db.collection('vb_exports').doc(id).set({ html, projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  return `https://vibespacekorea.com/?export=${id}`;
+}
 async function _infoShare() {
   const proj = getProject(); if (!proj) return;
   if (!state.loggedIn) { showToastMessage('로그인 후 공유할 수 있어요'); return; }
   showToastMessage('공유 링크 만드는 중…');
-  try {
-    const ok = await _initFirebase(); if (!ok || !_db) throw new Error('Firebase');
-    if (!firebase.auth().currentUser) { try { await firebase.auth().signInAnonymously(); } catch (e) {} }
-    const html = _infoShareHtml(proj);
-    if (html.length > 900000) throw new Error('too large');
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-    await _db.collection('vb_exports').doc(id).set({ html, projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-    _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, proj.name || '공사정보');
-  } catch (e) { console.error('info share', e); showToastMessage('공유 링크 생성 실패. 다시 시도해주세요.'); }
+  try { _infoShareSheet(await _infoShareLink(proj), proj.name || '공사정보'); }
+  catch (e) { console.error('info share', e); showToastMessage('공유 링크 생성 실패. 다시 시도해주세요.'); }
 }
 // 비동기 뒤에는 시스템 공유창이 막힐 수 있어 버튼을 한 번 더 누르게 함
 function _infoShareSheet(url, title) {
