@@ -8873,7 +8873,7 @@ function _getContentLinks() {
   const proj = getProject();
   if (!proj) return [];
   if (!proj.contentLinks) proj.contentLinks = [];
-  return proj.contentLinks;
+  return proj.contentLinks.filter(l => !l.deleted); // soft-delete된 링크는 화면에서 제외
 }
 
 function _contentTypeIcon(type) {
@@ -8960,7 +8960,7 @@ async function _fetchYTMeta(videoId) {
 function _fetchMissingMeta() {
   const proj = getProject();
   if (!proj?.contentLinks) return;
-  proj.contentLinks.filter(l => !l.title).forEach(item => {
+  proj.contentLinks.filter(l => !l.title && !l.deleted).forEach(item => {
     if (item.type === 'youtube' && item.videoId) {
       _fetchYTMeta(item.videoId).then(meta => {
         if (!meta.title) return;
@@ -9023,7 +9023,8 @@ function _addContentLink() {
       const it = (getProject()?.contentLinks || []).find(l => l.id === newItem.id);
       if (!it) return;
       it.title = meta.title; it.channel = meta.channel;
-      save(); renderContentTab();
+      it.updatedAt = Date.now();
+      save(); renderContentTab(); _syncContentLinksToCloud(getProject());
     });
   } else {
     _fetchLinkMeta(url).then(meta => {
@@ -9034,6 +9035,7 @@ function _addContentLink() {
       if (meta.ogImage) it.ogImage = meta.ogImage;
       if (meta.siteName) it.siteName = meta.siteName;
       if (meta.description) it.description = meta.description;
+      it.updatedAt = Date.now();
       save(); renderContentTab(); _syncContentLinksToCloud(getProject());
     });
   }
@@ -9042,10 +9044,11 @@ function _addContentLink() {
 function _deleteContentLink(id) {
   const proj = getProject();
   if (!proj || !proj.contentLinks) return;
-  proj.contentLinks = proj.contentLinks.filter(l => l.id !== id);
-  // save()/sync가 삭제 직전 클라우드 스냅샷과 union하면서 방금 지운 링크를 되살리지
-  // 못하도록, sync 호출보다 먼저 tombstone 등록 (styleImages/processes와 동일 패턴)
-  _markIdDeleted('contentLink', id);
+  // 배열에서 하드 삭제하면 안 됨 — 60초 tombstone은 삭제한 기기에서만 유효해서, 로컬에 이 링크를
+  // 갖고 있던 다른 기기/협업자의 union 병합이 다시 클라우드로 올려 되살렸음.
+  // furnitureItems/meetings와 동일하게 soft-delete로 표시해 updatedAt 비교로 삭제를 전파한다.
+  const it = proj.contentLinks.find(l => l.id === id);
+  if (it) { it.deleted = true; it.updatedAt = Date.now(); }
   save();
   renderContentTab();
   _syncContentLinksToCloud(proj);
@@ -12387,10 +12390,14 @@ function _mergeProcessRecords(localRecords, cloudRecords) {
     const lt = lr.updatedAt || lr.createdAt || 0;
     return lt > ct ? lr : cr;
   });
-  // records는 항상 합집합 병합이라 "삭제"를 표현할 수 없음 — 스타일 이미지 삭제가
-  // 되살아나던 것과 동일한 원인(삭제 직후 save()가 유발하는 전체 sync가 삭제 직전
-  // 클라우드 스냅샷과 union)이므로 동일한 tombstone 패턴으로 필터링
-  return [...merged, ...localOnly].filter(r => !_isRecentlyDeletedId('record', r.id));
+  // 삭제는 _softDeleteProcRecord의 stub({id,deleted,updatedAt})이 updatedAt 비교로 전파됨
+  return [...merged, ...localOnly];
+}
+// 기록을 배열에서 하드 삭제하면 안 됨 — records는 합집합 병합이라, 로컬에 이 기록을 갖고 있던
+// 다른 기기/협업자의 sync가 다시 올려 되살렸음(60초 tombstone은 삭제한 기기에서만 유효).
+// 사진·본문은 비운 stub만 남겨 문서 용량을 늘리지 않으면서 삭제를 전파한다.
+function _softDeleteProcRecord(proc, recordId) {
+  proc.records = (proc.records || []).map(r => r.id === recordId ? { id: r.id, deleted: true, updatedAt: Date.now() } : r);
 }
 // 공정 하나를 병합 — 스칼라 필드는 updatedAt이 더 최신인 쪽을 채택하되, records는 항상 합집합
 function _mergeOneProcess(localProc, cloudProc) {
@@ -12539,7 +12546,7 @@ function _renderProcRecords(procId) {
   const proj = getProject();
   const proc = proj?.processes.find(p => p.id === procId);
   if (!proc) return;
-  const records = [...(proc.records || []), ...(proj.meetings || []).filter(m => m.procId === procId && !m.deleted).map(m => ({ ...m, _meeting: true }))]
+  const records = [...(proc.records || []).filter(r => !r.deleted), ...(proj.meetings || []).filter(m => m.procId === procId && !m.deleted).map(m => ({ ...m, _meeting: true }))]
     .sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
   const ico = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
   const addBtn = `<div class="pr-add2"><button onclick="openProcRecord(null,'photo')">${ico} 포토</button><button onclick="openProcRecord(null,'post')">${ico} 포스팅</button></div>`;
@@ -12641,7 +12648,7 @@ function _prDayZoom(i) {
     if (!proc || !hit) return;
     const rec = hit.rec;
     rec.images = (rec.images || []).filter(u => u !== url);
-    if (!rec.images.length) { proc.records = proc.records.filter(r => r.id !== rec.id); _markIdDeleted('record', rec.id); }
+    if (!rec.images.length) _softDeleteProcRecord(proc, rec.id);
     else rec.updatedAt = Date.now();
     proc.updatedAt = Date.now();
     save();
@@ -12939,11 +12946,8 @@ function _deleteProcRecord(recordId) {
   const proj = getProject();
   const proc = proj?.processes.find(p => p.id === _currentProcDetailId);
   if (!proc) return;
-  proc.records = (proc.records||[]).filter(r => r.id !== recordId);
+  _softDeleteProcRecord(proc, recordId);
   proc.updatedAt = Date.now();
-  // save()가 유발하는 전체 sync가 삭제 직전 클라우드 스냅샷과 union하면서 방금 지운
-  // 기록을 되살리지 못하도록, save() 호출보다 먼저 tombstone 등록
-  _markIdDeleted('record', recordId);
   save();
   _renderProcRecords(_currentProcDetailId);
   showToastMessage('🗑️ 기록이 삭제됐습니다');
@@ -16307,10 +16311,23 @@ function _restoreDeletedStyleImgUrls() {
   } catch(e) {}
 }
 _restoreDeletedStyleImgUrls();
+// 스타일 이미지 영구 삭제 기록: proj.deletedStyleUrls를 클라우드에도 저장·합집합 병합
+// (deletedProcIds와 동일한 방식). 60초 tombstone은 삭제한 기기에서만 유효해서, 로컬에 이 이미지를
+// 갖고 있던 다른 기기/협업자의 union 병합이 다시 클라우드로 올려 되살렸음.
+// 업로드 URL은 매번 고유하고 이미지는 한 공간에만 속하므로 영구 기록해도 재추가와 충돌하지 않음.
+const _styleTombs = new Set();
+function _mergeStyleDelUrls(a, b) {
+  const out = [...new Set([...(a || []), ...(b || [])])];
+  out.forEach(u => _styleTombs.add(u));
+  return out;
+}
+try { (JSON.parse(localStorage.getItem('vibespace') || '{}').projects || []).forEach(p => _mergeStyleDelUrls(p.deletedStyleUrls)); } catch (e) {}
 function _markStyleImgDeleted(url) {
   if (!url) return;
   _deletedStyleImgUrls.set(url, Date.now());
   _persistDeletedStyleImgUrls();
+  const proj = getProject();
+  if (proj) proj.deletedStyleUrls = _mergeStyleDelUrls(proj.deletedStyleUrls, [url]);
 }
 function _isRecentlyDeletedStyleImg(url) {
   const t = _deletedStyleImgUrls.get(url);
@@ -16398,7 +16415,7 @@ function _mergeStyleImagesObj(localImgs, cloudImgs) {
       return result;
     });
     const localOnly = li.filter(x => !cloudUrls.has(x.url));
-    const m = [...localOnly, ...cloudWithMerged].filter(x => !_isRecentlyDeletedStyleImg(x.url));
+    const m = [...localOnly, ...cloudWithMerged].filter(x => !_isRecentlyDeletedStyleImg(x.url) && !_styleTombs.has(x.url));
     if (m.length) merged[r] = m;
   });
   return merged;
@@ -16478,6 +16495,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   // _startCollabListener, _syncProjToCloud가 전부 같은 헬퍼를 호출하므로, 병합 규칙을
   // 한 곳에서 고치면 세 경로 모두에 동시 적용된다 (예전엔 각자 따로 구현돼 있어서
   // 매번 한두 곳씩 누락되는 게 반복되는 버그의 근본 원인이었음).
+  merged.deletedStyleUrls = _mergeStyleDelUrls(local.deletedStyleUrls, cp.deletedStyleUrls);
   merged.styleImages = _mergeStyleImagesObj(local.styleImages, cp.styleImages);
   merged.styleRooms = _mergeStyleRoomsArr(local.styleRooms, cp.styleRooms);
   merged.contentLinks = _mergeListById(local.contentLinks, cp.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
@@ -16538,6 +16556,7 @@ async function _fetchStyleFromCloud() {
     // 따로 구현하면 tombstone 필터링이 빠져 방금 지운 이미지가 되살아날 수 있었음)
     if (remote.styleImages) {
       const local = proj.styleImages || {};
+      proj.deletedStyleUrls = _mergeStyleDelUrls(proj.deletedStyleUrls, remote.deletedStyleUrls);
       const merged = _mergeStyleImagesObj(local, remote.styleImages);
       if (JSON.stringify(merged) !== JSON.stringify(local)) { proj.styleImages = merged; changed = true; }
     }
@@ -16766,6 +16785,7 @@ function _syncProjToCloud(proj) {
     projData.fpVersions = _mergeListById(proj.fpVersions, cloudData.fpVersions, { type: 'fpVersion' });
     projData.fpCurrent = _fpvMergeCur(proj.fpCurrent, cloudData.fpCurrent);
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
+    projData.deletedStyleUrls = proj.deletedStyleUrls = _mergeStyleDelUrls(proj.deletedStyleUrls, cloudData.deletedStyleUrls);
     projData.styleImages = _mergeStyleImagesObj(proj.styleImages, cloudData.styleImages);
     projData.styleRooms = _mergeStyleRoomsArr(proj.styleRooms, cloudData.styleRooms);
     // meetings도 read-merge-write 필요 — 안 그러면 이 함수가 다른 저장 액션(공정/가구/도면 등)
@@ -16877,6 +16897,7 @@ async function _syncStyleImagesToCloud(proj) {
     const snap = await _db.collection('vb_projects').doc(proj.cloudId).get();
     const cloudImages = snap.data()?.projectData?.styleImages || {};
     // 2) cloud + local 병합 (다른 sync 경로들과 동일한 공용 헬퍼 사용)
+    proj.deletedStyleUrls = _mergeStyleDelUrls(proj.deletedStyleUrls, snap.data()?.projectData?.deletedStyleUrls);
     const merged = _mergeStyleImagesObj(proj.styleImages, cloudImages);
     // 3) 병합 결과 쓰기 — styleRooms(방 목록)도 함께 병합해서 push
     const cloudRooms = snap.data()?.projectData?.styleRooms || [];
@@ -16884,6 +16905,7 @@ async function _syncStyleImagesToCloud(proj) {
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.styleImages': merged,
       'projectData.styleRooms': mergedRooms,
+      'projectData.deletedStyleUrls': proj.deletedStyleUrls || [],
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
       'meta.updatedBy': state.user?.email || '',
       'meta.updatedBySessionId': _sessionId,
@@ -17018,11 +17040,11 @@ async function _syncContentLinksToCloud(proj) {
     const cloudLinks = snap.data()?.projectData?.contentLinks || [];
     // 2) 다른 sync 경로들과 동일한 공용 헬퍼로 병합 (id 기준 합집합 + 삭제 tombstone 필터링)
     //    편집자/뷰어도 쓰게 되면서 로컬이 항상 정본이라는 가정이 깨지므로, 다른 협업자가
-    //    올린 cloud 전용 항목도 보존해야 함 — _deleteContentLink()가 이미 호출하는
-    //    _markIdDeleted('contentLink', id) tombstone으로 삭제 항목의 재생성을 방지
+    //    올린 cloud 전용 항목도 보존해야 함 — 삭제는 _deleteContentLink()의 soft-delete로 전파
     const mergedFinal = _mergeListById(proj.contentLinks, cloudLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
-    // 3) 변경 없으면 스킵
-    if (JSON.stringify(mergedFinal.map(x=>x.id)) === JSON.stringify(cloudLinks.map(x=>x.id))) return;
+    // 3) 변경 없으면 스킵 — id 목록만 비교하면 상품 추가/삭제·제목 등 내용 수정이 "변경 없음"으로
+    //    판정돼, save()가 이 필드를 안 올리는 편집자/뷰어의 수정이 클라우드에 영영 반영되지 않았음
+    if (JSON.stringify(mergedFinal) === JSON.stringify(cloudLinks)) return;
     // 4) Firestore에 쓰기
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.contentLinks': mergedFinal,
@@ -17139,6 +17161,8 @@ function _startCollabListener(cloudId) {
     const localFurniApplied = proj.furniQuoteApplied;
     const localFpv = proj.fpVersions, localFpCur = proj.fpCurrent; // 도면 버전 보존
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
+    // 삭제 기록 보존 — 아래 Object.assign(remote)가 덮어쓰면 아직 클라우드에 못 올린 삭제가 유실됨
+    const localDelProcIds = proj.deletedProcIds, localDelStyleUrls = proj.deletedStyleUrls;
     const localCanvasJSON = proj.floorplanCanvasJSON || localStorage.getItem(`vb_fpcj_${proj.id}`) || null; // 캔버스 레이어 보존
     // 기록(meetings) + 이미지 보존: 로컬 데이터 백업
     const localMeetings = proj.meetings || [];
@@ -17195,11 +17219,12 @@ function _startCollabListener(cloudId) {
     });
     // 아래 필드들은 모두 공용 헬퍼로 병합 — _mergeLocalPreserve/_syncProjToCloud와 동일한
     // 규칙을 공유하므로, 병합 로직을 한 곳만 고치면 세 경로 모두에 동시 적용된다.
+    proj.deletedStyleUrls = _mergeStyleDelUrls(localDelStyleUrls, remote.deletedStyleUrls);
     proj.styleImages = _mergeStyleImagesObj(localImages, remote.styleImages);
     proj.styleRooms = _mergeStyleRoomsArr(localStyleRooms, remote.styleRooms);
     proj.contentLinks = _mergeListById(localContentLinks, remote.contentLinks, { sortByTsDesc: true, type: 'contentLink', orderTsOf: _contentLinkOrderTs });
     proj.furnitureItems = _mergeListById(localFurnitureItems, remote.furnitureItems, { newFirst: true, type: 'furnitureItem' });
-    proj.deletedProcIds = _mergeDelIds(proj.deletedProcIds, remote.deletedProcIds);
+    proj.deletedProcIds = _mergeDelIds(localDelProcIds, remote.deletedProcIds);
     proj.processes = _mergeProcessesArr(localProcesses, remote.processes);
     proj.materialItems = _mergeListById(localMaterialItems, remote.materialItems, { newFirst: true, type: 'materialItem' });
     proj.materialSelections = _mergeMatSelectionsObj(localMatSelections, remote.materialSelections);
