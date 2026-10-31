@@ -2106,6 +2106,20 @@ body.vs2-info:has(#form-view-panel[data-ivtab="fp"]), body.vs2-info:has(#form-vi
 .pv-pts { position:absolute; right:10px; bottom:142px; z-index:4; display:flex; flex-direction:column; gap:6px; }
 .pv-pts button { width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); cursor:pointer; }
 .pv-spec { margin-top:0; }
+.pv-spec-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+.pv-spec-item { background:#fff; border:1px solid #eef0f3; border-radius:16px; padding:12px; min-width:0; }
+.pv-spec-img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px; background:#f2f4f6; cursor:pointer; }
+.pv-spec-add { display:flex; align-items:center; justify-content:center; font-size:14px; color:#6b7684; }
+.pv-spec-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:12px 0 6px; }
+.pv-spec-top b { font-size:15px; font-weight:600; color:#111; min-width:0; }
+.pv-st { flex-shrink:0; font-size:12px; font-weight:600; border-radius:6px; padding:3px 7px; cursor:pointer; }
+.pv-st.need { background:#ffecec; color:#e5484d; }
+.pv-st.done { background:#e9f7ef; color:#1f8a4c; }
+.pv-sr { display:flex; gap:8px; padding:6px 0; border-top:1px solid #f2f4f6; font-size:13px; line-height:1.4; }
+.pv-sr span:first-child { width:68px; flex-shrink:0; color:#6b7684; font-weight:500; }
+.pv-sr span:last-child { min-width:0; color:#333; word-break:break-all; }
+.pv-sr a { color:#333; text-decoration:underline; }
+.pv-spec-link { width:100%; margin-top:6px; height:36px; border:none; border-radius:10px; background:#f2f4f6; font:inherit; font-size:13px; color:#4e5968; cursor:pointer; }
 .pv-spec-it { cursor:pointer; align-items:center; }
 .pv-spec-th { width:48px; height:48px; flex-shrink:0; border-radius:10px; background:#f2f4f6; object-fit:cover; display:flex; align-items:center; justify-content:center; color:#b0b8c1; font-size:20px; }
 .pv-spec-it > .pv-spec-t { flex:1; min-width:0; }
@@ -15837,7 +15851,7 @@ let _planBuy = 'all';
 function _planSetBuy(k) { _planBuy = k; _renderPlanView(true); }
 function _planSpecHtml(zone) {
   if (!_estSeedAllowed(getProject())) return '';
-  const proj = getProject(), data = proj.specData || {};
+  const proj = getProject(), data = proj.specData || {}, pm = _planGet(proj), edit = canEdit();
   const all = [...PLAN_SPEC.map((i, x) => ({ ...i, key: 's' + x, st0: (i.st === 'need' || i.st === 'check') ? 'need' : 'done', note: i.st === 'check' ? `발주 전 ${i.t} 체크` : i.st === 'own' ? '보유' : (i.t || '') })),
     ..._getFurnitureItems().filter(it => PLAN_APPLIANCE.includes(it.category)).map(it => ({ c: 'appl', n: it.name || it.category || '', m: it.category || '', s: '', q: it.qty > 1 ? it.qty + 'EA' : '', b: 'me', key: 'f' + it.id, zonable: true, st0: _getFurnitureStatus(it) === '미선택' ? 'need' : 'done', img0: it.imageUrl, link0: it.link || it.url }))];
   all.forEach(i => { const d = data[i.key] || {}; i.st1 = d.st || i.st0; i.link = d.link || i.link0 || ''; i.img = d.img || i.img0 || ''; i.zs = d.zones || i.z; });
@@ -15849,9 +15863,27 @@ function _planSpecHtml(zone) {
   const n = k => inZone.filter(i => k === 'all' || i.st1 === k).length;
   const sec = [['floor', '바닥'], ['wall', '벽지'], ['door', '문·몰딩'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['bath', '욕실'], ['etc', '기타']].map(([c, l]) => {
     const it = list.filter(i => i.c === c); if (!it.length) return '';
-    return `<div class="pv-spec-card"><div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it" onclick="_specEdit('${i.key}')">${i.img ? `<img class="pv-spec-th" src="${esc(i.img)}" alt="">` : '<div class="pv-spec-th">+</div>'}<div class="pv-spec-t"><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q, i.note, i.b === 'me' ? '내가 구매' : '시공사 구매', i.zonable && !(i.zs || []).length ? '구역 미지정' : ''].filter(Boolean).join(' · '))}</small>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">제품 링크</a>` : ''}</div><div class="pv-spec-r"><span class="${i.st1}">${i.st1 === 'need' ? '선택 필요' : '선택 완료'}</span></div></div>`).join('') + '</div>';
+    return `<div class="pv-spec-h">${l}</div><div class="pv-spec-grid">` + it.map(i => {
+      const sup = _planSupplier(i), url = i.link || sup.url || '', names = (i.zs || []).map(id => pm.zones.find(q => q.id === id)?.name).filter(Boolean).join(', ') || '도면 참고';
+      const row = (k, v) => v ? `<div class="pv-sr"><span>${k}</span><span>${v}</span></div>` : '';
+      return `<div class="pv-spec-item">
+        ${i.img ? `<img class="pv-spec-img" src="${esc(i.img)}" alt="" onclick="_specEdit('${i.key}')">` : `<div class="pv-spec-img pv-spec-add" onclick="_specEdit('${i.key}')">${edit ? '＋ 이미지 추가' : '이미지 없음'}</div>`}
+        <div class="pv-spec-top"><b>${esc(i.n)}</b><span class="pv-st ${i.st1}" onclick="_specEdit('${i.key}')">${i.st1 === 'need' ? '선택 필요' : '선택 완료'}</span></div>
+        ${row('위치', esc(names))}${row('모델명', esc(i.m))}${row('크기 / 마감', esc(i.s))}${row('물량', esc(i.q))}${row('구매', i.b === 'me' ? '내가 구매' : '시공사 구매')}${row('공급사', esc(sup.name || ''))}${row('비고', esc(i.note))}
+        ${url ? row('링크', `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url.replace(/^https?:\/\//, ''))}</a>`) : edit ? `<button class="pv-spec-link" onclick="_specEdit('${i.key}')">＋ 링크 추가</button>` : ''}
+      </div>`;
+    }).join('') + '</div>';
   }).join('');
-  return `<div class="pv-spec"><div class="pv-spec-f">${[['all', '전체'], ['need', '선택 필요'], ['done', '선택 완료']].map(([k, l]) => `<button class="${_planBuy === k ? 'on' : ''}" onclick="_planSetBuy('${k}')">${l} ${n(k)}</button>`).join('')}</div>${sec || '<div class="pv-spec-e">이 구역에 해당하는 항목이 없어요</div>'}</div>`;
+  return `<div class="pv-spec">${sec || '<div class="pv-spec-e">이 구역에 해당하는 항목이 없어요</div>'}</div>`;
+}
+function _planSupplier(i) {
+  const n = i.n, S = 'https://smartstore.naver.com/';
+  if (['매입등', '방습 매입등', 'LED BAR', '센서'].includes(n)) return { name: '(주) 플라베어', url: S + 'ahnsshop' };
+  if (n === '직부등') return { name: '네모조명', url: 'https://nemoline.co.kr/161' };
+  if (n === '매입 센서등') return { name: '엘엠전기조명', url: S + 'lmlighting' };
+  if (/타일/.test(n)) return { name: '타일뱅크' };
+  if (/마루$/.test(n)) return { name: '마루포유' };
+  return {};
 }
 // 제품 카드 편집: proj.specData[key] = { st, link, img, zones, at } — 키별 최신값 병합
 function _specMerge(a, b) { const o = { ...(a || {}) }; Object.entries(b || {}).forEach(([k, v]) => { if (!o[k] || (v.at || 0) > (o[k].at || 0)) o[k] = v; }); return o; }
