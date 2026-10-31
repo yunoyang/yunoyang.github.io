@@ -15843,10 +15843,10 @@ function _planSpecHtml(zone) {
   window._specItems = all;
   // 콘센트·스위치는 도면 포인트 개수로 구역별 수량 표시, 없는 구역에선 숨김
   const cnt = _planZoneStats(_planGet(proj), zone).counts, PT = { '2구 콘센트': 'outlet', '방우형 2구 콘센트': 'wet', 'TV 콘센트': 'tv', '2구 스위치': 'sw', '1구 스위치': 'sw' };
-  const inZone = all.filter(i => !i.zs || !i.zs.length || i.zs.includes(zone.id)).filter(i => !PT[i.n] || cnt[PT[i.n]]).map(i => PT[i.n] ? { ...i, s: '', q: i.n === '1구 스위치' ? '전체 1EA' : i.n === '2구 스위치' ? `스위치 ${cnt.sw}EA(구수 확인)` : cnt[PT[i.n]] + 'EA' } : i);
+  const inZone = all.filter(i => i.c !== 'appl').filter(i => !i.zs || !i.zs.length || i.zs.includes(zone.id)).filter(i => !PT[i.n] || cnt[PT[i.n]]).map(i => PT[i.n] ? { ...i, s: '', q: i.n === '1구 스위치' ? '전체 1EA' : i.n === '2구 스위치' ? `스위치 ${cnt.sw}EA(구수 확인)` : cnt[PT[i.n]] + 'EA' } : i);
   const list = inZone.filter(i => _planBuy === 'all' || i.st1 === _planBuy);
   const n = k => inZone.filter(i => k === 'all' || i.st1 === k).length;
-  const sec = [['floor', '바닥'], ['wall', '벽지'], ['door', '문·몰딩'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['bath', '욕실'], ['etc', '기타'], ['appl', '가전']].map(([c, l]) => {
+  const sec = [['floor', '바닥'], ['wall', '벽지'], ['door', '문·몰딩'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['bath', '욕실'], ['etc', '기타']].map(([c, l]) => {
     const it = list.filter(i => i.c === c); if (!it.length) return '';
     return `<div class="pv-spec-card"><div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it" onclick="_specEdit('${i.key}')">${i.img ? `<img class="pv-spec-th" src="${esc(i.img)}" alt="">` : '<div class="pv-spec-th">+</div>'}<div class="pv-spec-t"><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q, i.note, i.b === 'me' ? '내가 구매' : '시공사 구매', i.zonable && !(i.zs || []).length ? '구역 미지정' : ''].filter(Boolean).join(' · '))}</small>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">제품 링크</a>` : ''}</div><div class="pv-spec-r"><span class="${i.st1}">${i.st1 === 'need' ? '선택 필요' : '선택 완료'}</span></div></div>`).join('') + '</div>';
   }).join('');
