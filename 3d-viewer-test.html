@@ -156,7 +156,7 @@ if (new URLSearchParams(location.search).get('embed') === 'app') document.body.c
 
 // 모바일(터치 기기)에서는 보기만 가능하고, PC에서만 재질/가구 편집·저장이 가능하게 함
 // (재질 편집·가구 배치의 모바일 지원은 추후 업데이트)
-const isEditable = !(window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+const isEditable = !document.body.classList.contains('embed-app') && !(window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 if (!isEditable) {
   document.body.classList.add('view-only');
   const panel = document.getElementById('panel');
