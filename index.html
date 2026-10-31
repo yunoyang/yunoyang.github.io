@@ -2309,6 +2309,7 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .iv-basic-edit { display:none; width:100%; height:52px; margin-top:12px; border:none; border-radius:16px; background:#111; color:#fff; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; }
 #form-view-panel[data-ivtab="basic"] .iv-basic-edit { display:block; }
 #form-notif-btn { display:none; }
+#form-notif-btn .notif-badge { display:none !important; }
 body.vs2-info #screen-form #form-view-actions { display:none !important; }
 body.vs2-info #form-notif-btn[data-on="1"] { display:block; position:relative; order:9; margin-left:auto; margin-right:-6px; background:none; border:none; padding:0; width:40px; height:40px; cursor:pointer; }
 body.vs2-info #screen-form #form-title { order:1; }
@@ -4484,7 +4485,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <div class="form-screen-inner">
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
-      <button id="form-notif-btn" class="notif-btn2" onclick="openNotifPanel()" title="알림" aria-label="알림"><svg width="40" height="40" viewBox="14 13.5 40 40" fill="none"><path d="M26.1592 37.6774C27.1183 36.5831 27.6471 35.1777 27.6471 33.7226V30.443C27.6471 27.1208 29.9765 24.4027 33.4706 24H34.5294C38.0235 24.4027 40.3529 27.1208 40.3529 30.443V33.7226C40.3529 35.1777 40.8817 36.5831 41.8408 37.6774L43 39H25L26.1592 37.6774Z" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 41.8999C32.64 43.2332 35.36 43.2332 36 41.8999" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notif-badge" style="display:none;"></span></button>
+      <button id="form-notif-btn" class="notif-btn2" onclick="openShareDialog()" title="공유" aria-label="공유"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 22V10M15.5 14.5 20 10l4.5 4.5"/><path d="M13 19v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg><span class="notif-badge" style="display:none;"></span></button>
       <h2 id="form-title" onclick="if(document.body.classList.contains('vs2-info'))goTo('landing')">공사 정보</h2>
       <div id="form-view-actions" style="display:none;align-items:center;gap:2px;margin-left:auto;">
         <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정" style="margin-left:0;">
