@@ -4428,7 +4428,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
       <!-- 프로젝트명 (클릭 시 상세정보 접기/펴기) — 상세정보 전체를 카드 하나로, 섹션 사이는 구분선만 -->
       <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
-      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="est" onclick="_ivTab('est')">견적</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button><button data-k="basic" onclick="_ivTab('basic')">기본정보</button></div>
+      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button><button data-k="basic" onclick="_ivTab('basic')">기본정보</button></div>
       <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
       <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
       <div class="info-view-card" id="iv-basic-card" style="overflow:visible;">
@@ -11682,7 +11682,7 @@ function _vs2Phases(proj) {
   list.forEach(x => { x.status = x === cur ? 'current' : (x.done ? 'done' : 'todo'); });
   return list;
 }
-function _vs2GoEstimate() { const fp = document.getElementById('form-view-panel'); if (fp) fp.dataset.ivtab = 'est'; goTo('form'); setTimeout(() => _ivTab('est'), 60); }
+function _vs2GoEstimate() { if (_estGet(getProject())) openEstimate(); else if (canEdit()) _estCreate(false); else showToastMessage('아직 등록된 견적이 없어요'); }
 function _vs2RenderOverview() {
   const el = document.getElementById('vs2-overview'); const proj = getProject(); if (!el || !proj) return;
   let total = 0; const companies = new Set();
