@@ -18881,28 +18881,20 @@ async function generateExportLink(btn) {
   btn.innerHTML = origHtml;
 }
 
-// ===== 공사정보 공유: 도면·구역·자재 스냅샷을 vb_exports에 저장 (로그인 없이 ?export=id로 열람) =====
+// ===== 공사정보 공유: 도면·구역 사이즈 스냅샷을 vb_exports에 저장 (로그인 없이 ?export=id로 열람) =====
 // 금액·견적·공정 기록·연락처·상세주소는 넣지 않음
 function _infoShareHtml(proj) {
   const pm = _planGet(proj), f = proj.form || {}, SITE = 'https://vibespacekorea.com/';
   const one = v => Array.isArray(v) ? v[0] : v;
   const row = (k, v) => v ? `<div style="display:flex;gap:12px;padding:8px 0;border-top:1px solid #f2f4f6;font-size:14px;"><span style="width:72px;flex-shrink:0;color:#6b7684;">${k}</span><span style="color:#333;word-break:break-all;">${esc(String(v))}</span></div>` : '';
   const h = t => `<h2 style="font-size:18px;font-weight:600;color:#111;margin:28px 0 10px;">${t}</h2>`;
-  const item = i => `<div style="padding:12px 0;border-top:1px solid #f2f4f6;display:flex;gap:12px;">${i.img ? `<img src="${esc(i.img)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;">` : ''}<div style="min-width:0;"><div style="font-size:15px;font-weight:600;color:#111;">${esc(i.n)}</div><div style="font-size:13px;color:#6b7684;line-height:1.5;">${esc([i.m, i.s, i.q].filter(Boolean).join(' · '))}</div>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" style="font-size:13px;color:#333;">제품 링크</a>` : ''}</div></div>`;
   let body = `<h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px;">${esc(proj.name || '공사정보')}</h1>` +
     row('주택 유형', one(f.type)) + row('평수', one(f.size)) + row('공사 기간', f.startDate ? `${f.startDate} ~ ${f.endDate || '미정'}` : '') + row('지역', f.address);
   if (pm) {
     (pm.layers || []).forEach(l => { body += h(esc(l.label)) + `<img src="${esc(/^https?:/.test(l.src) ? l.src : SITE + l.src)}" alt="${esc(l.label)}" style="display:block;width:100%;height:auto;">`; });
     body += `<a href="${SITE}3d-viewer-test.html?embed=app${_fpv3dModelParam()}" target="_blank" rel="noopener" style="display:block;margin-top:16px;padding:14px;border-radius:12px;background:#111;color:#fff;text-align:center;font-size:15px;font-weight:600;text-decoration:none;">3D로 보기</a>`;
-    if (pm.zones[0]) _planSpecHtml(pm.zones[0]);
-    const items = (window._specItems || []).filter(i => i.c !== 'appl');
-    body += h('구역별 자재');
-    pm.zones.forEach(z => {
-      const st = _planZoneStats(pm, z), list = items.filter(i => (i.zs || []).includes(z.id));
-      body += `<h3 style="font-size:16px;font-weight:600;color:#111;margin:22px 0 2px;">${esc(z.name)}</h3><div style="font-size:13px;color:#6b7684;margin-bottom:8px;">바닥 ${st.area.toFixed(1)}㎡ · ${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}m · 둘레 ${st.perim.toFixed(1)}m</div>${list.map(item).join('')}`;
-    });
-    const common = items.filter(i => !(i.zs || []).length);
-    if (common.length) body += `<h3 style="font-size:16px;font-weight:600;color:#111;margin:22px 0 8px;">공통 (도면 참고)</h3>${common.map(item).join('')}`;
+    body += h('구역별 사이즈');
+    pm.zones.forEach(z => { const st = _planZoneStats(pm, z); body += row(esc(z.name), `바닥 ${st.area.toFixed(1)}㎡ · ${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}m · 둘레 ${st.perim.toFixed(1)}m`); });
   }
   return `<div style="max-width:720px;margin:0 auto;padding:24px 20px 60px;background:#fff;font-family:inherit;">${body}</div>`;
 }
@@ -18925,7 +18917,7 @@ function _infoShareSheet(url, title) {
   document.getElementById('pv-pick')?.remove();
   const ov = document.createElement('div'); ov.id = 'pv-pick';
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
-  ov.innerHTML = `<div class="pv-pick-in spec-ed"><div class="pv-pick-hd">공사정보 공유</div><div style="font-size:14px;color:#6b7684;line-height:1.5;">링크를 받은 사람은 로그인 없이 도면과 구역별 자재를 볼 수 있어요. 금액은 포함되지 않아요.</div><label class="t">링크</label><input type="url" readonly value="${esc(url)}" onclick="this.select()"><button class="save" id="info-share-go">공유하기</button></div>`;
+  ov.innerHTML = `<div class="pv-pick-in spec-ed"><div class="pv-pick-hd">공사정보 공유</div><div style="font-size:14px;color:#6b7684;line-height:1.5;">링크를 받은 사람은 로그인 없이 도면과 구역별 사이즈를 볼 수 있어요. 금액은 포함되지 않아요.</div><label class="t">링크</label><input type="url" readonly value="${esc(url)}" onclick="this.select()"><button class="save" id="info-share-go">공유하기</button></div>`;
   document.body.appendChild(ov);
   const go = document.getElementById('info-share-go');
   go.onclick = async () => {
