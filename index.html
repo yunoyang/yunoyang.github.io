@@ -2067,14 +2067,14 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-body { overflow:visible !important; }
 #plan-view.pv-inline .pv-left, #plan-view.pv-inline .pv-right { padding-left:0 !important; padding-right:0 !important; }
 #plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
-#plan-view.pv-inline .pv-stage { height:72vh; touch-action:pan-y; }
+#plan-view.pv-inline .pv-stage { height:auto; min-height:0; aspect-ratio:var(--pv-ar, 1); touch-action:pan-y; }
 #plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
 #plan-view.pv-inline .pv-row, #plan-view.pv-inline .pv-sumtbl, #plan-view.pv-inline .pv-srcnote { display:none; }
 #plan-view.pv-inline .pv-dds-top { display:none; }
 @media (min-width:900px) {
-  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:stretch; gap:16px; }
-  #plan-view.pv-inline .pv-left { flex:1.3 1 0; padding:0 !important; }
-  #plan-view.pv-inline .pv-stage { height:auto; flex:1; min-height:72vh; }
+  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:flex-start; gap:16px; }
+  #plan-view.pv-inline .pv-left { flex:1.3 1 0; padding:0 !important; position:sticky; top:64px; }
+  #plan-view.pv-inline .pv-stage { height:auto; flex:none; }
   #plan-view.pv-inline .pv-right { flex:1 1 0; width:auto; padding-top:0 !important; }
 }
 #form-view-panel #iv-fp-sub button[data-k] { display:none; }
@@ -2086,7 +2086,7 @@ button, input, textarea, select { font-family:var(--font); }
 .iv-fp-3d-full .pv-ov { display:none; }
 #plan-view.pv-inline .pv-chips { display:none; }
 #form-view-panel[data-fpsub="3d"] .pv-left > :not(#iv-fp-3d-wrap) { display:none !important; }
-#form-view-panel[data-ivtab="fp"][data-fpsub="3d"] .pv-left #iv-fp-3d-wrap { flex:1; height:auto !important; min-height:72vh; aspect-ratio:auto; margin:0; width:100%; border-radius:16px; }
+#form-view-panel[data-ivtab="fp"][data-fpsub="3d"] .pv-left #iv-fp-3d-wrap { flex:none; height:auto !important; min-height:0; aspect-ratio:var(--pv-ar, 1); margin:0; width:100%; border-radius:16px; }
 .pv-pts { position:absolute; left:10px; top:58px; z-index:4; display:flex; flex-direction:column; gap:6px; }
 .pv-pts button { width:36px; height:36px; display:flex; align-items:center; justify-content:center; padding:0; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); cursor:pointer; }
 .pv-spec { margin-top:0; }
@@ -15872,6 +15872,7 @@ function _renderPlanView(keepScroll) {
   const ptRows = Object.keys(PLAN_PT).filter(t => st.counts[t]).map(t => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;"><i style="width:8px;height:8px;border-radius:50%;background:${PLAN_PT[t].c};display:inline-block;"></i>${PLAN_PT[t].l} ${st.counts[t]}</span>`).join('') || '—';
   const lightRows = (Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join('<br>') + (z.fan ? `<br>씰링팬 ${z.fan}` : '')) || '—';
   const layers = pm.layers || [], hasImg = layers.length && pm.imgBox;
+  ov.style.setProperty('--pv-ar', hasImg ? pm.imgBox.w + '/' + pm.imgBox.h : (pm.width + 300) + '/' + (pm.height + 300));
   ov.innerHTML = `
   <div class="pv-hd">
     <button class="back-btn pv-back" onclick="_closePlanView()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
