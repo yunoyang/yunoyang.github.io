@@ -2078,7 +2078,11 @@ button, input, textarea, select { font-family:var(--font); }
   #plan-view.pv-inline .pv-right { flex:1 1 0; width:auto; padding-top:0 !important; }
 }
 #form-view-panel #iv-fp-sub { display:none; }
-.pv-ov-ver { width:36px; padding:0; justify-content:center; }
+.pv-ov-ver { width:36px; padding:0; justify-content:center; order:3; margin-left:auto; flex-shrink:0; }
+.pv-ov { right:10px; }
+.pv-ov .pv-mode { flex:0 0 50%; box-sizing:border-box; }
+.pv-ov .pv-mode button { flex:1; font-size:15px; }
+.pv-ov-dd { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .pv-ov { position:absolute; top:10px; left:10px; z-index:4; display:flex; align-items:center; gap:6px; }
 .pv-mode { display:flex; padding:3px; background:rgba(255,255,255,.94); border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.12); }
 .pv-mode button { border:none; background:none; padding:6px 12px; border-radius:8px; font:inherit; font-size:13px; font-weight:500; color:#6b7684; cursor:pointer; }
