@@ -14196,7 +14196,7 @@ function _ivSwitchFpTab(tab) {
 function _ivFp3dSrc(link, full) {
   if (!/3d-viewer-test\.html/.test(link)) return link;
   // 공사정보 3D 탭에선 전체 UI(재질·가구·조명)를 모바일 최적화 레이아웃으로 바로 보여줌
-  return link.split('?')[0] + (full ? '?x=1' : '?embed=app') + _fpv3dModelParam();
+  return link.split('?')[0] + (full ? '?x=1' : '?embed=app') + '&v=' + Date.now() + _fpv3dModelParam(); // v: 뷰어 페이지 캐시 방지
 }
 function _ivToggleFp3dFull(force) {
   const wrap = document.getElementById('iv-fp-3d-wrap');
