@@ -2069,6 +2069,27 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
 #plan-view.pv-inline .pv-stage { height:56vh; touch-action:pan-y; }
 #plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
+#plan-view.pv-inline .pv-row, #plan-view.pv-inline .pv-sumtbl, #plan-view.pv-inline .pv-srcnote { display:none; }
+@media (min-width:900px) {
+  #plan-view.pv-inline .pv-body { flex-direction:row-reverse; gap:16px; }
+  #plan-view.pv-inline .pv-left { padding:0 !important; }
+  #plan-view.pv-inline .pv-right { padding-top:0 !important; }
+}
+.pv-spec { margin-top:20px; }
+.pv-spec-f { display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; }
+.pv-spec-f button { flex-shrink:0; border:none; background:#f2f4f6; color:#4e5968; border-radius:999px; padding:8px 14px; font:inherit; font-size:14px; font-weight:500; cursor:pointer; }
+.pv-spec-f button.on { background:#111; color:#fff; }
+.pv-spec-h { font-size:14px; font-weight:600; color:#6b7684; padding:16px 0 6px; }
+.pv-spec-it { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #f2f4f6; }
+.pv-spec-it > div:first-child { min-width:0; }
+.pv-spec-it b { display:block; font-size:15px; font-weight:600; color:#111; }
+.pv-spec-it small { display:block; margin-top:2px; font-size:13px; color:#6b7684; line-height:1.45; }
+.pv-spec-r { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.pv-spec-r span { font-size:12px; font-weight:600; border-radius:6px; padding:3px 7px; background:#f2f4f6; color:#333d4b; }
+.pv-spec-r span.me { background:#111; color:#fff; }
+.pv-spec-r em { font-style:normal; font-size:12px; font-weight:500; color:#6b7684; }
+.pv-spec-r em.need { color:#e5484d; }
+.pv-spec-e { padding:24px 0; text-align:center; font-size:14px; color:#8b95a1; }
 .pv-dds { display:flex; gap:8px; }
 .pv-dd { flex:1; min-width:0; display:flex; align-items:center; gap:6px; height:44px; padding:0 12px; border:1px solid #e5e8eb; border-radius:10px; background:#fff; font-family:inherit; cursor:pointer; color:#333d4b; }
 .pv-dd small { font-size:12px; color:#8b95a1; flex-shrink:0; }
@@ -15702,6 +15723,52 @@ function _planBindStage() {
   stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
   stage.addEventListener('dblclick', () => _planZoomReset());
 }
+// 스펙북(정자동 우성 311-205) 자재 — 프로젝트 데이터가 아닌 기본값. 공급사 연락처는 공개 저장소라 넣지 않음
+// buy: me=내가 구매(클라이언트 발주·직영시공), con=시공사 구매 / st: need=선택 필요, check=발주 전 현장 체크, own=보유
+const PLAN_SPEC_ROOMS = ['z1', 'z2', 'z4', 'z5', 'z8', 'z9', 'z10', 'z11'];
+const PLAN_SPEC = [
+  { c: 'floor', n: '합판마루', m: '구정마루 브러쉬골드_티크스카치', s: '115×900×7.5', q: '61.9㎡', b: 'me', z: ['z1', 'z4', 'z5', 'z8', 'z10', 'z11'] },
+  { c: 'floor', n: '강마루', m: '구정마루 마블러스젠_샌드테라조', s: '597×597×8.7', q: '18.93㎡', b: 'me', z: ['z2', 'z3'] },
+  { c: 'floor', n: '욕실 바닥 타일', m: '66046', s: '600×600', q: '6.66㎡', b: 'con', z: ['z6', 'z7'], st: 'need', t: '메지 컬러' },
+  { c: 'floor', n: '세탁실·발코니 바닥 타일', m: '61274', s: '600×600', q: '4.52㎡', b: 'con', z: ['z3', 'z12'], st: 'need', t: '메지 컬러' },
+  { c: 'floor', n: '현관 바닥 타일', m: 'ZELL CARBONE 유광', s: '100×100', q: '2.08㎡', b: 'con', z: ['z9'], st: 'need', t: '메지 컬러' },
+  { c: 'floor', n: '현관 바닥 타일', m: 'TETRIS SAND MATT', s: '50×200', q: '2.08㎡', b: 'con', z: ['z9'], st: 'need', t: '메지 컬러' },
+  { c: 'wall', n: '벽지', m: '신한벽지 파사드 2203-1', s: '벽·천정', q: '240㎡', b: 'me', z: PLAN_SPEC_ROOMS },
+  { c: 'wall', n: '욕실 벽 타일', m: '61274', s: '600×1200', q: '24.77㎡', b: 'con', z: ['z6', 'z7'], st: 'need', t: '메지 컬러' },
+  { c: 'wall', n: '탄성코트', m: '네오케미칼 세라믹-C 진주', s: '벽·천정', q: '', b: 'me', z: ['z3', 'z12'] },
+  { c: 'outlet', n: '2구 콘센트', m: '', s: '도면 참고', q: '19EA', b: 'me', st: 'need' },
+  { c: 'outlet', n: '방우형 2구 콘센트', m: '', s: '도면 참고', q: '6EA', b: 'me', st: 'need' },
+  { c: 'outlet', n: 'TV 콘센트', m: '', s: '도면 참고', q: '3EA', b: 'me', st: 'need' },
+  { c: 'outlet', n: '2구 스위치', m: '', s: '도면 참고', q: '6EA', b: 'me', st: 'need' },
+  { c: 'outlet', n: '1구 스위치', m: '', s: '도면 참고', q: '1EA', b: 'me', st: 'need' },
+  { c: 'outlet', n: '스위치', m: '융 LS990 1구', s: '', q: '', b: 'me', z: ['z11'] },
+  { c: 'outlet', n: '스위치', m: '융 LS990 4구', s: '', q: '', b: 'me', z: ['z11'] },
+  { c: 'outlet', n: '콘센트', m: '융 LS990 3구', s: '', q: '', b: 'me', z: ['z11'] },
+  { c: 'light', n: '매입등', m: '누빔 슬림테3 75mm 다운라이트', s: 'Ø83 · LED 8W 4000K', q: '전체 29EA', b: 'me', z: ['z1', 'z2', 'z4', 'z8', 'z9', 'z10', 'z11'] },
+  { c: 'light', n: '방습 매입등', m: '남영전구 LED 64mm 방습 다운라이트', s: 'Ø70 · LED 5W 4000K', q: '전체 5EA', b: 'me', z: ['z6', 'z7'] },
+  { c: 'light', n: '펜던트', m: '', s: '', q: '', b: 'me', z: ['z2'], st: 'own' },
+  { c: 'light', n: 'LED BAR', m: '율빛 12V LED바 블럭바 간접조명', s: '3000K', q: '거실 4.5M · 안방 3.7M · 공용욕실 1.45M', b: 'me', z: ['z7', 'z10', 'z11'], st: 'check', t: '길이' },
+  { c: 'light', n: '벽등', m: '', s: '현관 벽', q: '1EA', b: 'me', z: ['z9'], st: 'need' },
+  { c: 'light', n: '벽등', m: '', s: '세면대 위', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'light', n: '직부등', m: 'PD3020', s: '1700×30 · 4000K', q: '전체 2EA', b: 'me', z: ['z3', 'z12'] },
+  { c: 'light', n: '매입 센서등', m: 'LED 매입센서등 COB 집중형 EL9199', s: 'Ø83 · 주백색', q: '1EA', b: 'me', z: ['z5'] },
+  { c: 'light', n: '센서', m: '텔트론 오토온미니 히든센서', s: '', q: '1EA', b: 'me', z: ['z9'] },
+  { c: 'light', n: '씰링팬', m: '', s: '크기에 따라 등간격 재확인', q: '전체 4EA', b: 'me', z: ['z1', 'z4', 'z10', 'z11'], st: 'need' },
+];
+let _planBuy = 'all';
+function _planSetBuy(k) { _planBuy = k; _renderPlanView(true); }
+function _planSpecHtml(zone) {
+  if (!_estSeedAllowed(getProject())) return '';
+  const inZone = PLAN_SPEC.filter(i => !i.z || i.z.includes(zone.id));
+  const list = inZone.filter(i => _planBuy === 'all' || i.b === _planBuy);
+  const n = k => inZone.filter(i => k === 'all' || i.b === k).length;
+  const tag = i => i.st === 'need' ? `<em class="need">${i.t ? esc(i.t) + ' ' : ''}선택 필요</em>` : i.st === 'check' ? `<em class="need">발주 전 ${esc(i.t)} 체크</em>` : i.st === 'own' ? '<em>보유</em>' : '';
+  const sec = [['floor', '바닥 마감'], ['wall', '벽지·벽 마감'], ['outlet', '콘센트·스위치'], ['light', '조명']].map(([c, l]) => {
+    const it = list.filter(i => i.c === c); if (!it.length) return '';
+    return `<div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it"><div><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q].filter(Boolean).join(' · '))}</small></div><div class="pv-spec-r"><span class="${i.b}">${i.b === 'me' ? '내가 구매' : '시공사 구매'}</span>${tag(i)}</div></div>`).join('');
+  }).join('');
+  return `<div class="pv-spec"><div class="pv-spec-f">${[['all', '전체'], ['me', '내가 구매'], ['con', '시공사 구매']].map(([k, l]) => `<button class="${_planBuy === k ? 'on' : ''}" onclick="_planSetBuy('${k}')">${l} ${n(k)}</button>`).join('')}</div>${sec || '<div class="pv-spec-e">이 구역에 해당하는 항목이 없어요</div>'}</div>`;
+}
 function _renderPlanView(keepScroll) {
   const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
   const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
@@ -15732,16 +15799,16 @@ function _renderPlanView(keepScroll) {
         <div class="pv-kpi"><div><small>바닥 면적</small><b>${st.area.toFixed(1)}㎡</b><small>${(st.area / 3.3058).toFixed(1)}평</small></div><div><small>크기</small><b>${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}</b><small>m</small></div><div><small>둘레</small><b>${st.perim.toFixed(1)}m</b><small>벽 ${st.wall.toFixed(1)}㎡</small></div></div>
         ${row('치수', `${st.w.toLocaleString()} × ${st.h.toLocaleString()}mm`)}${row('천장고', ((z.ceiling || pm.ceiling) / 1000) + 'm')}${row('바닥 마감', esc(z.floor || '—'))}${row('전기', ptRows)}${row('조명', lightRows)}${row('문', doors.length ? doors.map(d => `${esc(d.type)} ${esc(d.size)}<br><span style="color:#999;font-size:12px;">${esc(d.spec || '')}</span>`).join('<br>') : '—')}
       </div>
-      <div class="pv-card" style="padding:4px 0;overflow-x:auto;">
+      <div class="pv-card pv-sumtbl" style="padding:4px 0;overflow-x:auto;">
         <table>
           <tr style="color:#888;"><th style="font-weight:500;">구역</th><th style="font-weight:500;">면적㎡</th><th style="font-weight:500;">둘레m</th><th style="font-weight:500;">콘센트</th><th style="font-weight:500;">조명</th><th style="font-weight:500;padding-right:14px;">스위치</th></tr>
           ${pm.zones.map(q => { const s = _planZoneStats(pm, q); return `<tr onclick="_planSelect('${q.id}')" style="cursor:pointer;border-top:1px solid #f2f2f2;${q.id === z.id ? 'background:#fff6ee;font-weight:600;' : ''}"><td>${esc(q.name)}</td><td>${s.area.toFixed(1)}</td><td>${s.perim.toFixed(1)}</td><td>${(s.counts.outlet || 0) + (s.counts.wet || 0)}</td><td>${s.lights}</td><td style="padding-right:14px;">${s.counts.sw || 0}</td></tr>`; }).join('')}
           <tr style="border-top:2px solid #eee;font-weight:700;"><td>합계</td><td>${total.toFixed(1)}</td><td></td><td>${(pm.points || []).filter(p => p.t === 'outlet' || p.t === 'wet').length}</td><td>${pm.zones.reduce((a, q) => a + _planZoneStats(pm, q).lights, 0)}</td><td style="padding-right:14px;">${(pm.points || []).filter(p => p.t === 'sw').length}</td></tr>
         </table>
       </div>
-      <div style="font-size:12px;color:#999;line-height:1.6;padding:0 4px;">${esc(pm.source || '')}. 면적은 벽 중심선 기준이라 실제 마감 면적과 차이가 있을 수 있어요.</div>
+      <div class="pv-srcnote" style="font-size:12px;color:#999;line-height:1.6;padding:0 4px;">${esc(pm.source || '')}. 면적은 벽 중심선 기준이라 실제 마감 면적과 차이가 있을 수 있어요.</div>
     </div>
-  </div>`;
+  </div>${ov.classList.contains('pv-inline') ? _planSpecHtml(z) : ''}`;
   _planBindStage(); _planApplyZoom();
   if (keepScroll) { const r = ov.querySelector('.pv-right'); if (r) r.scrollTop = rightScroll; const b = ov.querySelector('.pv-body'); if (b) b.scrollTop = bodyScroll; }
 }
