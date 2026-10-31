@@ -15800,6 +15800,35 @@ const PLAN_SPEC = [
   { c: 'light', n: '매입 센서등', m: 'LED 매입센서등 COB 집중형 EL9199', s: 'Ø83 · 주백색', q: '1EA', b: 'me', z: ['z5'] },
   { c: 'light', n: '센서', m: '텔트론 오토온미니 히든센서', s: '', q: '1EA', b: 'me', z: ['z9'] },
   { c: 'light', n: '씰링팬', m: '', s: '크기에 따라 등간격 재확인', q: '전체 4EA', b: 'me', z: ['z1', 'z4', 'z10', 'z11'], st: 'need' },
+  // 아래는 키(s+인덱스)가 밀리지 않도록 뒤에만 추가
+  { c: 'door', n: '방문 WD-01', m: '양방향 슬림 와이드 · 시트 영림 195', s: '핸들 YDH-017S · 경첩 · 스토퍼', q: '', b: 'con', z: ['z1', 'z4', 'z10'], st: 'need', t: '핸들' },
+  { c: 'door', n: '욕실·세탁실 문 WD-02', m: '발포 슬림 와이드 · 시트 영림 195', s: '핸들 YDH-017S · 경첩 · 스토퍼', q: '', b: 'con', z: ['z3', 'z6', 'z7'], st: 'need', t: '핸들' },
+  { c: 'door', n: '가마찌도어 WD-03', m: '라왕합판 제작', s: '경첩 4035SS · 문틀 스토퍼', q: '', b: 'con', z: ['z9'], st: 'need', t: '핸들(단종 모델)' },
+  { c: 'door', n: '타공도어 WD-04', m: '라왕합판 제작', s: '경첩 4035SS · 문틀 스토퍼', q: '', b: 'con', z: ['z12'], st: 'need', t: '핸들(단종 모델)' },
+  { c: 'door', n: '평몰딩 MD-01', m: 'MDF 평몰딩 30 · 영림 195', s: '30×9T 걸레받이·천장몰딩', q: '', b: 'con', z: PLAN_SPEC_ROOMS },
+  { c: 'bath', n: '점검구', m: '평돔형', s: '천정', q: '전체 2EA', b: 'con', z: ['z6', 'z7'] },
+  { c: 'bath', n: '천장 간접', m: '욕실간접 조명 박스 SMC-T5', s: '', q: '1EA', b: 'con', z: ['z7'] },
+  { c: 'bath', n: '유리 파티션', m: '투명 유리파티션', s: '600×1830', q: '1EA', b: 'con', z: ['z7'] },
+  { c: 'bath', n: '도어 씰', m: 'LG하우시스 하이막스 캔디화이트', s: '인조대리석', q: '', b: 'con', z: ['z6', 'z7'] },
+  { c: 'bath', n: '양변기', m: '', s: '', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '세면대', m: '', s: '벽체 연결 트랩·폽업 부속 포함', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '세면 수전', m: '', s: '', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'bath', n: '욕조 수전', m: '', s: '샤워헤드 슬라이드바 포함', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'bath', n: '욕조', m: '', s: '', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'bath', n: '샤워 겸용 세면 수전', m: '', s: '샤워헤드 슬라이드바 포함', q: '1EA', b: 'me', z: ['z6'], st: 'need' },
+  { c: 'bath', n: '욕조 선반', m: '', s: '', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'bath', n: '샤워 선반', m: '', s: '', q: '1EA', b: 'me', z: ['z7'], st: 'need' },
+  { c: 'bath', n: '수건걸이', m: '', s: '', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '휴지걸이', m: '', s: '', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '욕실장', m: '', s: '', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '육가', m: '', s: '', q: '각 1EA', b: 'me', z: ['z6', 'z7'], st: 'need' },
+  { c: 'bath', n: '환풍기', m: '힘펠 제로크 HV3-80X', s: '270×270×166', q: '1EA', b: 'me', z: ['z6'] },
+  { c: 'bath', n: '환풍기', m: '힘펠 휴젠뜨2', s: '477×313×149', q: '1EA', b: 'me', z: ['z7'] },
+  { c: 'etc', n: '세탁 육가', m: '', s: '', q: '각 1EA', b: 'con', z: ['z3', 'z12'] },
+  { c: 'etc', n: '세탁기용 수전', m: '대림바스 DL-G4243', s: '', q: '각 1EA', b: 'con', z: ['z3', 'z12'] },
+  { c: 'etc', n: '현관문 필름', m: '', s: '현관문·문틀', q: '', b: 'con', z: ['z9'], st: 'need' },
+  { c: 'etc', n: '도어락', m: '', s: '', q: '1EA', b: 'con', z: ['z9'], st: 'need' },
+  { c: 'etc', n: '월패드', m: '', s: '비디오폰', q: '1EA', b: 'con', z: ['z11'], st: 'need' },
 ];
 const PLAN_PT_ICON = { outlet: '<circle cx="12" cy="12" r="9"/><path d="M9 10v3M15 10v3"/>', wet: '<path d="M12 3s7 7.5 7 12a7 7 0 0 1-14 0c0-4.5 7-12 7-12z"/>', tv: '<rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/>', sw: '<rect x="6" y="3" width="12" height="18" rx="2"/><path d="M12 8v8"/>', panel: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>' };
 const PLAN_APPLIANCE = ['냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐'];
@@ -15809,14 +15838,15 @@ function _planSpecHtml(zone) {
   if (!_estSeedAllowed(getProject())) return '';
   const proj = getProject(), data = proj.specData || {};
   const all = [...PLAN_SPEC.map((i, x) => ({ ...i, key: 's' + x, st0: (i.st === 'need' || i.st === 'check') ? 'need' : 'done', note: i.st === 'check' ? `발주 전 ${i.t} 체크` : i.st === 'own' ? '보유' : (i.t || '') })),
-    // 조명·손잡이·욕실은 스펙 분류와 겹쳐 제외
-    ..._getFurnitureItems().filter(it => !['조명', '손잡이', '욕실'].includes(it.category)).map(it => ({ c: PLAN_APPLIANCE.includes(it.category) ? 'appl' : 'furn', n: it.name || it.category || '', m: it.category || '', s: '', q: it.qty > 1 ? it.qty + 'EA' : '', b: 'me', key: 'f' + it.id, zonable: true, st0: _getFurnitureStatus(it) === '미선택' ? 'need' : 'done', img0: it.imageUrl, link0: it.link || it.url }))];
+    ..._getFurnitureItems().filter(it => PLAN_APPLIANCE.includes(it.category)).map(it => ({ c: 'appl', n: it.name || it.category || '', m: it.category || '', s: '', q: it.qty > 1 ? it.qty + 'EA' : '', b: 'me', key: 'f' + it.id, zonable: true, st0: _getFurnitureStatus(it) === '미선택' ? 'need' : 'done', img0: it.imageUrl, link0: it.link || it.url }))];
   all.forEach(i => { const d = data[i.key] || {}; i.st1 = d.st || i.st0; i.link = d.link || i.link0 || ''; i.img = d.img || i.img0 || ''; i.zs = d.zones || i.z; });
   window._specItems = all;
-  const inZone = all.filter(i => !i.zs || !i.zs.length || i.zs.includes(zone.id));
+  // 콘센트·스위치는 도면 포인트 개수로 구역별 수량 표시, 없는 구역에선 숨김
+  const cnt = _planZoneStats(_planGet(proj), zone).counts, PT = { '2구 콘센트': 'outlet', '방우형 2구 콘센트': 'wet', 'TV 콘센트': 'tv', '2구 스위치': 'sw', '1구 스위치': 'sw' };
+  const inZone = all.filter(i => !i.zs || !i.zs.length || i.zs.includes(zone.id)).filter(i => !PT[i.n] || cnt[PT[i.n]]).map(i => PT[i.n] ? { ...i, s: '', q: i.n === '1구 스위치' ? '전체 1EA' : i.n === '2구 스위치' ? `스위치 ${cnt.sw}EA(구수 확인)` : cnt[PT[i.n]] + 'EA' } : i);
   const list = inZone.filter(i => _planBuy === 'all' || i.st1 === _planBuy);
   const n = k => inZone.filter(i => k === 'all' || i.st1 === k).length;
-  const sec = [['floor', '바닥'], ['wall', '벽지'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['furn', '가구'], ['appl', '가전']].map(([c, l]) => {
+  const sec = [['floor', '바닥'], ['wall', '벽지'], ['door', '문·몰딩'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['bath', '욕실'], ['etc', '기타'], ['appl', '가전']].map(([c, l]) => {
     const it = list.filter(i => i.c === c); if (!it.length) return '';
     return `<div class="pv-spec-card"><div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it" onclick="_specEdit('${i.key}')">${i.img ? `<img class="pv-spec-th" src="${esc(i.img)}" alt="">` : '<div class="pv-spec-th">+</div>'}<div class="pv-spec-t"><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q, i.note, i.b === 'me' ? '내가 구매' : '시공사 구매', i.zonable && !(i.zs || []).length ? '구역 미지정' : ''].filter(Boolean).join(' · '))}</small>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">제품 링크</a>` : ''}</div><div class="pv-spec-r"><span class="${i.st1}">${i.st1 === 'need' ? '선택 필요' : '선택 완료'}</span></div></div>`).join('') + '</div>';
   }).join('');
