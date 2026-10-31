@@ -2090,6 +2090,7 @@ button, input, textarea, select { font-family:var(--font); }
 .pv-ov-dd { display:flex; align-items:center; gap:3px; height:36px; padding:0 10px; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); font:inherit; font-size:13px; font-weight:500; color:#111; cursor:pointer; }
 .iv-fp-3d-full .pv-ov { display:none; }
 #plan-view.pv-inline .pv-chips { display:none; }
+#plan-view.pv-inline .pv-stage { background:transparent; border-radius:0; border:none; box-shadow:none; }
 #plan-view.pv-inline .pv-inner { inset:56px 58px 20px 20px; }
 @media (max-width:599px) {
   #plan-view.pv-inline .pv-pts { bottom:112px; gap:4px; }
@@ -2098,7 +2099,7 @@ button, input, textarea, select { font-family:var(--font); }
   #plan-view.pv-inline .pv-inner { inset:56px 48px 20px 20px; }
 }
 #form-view-panel[data-fpsub="3d"] .pv-left > :not(#iv-fp-3d-wrap) { display:none !important; }
-#form-view-panel[data-ivtab="fp"][data-fpsub="3d"] .pv-left #iv-fp-3d-wrap { flex:none; height:auto !important; min-height:0; aspect-ratio:var(--pv-ar, 1); margin:0; width:100%; border-radius:16px; }
+#form-view-panel[data-ivtab="fp"][data-fpsub="3d"] .pv-left #iv-fp-3d-wrap { flex:none; height:auto !important; min-height:0; aspect-ratio:var(--pv-ar, 1); margin:0; width:100%; border-radius:0; }
 .pv-pts { position:absolute; right:10px; bottom:142px; z-index:4; display:flex; flex-direction:column; gap:6px; }
 .pv-pts button { width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); cursor:pointer; }
 .pv-spec { margin-top:0; }
