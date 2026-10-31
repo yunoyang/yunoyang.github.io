@@ -18891,8 +18891,14 @@ function _infoShareHtml(proj) {
   let body = `<h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px;">${esc(proj.name || '공사정보')}</h1>` +
     row('주택 유형', one(f.type)) + row('평수', one(f.size)) + row('공사 기간', f.startDate ? `${f.startDate} ~ ${f.endDate || '미정'}` : '') + row('지역', f.address);
   if (pm) {
-    (pm.layers || []).forEach(l => { body += h(esc(l.label)) + `<img src="${esc(/^https?:/.test(l.src) ? l.src : SITE + l.src)}" alt="${esc(l.label)}" style="display:block;width:100%;height:auto;">`; });
-    body += `<a href="${SITE}3d-viewer-test.html?embed=app${_fpv3dModelParam()}" target="_blank" rel="noopener" style="display:block;margin-top:16px;padding:14px;border-radius:12px;background:#111;color:#fff;text-align:center;font-size:15px;font-weight:600;text-decoration:none;">3D로 보기</a>`;
+    // 스냅샷은 innerHTML로 들어가 <script>가 안 돌므로 인라인 핸들러로 평면/3D·도면 전환
+    const layers = (pm.layers || []).map(l => ({ label: l.label, src: /^https?:/.test(l.src) ? l.src : SITE + l.src }));
+    const ar = pm.imgBox ? pm.imgBox.w + '/' + pm.imgBox.h : '1';
+    const tabCss = on => `flex:1;height:40px;border:none;border-radius:8px;font:inherit;font-size:15px;cursor:pointer;background:${on ? '#111' : 'transparent'};color:${on ? '#fff' : '#6b7684'};`;
+    const sw = is3d => `var p=document.getElementById('vsp-plan'),f=document.getElementById('vsp-3d'),a=document.getElementById('vsp-t2'),b=document.getElementById('vsp-t3'),d=document.getElementById('vsp-sel');${is3d ? `if(!f.getAttribute('src'))f.setAttribute('src',f.dataset.src);` : ''}p.style.display='${is3d ? 'none' : 'block'}';f.style.display='${is3d ? 'block' : 'none'}';if(d)d.style.display='${is3d ? 'none' : 'block'}';(${is3d} ? b : a).style.background='#111';(${is3d} ? b : a).style.color='#fff';(${is3d} ? a : b).style.background='transparent';(${is3d} ? a : b).style.color='#6b7684';`;
+    body += `<div style="display:flex;gap:8px;align-items:center;margin:24px 0 12px;"><div style="flex:0 0 50%;display:flex;padding:3px;background:#f2f4f6;border-radius:10px;box-sizing:border-box;"><button id="vsp-t2" style="${tabCss(true)}" onclick="${sw(false)}">평면</button><button id="vsp-t3" style="${tabCss(false)}" onclick="${sw(true)}">3D</button></div>${layers.length > 1 ? `<select id="vsp-sel" onchange="document.getElementById('vsp-plan').src=this.value" style="flex:1;min-width:0;height:46px;padding:0 10px;border:1px solid #e5e8eb;border-radius:10px;background:#fff;font:inherit;font-size:15px;color:#111;">${layers.map(l => `<option value="${esc(l.src)}">${esc(l.label)}</option>`).join('')}</select>` : ''}</div>
+      ${layers.length ? `<img id="vsp-plan" src="${esc(layers[0].src)}" alt="평면도" style="display:block;width:100%;height:auto;">` : '<div id="vsp-plan"></div>'}
+      <iframe id="vsp-3d" data-src="${SITE}3d-viewer-test.html?embed=app&v=${Date.now()}${_fpv3dModelParam()}" allowfullscreen style="display:none;width:100%;aspect-ratio:${ar};border:none;"></iframe>`;
     body += h('구역별 사이즈');
     pm.zones.forEach(z => { const st = _planZoneStats(pm, z); body += row(esc(z.name), `바닥 ${st.area.toFixed(1)}㎡ · ${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}m · 둘레 ${st.perim.toFixed(1)}m`); });
   }
