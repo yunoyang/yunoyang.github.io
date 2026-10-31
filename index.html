@@ -2054,7 +2054,7 @@ button, input, textarea, select { font-family:var(--font); }
 
 #form-view-panel .iv-fp-tabs { display:none !important; }
 #iv-floorplan-card .iv-fp-3d-wrap { display:none !important; }
-#form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card,#plan-view) { display:none !important; }
+#form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card) { display:none !important; }
 #form-view-panel:not([data-fpsub="3d"]) #iv-fp-3d-wrap { display:none !important; }
 #form-view-panel[data-fpsub="3d"] .iv-fp-3d-full-btn { display:none !important; }
 #form-view-panel[data-ivtab="fp"][data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:420px; }
@@ -2067,13 +2067,14 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-body { overflow:visible !important; }
 #plan-view.pv-inline .pv-left, #plan-view.pv-inline .pv-right { padding-left:0 !important; padding-right:0 !important; }
 #plan-view.pv-inline .pv-right { overflow:visible !important; padding-bottom:0 !important; }
-#plan-view.pv-inline .pv-stage { height:56vh; touch-action:pan-y; }
+#plan-view.pv-inline .pv-stage { height:72vh; touch-action:pan-y; }
 #plan-view.pv-inline .pv-card { border:1px solid #eef0f3; }
 #plan-view.pv-inline .pv-row, #plan-view.pv-inline .pv-sumtbl, #plan-view.pv-inline .pv-srcnote { display:none; }
 #plan-view.pv-inline .pv-dds-top { display:none; }
 @media (min-width:900px) {
-  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:flex-start; gap:16px; }
-  #plan-view.pv-inline .pv-left { flex:1.3 1 0; padding:0 !important; position:sticky; top:64px; }
+  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:stretch; gap:16px; }
+  #plan-view.pv-inline .pv-left { flex:1.3 1 0; padding:0 !important; }
+  #plan-view.pv-inline .pv-stage { height:auto; flex:1; min-height:72vh; }
   #plan-view.pv-inline .pv-right { flex:1 1 0; width:auto; padding-top:0 !important; }
 }
 #form-view-panel #iv-fp-sub button[data-k] { display:none; }
@@ -2083,7 +2084,26 @@ button, input, textarea, select { font-family:var(--font); }
 .pv-mode button.on { background:#111; color:#fff; font-weight:600; }
 .pv-ov-dd { display:flex; align-items:center; gap:3px; height:36px; padding:0 10px; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); font:inherit; font-size:13px; font-weight:500; color:#111; cursor:pointer; }
 .iv-fp-3d-full .pv-ov { display:none; }
+#plan-view.pv-inline .pv-chips { display:none; }
+#form-view-panel[data-fpsub="3d"] .pv-left > :not(#iv-fp-3d-wrap) { display:none !important; }
+#form-view-panel[data-ivtab="fp"][data-fpsub="3d"] .pv-left #iv-fp-3d-wrap { flex:1; height:auto !important; min-height:72vh; aspect-ratio:auto; margin:0; width:100%; border-radius:16px; }
+.pv-pts { position:absolute; left:10px; top:58px; z-index:4; display:flex; flex-direction:column; gap:6px; }
+.pv-pts button { width:36px; height:36px; display:flex; align-items:center; justify-content:center; padding:0; border:none; border-radius:10px; background:rgba(255,255,255,.94); box-shadow:0 1px 4px rgba(0,0,0,.12); cursor:pointer; }
 .pv-spec { margin-top:0; }
+.pv-spec-it { cursor:pointer; align-items:center; }
+.pv-spec-th { width:48px; height:48px; flex-shrink:0; border-radius:10px; background:#f2f4f6; object-fit:cover; display:flex; align-items:center; justify-content:center; color:#b0b8c1; font-size:20px; }
+.pv-spec-it > .pv-spec-t { flex:1; min-width:0; }
+.pv-spec-it a { font-size:12px; font-weight:500; color:#333d4b; text-decoration:underline; }
+.pv-spec-r span.need { background:#ffecec; color:#e5484d; }
+.pv-spec-r span.done { background:#e9f7ef; color:#1f8a4c; }
+.spec-ed label.t { display:block; font-size:13px; font-weight:600; color:#6b7684; margin:14px 0 6px; }
+.spec-ed input[type=url] { width:100%; box-sizing:border-box; height:44px; padding:0 12px; border:1px solid #e5e8eb; border-radius:10px; font:inherit; font-size:15px; }
+.spec-ed .opts { display:flex; flex-wrap:wrap; gap:6px; }
+.spec-ed .opts button { border:none; background:#f2f4f6; color:#4e5968; border-radius:999px; padding:8px 12px; font:inherit; font-size:14px; cursor:pointer; }
+.spec-ed .opts button.on { background:#111; color:#fff; }
+.spec-ed .prev { display:block; width:88px; height:88px; object-fit:cover; border-radius:10px; margin-bottom:8px; }
+.spec-ed .up { display:inline-block; padding:8px 14px; border-radius:10px; background:#f2f4f6; font-size:14px; cursor:pointer; }
+.spec-ed .save { width:100%; height:48px; margin-top:18px; border:none; border-radius:12px; background:#111; color:#fff; font:inherit; font-size:16px; font-weight:600; cursor:pointer; }
 .pv-spec-card { background:#fff; border:1px solid #eef0f3; border-radius:16px; padding:6px 16px; margin-bottom:12px; }
 .pv-spec-it:last-child { border-bottom:none; }
 .pv-spec-f { display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; }
@@ -15766,28 +15786,86 @@ const PLAN_SPEC = [
   { c: 'light', n: '센서', m: '텔트론 오토온미니 히든센서', s: '', q: '1EA', b: 'me', z: ['z9'] },
   { c: 'light', n: '씰링팬', m: '', s: '크기에 따라 등간격 재확인', q: '전체 4EA', b: 'me', z: ['z1', 'z4', 'z10', 'z11'], st: 'need' },
 ];
+const PLAN_PT_ICON = { outlet: '<circle cx="12" cy="12" r="9"/><path d="M9 10v3M15 10v3"/>', wet: '<path d="M12 3s7 7.5 7 12a7 7 0 0 1-14 0c0-4.5 7-12 7-12z"/>', tv: '<rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/>', sw: '<rect x="6" y="3" width="12" height="18" rx="2"/><path d="M12 8v8"/>', panel: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>' };
 const PLAN_APPLIANCE = ['냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐'];
 let _planBuy = 'all';
 function _planSetBuy(k) { _planBuy = k; _renderPlanView(true); }
 function _planSpecHtml(zone) {
   if (!_estSeedAllowed(getProject())) return '';
-  // 가구·가전은 구역 정보가 없어 프로젝트 전체 목록을 보여줌. 조명·손잡이·욕실은 스펙 분류와 겹쳐 제외
-  const furn = _getFurnitureItems().filter(it => !['조명', '손잡이', '욕실'].includes(it.category)).map(it => ({ c: PLAN_APPLIANCE.includes(it.category) ? 'appl' : 'furn', n: it.name || it.category || '', m: it.category || '', s: _getFurnitureStatus(it), q: it.qty > 1 ? it.qty + 'EA' : '', b: 'me' }));
-  const inZone = [...PLAN_SPEC.filter(i => !i.z || i.z.includes(zone.id)), ...furn];
-  const list = inZone.filter(i => _planBuy === 'all' || i.b === _planBuy);
-  const n = k => inZone.filter(i => k === 'all' || i.b === k).length;
-  const tag = i => i.st === 'need' ? `<em class="need">${i.t ? esc(i.t) + ' ' : ''}선택 필요</em>` : i.st === 'check' ? `<em class="need">발주 전 ${esc(i.t)} 체크</em>` : i.st === 'own' ? '<em>보유</em>' : '';
+  const proj = getProject(), data = proj.specData || {};
+  const all = [...PLAN_SPEC.map((i, x) => ({ ...i, key: 's' + x, st0: (i.st === 'need' || i.st === 'check') ? 'need' : 'done', note: i.st === 'check' ? `발주 전 ${i.t} 체크` : i.st === 'own' ? '보유' : (i.t || '') })),
+    // 조명·손잡이·욕실은 스펙 분류와 겹쳐 제외
+    ..._getFurnitureItems().filter(it => !['조명', '손잡이', '욕실'].includes(it.category)).map(it => ({ c: PLAN_APPLIANCE.includes(it.category) ? 'appl' : 'furn', n: it.name || it.category || '', m: it.category || '', s: '', q: it.qty > 1 ? it.qty + 'EA' : '', b: 'me', key: 'f' + it.id, zonable: true, st0: _getFurnitureStatus(it) === '미선택' ? 'need' : 'done', img0: it.imageUrl, link0: it.link || it.url }))];
+  all.forEach(i => { const d = data[i.key] || {}; i.st1 = d.st || i.st0; i.link = d.link || i.link0 || ''; i.img = d.img || i.img0 || ''; i.zs = d.zones || i.z; });
+  window._specItems = all;
+  const inZone = all.filter(i => !i.zs || !i.zs.length || i.zs.includes(zone.id));
+  const list = inZone.filter(i => _planBuy === 'all' || i.st1 === _planBuy);
+  const n = k => inZone.filter(i => k === 'all' || i.st1 === k).length;
   const sec = [['floor', '바닥'], ['wall', '벽지'], ['outlet', '콘센트'], ['switch', '스위치'], ['light', '조명'], ['furn', '가구'], ['appl', '가전']].map(([c, l]) => {
     const it = list.filter(i => i.c === c); if (!it.length) return '';
-    return `<div class="pv-spec-card"><div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it"><div><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q].filter(Boolean).join(' · '))}</small></div><div class="pv-spec-r"><span class="${i.b}">${i.b === 'me' ? '내가 구매' : '시공사 구매'}</span>${tag(i)}</div></div>`).join('') + '</div>';
+    return `<div class="pv-spec-card"><div class="pv-spec-h">${l}</div>` + it.map(i => `<div class="pv-spec-it" onclick="_specEdit('${i.key}')">${i.img ? `<img class="pv-spec-th" src="${esc(i.img)}" alt="">` : '<div class="pv-spec-th">+</div>'}<div class="pv-spec-t"><b>${esc(i.n)}</b><small>${esc([i.m, i.s, i.q, i.note, i.b === 'me' ? '내가 구매' : '시공사 구매', i.zonable && !(i.zs || []).length ? '구역 미지정' : ''].filter(Boolean).join(' · '))}</small>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">제품 링크</a>` : ''}</div><div class="pv-spec-r"><span class="${i.st1}">${i.st1 === 'need' ? '선택 필요' : '선택 완료'}</span></div></div>`).join('') + '</div>';
   }).join('');
-  return `<div class="pv-spec"><div class="pv-spec-f">${[['all', '전체'], ['me', '내가 구매'], ['con', '시공사 구매']].map(([k, l]) => `<button class="${_planBuy === k ? 'on' : ''}" onclick="_planSetBuy('${k}')">${l} ${n(k)}</button>`).join('')}</div>${sec || '<div class="pv-spec-e">이 구역에 해당하는 항목이 없어요</div>'}</div>`;
+  return `<div class="pv-spec"><div class="pv-spec-f">${[['all', '전체'], ['need', '선택 필요'], ['done', '선택 완료']].map(([k, l]) => `<button class="${_planBuy === k ? 'on' : ''}" onclick="_planSetBuy('${k}')">${l} ${n(k)}</button>`).join('')}</div>${sec || '<div class="pv-spec-e">이 구역에 해당하는 항목이 없어요</div>'}</div>`;
+}
+// 제품 카드 편집: proj.specData[key] = { st, link, img, zones, at } — 키별 최신값 병합
+function _specMerge(a, b) { const o = { ...(a || {}) }; Object.entries(b || {}).forEach(([k, v]) => { if (!o[k] || (v.at || 0) > (o[k].at || 0)) o[k] = v; }); return o; }
+let _specDraft = null;
+function _specEdit(key) {
+  const i = (window._specItems || []).find(x => x.key === key); if (!i) return;
+  if (!canEdit()) { if (i.link) window.open(i.link, '_blank'); return; }
+  _specDraft = { key, st: i.st1, link: i.link, img: i.img, zones: [...(i.zs || [])], zonable: i.zonable, n: i.n };
+  _specSheet();
+}
+function _specSheet() {
+  const d = _specDraft, pm = _planGet(getProject());
+  document.getElementById('pv-pick')?.remove();
+  const ov = document.createElement('div'); ov.id = 'pv-pick';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="pv-pick-in spec-ed"><div class="pv-pick-hd">${esc(d.n)}</div>
+    <label class="t">상태</label><div class="opts"><button class="${d.st === 'need' ? 'on' : ''}" onclick="_specDraft.st='need';_specSheet()">선택 필요</button><button class="${d.st === 'done' ? 'on' : ''}" onclick="_specDraft.st='done';_specSheet()">선택 완료</button></div>
+    <label class="t">제품 링크</label><input type="url" id="spec-link" placeholder="https://" value="${esc(d.link || '')}" oninput="_specDraft.link=this.value">
+    <label class="t">이미지</label>${d.img ? `<img class="prev" src="${esc(d.img)}" alt="">` : ''}<label class="up">${d.img ? '이미지 변경' : '이미지 추가'}<input type="file" accept="image/*" style="display:none" onchange="_specUpload(this)"></label>
+    ${d.zonable ? `<label class="t">구역</label><div class="opts">${pm.zones.map(z => `<button class="${d.zones.includes(z.id) ? 'on' : ''}" onclick="_specZone('${z.id}')">${esc(z.name)}</button>`).join('')}</div>` : ''}
+    <button class="save" onclick="_specSave()">저장</button></div>`;
+  document.body.appendChild(ov);
+}
+function _specZone(id) { const z = _specDraft.zones; _specDraft.zones = z.includes(id) ? z.filter(x => x !== id) : [...z, id]; _specSheet(); }
+async function _specUpload(input) {
+  const file = input.files && input.files[0], proj = getProject(); if (!file || !proj) return;
+  showToastMessage('업로드 중…');
+  try {
+    await _initFirebase(); await _waitForFirebaseUser(4000);
+    if (!_fbStorage || !firebase.auth().currentUser) throw new Error('로그인 필요');
+    const pid = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const ref = _fbStorage.ref(`styleImages/${pid}/spec_${Date.now()}.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`);
+    await ref.put(file, { contentType: file.type || 'image/jpeg' });
+    _specDraft.img = await ref.getDownloadURL();
+    _specSheet();
+  } catch (e) { showToastMessage('⚠️ 이미지 업로드 실패'); }
+}
+async function _specSave() {
+  const d = _specDraft, proj = getProject(); if (!d || !proj) return;
+  let link = (d.link || '').trim();
+  if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+  proj.specData = { ...(proj.specData || {}), [d.key]: { st: d.st, link, img: d.img || '', zones: d.zones, at: Date.now() } };
+  save();
+  document.getElementById('pv-pick')?.remove();
+  _renderPlanView(true);
+  if (!proj.cloudId) return;
+  try {
+    const ref = _db.collection('vb_projects').doc(proj.cloudId);
+    proj.specData = _specMerge(proj.specData, (await ref.get()).data()?.projectData?.specData);
+    await ref.update({ 'projectData.specData': proj.specData, 'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(), 'meta.updatedBy': state.user?.email || '', 'meta.updatedBySessionId': _sessionId });
+    localStorage.setItem('vibespace', JSON.stringify(state));
+  } catch (e) { console.error('[specSync]', e.code, e.message); showToastMessage('⚠️ 제품 정보 동기화 실패'); }
 }
 function _ivFpModeHtml(k) { return `<div class="pv-mode"><button class="${k === 'plan' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('plan')">평면</button><button class="${k === '3d' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('3d')">3D</button></div>`; }
 function _renderPlanView(keepScroll) {
   const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
   const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
   const z = pm.zones.find(x => x.id === _planSel) || pm.zones[0], st = _planZoneStats(pm, z);
+  // 3D가 왼쪽 칸에 들어가 있으면 다시 그리지 않음 (iframe이 사라짐) — 제품 카드만 갱신
+  if (ov.querySelector('.pv-left #iv-fp-3d-wrap')) { const sp = ov.querySelector('.pv-spec'); if (sp) sp.outerHTML = _planSpecHtml(z); return; }
   const total = pm.zones.reduce((a, q) => a + _planArea(q.poly), 0);
   const row = (k, v) => `<div class="pv-row"><span>${k}</span><span>${v}</span></div>`;
   const doors = (pm.doors || []).filter(d => d.zone === z.id);
@@ -15803,7 +15881,7 @@ function _renderPlanView(keepScroll) {
     <div class="pv-left">
       <div class="pv-dds pv-dds-top"><button class="pv-dd" onclick="_planPick('zone')"><small>구역</small><b>${esc(z.name)}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>${hasImg ? `<button class="pv-dd" onclick="_planPick('layer')"><small>도면</small><b>${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>
       <div class="pv-chips">${Object.keys(PLAN_PT).map(t => `<button class="pv-chip" onclick="_planTogglePt('${t}')" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};border-color:${PLAN_PT[t].c};color:#fff;` : ''}">${PLAN_PT[t].l}</button>`).join('')}</div>
-      <div class="pv-stage">${ov.classList.contains('pv-inline') ? `<div class="pv-ov" onpointerdown="event.stopPropagation()">${_ivFpModeHtml('plan')}${hasImg ? `<button class="pv-ov-dd" onclick="_planPick('layer')">${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>` : ''}<div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '' })}</div>
+      <div class="pv-stage">${ov.classList.contains('pv-inline') ? `<div class="pv-ov" onpointerdown="event.stopPropagation()">${_ivFpModeHtml('plan')}${hasImg ? `<button class="pv-ov-dd" onclick="_planPick('layer')">${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>` : ''}${ov.classList.contains('pv-inline') ? `<div class="pv-pts" onpointerdown="event.stopPropagation()">${Object.keys(PLAN_PT).map(t => `<button onclick="_planTogglePt('${t}')" aria-label="${PLAN_PT[t].l}" title="${PLAN_PT[t].l}" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};color:#fff;` : `color:${PLAN_PT[t].c};`}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${PLAN_PT_ICON[t]}</svg></button>`).join('')}</div>` : ''}<div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '' })}</div>
         <div class="pv-zoom"><button onclick="_planZoomBy(1.4)" aria-label="확대">＋</button><button onclick="_planZoomBy(1/1.4)" aria-label="축소">－</button><button onclick="_planZoomReset()" aria-label="원래 크기" style="font-size:13px;">1:1</button></div>
       </div>
       <div style="font-size:12px;color:#999;">구역을 탭하면 정보가 바뀌어요 · 두 손가락으로 확대</div>
@@ -16571,6 +16649,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
   if (local.furniQuoteApplied || cp.furniQuoteApplied) merged.furniQuoteApplied = local.furniQuoteApplied || cp.furniQuoteApplied;
   merged.fpVersions = _mergeListById(local.fpVersions, cp.fpVersions, { type: 'fpVersion' });
+  merged.specData = _specMerge(local.specData, cp.specData);
   merged.fpCurrent = _fpvMergeCur(local.fpCurrent, cp.fpCurrent);
   const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
   if (local.planSeeded || cp.planSeeded) merged.planSeeded = true;
@@ -16842,6 +16921,7 @@ function _syncProjToCloud(proj) {
     if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
     if (proj.furniQuoteApplied || cloudData.furniQuoteApplied) projData.furniQuoteApplied = proj.furniQuoteApplied || cloudData.furniQuoteApplied;
     projData.fpVersions = _mergeListById(proj.fpVersions, cloudData.fpVersions, { type: 'fpVersion' });
+    projData.specData = proj.specData = _specMerge(proj.specData, cloudData.specData);
     projData.fpCurrent = _fpvMergeCur(proj.fpCurrent, cloudData.fpCurrent);
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
     projData.deletedStyleUrls = proj.deletedStyleUrls = _mergeStyleDelUrls(proj.deletedStyleUrls, cloudData.deletedStyleUrls);
@@ -17218,6 +17298,7 @@ function _startCollabListener(cloudId) {
     const localEstimate = proj.estimate, localEstSeeded = proj.estimateSeeded; // 견적 보존
     const localSchedApplied = proj.scheduleApplied; // 공정표 적용 플래그 보존
     const localFurniApplied = proj.furniQuoteApplied;
+    const localSpec = proj.specData;
     const localFpv = proj.fpVersions, localFpCur = proj.fpCurrent; // 도면 버전 보존
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     // 삭제 기록 보존 — 아래 Object.assign(remote)가 덮어쓰면 아직 클라우드에 못 올린 삭제가 유실됨
@@ -17291,6 +17372,7 @@ function _startCollabListener(cloudId) {
     if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
     if (localFurniApplied || remote.furniQuoteApplied) proj.furniQuoteApplied = localFurniApplied || remote.furniQuoteApplied;
     proj.fpVersions = _mergeListById(localFpv, remote.fpVersions, { type: 'fpVersion' });
+    proj.specData = _specMerge(localSpec, remote.specData);
     proj.fpCurrent = _fpvMergeCur(localFpCur, remote.fpCurrent);
     { const _p = _mergeEstimate(localPlan, _planDec(remote.planModel)); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
     localStorage.setItem('vibespace', JSON.stringify(state));
@@ -17465,6 +17547,9 @@ async function _syncFpVersionsToCloud(proj) {
 function _ivFpSub(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
   panel.dataset.fpsub = k;
+  // 3D는 평면도 칸 안에서 교체 — 오른쪽 구역 정보·제품 카드는 유지
+  const _w3 = document.getElementById('iv-fp-3d-wrap'), _pv = document.getElementById('plan-view'), _left = _pv?.querySelector('.pv-left');
+  if (_w3 && _left && k === '3d') _left.appendChild(_w3); else if (_w3 && _pv && k !== '3d' && _w3.parentElement === _left) _pv.after(_w3);
   document.querySelectorAll('#iv-fp-sub button[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === k));
   _fpvRender();
   if (k !== '3d') _ivSwitchFpTab('2d');
