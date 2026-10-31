@@ -4485,7 +4485,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <div class="form-screen-inner">
     <div class="form-header">
       <button class="back-btn" onclick="formGoBack()"><svg class="icon" width="22" height="22"><use href="#icon-chevron-left"/></svg></button>
-      <button id="form-notif-btn" class="notif-btn2" onclick="openShareDialog()" title="공유" aria-label="공유"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 22V10M15.5 14.5 20 10l4.5 4.5"/><path d="M13 19v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg><span class="notif-badge" style="display:none;"></span></button>
+      <button id="form-notif-btn" class="notif-btn2" onclick="_infoShare()" title="공유" aria-label="공유"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 22V10M15.5 14.5 20 10l4.5 4.5"/><path d="M13 19v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg><span class="notif-badge" style="display:none;"></span></button>
       <h2 id="form-title" onclick="if(document.body.classList.contains('vs2-info'))goTo('landing')">공사 정보</h2>
       <div id="form-view-actions" style="display:none;align-items:center;gap:2px;margin-left:auto;">
         <button class="form-edit-icon-btn" id="form-edit-icon-btn" onclick="switchToFormEdit()" title="수정" style="margin-left:0;">
@@ -18878,6 +18878,60 @@ async function generateExportLink(btn) {
   }
   btn.disabled = false;
   btn.innerHTML = origHtml;
+}
+
+// ===== 공사정보 공유: 도면·구역·자재 스냅샷을 vb_exports에 저장 (로그인 없이 ?export=id로 열람) =====
+// 금액·견적·공정 기록·연락처·상세주소는 넣지 않음
+function _infoShareHtml(proj) {
+  const pm = _planGet(proj), f = proj.form || {}, SITE = 'https://vibespacekorea.com/';
+  const one = v => Array.isArray(v) ? v[0] : v;
+  const row = (k, v) => v ? `<div style="display:flex;gap:12px;padding:8px 0;border-top:1px solid #f2f4f6;font-size:14px;"><span style="width:72px;flex-shrink:0;color:#6b7684;">${k}</span><span style="color:#333;word-break:break-all;">${esc(String(v))}</span></div>` : '';
+  const h = t => `<h2 style="font-size:18px;font-weight:600;color:#111;margin:28px 0 10px;">${t}</h2>`;
+  const item = i => `<div style="padding:12px 0;border-top:1px solid #f2f4f6;display:flex;gap:12px;">${i.img ? `<img src="${esc(i.img)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;">` : ''}<div style="min-width:0;"><div style="font-size:15px;font-weight:600;color:#111;">${esc(i.n)}</div><div style="font-size:13px;color:#6b7684;line-height:1.5;">${esc([i.m, i.s, i.q].filter(Boolean).join(' · '))}</div>${i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener" style="font-size:13px;color:#333;">제품 링크</a>` : ''}</div></div>`;
+  let body = `<h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px;">${esc(proj.name || '공사정보')}</h1>` +
+    row('주택 유형', one(f.type)) + row('평수', one(f.size)) + row('공사 기간', f.startDate ? `${f.startDate} ~ ${f.endDate || '미정'}` : '') + row('지역', f.address);
+  if (pm) {
+    (pm.layers || []).forEach(l => { body += h(esc(l.label)) + `<img src="${esc(/^https?:/.test(l.src) ? l.src : SITE + l.src)}" alt="${esc(l.label)}" style="display:block;width:100%;height:auto;">`; });
+    body += `<a href="${SITE}3d-viewer-test.html?embed=app${_fpv3dModelParam()}" target="_blank" rel="noopener" style="display:block;margin-top:16px;padding:14px;border-radius:12px;background:#111;color:#fff;text-align:center;font-size:15px;font-weight:600;text-decoration:none;">3D로 보기</a>`;
+    if (pm.zones[0]) _planSpecHtml(pm.zones[0]);
+    const items = (window._specItems || []).filter(i => i.c !== 'appl');
+    body += h('구역별 자재');
+    pm.zones.forEach(z => {
+      const st = _planZoneStats(pm, z), list = items.filter(i => (i.zs || []).includes(z.id));
+      body += `<h3 style="font-size:16px;font-weight:600;color:#111;margin:22px 0 2px;">${esc(z.name)}</h3><div style="font-size:13px;color:#6b7684;margin-bottom:8px;">바닥 ${st.area.toFixed(1)}㎡ · ${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}m · 둘레 ${st.perim.toFixed(1)}m</div>${list.map(item).join('')}`;
+    });
+    const common = items.filter(i => !(i.zs || []).length);
+    if (common.length) body += `<h3 style="font-size:16px;font-weight:600;color:#111;margin:22px 0 8px;">공통 (도면 참고)</h3>${common.map(item).join('')}`;
+  }
+  return `<div style="max-width:720px;margin:0 auto;padding:24px 20px 60px;background:#fff;font-family:inherit;">${body}</div>`;
+}
+async function _infoShare() {
+  const proj = getProject(); if (!proj) return;
+  if (!state.loggedIn) { showToastMessage('로그인 후 공유할 수 있어요'); return; }
+  showToastMessage('공유 링크 만드는 중…');
+  try {
+    const ok = await _initFirebase(); if (!ok || !_db) throw new Error('Firebase');
+    if (!firebase.auth().currentUser) { try { await firebase.auth().signInAnonymously(); } catch (e) {} }
+    const html = _infoShareHtml(proj);
+    if (html.length > 900000) throw new Error('too large');
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    await _db.collection('vb_exports').doc(id).set({ html, projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, proj.name || '공사정보');
+  } catch (e) { console.error('info share', e); showToastMessage('공유 링크 생성 실패. 다시 시도해주세요.'); }
+}
+// 비동기 뒤에는 시스템 공유창이 막힐 수 있어 버튼을 한 번 더 누르게 함
+function _infoShareSheet(url, title) {
+  document.getElementById('pv-pick')?.remove();
+  const ov = document.createElement('div'); ov.id = 'pv-pick';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="pv-pick-in spec-ed"><div class="pv-pick-hd">공사정보 공유</div><div style="font-size:14px;color:#6b7684;line-height:1.5;">링크를 받은 사람은 로그인 없이 도면과 구역별 자재를 볼 수 있어요. 금액은 포함되지 않아요.</div><label class="t">링크</label><input type="url" readonly value="${esc(url)}" onclick="this.select()"><button class="save" id="info-share-go">공유하기</button></div>`;
+  document.body.appendChild(ov);
+  const go = document.getElementById('info-share-go');
+  go.onclick = async () => {
+    if (navigator.share) { try { await navigator.share({ title, text: `[${title}] 공사정보입니다. 견적 부탁드립니다.`, url }); } catch (e) { return; } }
+    else { await navigator.clipboard?.writeText(url); showToastMessage('링크를 복사했어요'); }
+    ov.remove();
+  };
 }
 
 // ===== 공사계획 공유 링크 뷰어 (Firestore 공개 읽기, 인증 불필요) =====
