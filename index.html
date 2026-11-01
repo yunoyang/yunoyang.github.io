@@ -5891,7 +5891,8 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     <button onclick="_closeFurnitureCategoryDetail()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-left:-4px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span id="furniture-detail-title" style="flex:1;font-size:17px;font-weight:600;color:#111;"></span>
+    <span id="furniture-detail-title" style="flex-shrink:0;font-size:17px;font-weight:600;color:#111;"></span>
+    <span id="furniture-detail-total" style="flex:1;min-width:0;font-size:17px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
     <div style="display:flex;align-items:center;gap:2px;">
       <span id="furniture-detail-count" style="font-size:13px;color:#aaa;"></span>
       <button onclick="_openAddFurnitureItemForCurrentCategory()" style="width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
@@ -19202,6 +19203,9 @@ function _renderFurnitureCategoryDetail(cat) {
   const items = _getFurnitureItems().filter(it => (it.category || '기타') === cat);
   if (titleEl) titleEl.textContent = cat;
   if (countEl) countEl.textContent = items.length + '개';
+  const totalEl = document.getElementById('furniture-detail-total');
+  const catTotal = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  if (totalEl) totalEl.textContent = catTotal ? catTotal.toLocaleString() + '원' : '';
 
   const rowHtml = (it) => {
     const status = _getFurnitureStatus(it);
