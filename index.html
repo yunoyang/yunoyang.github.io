@@ -2922,6 +2922,9 @@ body.vs2-info #screen-form #form-title { order:1; }
 }
 .acct-type-card:hover { border-color:#bbb; background:#fafafa; }
 .acct-type-card:active { transform:scale(.98); }
+.acct-type-card.selected, .acct-type-card.selected:hover { border-color:#111; box-shadow:inset 0 0 0 .5px #111; background:#fff; }
+.acct-next { position:fixed; left:50%; transform:translateX(-50%); bottom:max(40px, calc(env(safe-area-inset-bottom) + 16px)); width:min(calc(100% - 48px), 432px); height:56px; border:none; border-radius:14px; background:#111; color:#fff; font-family:var(--font); font-size:16px; font-weight:600; cursor:pointer; }
+.acct-next:disabled { background:#e5e8eb; color:#aaa; cursor:default; }
 .acct-cat-chip {
   padding:8px 14px; border:1.5px solid #e8e8e8; border-radius:20px;
   font-size:13px; font-weight:500; color:#555; background:#fff;
@@ -4235,15 +4238,15 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         <h2 style="font-size:22px;font-weight:700;margin:12px 0 6px;">어떤 목적으로<br>시작하시나요?</h2>
         <p style="font-size:14px;color:#888;margin:0 0 24px;">나중에 언제든 변경할 수 있어요</p>
         <div style="display:flex;flex-direction:column;gap:12px;">
-          <button class="acct-type-card" onclick="_acctSelectRole('general')">
-            <span style="font-size:26px;">🏠</span>
+          <button class="acct-type-card" onclick="_acctPick('role','general',this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
             <span style="flex:1;text-align:left;">
               <span style="display:block;font-size:16px;font-weight:600;color:#111;">일반 사용자</span>
               <span style="display:block;font-size:13px;color:#888;margin-top:2px;">내 인테리어 프로젝트를 관리해요</span>
             </span>
           </button>
-          <button class="acct-type-card" onclick="_acctSelectRole('expert')">
-            <span style="font-size:26px;">🛠️</span>
+          <button class="acct-type-card" onclick="_acctPick('role','expert',this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
             <span style="flex:1;text-align:left;">
               <span style="display:block;font-size:16px;font-weight:600;color:#111;">전문가 / 업체</span>
               <span style="display:block;font-size:13px;color:#888;margin-top:2px;">시공·컨설팅 서비스를 제공해요</span>
@@ -4251,6 +4254,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
           </button>
         </div>
         <button onclick="_acctSkip()" style="width:100%;text-align:center;background:none;border:none;color:#aaa;font-size:13px;padding:20px 0 0;cursor:pointer;font-family:var(--font);">나중에 정할게요</button>
+        <button class="acct-next" id="acct-next-role" disabled onclick="_acctNext('role')">다음</button>
       </div>
 
       <!-- STEP 2: 스튜디오 / 시공업체 -->
@@ -4258,21 +4262,22 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         <h2 style="font-size:22px;font-weight:700;margin:12px 0 6px;">어떤 전문가이신가요?</h2>
         <p style="font-size:14px;color:#888;margin:0 0 24px;">가입 후에도 수정할 수 있어요</p>
         <div style="display:flex;flex-direction:column;gap:12px;">
-          <button class="acct-type-card" onclick="_acctSelectKind('studio')">
-            <span style="font-size:26px;">🎨</span>
+          <button class="acct-type-card" onclick="_acctPick('kind','studio',this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1.2-1-1.7-1-2.7 0-1 .8-1.5 1.8-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="8" r="1"/></svg>
             <span style="flex:1;text-align:left;">
               <span style="display:block;font-size:16px;font-weight:600;color:#111;">인테리어 스튜디오</span>
               <span style="display:block;font-size:13px;color:#888;margin-top:2px;">종합 컨설팅·설계·시공관리</span>
             </span>
           </button>
-          <button class="acct-type-card" onclick="_acctSelectKind('contractor')">
-            <span style="font-size:26px;">🔨</span>
+          <button class="acct-type-card" onclick="_acctPick('kind','contractor',this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m15 12-8.4 8.4a2.1 2.1 0 0 1-3-3L12 9"/><path d="m17.6 15 4.4-4.4-2.1-2.1-1.1.3-2.4-2.4V4.9L13.6 2H9l3.6 3.6v1.6l5 5z"/><path d="M13 8l3 3"/></svg>
             <span style="flex:1;text-align:left;">
               <span style="display:block;font-size:16px;font-weight:600;color:#111;">시공 업체</span>
               <span style="display:block;font-size:13px;color:#888;margin-top:2px;">특정 공정을 전문으로 시공해요</span>
             </span>
           </button>
         </div>
+        <button class="acct-next" id="acct-next-kind" disabled onclick="_acctNext('kind')">다음</button>
       </div>
 
       <!-- STEP 3: 상세 정보 입력 -->
@@ -7823,6 +7828,11 @@ async function _openCommunityProjectDetail(cloudId) {
 // 현재 보이는 스텝만 전환 (페이지 자체는 유지) — 뒤로가기 버튼 표시도 여기서 같이 관리
 function _acctGoToStep(step) {
   _acctSelectedRole = step === 'role' ? null : _acctSelectedRole;
+  if (step === 'role' || step === 'kind') { // 돌아오면 선택 초기화
+    delete _acctPending[step];
+    document.querySelectorAll(`#acct-step-${step} .acct-type-card`).forEach(c => c.classList.remove('selected'));
+    document.getElementById(`acct-next-${step}`).disabled = true;
+  }
   if (step === 'role') { _acctSelectedKind = null; _acctSelectedCategories = new Set(); }
   document.getElementById('acct-step-role').style.display = step === 'role' ? '' : 'none';
   document.getElementById('acct-step-kind').style.display = step === 'kind' ? '' : 'none';
@@ -7831,6 +7841,17 @@ function _acctGoToStep(step) {
   if (backBtn) backBtn.style.visibility = step === 'role' ? 'hidden' : 'visible';
 }
 
+// 카드는 선택만 하고, 다음 버튼에서 기존 단계 이동 로직 실행
+let _acctPending = {};
+function _acctPick(step, value, el) {
+  _acctPending[step] = value;
+  document.querySelectorAll(`#acct-step-${step} .acct-type-card`).forEach(c => c.classList.toggle('selected', c === el));
+  document.getElementById(`acct-next-${step}`).disabled = false;
+}
+function _acctNext(step) {
+  const v = _acctPending[step]; if (!v) return;
+  if (step === 'role') _acctSelectRole(v); else _acctSelectKind(v);
+}
 function _acctPageBack() {
   const kindVisible = document.getElementById('acct-step-kind').style.display !== 'none';
   if (kindVisible) _acctGoToStep('role');
