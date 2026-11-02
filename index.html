@@ -5903,6 +5903,9 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     <span id="furniture-detail-total" style="flex:1;min-width:0;font-size:17px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
     <div style="display:flex;align-items:center;gap:2px;">
       <span id="furniture-detail-count" style="font-size:13px;color:#aaa;"></span>
+      <button onclick="_furnShareCategory()" aria-label="카테고리 링크 공유" style="width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 13v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg>
+      </button>
       <button onclick="_openAddFurnitureItemForCurrentCategory()" style="width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
@@ -19303,6 +19306,42 @@ function _renderFurnitureCategoryDetail(cat) {
   el.innerHTML = items.length === 0
     ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">이 카테고리에 제품이 없습니다</div>`
     : `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(it => rowHtml(it)).join('')}</div>`;
+}
+
+// 카테고리별 공유 링크: 제품 목록 스냅샷을 vb_exports에 저장 (프로젝트명·연락처 제외)
+function _furnShareHtml(cat, items) {
+  const http = u => /^https?:\/\//.test(u || '') ? u : '';
+  const total = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  const cards = items.map(it => {
+    const qty = it.qty || 1, price = (it.price || 0) * qty, img = http(it.imageUrl), url = http(it.url);
+    return `<div style="display:flex;gap:12px;padding:12px;border:1px solid #eef0f5;border-radius:14px;margin-bottom:10px;">
+      ${img ? `<img src="${esc(img)}" alt="" style="width:88px;height:88px;object-fit:cover;border-radius:10px;flex-shrink:0;">` : ''}
+      <div style="min-width:0;font-size:14px;color:#555;line-height:1.5;">
+        ${it.brand ? `<div style="color:#aaa;font-size:13px;">${esc(it.brand)}</div>` : ''}
+        <div style="font-size:16px;font-weight:500;color:#111;">${esc(it.name || '')}</div>
+        ${price ? `<div>${price.toLocaleString()}원${qty > 1 ? ` (${qty}개)` : ''}</div>` : ''}
+        ${it.size ? `<div>${esc(it.size)}</div>` : ''}
+        ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#333d4b;text-decoration:underline;">제품 링크</a>` : ''}
+      </div></div>`;
+  }).join('');
+  return `<div style="max-width:560px;margin:0 auto;padding:24px 16px 48px;font-family:var(--font);background:#fff;"><h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 4px;">${esc(cat)}</h1><div style="font-size:15px;color:#555;margin-bottom:20px;">제품 ${items.length}개${total ? ` · ${total.toLocaleString()}원` : ''}</div>${cards}</div>`;
+}
+async function _furnShareCategory() {
+  const cat = _furnitureCategoryView; if (!cat) return;
+  const items = _getFurnitureItems().filter(it => (it.category || '기타') === cat);
+  if (!items.length) { showToastMessage('공유할 제품이 없습니다'); return; }
+  try {
+    const ok = await _initFirebase(); if (!ok || !_db) throw new Error('Firebase');
+    if (!firebase.auth().currentUser) { try { await firebase.auth().signInAnonymously(); } catch (e) {} }
+    const html = _furnShareHtml(cat, items);
+    if (html.length > 900000) throw new Error('too large');
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: cat, kind: 'products', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, cat);
+  } catch (e) {
+    console.warn('category share:', e);
+    showToastMessage('링크를 만들지 못했습니다. 잠시 후 다시 시도해주세요.');
+  }
 }
 
 // ===== 현장사진 탭 =====
