@@ -6395,7 +6395,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 <div class="overlay" id="dlg-withdraw" style="align-items:flex-end;padding:0;">
   <div class="dialog" style="border-radius:32px;max-width:520px;margin:0 auto;width:100%;">
     <h3>탈퇴하시겠습니까?</h3>
-    <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:20px;">탈퇴하면 모든 데이터가 사라지며 복구할 수 없습니다.</p>
+    <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:20px;">탈퇴 후 30일 안에 다시 로그인하면 복구할 수 있어요. 30일이 지나면 계정과 프로젝트, 사진이 영구 삭제됩니다. 공동작업자가 있는 프로젝트는 공동작업자에게 넘어갑니다.</p>
     <div class="dialog-actions split">
       <button class="btn-cancel" onclick="closeDialog('dlg-withdraw')">취소</button>
       <button class="btn-danger" style="height:48px;" onclick="closeDialog('dlg-withdraw');requestAccountDeletion();">탈퇴하기</button>
@@ -18612,10 +18612,6 @@ async function requestAccountDeletion() {
       }, { merge: true });
     }
   } catch(e) { console.warn('withdraw flag save failed:', e); }
-  // 알림용 메일 (실제 삭제는 진행하지 않음 — 데이터는 보관되어 재로그인 시 자동 복구됨)
-  const subject = encodeURIComponent('[바이브스페이스] 회원 탈퇴 신청');
-  const body = encodeURIComponent(`이메일: ${email}\n이름: ${name}\n\n위 계정이 탈퇴 신청되었습니다. (데이터는 ${WITHDRAW_RECOVERY_DAYS}일간 보관됩니다)`);
-  window.open(`mailto:yunoenemy@gmail.com?subject=${subject}&body=${body}`, '_blank');
   doLogout();
   showToastMessage(`탈퇴 처리되었습니다. ${WITHDRAW_RECOVERY_DAYS}일 이내 재로그인하면 데이터가 그대로 복구됩니다.`);
 }
@@ -18988,6 +18984,7 @@ async function generateExportLink(btn) {
     const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     await _db.collection('vb_exports').doc(id).set({
       html,
+      ownerEmail: state.user?.email || '',
       projectName: proj?.name || '공사계획서',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -19037,7 +19034,7 @@ async function _infoShareLink(proj) {
   const html = _infoShareHtml(proj);
   if (html.length > 900000) throw new Error('too large');
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  await _db.collection('vb_exports').doc(id).set({ html, projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   return `https://vibespacekorea.com/?export=${id}`;
 }
 async function _infoShare() {
