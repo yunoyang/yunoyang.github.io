@@ -4515,7 +4515,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
       <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button><button data-k="basic" onclick="_ivTab('basic')">기본정보</button></div>
       <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
-      <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
+      <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div><div id="iv-team-list" class="collab-member-list" style="margin-top:16px;"></div></div>
       <div class="info-view-card" id="iv-basic-card" style="overflow:visible;">
         <div onclick="_toggleProjectInfoDetail()" style="padding:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
           <div style="font-size:14px;font-weight:500;color:#aaa;letter-spacing:.04em;margin-bottom:6px;">프로젝트명</div>
@@ -15165,6 +15165,7 @@ function _applyCollabBadgeText(text) {
 function updateCollabMenuBadge() {
   const proj = getProject();
   if (!proj) return;
+  _renderIvTeamList();
   // 로컬 데이터로 즉시 렌더
   const localCollabs = proj.collaborators || [];
   const invites = (proj.invites || []).filter(i => new Date(i.expiresAt) >= new Date());
@@ -17774,10 +17775,22 @@ function _ivFpSub(k) {
   }
 }
 // 공사정보 탭 전환 — 섹션 표시는 CSS(data-ivtab)로, 비어 있는 탭엔 안내 문구
+// 팀 탭: 오너·공동작업자에 이어 수락 전 초대를 함께 표시
+function _renderIvTeamList() {
+  const el = document.getElementById('iv-team-list'), proj = getProject(); if (!el || !proj) return;
+  const collabs = proj.collaborators || [], joined = new Set(collabs.map(m => (m.email || '').toLowerCase()));
+  const owner = proj.owner || (_isProjOwner(proj) ? state.user : null);
+  const row = (name, sub, role, pending) => `<div class="collab-member-row"><div class="cm-avatar${pending ? ' pending' : ''}">${pending ? '' : esc((name || '?').charAt(0).toUpperCase())}</div><div class="cm-info"><div class="cm-name${pending ? ' pending' : ''}">${esc(name)}</div><div class="cm-email${pending ? ' pending' : ''}">${esc(sub)}</div></div><span class="cm-role${role === '오너' ? ' owner' : ''}">${role}</span></div>`;
+  const pending = (proj.invites || []).filter(i => new Date(i.expiresAt) >= new Date() && !joined.has((i.email || '').toLowerCase()));
+  el.innerHTML = (owner ? row(owner.name || owner.email || '오너', owner.email || '', '오너') : '')
+    + collabs.map(m => row(m.name || m.email.split('@')[0], m.email, m.role === '뷰어' ? '보기만' : '편집 가능')).join('')
+    + pending.map(i => row(i.email || '초대 링크', `초대 진행중 · ~${i.expiresAt.slice(0, 10)}`, i.role === '뷰어' ? '보기만' : '편집 가능', true)).join('');
+}
 function _ivTab(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
   if (panel.dataset.ivtab !== k) { panel.classList.remove('vs-enter'); void panel.offsetWidth; panel.classList.add('vs-enter'); }
   panel.dataset.ivtab = k;
+  if (k === 'team') _renderIvTeamList();
   // 기본정보 탭에선 상세 항목을 펼친 상태로
   if (k === 'basic') { const b = document.getElementById('iv-project-detail-body'); if (b && b.style.display === 'none') _toggleProjectInfoDetail(); }
   document.querySelectorAll('#iv-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
