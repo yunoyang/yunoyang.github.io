@@ -19048,7 +19048,7 @@ async function _infoShare() {
   catch (e) { console.error('info share', e); showToastMessage('공유 링크 생성 실패. 다시 시도해주세요.'); }
 }
 // 비동기 뒤에는 시스템 공유창이 막힐 수 있어 버튼을 한 번 더 누르게 함
-function _infoShareSheet(url, title) {
+function _infoShareSheet(url, title, text) {
   document.getElementById('pv-pick')?.remove();
   const ov = document.createElement('div'); ov.id = 'pv-pick';
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
@@ -19056,7 +19056,7 @@ function _infoShareSheet(url, title) {
   document.body.appendChild(ov);
   const go = document.getElementById('info-share-go');
   go.onclick = async () => {
-    if (navigator.share) { try { await navigator.share({ title, text: `[${title}] 공사정보입니다. 견적 부탁드립니다.`, url }); } catch (e) { return; } }
+    if (navigator.share) { try { await navigator.share({ title, text: text || `[${title}] 공사정보입니다. 견적 부탁드립니다.`, url }); } catch (e) { return; } }
     else { await navigator.clipboard?.writeText(url); showToastMessage('링크를 복사했어요'); }
     ov.remove();
   };
@@ -19310,7 +19310,7 @@ function _renderFurnitureCategoryDetail(cat) {
 
 // 카테고리별 공유 링크: 제품 목록 스냅샷을 vb_exports에 저장 (프로젝트명·연락처 제외)
 function _furnShareHtml(cat, items) {
-  const http = u => /^https?:\/\//.test(u || '') ? u : '';
+  const http = u => /^https?:\/\//.test(u || '') ? u.replace(/["'<>]/g, c => '%' + c.charCodeAt(0).toString(16)) : ''; // esc는 따옴표를 막지 않음
   const total = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const cards = items.map(it => {
     const qty = it.qty || 1, price = (it.price || 0) * qty, img = http(it.imageUrl), url = http(it.url);
@@ -19337,7 +19337,7 @@ async function _furnShareCategory() {
     if (html.length > 900000) throw new Error('too large');
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: cat, kind: 'products', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-    _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, cat);
+    _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, cat, `[${cat}] 제품 목록입니다.`);
   } catch (e) {
     console.warn('category share:', e);
     showToastMessage('링크를 만들지 못했습니다. 잠시 후 다시 시도해주세요.');
