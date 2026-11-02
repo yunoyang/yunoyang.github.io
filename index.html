@@ -7986,6 +7986,7 @@ async function _proSave(patch, msg) {
 }
 async function _proUpload(files) {
   if (!files || !files.length) return;
+  if (state.loggedIn) { await _initFirebase(); await _waitForFirebaseUser(4000); } // 다른 업로드 함수들과 동일 — 미초기화/auth 복원 지연 대응
   if (!_fbStorage) { showToastMessage('업로드를 사용할 수 없어요'); return; }
   const prog = document.getElementById('pro-prog');
   const added = [];
@@ -12621,6 +12622,8 @@ function _onChecklistPhotoFile(input, procId, si, ii) {
             console.warn('checklist photo upload failed, using local data URL:', err);
             showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요(' + (err.code || err.message || '업로드 실패') + ') — 용량이 크면 사라질 수 있으니 다시 시도해주세요');
           }
+        } else if (state.loggedIn) {
+          showToastMessage('⚠️ 저장소 연결 실패로 사진이 클라우드에 저장되지 않았어요 — 다시 시도해주세요');
         }
         const proj2 = getProject();
         const proc2 = proj2?.processes.find(p => p.id === procId);
@@ -17131,20 +17134,20 @@ function _syncProjToCloud(proj) {
       _fpDropOrphanEdited(projData);
     }
     // base64 이미지 모두 제거 → Firestore 1MB 제한 방지 (이미지는 localStorage/IDB에 저장)
-    (projData.meetings || []).forEach(m => {
-      if (Array.isArray(m.images)) m.images = m.images.filter(img => img && !img.startsWith('data:'));
-      m.content = _stripBase64FromHtml(m.content);
-    });
+    // 병합 결과는 로컬 proj의 객체를 그대로 참조하므로 반드시 복사본에서 제거해야 함 — 예전엔
+    // 제자리에서 지워서, "이 기기에만 저장됐어요"로 남겨둔 로컬 사진까지 sync 때 함께 사라졌음
+    if (Array.isArray(projData.meetings)) projData.meetings = projData.meetings.map(m => ({
+      ...m,
+      ...(Array.isArray(m.images) ? { images: m.images.filter(img => img && !img.startsWith('data:')) } : {}),
+      ...(m.content ? { content: _stripBase64FromHtml(m.content) } : {}), // content: undefined는 Firestore가 거부
+    }));
     // furnitureItems 이미지도 base64면 제거 (Storage 업로드 실패 시 로컬 폴백된 대용량 data URL)
-    (projData.furnitureItems || []).forEach(it => {
-      if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
-    });
+    const _dropDataImg = it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it;
+    if (Array.isArray(projData.furnitureItems)) projData.furnitureItems = projData.furnitureItems.map(_dropDataImg);
     // 스펙북 자재(materialItems) 이미지도 동일 — _syncMaterialItemsToCloud에선 제거하는데 여기서만
     // 빠져 있어서, 스펙북 사진 업로드가 실패해 남은 1200px data URL이 owner 전체 sync에 그대로
     // 실려 문서가 1MB를 넘기면 다른 모든 데이터 타입의 sync까지 통째로 실패할 수 있었음
-    (projData.materialItems || []).forEach(it => {
-      if (it.imageUrl && it.imageUrl.startsWith('data:')) it.imageUrl = '';
-    });
+    if (Array.isArray(projData.materialItems)) projData.materialItems = projData.materialItems.map(_dropDataImg);
     // 체크리스트 메모 사진 + 공정기록 사진 모두 base64면 제거 (Storage 업로드 실패 폴백분)
     if (Array.isArray(projData.processes)) projData.processes = projData.processes.map(_stripProcessBase64);
     // floorplanEditedImage(편집 도면)는 용량이 클 수 있으므로 base64 제거
@@ -17166,7 +17169,7 @@ function _syncProjToCloud(proj) {
         const dropB64 = v => (typeof v === 'string' && v.startsWith('data:')) ? null : v;
         if (size() > LIMIT && Array.isArray(projData.floorplanImages)) projData.floorplanImages = projData.floorplanImages.map(dropB64);
         if (size() > LIMIT) projData.floorplanImage = dropB64(projData.floorplanImage);
-        if (size() > LIMIT) (projData.processes || []).forEach(p => (p.records || []).forEach(r => { r.content = _stripBase64FromHtml(r.content); }));
+        if (size() > LIMIT && Array.isArray(projData.processes)) projData.processes = projData.processes.map(p => Array.isArray(p.records) ? { ...p, records: p.records.map(r => r.content ? { ...r, content: _stripBase64FromHtml(r.content) } : r) } : p);
         console.warn('[sync] 문서 크기 초과로 일부 필드 제외, 현재', size(), 'bytes');
       }
     }
@@ -19760,6 +19763,8 @@ async function confirmSaveSpecbookItem(continueAdding) {
         const ref = _fbStorage.ref(`materials/${projId}/${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`);
         await ref.put(_dataUrlToBlob(imageUrl), { contentType: 'image/jpeg' });
         imageUrl = await ref.getDownloadURL();
+      } else {
+        sbUploadErr = '로그인 세션 확인 실패';
       }
     } catch(e) {
       console.warn('specbook image upload failed, keeping local data URL:', e);
@@ -19945,6 +19950,8 @@ function _onSitePhotoFile(input, key) {
             console.warn('site photo upload failed, using local data URL:', err);
             showToastMessage('⚠️ 사진이 이 기기에만 저장됐어요(' + (err.code || err.message || '업로드 실패') + ') — 용량이 크면 사라질 수 있으니 다시 시도해주세요');
           }
+        } else if (state.loggedIn) {
+          showToastMessage('⚠️ 로그인 세션 확인 실패로 사진이 클라우드에 저장되지 않았어요 — 다시 시도해주세요');
         }
         uploaded.push(finalSrc);
       } catch(e) { console.warn('site photo processing failed:', e); }
@@ -20187,6 +20194,7 @@ function _onFurnitureImageFile(input) {
         }
       } else {
         imgInput.value = dataUrl;
+        if (state.loggedIn) showToastMessage('⚠️ 저장소 연결 실패로 이미지가 이 기기에만 저장됐어요 — 다시 시도해주세요');
       }
       _renderFiImagePreview();
     } catch(e) {
@@ -23390,6 +23398,7 @@ async function fpSave() {
       save();
       _syncFloorplanToCloud(proj);
       _loadInfoView();
+      if (state.loggedIn) showToastMessage('⚠️ 저장소 연결 실패로 도면이 이 기기에만 저장됐어요 — 다시 시도해주세요');
     }
 
     btn.innerHTML = '✓ 저장됨';
