@@ -19065,6 +19065,10 @@ function _infoShareSheet(url, title, text) {
   const ov = document.createElement('div'); ov.id = 'pv-pick';
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
   ov.innerHTML = `<div class="pv-pick-in spec-ed"><div class="pv-pick-hd">공사정보 공유</div><div style="font-size:14px;color:#6b7684;line-height:1.5;">링크를 받은 사람은 로그인 없이 도면과 구역별 사이즈를 볼 수 있어요. 금액은 포함되지 않아요.</div><label class="t">링크</label><input type="url" readonly value="${esc(url)}" onclick="this.select()"><button class="save" id="info-share-go">공유하기</button></div>`;
+  if (text) { // 제품 목록 공유
+    ov.querySelector('.pv-pick-hd').textContent = `${title} 공유`;
+    ov.querySelector('.pv-pick-hd').nextElementSibling.textContent = '링크를 받은 사람은 로그인 없이 제품 목록과 가격을 볼 수 있어요';
+  }
   document.body.appendChild(ov);
   const go = document.getElementById('info-share-go');
   go.onclick = async () => {
@@ -19098,7 +19102,9 @@ async function _checkExportOnLoad() {
   }
 
   try {
-    const doc = await _db.collection('vb_exports').doc(exportId).get();
+    // 캐시가 '없음'으로 응답해 방금 만든 링크가 만료로 보이지 않도록 서버 우선 조회
+    const ref = _db.collection('vb_exports').doc(exportId);
+    const doc = await ref.get({ source: 'server' }).catch(() => ref.get());
     if (!doc.exists) {
       document.getElementById('export-view-content').innerHTML =
         '<div style="text-align:center;padding:60px;color:#aaa;font-size:14px;">공사계획서를 찾을 수 없거나 만료되었습니다.</div>';
