@@ -14450,14 +14450,14 @@ const LEGAL_PRIVACY_MD = `## 제1조 (개인정보의 처리 목적)
 
 1. 본 서비스는 **만 14세 이상**만 이용할 수 있습니다. 만 14세 미만 아동의 개인정보는 수집하지 않습니다.
 2. 회사는 회원가입 시 생년월일 입력 또는 "만 14세 이상입니다" 확인 절차 등 자기신고 방식의 연령 확인 절차를 운영합니다.
-3. 구글 소셜 로그인은 이용자의 실제 연령 정보를 회사에 제공하지 않으므로, 구글 로그인 이후 별도의 연령 확인 단계를 거쳐야 회원가입이 완료됩니다.
+3. 구글·Apple 소셜 로그인은 이용자의 실제 연령 정보를 회사에 제공하지 않으므로, 구글 로그인 이후 별도의 연령 확인 단계를 거쳐야 회원가입이 완료됩니다.
 4. 만 14세 미만 아동이 연령을 허위로 기재하는 등의 방법으로 가입한 사실을 회사가 알게 된 경우, 회사는 지체없이 해당 계정 및 수집된 개인정보(업로드 콘텐츠 포함)를 파기하고 서비스 이용을 제한합니다.
 
 ### 6) 서비스 이용 과정에서 자동으로 생성·수집되는 정보
 - IP주소, 접속 로그, 쿠키, 서비스 이용기록, 기기정보(OS, 브라우저 종류)
 
 ### 7) 수집방법
-- 홈페이지(회원가입, 구글 로그인, 프로젝트 생성 등 이용자 입력)
+- 홈페이지(회원가입, 구글·Apple 로그인, 프로젝트 생성 등 이용자 입력)
 - 파일 업로드 기능을 통한 이용자의 자발적 제공
 - 서비스 이용 과정에서 자동 생성정보 수집 장치를 통한 수집
 
@@ -19012,7 +19012,7 @@ function _infoShareHtml(proj) {
   const one = v => Array.isArray(v) ? v[0] : v;
   const row = (k, v) => v ? `<div style="display:flex;gap:12px;padding:8px 0;border-top:1px solid #f2f4f6;font-size:14px;"><span style="width:72px;flex-shrink:0;color:#6b7684;">${k}</span><span style="color:#333;word-break:break-all;">${esc(String(v))}</span></div>` : '';
   const h = t => `<h2 style="font-size:18px;font-weight:600;color:#111;margin:28px 0 10px;">${t}</h2>`;
-  let body = `<h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px;">${esc(proj.name || '공사정보')}</h1>` +
+  let body = `<h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 12px;">공사정보</h1>` +
     row('주택 유형', one(f.type)) + row('평수', one(f.size)) + row('공사 기간', f.startDate ? `${f.startDate} ~ ${f.endDate || '미정'}` : '') + row('지역', f.address);
   if (pm) {
     // 스냅샷은 innerHTML로 들어가 <script>가 안 돌므로 인라인 핸들러로 평면/3D·도면 전환
@@ -19034,14 +19034,14 @@ async function _infoShareLink(proj) {
   const html = _infoShareHtml(proj);
   if (html.length > 900000) throw new Error('too large');
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: proj.name || '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: '공사정보', kind: 'info', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   return `https://vibespacekorea.com/?export=${id}`;
 }
 async function _infoShare() {
   const proj = getProject(); if (!proj) return;
   if (!state.loggedIn) { showToastMessage('로그인 후 공유할 수 있어요'); return; }
   showToastMessage('공유 링크 만드는 중…');
-  try { _infoShareSheet(await _infoShareLink(proj), proj.name || '공사정보'); }
+  try { _infoShareSheet(await _infoShareLink(proj), '공사정보'); }
   catch (e) { console.error('info share', e); showToastMessage('공유 링크 생성 실패. 다시 시도해주세요.'); }
 }
 // 비동기 뒤에는 시스템 공유창이 막힐 수 있어 버튼을 한 번 더 누르게 함
