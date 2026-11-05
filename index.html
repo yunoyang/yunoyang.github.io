@@ -17946,8 +17946,18 @@ async function openDocViewer(id) {
   try {
     const lib = await _loadPdfJs();
     // URL 직접 로드가 WebView에서 실패하는 경우가 있어 바이트로 받아서 전달
-    const buf = await (await fetch(d.url)).arrayBuffer();
-    const pdf = await lib.getDocument({ data: new Uint8Array(buf) }).promise;
+    let step = 'download';
+    const res = await fetch(d.url).catch(e => { throw new Error('download: ' + (e.message || e)); });
+    if (!res.ok) throw new Error('download HTTP ' + res.status);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    let pdf;
+    try { pdf = await lib.getDocument({ data: bytes.slice() }).promise; }
+    catch (e1) {
+      // Worker가 막힌 환경이면 메인 스레드로 재시도
+      console.warn('[doc view] worker 실패, 메인 스레드로 재시도', e1);
+      pdf = await lib.getDocument({ data: bytes, disableWorker: true, isEvalSupported: false }).promise
+        .catch(e2 => { throw new Error('parse: ' + (e1.message || e1) + ' / ' + (e2.message || e2)); });
+    }
     const body = document.getElementById('dv-body'); if (!body || token !== _docViewToken) return;
     body.innerHTML = '';
     const w = Math.min(body.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -17965,7 +17975,7 @@ async function openDocViewer(id) {
     console.warn('[doc view]', e);
     window._docViewErr = String(e && (e.message || e));
     const body = document.getElementById('dv-body');
-    if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
+    if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><span style="font-size:11px;color:#bbb;word-break:break-all;">${esc(window._docViewErr || '')}</span><br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
   }
 }
 function closeDocViewer() {
