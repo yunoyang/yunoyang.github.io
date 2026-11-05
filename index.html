@@ -17967,7 +17967,7 @@ async function openDocViewer(id) {
     body.innerHTML = '<div class="dv-inner" id="dv-inner"></div><div class="dv-zoom"><button onclick="_dvZoomBy(1/1.4)" aria-label="축소">−</button><span id="dv-zoom-val" onclick="_dvSetZoom(1)">100%</span><button onclick="_dvZoomBy(1.4)" aria-label="확대">+</button></div>';
     body.classList.add('dv-ready');
     const inner = document.getElementById('dv-inner');
-    const w = Math.min(body.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const w = Math.max(280, Math.min((body.clientWidth || window.innerWidth || 375) - 24, 900)), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     _dv = { z: 1, w, dpr, pages: [], token };
     _dvBindGestures(body);
     for (let i = 1; i <= pdf.numPages; i++) {
