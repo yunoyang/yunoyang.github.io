@@ -17824,13 +17824,14 @@ async function _syncFpVersionsToCloud(proj) {
 
 // ===== 아카이브 > 자료: PDF 업로드·보기 =====
 // proj.docFiles: [{id, url, thumb, name, size, pages, at, updatedAt, by, byName, deleted?}]
-const _PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+// 앱(capacitor://)에서는 외부 도메인 Worker가 막혀 같은 출처에 내장
+const _PDFJS = 'assets/pdfjs/pdf.min.js';
 let _pdfjsP = null;
 function _loadPdfJs() {
   if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
   if (!_pdfjsP) _pdfjsP = new Promise((res, rej) => {
     const s = document.createElement('script'); s.src = _PDFJS;
-    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = _PDFJS.replace('pdf.min.js', 'pdf.worker.min.js'); res(pdfjsLib); };
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.js', location.href).href; res(pdfjsLib); };
     s.onerror = () => { _pdfjsP = null; rej(new Error('pdf.js 로드 실패')); };
     document.head.appendChild(s);
   });
@@ -17944,7 +17945,9 @@ async function openDocViewer(id) {
   const token = ++_docViewToken;
   try {
     const lib = await _loadPdfJs();
-    const pdf = await lib.getDocument({ url: d.url }).promise;
+    // URL 직접 로드가 WebView에서 실패하는 경우가 있어 바이트로 받아서 전달
+    const buf = await (await fetch(d.url)).arrayBuffer();
+    const pdf = await lib.getDocument({ data: new Uint8Array(buf) }).promise;
     const body = document.getElementById('dv-body'); if (!body || token !== _docViewToken) return;
     body.innerHTML = '';
     const w = Math.min(body.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -17960,6 +17963,7 @@ async function openDocViewer(id) {
     }
   } catch (e) {
     console.warn('[doc view]', e);
+    window._docViewErr = String(e && (e.message || e));
     const body = document.getElementById('dv-body');
     if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
   }
