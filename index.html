@@ -1495,6 +1495,29 @@ button, input, textarea, select { font-family:var(--font); }
   margin-left: 4px; vertical-align: middle;
 }
 /* ===== 기록 인라인 이미지 ===== */
+/* 아카이브 > 자료 */
+#docs-list { padding:14px 16px 100px; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+@media (min-width:660px){ #docs-list { grid-template-columns:repeat(3,1fr); gap:16px; } }
+@media (min-width:1000px){ #docs-list { grid-template-columns:repeat(4,1fr); } }
+.doc-card { border:1px solid #eee; border-radius:16px; overflow:hidden; background:#fff; cursor:pointer; }
+.doc-card:active { opacity:.8; }
+.doc-thumb { aspect-ratio:1/1.3; background:#f4f5f7; display:flex; align-items:center; justify-content:center; overflow:hidden; border-bottom:1px solid #f0f0f0; }
+.doc-thumb img { width:100%; height:100%; object-fit:cover; object-position:top; }
+.doc-thumb span { font-size:15px; font-weight:600; color:#e5484d; background:#fff; padding:8px 12px; border-radius:8px; }
+.doc-info { padding:10px 12px 12px; }
+.doc-name { font-size:14px; color:#111; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-all; }
+.doc-meta { font-size:12px; color:#aaa; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.docs-empty { grid-column:1/-1; text-align:center; padding:70px 20px; color:#888; font-size:15px; line-height:1.7; }
+.docs-empty-btn { margin-top:18px; padding:10px 22px; border:none; border-radius:20px; background:#222; color:#fff; font-size:14px; font-family:var(--font); cursor:pointer; }
+#doc-viewer { position:fixed; inset:0; z-index:9500; background:#f2f3f5; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .3s cubic-bezier(.32,1,.64,1); }
+#doc-viewer.on { transform:none; }
+.dv-head { display:flex; align-items:center; gap:6px; padding:calc(env(safe-area-inset-top) + 8px) 10px 8px; background:#fff; border-bottom:1px solid #eee; }
+.dv-title { flex:1; min-width:0; font-size:16px; font-weight:600; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dv-btn { flex-shrink:0; display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 10px; border:none; background:none; color:#333; font-size:14px; font-family:var(--font); text-decoration:none; cursor:pointer; border-radius:10px; }
+.dv-del { color:#e53935; }
+.dv-body { flex:1; overflow:auto; -webkit-overflow-scrolling:touch; padding:12px 12px calc(env(safe-area-inset-bottom) + 24px); display:flex; flex-direction:column; align-items:center; gap:12px; }
+.dv-page { background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.08); max-width:100%; height:auto; }
+.dv-loading { padding:80px 20px; text-align:center; color:#999; font-size:14px; line-height:1.8; }
 /* meeting-content-view 내 굵기 명시 (부모 font-weight:300 → bolder 상대값 방지) */
 .meeting-content-view { max-width:100%; overflow-x:hidden; word-break:break-word; overflow-wrap:anywhere; font-family:var(--font); }
 .meeting-link-card {
@@ -4454,6 +4477,11 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       <div id="meeting-list" style="padding:14px 16px 100px;"></div>
     </div>
 
+    <!-- Docs Tab (아카이브 > 자료) -->
+    <div id="tab-docs" style="display:none; background:#fff;">
+      <div id="docs-list"></div>
+    </div>
+
     <!-- Furniture & Appliances Tab -->
     <div id="tab-furniture" style="display:none; background:#fff;">
       <div id="furniture-list" style="padding:12px 14px 100px;"></div>
@@ -5210,6 +5238,11 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 </div>
 <div class="floating-group" id="floating-add-content" style="display:none;">
   <button class="floating-btn" onclick="openAddContent()" aria-label="컨텐츠 추가">
+    <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
+  </button>
+</div>
+<div class="floating-group" id="floating-add-docs" style="display:none;">
+  <button class="floating-btn" onclick="openAddDoc()" aria-label="자료 추가">
     <svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>
   </button>
 </div>
@@ -8640,7 +8673,7 @@ function goTo(screen) {
   const fab = document.getElementById('floating-add-process');
   if (fab) fab.style.display = screen === 'main' ? '' : 'none';
   if (screen !== 'main') {
-    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-furniture','floating-add-sitephotos','floating-add-specbook'].forEach(id => {
+    ['floating-add-style','floating-add-meeting','floating-add-content','floating-add-docs','floating-add-furniture','floating-add-sitephotos','floating-add-specbook'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -8908,7 +8941,7 @@ document.addEventListener('wheel', e => {
 }, { passive: true });
 
 // ===== TABS =====
-const _MAIN_TABS = ['plan','calendar','style','content','furniture','meeting','more','sitephotos','matselect','specbook'];
+const _MAIN_TABS = ['plan','calendar','style','content','docs','furniture','meeting','more','sitephotos','matselect','specbook'];
 function _restoreTabFromHash() {
   const m = window.location.hash.match(/[#&]tab=([\w]+)/);
   const tab = m?.[1];
@@ -8925,12 +8958,13 @@ function switchMainTab(tab, btn) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
   // PC에서 넓게 쓰는 탭(일정/스타일/컨텐츠/가구&가전/스펙북)일 때만 .app을 화면 전체 폭으로 확장
-  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'furniture', 'specbook', 'matselect', 'sitephotos', 'meeting'].includes(tab));
+  document.body.classList.toggle('wide-tab', ['calendar', 'style', 'content', 'docs', 'furniture', 'specbook', 'matselect', 'sitephotos', 'meeting'].includes(tab));
   document.getElementById('tab-plan').style.display = tab === 'plan' ? '' : 'none';
   document.getElementById('tab-calendar').style.display = tab === 'calendar' ? '' : 'none';
   document.getElementById('tab-style').style.display = tab === 'style' ? '' : 'none';
   document.getElementById('tab-content').style.display = tab === 'content' ? '' : 'none';
   document.getElementById('tab-meeting').style.display = tab === 'meeting' ? '' : 'none';
+  document.getElementById('tab-docs').style.display = tab === 'docs' ? '' : 'none';
   document.getElementById('tab-matselect').style.display = tab === 'matselect' ? '' : 'none';
   document.getElementById('tab-furniture').style.display = tab === 'furniture' ? '' : 'none';
   document.getElementById('tab-sitephotos').style.display = tab === 'sitephotos' ? '' : 'none';
@@ -8938,10 +8972,11 @@ function switchMainTab(tab, btn) {
   document.getElementById('tab-more').style.display = tab === 'more' ? '' : 'none';
   { const sec = document.getElementById('tab-' + tab); if (sec) { sec.classList.remove('vs-enter'); void sec.offsetWidth; sec.classList.add('vs-enter'); } }
   if (tab === 'more') _renderMoreTab();
-  document.getElementById('floating-add-process').style.display = (tab === 'more' || tab === 'style' || tab === 'content' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook' || tab === 'matselect') ? 'none' : (!canEdit() ? 'none' : '');
+  document.getElementById('floating-add-process').style.display = (tab === 'more' || tab === 'style' || tab === 'content' || tab === 'docs' || tab === 'meeting' || tab === 'furniture' || tab === 'sitephotos' || tab === 'specbook' || tab === 'matselect') ? 'none' : (!canEdit() ? 'none' : '');
   document.getElementById('floating-add-style').style.display = (tab === 'style' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-meeting').style.display = tab === 'meeting' ? '' : 'none';
   document.getElementById('floating-add-content').style.display = tab === 'content' ? '' : 'none';
+  document.getElementById('floating-add-docs').style.display = (tab === 'docs' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-furniture').style.display = (tab === 'furniture' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-sitephotos').style.display = (tab === 'sitephotos' && canEdit()) ? '' : 'none';
   document.getElementById('floating-add-specbook').style.display = (tab === 'specbook' && canEdit()) ? '' : 'none';
@@ -8951,6 +8986,7 @@ function switchMainTab(tab, btn) {
   if (tab === 'style') { renderStyleTab(); _fetchStyleFromCloud(); }
   if (tab === 'content') { renderContentTab(); _fetchContentLinksFromCloud(); }
   if (tab === 'meeting') { renderMeetingTab(); _fetchMeetingsFromCloud(); }
+  if (tab === 'docs') { renderDocsTab(); }
   if (tab === 'furniture') { requestAnimationFrame(() => requestAnimationFrame(renderFurnitureTab)); _fetchFurnitureFromCloud(); }
   if (tab === 'sitephotos') { _renderSitePhotosTab(); }
   if (tab === 'matselect') { renderMatSelectTab(); }
@@ -11784,12 +11820,12 @@ function _vs2Sync(tab) {
   _vs2Tab = tab;
   if (tab !== 'plan' && document.body.classList.contains('vs2-detail-on')) _vs2ClosePhase();
   // 하단 메뉴: 홈(공정·일정) / 스타일(스타일·제품) / 공사정보 / 기록 / 전체
-  const group = (tab === 'plan' || tab === 'calendar') ? 'plan' : (tab === 'style' || tab === 'furniture') ? 'style' : (tab === 'meeting' || tab === 'content') ? 'meeting' : tab;
+  const group = (tab === 'plan' || tab === 'calendar') ? 'plan' : (tab === 'style' || tab === 'furniture') ? 'style' : (tab === 'meeting' || tab === 'docs' || tab === 'content') ? 'meeting' : tab;
   document.querySelectorAll('#vs2-nav .vs2-nav-btn[data-tab]').forEach(b => {
     const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
   _vs2MoveInd();
-  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['furniture', '제품'], ['style', '이미지']], meeting: [['meeting', '기록'], ['content', '컨텐츠']] }[group];
+  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['furniture', '제품'], ['style', '이미지']], meeting: [['meeting', '기록'], ['docs', '자료'], ['content', '컨텐츠']] }[group];
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
@@ -16875,6 +16911,7 @@ function _mergeLocalPreserve(cp, localProjs) {
   if (local.scheduleApplied || cp.scheduleApplied) merged.scheduleApplied = local.scheduleApplied || cp.scheduleApplied;
   if (local.furniQuoteApplied || cp.furniQuoteApplied) merged.furniQuoteApplied = local.furniQuoteApplied || cp.furniQuoteApplied;
   merged.fpVersions = _mergeListById(local.fpVersions, cp.fpVersions, { type: 'fpVersion' });
+  merged.docFiles = _mergeListById(local.docFiles, cp.docFiles, { type: 'docFile' });
   merged.specData = _specMerge(local.specData, cp.specData);
   merged.fpCurrent = _fpvMergeCur(local.fpCurrent, cp.fpCurrent);
   const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
@@ -17148,6 +17185,7 @@ function _syncProjToCloud(proj) {
     if (proj.scheduleApplied || cloudData.scheduleApplied) projData.scheduleApplied = proj.scheduleApplied || cloudData.scheduleApplied;
     if (proj.furniQuoteApplied || cloudData.furniQuoteApplied) projData.furniQuoteApplied = proj.furniQuoteApplied || cloudData.furniQuoteApplied;
     projData.fpVersions = _mergeListById(proj.fpVersions, cloudData.fpVersions, { type: 'fpVersion' });
+    projData.docFiles = _mergeListById(proj.docFiles, cloudData.docFiles, { type: 'docFile' });
     projData.specData = proj.specData = _specMerge(proj.specData, cloudData.specData);
     projData.fpCurrent = _fpvMergeCur(proj.fpCurrent, cloudData.fpCurrent);
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
@@ -17534,6 +17572,7 @@ function _startCollabListener(cloudId) {
     const localFurniApplied = proj.furniQuoteApplied;
     const localSpec = proj.specData;
     const localFpv = proj.fpVersions, localFpCur = proj.fpCurrent; // 도면 버전 보존
+    const localDocs = proj.docFiles; // 자료 보존
     const localPlan = proj.planModel, localPlanSeeded = proj.planSeeded; // 도면 정보 보존
     // 삭제 기록 보존 — 아래 Object.assign(remote)가 덮어쓰면 아직 클라우드에 못 올린 삭제가 유실됨
     const localDelProcIds = proj.deletedProcIds, localDelStyleUrls = proj.deletedStyleUrls, localRoomDels = proj.styleRoomDels;
@@ -17609,6 +17648,7 @@ function _startCollabListener(cloudId) {
     if (localSchedApplied || remote.scheduleApplied) proj.scheduleApplied = localSchedApplied || remote.scheduleApplied;
     if (localFurniApplied || remote.furniQuoteApplied) proj.furniQuoteApplied = localFurniApplied || remote.furniQuoteApplied;
     proj.fpVersions = _mergeListById(localFpv, remote.fpVersions, { type: 'fpVersion' });
+    proj.docFiles = _mergeListById(localDocs, remote.docFiles, { type: 'docFile' });
     proj.specData = _specMerge(localSpec, remote.specData);
     proj.fpCurrent = _fpvMergeCur(localFpCur, remote.fpCurrent);
     { const _p = _mergeEstimate(localPlan, _planDec(remote.planModel)); if (_p) proj.planModel = _p; if (localPlanSeeded || remote.planSeeded) proj.planSeeded = true; }
@@ -17778,6 +17818,152 @@ async function _syncFpVersionsToCloud(proj) {
     await ref.update({ 'projectData.fpVersions': proj.fpVersions, 'projectData.fpCurrent': proj.fpCurrent, 'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(), 'meta.updatedBy': state.user?.email || '', 'meta.updatedBySessionId': _sessionId });
     localStorage.setItem('vibespace', JSON.stringify(state));
   } catch (e) { console.error('[fpvSync]', e.code, e.message); showToastMessage('⚠️ 도면 버전 동기화 실패'); }
+}
+
+// ===== 아카이브 > 자료: PDF 업로드·보기 =====
+// proj.docFiles: [{id, url, thumb, name, size, pages, at, updatedAt, by, byName, deleted?}]
+const _PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+let _pdfjsP = null;
+function _loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!_pdfjsP) _pdfjsP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = _PDFJS;
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = _PDFJS.replace('pdf.min.js', 'pdf.worker.min.js'); res(pdfjsLib); };
+    s.onerror = () => { _pdfjsP = null; rej(new Error('pdf.js 로드 실패')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjsP;
+}
+function _docList(proj) { return (proj?.docFiles || []).filter(d => !d.deleted).sort((a, b) => (b.at || 0) - (a.at || 0)); }
+function _docSize(n) { return !n ? '' : n < 1048576 ? Math.max(1, Math.round(n / 1024)) + 'KB' : (n / 1048576).toFixed(1) + 'MB'; }
+function renderDocsTab() {
+  const el = document.getElementById('docs-list'); if (!el) return;
+  const list = _docList(getProject());
+  if (!list.length) {
+    el.innerHTML = `<div class="docs-empty"><div style="font-size:34px;margin-bottom:10px;">📄</div>아직 올린 자료가 없어요<br><span style="font-size:13px;color:#bbb;">견적서·도면·계약서 PDF를 올려 함께 보세요</span>${canEdit() ? `<button class="docs-empty-btn" onclick="openAddDoc()">PDF 올리기</button>` : ''}</div>`;
+    return;
+  }
+  el.innerHTML = list.map(d => {
+    const dt = new Date(d.at || 0);
+    return `<div class="doc-card" onclick="openDocViewer('${d.id}')">
+      <div class="doc-thumb">${d.thumb ? `<img src="${esc(d.thumb)}" loading="lazy" alt="">` : `<span>PDF</span>`}</div>
+      <div class="doc-info">
+        <div class="doc-name">${esc(d.name || '자료')}</div>
+        <div class="doc-meta">${[d.pages ? d.pages + '쪽' : '', _docSize(d.size), `${dt.getMonth() + 1}.${dt.getDate()}`, d.byName || ''].filter(Boolean).map(esc).join(' · ')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openAddDoc() {
+  if (!canEdit()) return;
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'application/pdf,.pdf';
+  inp.onchange = () => _uploadDoc(inp.files && inp.files[0]);
+  inp.click();
+}
+async function _uploadDoc(file) {
+  if (!file) return;
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) { showToastMessage('⚠️ PDF 파일만 올릴 수 있어요'); return; }
+  if (file.size > 50 * 1048576) { showToastMessage('⚠️ 50MB 이하 파일만 올릴 수 있어요'); return; }
+  showToastMessage('자료 올리는 중…');
+  try {
+    // 첫 페이지 썸네일 + 페이지 수 (실패해도 업로드는 진행)
+    let thumbBlob = null, pages = 0;
+    try {
+      const lib = await _loadPdfJs();
+      const pdf = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      pages = pdf.numPages;
+      const pg = await pdf.getPage(1);
+      const vp0 = pg.getViewport({ scale: 1 });
+      const vp = pg.getViewport({ scale: 480 / vp0.width });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext: cx, viewport: vp }).promise;
+      thumbBlob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
+    } catch (e) { console.warn('[doc thumb]', e); }
+    await _initFirebase(); await _waitForFirebaseUser(4000);
+    if (!_fbStorage || !firebase.auth().currentUser) throw new Error('로그인 필요');
+    const projId = (proj.cloudId || proj.id || 'local').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const base = `styleImages/${projId}/doc_${Date.now()}`;
+    const ref = _fbStorage.ref(`${base}.pdf`);
+    await ref.put(file, { contentType: 'application/pdf' });
+    const url = await ref.getDownloadURL();
+    let thumb = '';
+    if (thumbBlob) { const tr = _fbStorage.ref(`${base}_t.jpg`); await tr.put(thumbBlob, { contentType: 'image/jpeg' }); thumb = await tr.getDownloadURL(); }
+    const now = Date.now();
+    const d = { id: 'doc_' + now + Math.random().toString(36).slice(2, 5), url, thumb, name: file.name.replace(/\.pdf$/i, ''), size: file.size, pages, at: now, updatedAt: now, by: state.user?.email || '', byName: state.user?.name || state.user?.email?.split('@')[0] || '' };
+    proj.docFiles = [...(proj.docFiles || []), d];
+    save(); renderDocsTab();
+    await _syncDocsToCloud(proj);
+    showToastMessage('✅ 자료를 올렸어요');
+  } catch (e) {
+    console.warn('[doc upload]', e);
+    showToastMessage('⚠️ 업로드 실패 (' + (e.code || e.message || '') + ')');
+  }
+}
+async function _syncDocsToCloud(proj) {
+  if (!proj?.cloudId) return;
+  const ok = await _initFirebase(); if (!ok || !_db) return;
+  try {
+    const ref = _db.collection('vb_projects').doc(proj.cloudId);
+    const cd = (await ref.get()).data()?.projectData || {};
+    proj.docFiles = _mergeListById(proj.docFiles, cd.docFiles, { type: 'docFile' });
+    await ref.update({ 'projectData.docFiles': proj.docFiles, 'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(), 'meta.updatedBy': state.user?.email || '', 'meta.updatedBySessionId': _sessionId });
+    localStorage.setItem('vibespace', JSON.stringify(state));
+  } catch (e) { console.error('[docSync]', e.code, e.message); showToastMessage('⚠️ 자료 동기화 실패'); }
+}
+let _docViewToken = 0;
+async function openDocViewer(id) {
+  const d = (getProject()?.docFiles || []).find(x => x.id === id); if (!d) return;
+  document.getElementById('doc-viewer')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'doc-viewer';
+  ov.innerHTML = `<div class="dv-head">
+      <button class="dv-btn" onclick="closeDocViewer()" aria-label="닫기"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
+      <div class="dv-title">${esc(d.name || '자료')}</div>
+      <a class="dv-btn" href="${esc(d.url)}" target="_blank" rel="noopener" aria-label="원본 열기">원본</a>
+      ${canEdit() ? `<button class="dv-btn dv-del" onclick="deleteDoc('${d.id}')">삭제</button>` : ''}
+    </div>
+    <div class="dv-body" id="dv-body"><div class="dv-loading"><div class="join-spinner" style="margin:0 auto 14px;width:28px;height:28px;border-width:3px;"></div>자료 불러오는 중…</div></div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  const token = ++_docViewToken;
+  try {
+    const lib = await _loadPdfJs();
+    const pdf = await lib.getDocument({ url: d.url }).promise;
+    const body = document.getElementById('dv-body'); if (!body || token !== _docViewToken) return;
+    body.innerHTML = '';
+    const w = Math.min(body.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    for (let i = 1; i <= pdf.numPages; i++) {
+      if (token !== _docViewToken) return;
+      const pg = await pdf.getPage(i);
+      const vp0 = pg.getViewport({ scale: 1 });
+      const vp = pg.getViewport({ scale: (w / vp0.width) * dpr });
+      const c = document.createElement('canvas'); c.className = 'dv-page';
+      c.width = vp.width; c.height = vp.height; c.style.width = w + 'px';
+      body.appendChild(c);
+      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) {
+    console.warn('[doc view]', e);
+    const body = document.getElementById('dv-body');
+    if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
+  }
+}
+function closeDocViewer() {
+  _docViewToken++;
+  const ov = document.getElementById('doc-viewer'); if (!ov) return;
+  ov.classList.remove('on'); setTimeout(() => ov.remove(), 300);
+}
+async function deleteDoc(id) {
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  if (!confirm('이 자료를 삭제할까요?')) return;
+  const d = (proj.docFiles || []).find(x => x.id === id); if (!d) return;
+  d.deleted = true; d.updatedAt = Date.now();
+  save(); closeDocViewer(); renderDocsTab();
+  await _syncDocsToCloud(proj);
+  showToastMessage('자료를 삭제했어요');
 }
 
 // 공사정보 > 도면 하위 탭: 평면(도면 이미지 + 도면 정보 펼침) / 3D(화면 꽉 차게 3D 뷰)
