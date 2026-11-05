@@ -4043,6 +4043,11 @@ body.vs2-info #screen-form #form-title { order:1; }
 .vs2-ov-total { display:flex; align-items:center; gap:4px; font-size:18px; font-weight:700; letter-spacing:-.02em; }
 .vs2-ov-row { display:flex; justify-content:space-between; font-size:14px; color:#62676d; line-height:1.45; }
 .vs2-ov-row b { font-weight:600; color:#3a3f45; }
+.vs2-ov-phase { display:flex; gap:10px; font-size:13px; color:#62676d; line-height:1.5; margin:-4px 0 10px; padding-bottom:12px; border-bottom:1px solid #ececec; }
+.vs2-ov-phase-l { flex-shrink:0; }
+.vs2-ov-phase-v { flex:1; text-align:right; word-break:keep-all; }
+.vs2-ov-phase-v b { font-weight:600; color:#3a3f45; }
+.vs2-ov-phase-v i { font-style:normal; color:#c4c8cd; margin:0 6px; }
 #vs2-seg { display:flex; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
 #vs2-seg button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
 #vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
@@ -11892,8 +11897,13 @@ function _vs2RenderOverview() {
   const _today = _vs2Today(), _ps = (proj.processes || []).filter(p => !p.deleted);
   const progress = _ps.length ? Math.round(_ps.filter(p => _vs2ProcState(p, _today) === 'done').length / _ps.length * 100) : 0;
   const period = f.startDate ? `${_vs2Fmt(f.startDate)} - ${f.endDate ? _vs2Fmt(f.endDate) : '미정'}` : '미정';
+  // 단계별 공사비 (플래닝 / 구조공사 / 마감공사)
+  const _phSum = id => _ps.filter(p => _getProcPhase(p) === id).reduce((s, p) => s + _procCost(p), 0);
+  const phaseDetail = [['planning', '플래닝'], ['structure', '구조공사'], ['finish', '마감공사']]
+    .map(([id, l]) => `${l} <b>${Math.round(_phSum(id)).toLocaleString()}원</b>`).join('<i>/</i>');
   el.innerHTML = `<button class="vs2-ov-card" onclick="_vs2GoEstimate()">
       <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}</span></div>
+      <div class="vs2-ov-phase"><span class="vs2-ov-phase-l">상세</span><span class="vs2-ov-phase-v">${phaseDetail}</span></div>
       <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
       <div class="vs2-ov-row"><span>진행상황</span><span><b>${progress}%</b></span></div>
     </button>`;
