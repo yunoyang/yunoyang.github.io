@@ -12278,6 +12278,14 @@ function _renderProcDetailContent(procId) {
     <div style="height:8px;background:#f0f2f6;"></div>
     <div style="background:#fff;padding:12px 20px 6px;">
       <div class="work-field">
+        <span class="f-label">공정 단계</span>
+        <span class="f-value filled" style="position:relative;">
+          ${esc((PROCESS_CATEGORIES.find(c => c.id === _getProcPhase(p)) || PROCESS_CATEGORIES[0]).label)}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          ${canEdit() ? `<select aria-label="공정 단계" onchange="_setProcPhase('${p.id}', this.value)" style="position:absolute;inset:0;opacity:0;width:100%;font-size:16px;cursor:pointer;">${PROCESS_CATEGORIES.map(c => `<option value="${c.id}"${c.id === _getProcPhase(p) ? ' selected' : ''}>${c.label}</option>`).join('')}</select>` : ''}
+        </span>
+      </div>
+      <div class="work-field">
         <span class="f-label">예상견적</span>
         <span class="f-value ${totalCost>0?'readonly':''}">${totalCost>0 ? totalCost.toLocaleString()+'원' : '0원'}</span>
       </div>
@@ -13530,6 +13538,16 @@ function confirmSchedule() {
   save(); renderAll();
   closeDialog('dlg-schedule');
   _refreshProcDetailIfOpen();
+}
+// 공정 상세에서 단계(플래닝/구조/마감/공사후) 이동 — proc.phase가 이름 기반 추정보다 우선
+function _setProcPhase(procId, phase) {
+  const proc = getProject()?.processes.find(p => p.id === procId);
+  if (!proc || !PROCESS_CATEGORIES.some(c => c.id === phase)) return;
+  proc.phase = phase;
+  proc.updatedAt = Date.now(); // 병합 시 클라우드의 이전 단계로 되돌아가지 않도록
+  save(); renderAll();
+  _refreshProcDetailIfOpen();
+  showToastMessage(`${PROCESS_CATEGORIES.find(c => c.id === phase).label} 단계로 옮겼어요`);
 }
 function formatDate(iso) {
   if (!iso) return '';
