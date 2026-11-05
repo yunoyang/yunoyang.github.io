@@ -1516,7 +1516,12 @@ button, input, textarea, select { font-family:var(--font); }
 .dv-btn { flex-shrink:0; display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 10px; border:none; background:none; color:#333; font-size:14px; font-family:var(--font); text-decoration:none; cursor:pointer; border-radius:10px; }
 .dv-del { color:#e53935; }
 .dv-body { flex:1; overflow:auto; -webkit-overflow-scrolling:touch; padding:12px 12px calc(env(safe-area-inset-bottom) + 24px); display:flex; flex-direction:column; align-items:center; gap:12px; }
-.dv-page { background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.08); max-width:100%; height:auto; }
+.dv-page { display:block; margin:0 auto; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.08); height:auto; }
+.dv-body.dv-ready { display:block; overflow:auto; touch-action:pan-x pan-y; padding:12px 0 calc(env(safe-area-inset-bottom) + 80px); }
+.dv-inner { display:flex; flex-direction:column; gap:12px; width:max-content; min-width:100%; padding:0 12px; box-sizing:border-box; }
+.dv-zoom { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 20px); transform:translateX(-50%); display:flex; align-items:center; gap:4px; background:rgba(20,20,20,.82); border-radius:22px; padding:4px; z-index:2; }
+.dv-zoom button { width:38px; height:36px; border:none; background:none; color:#fff; font-size:22px; line-height:1; cursor:pointer; border-radius:18px; }
+.dv-zoom span { min-width:52px; text-align:center; color:#fff; font-size:13px; cursor:pointer; }
 .dv-loading { padding:80px 20px; text-align:center; color:#999; font-size:14px; line-height:1.8; }
 /* meeting-content-view 내 굵기 명시 (부모 font-weight:300 → bolder 상대값 방지) */
 .meeting-content-view { max-width:100%; overflow-x:hidden; word-break:break-word; overflow-wrap:anywhere; font-family:var(--font); }
@@ -17959,17 +17964,22 @@ async function openDocViewer(id) {
         .catch(e2 => { throw new Error('parse: ' + (e1.message || e1) + ' / ' + (e2.message || e2)); });
     }
     const body = document.getElementById('dv-body'); if (!body || token !== _docViewToken) return;
-    body.innerHTML = '';
+    body.innerHTML = '<div class="dv-inner" id="dv-inner"></div><div class="dv-zoom"><button onclick="_dvZoomBy(1/1.4)" aria-label="축소">−</button><span id="dv-zoom-val" onclick="_dvSetZoom(1)">100%</span><button onclick="_dvZoomBy(1.4)" aria-label="확대">+</button></div>';
+    body.classList.add('dv-ready');
+    const inner = document.getElementById('dv-inner');
     const w = Math.min(body.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    _dv = { z: 1, w, dpr, pages: [], token };
+    _dvBindGestures(body);
     for (let i = 1; i <= pdf.numPages; i++) {
       if (token !== _docViewToken) return;
       const pg = await pdf.getPage(i);
       const vp0 = pg.getViewport({ scale: 1 });
-      const vp = pg.getViewport({ scale: (w / vp0.width) * dpr });
       const c = document.createElement('canvas'); c.className = 'dv-page';
-      c.width = vp.width; c.height = vp.height; c.style.width = w + 'px';
-      body.appendChild(c);
-      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      c.style.width = (w * _dv.z) + 'px';
+      inner.appendChild(c);
+      const entry = { pg, c, baseW: vp0.width, rendered: 0, task: null };
+      _dv.pages.push(entry);
+      await _dvRenderPage(entry, 1);
     }
   } catch (e) {
     console.warn('[doc view]', e);
@@ -17984,7 +17994,69 @@ async function openDocViewer(id) {
     if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><span style="font-size:11px;color:#bbb;word-break:break-all;">${esc(window._docViewErr || '')}</span><br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
   }
 }
+// ── 자료 뷰어 확대/축소: 핀치·더블탭·Ctrl+휠·버튼, 확대 후 선명하게 다시 그림 ──
+let _dv = null;
+async function _dvRenderPage(e, z) {
+  if (!_dv) return;
+  const target = Math.min(_dv.w * z * _dv.dpr, 4096);
+  if (e.rendered && target <= e.rendered * 1.15) return;
+  try { e.task?.cancel(); } catch (_) {}
+  const vp = e.pg.getViewport({ scale: target / e.baseW });
+  const off = document.createElement('canvas'); off.width = vp.width; off.height = vp.height;
+  e.task = e.pg.render({ canvasContext: off.getContext('2d'), viewport: vp });
+  try { await e.task.promise; } catch (_) { return; }
+  e.c.width = off.width; e.c.height = off.height; e.c.getContext('2d').drawImage(off, 0, 0);
+  e.rendered = target;
+}
+function _dvSetZoom(nz, cx, cy) {
+  const body = document.getElementById('dv-body'); if (!_dv || !body) return;
+  nz = Math.max(1, Math.min(5, nz));
+  const r = body.getBoundingClientRect();
+  if (cx == null) { cx = r.width / 2; cy = r.height / 2; } else { cx -= r.left; cy -= r.top; }
+  const k = nz / _dv.z;
+  const px = body.scrollLeft + cx, py = body.scrollTop + cy;
+  _dv.z = nz;
+  _dv.pages.forEach(e => { e.c.style.width = (_dv.w * nz) + 'px'; });
+  body.scrollLeft = px * k - cx; body.scrollTop = py * k - cy;
+  const lab = document.getElementById('dv-zoom-val'); if (lab) lab.textContent = Math.round(nz * 100) + '%';
+  clearTimeout(_dv.rt);
+  _dv.rt = setTimeout(() => {
+    if (!_dv) return;
+    const br = body.getBoundingClientRect();
+    _dv.pages.forEach(e => { const cr = e.c.getBoundingClientRect(); if (cr.bottom > br.top - 400 && cr.top < br.bottom + 400) _dvRenderPage(e, _dv.z); });
+  }, 250);
+}
+function _dvZoomBy(f) { if (_dv) _dvSetZoom(_dv.z * f); }
+function _dvBindGestures(body) {
+  let pinch = null, lastTap = 0;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  body.addEventListener('touchstart', ev => {
+    if (ev.touches.length === 2) { pinch = { d: dist(ev.touches), z: _dv.z }; ev.preventDefault(); }
+    else if (ev.touches.length === 1) {
+      const now = Date.now();
+      if (now - lastTap < 280) { const t = ev.touches[0]; _dvSetZoom(_dv.z > 1.05 ? 1 : 2.5, t.clientX, t.clientY); ev.preventDefault(); lastTap = 0; }
+      else lastTap = now;
+    }
+  }, { passive: false });
+  body.addEventListener('touchmove', ev => {
+    if (!pinch || ev.touches.length !== 2) return;
+    ev.preventDefault();
+    const t = ev.touches;
+    _dvSetZoom(pinch.z * dist(t) / pinch.d, (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+  }, { passive: false });
+  body.addEventListener('touchend', ev => { if (ev.touches.length < 2) pinch = null; });
+  // iOS Safari 제스처 이벤트(페이지 전체 확대) 차단
+  body.addEventListener('gesturestart', ev => ev.preventDefault());
+  // PC: Ctrl/⌘ + 휠, 트랙패드 핀치
+  body.addEventListener('wheel', ev => {
+    if (!ev.ctrlKey && !ev.metaKey) return;
+    ev.preventDefault();
+    _dvSetZoom(_dv.z * Math.exp(-ev.deltaY * 0.01), ev.clientX, ev.clientY);
+  }, { passive: false });
+  body.addEventListener('scroll', () => { if (_dv && _dv.z > 1) _dvSetZoom(_dv.z); }, { passive: true });
+}
 function closeDocViewer() {
+  _dv = null;
   _docViewToken++;
   const ov = document.getElementById('doc-viewer'); if (!ov) return;
   ov.classList.remove('on'); setTimeout(() => ov.remove(), 300);
