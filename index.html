@@ -4043,11 +4043,11 @@ body.vs2-info #screen-form #form-title { order:1; }
 .vs2-ov-total { display:flex; align-items:center; gap:4px; font-size:18px; font-weight:700; letter-spacing:-.02em; }
 .vs2-ov-row { display:flex; justify-content:space-between; font-size:14px; color:#62676d; line-height:1.45; }
 .vs2-ov-row b { font-weight:600; color:#3a3f45; }
-.vs2-ov-phase { display:flex; gap:10px; font-size:13px; color:#62676d; line-height:1.5; margin:-4px 0 10px; padding-bottom:12px; border-bottom:1px solid #ececec; }
-.vs2-ov-phase-l { flex-shrink:0; }
-.vs2-ov-phase-v { flex:1; text-align:right; word-break:keep-all; }
-.vs2-ov-phase-v b { font-weight:600; color:#3a3f45; }
-.vs2-ov-phase-v i { font-style:normal; color:#c4c8cd; margin:0 6px; }
+.vs2-ov-phase { font-size:13px; color:#62676d; line-height:1.5; text-align:right; word-break:keep-all; margin:-4px 0 10px; padding-bottom:12px; border-bottom:1px solid #ececec; }
+.vs2-ov-phase b { font-weight:600; color:#3a3f45; }
+.vs2-ov-chev { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; margin:-5px -6px -5px 0; color:#8b95a1; transition:transform .2s; }
+.vs2-ov-chev.on { transform:rotate(180deg); }
+.vs2-ov-phase i { font-style:normal; color:#c4c8cd; margin:0 6px; }
 #vs2-seg { display:flex; background:#fff; border-bottom:1px solid #eef0f3; position:sticky; top:0; z-index:5; }
 #vs2-seg button { flex:1; border:none; background:none; padding:13px 0 11px; font-size:16px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
 #vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
@@ -11885,6 +11885,8 @@ function _vs2Phases(proj) {
   return list;
 }
 function _vs2GoEstimate() { if (_estGet(getProject())) openEstimate(); else if (canEdit()) _estCreate(false); else showToastMessage('아직 등록된 견적이 없어요'); }
+let _vs2CostOpen = false;
+function _vs2ToggleCost() { _vs2CostOpen = !_vs2CostOpen; _vs2RenderOverview(); }
 function _vs2RenderOverview() {
   const el = document.getElementById('vs2-overview'); const proj = getProject(); if (!el || !proj) return;
   let total = 0; const companies = new Set();
@@ -11902,8 +11904,8 @@ function _vs2RenderOverview() {
   const phaseDetail = [['planning', '플래닝'], ['structure', '구조공사'], ['finish', '마감공사']]
     .map(([id, l]) => `${l} <b>${Math.round(_phSum(id)).toLocaleString()}원</b>`).join('<i>/</i>');
   el.innerHTML = `<button class="vs2-ov-card" onclick="_vs2GoEstimate()">
-      <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}</span></div>
-      <div class="vs2-ov-phase"><span class="vs2-ov-phase-l">상세</span><span class="vs2-ov-phase-v">${phaseDetail}</span></div>
+      <div class="vs2-ov-top"><span>예상 공사비</span><span class="vs2-ov-total">${totalAll > 0 ? Math.round(totalAll).toLocaleString() + '원' : '0원'}<span class="vs2-ov-chev${_vs2CostOpen ? ' on' : ''}" role="button" aria-label="단계별 공사비" onclick="event.stopPropagation();_vs2ToggleCost()"><svg class="icon" width="18" height="18" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-down"/></svg></span></span></div>
+      ${_vs2CostOpen ? `<div class="vs2-ov-phase">${phaseDetail}</div>` : ''}
       <div class="vs2-ov-row"><span>일정</span><span><b>${period}</b></span></div>
       <div class="vs2-ov-row"><span>진행상황</span><span><b>${progress}%</b></span></div>
     </button>`;
