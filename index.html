@@ -1617,12 +1617,12 @@ button, input, textarea, select { font-family:var(--font); }
   transition:border-color .3s ease, background-color .3s ease, box-shadow .3s ease;
 }
 /* 시공 시작일이 다가오면(2일 전부터) 강조되는 카드 상태 */
-.work-card.in-progress { border-color:#0088ff; }
 .work-card.upcoming {
   border-color:#4e92ff;
   background:#f8faff;
   animation:cardBlueGlow 2.4s ease-in-out infinite;
 }
+.work-card.upcoming.in-progress { border-color:#0088ff; }
 /* 상태 카드: 블루 4% 쉐도우가 커졌다 작아지는 움직임 */
 @keyframes cardBlueGlow {
   0%,100% { box-shadow:0 2px 8px 0 rgba(0,136,255,0.04); }
