@@ -1,0 +1,48 @@
+{
+  "name": "@codetrix-studio/capacitor-google-auth",
+  "version": "3.4.0-rc.4",
+  "description": "Google Auth plugin for capacitor.",
+  "main": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "author": "CodetrixStudio",
+  "license": "MIT",
+  "peerDependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "files": [
+    "dist/",
+    "ios/",
+    "android/",
+    "!android/src/androidTest",
+    "!android/src/test",
+    "CodetrixStudioCapacitorGoogleAuth.podspec"
+  ],
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native",
+    "google",
+    "auth",
+    "firebase",
+    "angular",
+    "vue",
+    "react",
+    "ionic"
+  ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodetrixStudio/CapacitorGoogleAuth"
+  },
+  "bugs": {
+    "url": "https://github.com/CodetrixStudio/CapacitorGoogleAuth/issues"
+  },
+  "prettier": "@ionic/prettier-config"
+}
