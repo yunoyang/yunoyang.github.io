@@ -1617,6 +1617,7 @@ button, input, textarea, select { font-family:var(--font); }
   transition:border-color .3s ease, background-color .3s ease, box-shadow .3s ease;
 }
 /* 시공 시작일이 다가오면(2일 전부터) 강조되는 카드 상태 */
+.work-card.in-progress { border-color:#0088ff; }
 .work-card.upcoming {
   border-color:#4e92ff;
   background:#f8faff;
@@ -12009,10 +12010,10 @@ function renderWorkCards() {
     const ddayBadge = ddayLabel
       ? `<span class="work-card-dday-badge">${ddayLabel}</span>` : '';
     return `
-    <div class="work-card${isExpanded ? ' expanded' : ''}${isUpcoming ? ' upcoming' : ''}" data-proc-id="${p.id}">
+    <div class="work-card${isExpanded ? ' expanded' : ''}${isUpcoming ? ' upcoming' : ''}${inProgress ? ' in-progress' : ''}" data-proc-id="${p.id}">
       <div class="work-card-row" onclick="toggleCardExpand('${p.id}')">
         <div class="work-card-name-area">
-          <span class="work-card-title" style="font-size:16px;font-weight:400;color:#000;">${esc(p.name)}</span>
+          <span class="work-card-title" style="font-size:16px;font-weight:400;color:${inProgress ? '#0088ff' : '#000'};">${esc(p.name)}</span>
           ${ddayBadge}
         </div>
         <div class="work-card-fold-area">
