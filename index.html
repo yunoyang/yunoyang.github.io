@@ -17975,6 +17975,12 @@ async function openDocViewer(id) {
     console.warn('[doc view]', e);
     window._docViewErr = String(e && (e.message || e));
     const body = document.getElementById('dv-body');
+    // 저장소 CORS 미설정으로 바이트를 못 받는 경우: 브라우저 내장 PDF 뷰어로 표시
+    if (body && /^download/.test(window._docViewErr || '')) {
+      body.style.padding = '0';
+      body.innerHTML = `<iframe src="${esc(d.url)}" style="flex:1;width:100%;height:100%;border:0;background:#fff;" title="${esc(d.name || '자료')}"></iframe>`;
+      return;
+    }
     if (body) body.innerHTML = `<div class="dv-loading">자료를 표시하지 못했어요<br><span style="font-size:11px;color:#bbb;word-break:break-all;">${esc(window._docViewErr || '')}</span><br><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:#0088ff;">원본으로 열기</a></div>`;
   }
 }
