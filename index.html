@@ -1495,6 +1495,8 @@ button, input, textarea, select { font-family:var(--font); }
   margin-left: 4px; vertical-align: middle;
 }
 /* ===== 기록 인라인 이미지 ===== */
+.fpv-pdf-loading { padding:40px 0; text-align:center; font-size:13px; color:#aaa; }
+.fpv-pdf-link { display:block; text-align:right; font-size:12px; color:#5084ff; padding:8px 12px; text-decoration:none; border-top:1px solid #f0f2f5; }
 /* 아카이브 > 자료 */
 #docs-list { padding:14px 16px 100px; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
 @media (min-width:660px){ #docs-list { grid-template-columns:repeat(3,1fr); gap:16px; } }
@@ -17748,10 +17750,33 @@ function _fpvRender() {
   const host = document.getElementById('iv-fpv-plan');
   if (host) {
     const pc = _fpvCur(proj, 'plan');
+    const pdfImg = pc?.ftype === 'pdf' ? (pc.preview || _fpvPdfCache[pc.url] || '') : '';
     host.innerHTML = !pc ? '' : pc.ftype === 'pdf'
-      ? `<div class="fpv-cur"><a class="fpv-pdf" href="${esc(pc.url)}" target="_blank" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(pc.name || '평면도.pdf')}</span><span style="color:#5084ff;font-size:13px;">열기</span></a></div>`
+      ? `<div class="fpv-cur">${pdfImg ? `<img src="${esc(pdfImg)}" alt="평면도" onclick="_openSwipeViewer(['${esc(pdfImg)}'],0)">` : `<div class="fpv-pdf-loading">PDF 도면 불러오는 중…</div>`}<a class="fpv-pdf-link" href="${esc(pc.url)}" target="_blank" rel="noopener">PDF 원본 열기</a></div>`
       : `<div class="fpv-cur"><img src="${esc(pc.url)}" alt="평면도" onclick="_openSwipeViewer(['${esc(pc.url)}'],0)"></div>`;
+    if (pc?.ftype === 'pdf' && !pdfImg) _fpvPdfPreview(pc.url).then(u => { if (u) _fpvRender(); });
   }
+}
+// PDF 도면 → 첫 페이지 이미지 (화면 표시용). 업로드 시 jpg로 저장, 예전 PDF는 즉석 변환 후 메모리 캐시
+const _fpvPdfCache = {};
+async function _pdfFirstPageBlob(src, maxW = 2000) {
+  const lib = await _loadPdfJs();
+  const data = src instanceof Blob ? new Uint8Array(await src.arrayBuffer()) : new Uint8Array(await (await fetch(src)).arrayBuffer());
+  const pdf = await lib.getDocument({ data }).promise;
+  const pg = await pdf.getPage(1);
+  const vp0 = pg.getViewport({ scale: 1 });
+  const vp = pg.getViewport({ scale: Math.min(maxW / vp0.width, 4) });
+  const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+  const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+  await pg.render({ canvasContext: cx, viewport: vp }).promise;
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+}
+async function _fpvPdfPreview(url) {
+  if (_fpvPdfCache[url]) return _fpvPdfCache[url];
+  if (_fpvPdfCache['_p' + url]) return null;
+  _fpvPdfCache['_p' + url] = 1;
+  try { const b = await _pdfFirstPageBlob(url); _fpvPdfCache[url] = URL.createObjectURL(b); return _fpvPdfCache[url]; }
+  catch (e) { console.warn('[fpv pdf preview]', e); return null; }
 }
 // 3D 탭 iframe에 현재 3D 버전(GLB)을 반영
 function _fpv3dModelParam() { const c = _fpvCur(getProject(), '3d'); return c ? '&model=' + encodeURIComponent(c.url) : ''; }
@@ -17779,6 +17804,7 @@ function _fpvOpen() {
 function _fpvPreview(id) {
   const v = (getProject()?.fpVersions || []).find(x => x.id === id); if (!v) return;
   if (v.ftype === 'image') _openSwipeViewer([v.url], 0);
+  else if (v.ftype === 'pdf' && v.preview) _openSwipeViewer([v.preview], 0);
   else if (v.ftype === 'glb') window.open('3d-viewer-test.html?model=' + encodeURIComponent(v.url), '_blank');
   else window.open(v.url, '_blank');
 }
@@ -17797,7 +17823,16 @@ async function _fpvUpload(kind, input) {
     const ref = _fbStorage.ref(`styleImages/${projId}/fpv_${kind}_${Date.now()}.${ext || 'bin'}`);
     await ref.put(file, { contentType: kind === '3d' ? 'model/gltf-binary' : (file.type || 'application/octet-stream') });
     const url = await ref.getDownloadURL();
-    const v = { id: 'fpv_' + Date.now() + Math.random().toString(36).slice(2, 5), kind, url, name: file.name, ftype, at: Date.now(), by: state.user?.email || '', byName: state.user?.name || state.user?.email?.split('@')[0] || '' };
+    // PDF 평면도는 첫 페이지를 이미지로 만들어 화면에 바로 보이게
+    let preview = '';
+    if (kind === 'plan' && ftype === 'pdf') {
+      try {
+        const pb = await _pdfFirstPageBlob(file);
+        const pr = _fbStorage.ref(`styleImages/${projId}/fpv_plan_${Date.now()}_p1.jpg`);
+        await pr.put(pb, { contentType: 'image/jpeg' }); preview = await pr.getDownloadURL();
+      } catch (e) { console.warn('[fpv pdf→img]', e); }
+    }
+    const v = { id: 'fpv_' + Date.now() + Math.random().toString(36).slice(2, 5), kind, url, ...(preview ? { preview } : {}), name: file.name, ftype, at: Date.now(), by: state.user?.email || '', byName: state.user?.name || state.user?.email?.split('@')[0] || '' };
     proj.fpVersions = [...(proj.fpVersions || []), v];
     proj.fpCurrent = { ...(proj.fpCurrent || {}), [kind]: { id: v.id, at: v.at } };
     save(); await _syncFpVersionsToCloud(proj);
