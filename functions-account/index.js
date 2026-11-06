@@ -43,8 +43,11 @@ async function purgeAccount(userDoc) {
 }
 exports.purgeWithdrawnAccounts = onSchedule({ schedule: '0 4 * * *', timeZone: 'Asia/Seoul', region: REGION, timeoutSeconds: 540 }, async () => {
   const cutoff = new Date(Date.now() - WITHDRAW_RETENTION_DAYS * 86400000);
-  const snap = await db.collection('vb_users').where('withdrawn', '==', true).where('withdrawnAt', '<', cutoff).get();
-  for (const d of snap.docs) {
+  // 복합 색인 없이 동작하도록 withdrawn만 조회하고 날짜는 코드에서 거름
+  const snap = await db.collection('vb_users').where('withdrawn', '==', true).get();
+  const due = snap.docs.filter(d => { const t = d.data().withdrawnAt; return t && t.toDate && t.toDate() < cutoff; });
+  console.log(`withdrawn ${snap.size}, due ${due.length}`);
+  for (const d of due) {
     try { await purgeAccount(d); console.log('purged account', d.id); }
     catch (e) { console.error('purge failed', d.id, e); } // 다음 날 재시도
   }
