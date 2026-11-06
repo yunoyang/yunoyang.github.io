@@ -2103,11 +2103,16 @@ button, input, textarea, select { font-family:var(--font); }
 #plan-view.pv-inline .pv-right > .pv-card:first-child { border:none; background:transparent; padding:0; border-radius:0; }
 #plan-view.pv-inline .pv-row, #plan-view.pv-inline .pv-sumtbl, #plan-view.pv-inline .pv-srcnote { display:none; }
 #plan-view.pv-inline .pv-dds-top { display:none; }
+/* PC: 도면을 위에 크게, 구역 정보는 아래로 / 평면·3D 탭은 도면 위 가운데 */
 @media (min-width:900px) {
-  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:flex-start; gap:16px; }
-  #plan-view.pv-inline .pv-left { flex:1.3 1 0; padding:0 !important; position:sticky; top:64px; }
+  #plan-view.pv-inline .pv-body { flex-direction:column; align-items:stretch; gap:16px; }
+  #plan-view.pv-inline .pv-left { width:100%; padding:0 !important; position:static; }
   #plan-view.pv-inline .pv-stage { height:auto; flex:none; }
-  #plan-view.pv-inline .pv-right { flex:1 1 0; width:auto; padding-top:0 !important; }
+  #plan-view.pv-inline .pv-right { width:100%; padding-top:0 !important; }
+  #plan-view.pv-inline .pv-ov { left:50%; right:auto; transform:translateX(-50%); }
+  #plan-view.pv-inline .pv-ov .pv-mode { flex:none; }
+  #plan-view.pv-inline .pv-ov .pv-mode button { flex:none; min-width:72px; }
+  #plan-view.pv-inline .pv-ov-ver { margin-left:0; }
 }
 #form-view-panel #iv-fp-sub { display:none; }
 .pv-ov-ver { color:#333333; width:36px; padding:0; justify-content:center; order:3; margin-left:auto; flex-shrink:0; }
