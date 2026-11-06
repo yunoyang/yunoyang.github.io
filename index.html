@@ -4724,16 +4724,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         <span class="form-label">프로젝트명</span>
         <input class="addr-input" id="f-project-name" placeholder="예: 서울 마포 34평 리모델링" oninput="saveFormData()">
       </div>
-      <div class="form-group">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span class="form-label" style="margin:0;">프로젝트 공개 <span style="font-weight:400;color:#aaa;font-size:13px;">(커뮤니티에 노출)</span></span>
-          <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
-            <input type="checkbox" id="f-project-public" onchange="_onFormProjectPublicToggle(this.checked)" style="opacity:0;width:0;height:0;">
-            <span id="f-project-public-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:26px;transition:.2s;"></span>
-            <span id="f-project-public-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s;"></span>
-          </label>
-        </div>
-      </div>
+      <!-- 커뮤니티 제거로 프로젝트 공개 스위치 삭제 -->
       <div class="form-group">
         <span class="form-label">시공종류 (1개 선택)</span>
         <div class="checkbox-row">
@@ -4838,17 +4829,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
           <span class="f-label">가입일</span>
           <span class="f-value readonly" id="acct-joined-row" style="cursor:default;">-</span>
         </div>
-        <div style="height:1px;background:#f0f2f5;"></div>
-        <div class="work-field">
-          <span class="f-label">프로젝트 공개</span>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
-              <input type="checkbox" id="acct-project-public" onchange="_onProjectPublicToggle(this.checked)" style="opacity:0;width:0;height:0;">
-              <span id="acct-project-public-slider" style="position:absolute;cursor:pointer;inset:0;background:#e0e0e0;border-radius:26px;transition:.2s;"></span>
-              <span id="acct-project-public-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s;"></span>
-            </label>
-          </div>
-        </div>
+        
       </div>
       <!-- 전문가/업체 신청 현황 (accountType이 expert일 때만 표시) -->
       <div id="acct-expert-status-card" style="display:none;margin-bottom:16px;"></div>
@@ -6119,14 +6100,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('sitephotos');"><span style="display:flex;align-items:center;gap:8px;">📷&nbsp; 현장 사진</span></button>
     <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('matselect');"><span style="display:flex;align-items:center;gap:8px;">🧱&nbsp; 자재 선택</span></button>
-    <button class="mobile-sheet-item" onclick="goTo('consulting');closeAllMenus();" style="justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> 전문가 컨설팅
-      </span>
-      <span style="font-size:10px;font-weight:600;color:#111;background:#ffcc33;border-radius:4px;padding:2px 7px;letter-spacing:.02em;">오픈준비중</span>
-    </button>
     <button class="mobile-sheet-item" onclick="openNoticeDialog();closeAllMenus();"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문</span></button>
-    <button class="mobile-sheet-item" onclick="closeAllMenus();showToastMessage('커뮤니티는 준비 중이에요');" style="justify-content:space-between;"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 커뮤니티</span><span style="font-size:10px;font-weight:600;color:#111;background:#ffcc33;border-radius:4px;padding:2px 7px;letter-spacing:.02em;">준비중</span></button>
     <button class="mobile-sheet-item" onclick="closeAllMenus();openAccountDialog();"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 계정</span></button>
     <button class="mobile-sheet-item" onclick="closeAllMenus();setTimeout(()=>toggleLandingMenu({stopPropagation(){}}),0);"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 설정</span></button>
   </div>
@@ -8159,7 +8133,7 @@ async function _renderExpertStatusCard() {
         <div style="font-size:12.5px;color:#888;margin-top:8px;line-height:1.6;">업체 회원에서 탈퇴 처리되어 업체 목록 노출이 중단됐습니다.</div>
         <button onclick="_acctGoToStep('kind');goTo('account-setup');" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font);">다시 신청하기</button>` : ''}
       </div>
-      ${status === 'approved' ? `
+      ${CONSULTING_ENABLED && status === 'approved' ? `
       <div style="background:#fff;border-radius:16px;border:1px solid #eee;padding:18px 20px;margin-top:12px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span style="font-size:15px;font-weight:600;color:#111;">컨설팅 자격</span>
@@ -11785,15 +11759,11 @@ function _renderMoreTab() {
       ${row(I.layers, '자재 선택', "_vs2Go('matselect')")}
       ${row(I.doc, '인테리어 양해 안내문', 'openNoticeDialog()')}
     </div>
-    <div class="mr-sec"><div class="mr-h">서비스</div>
-      ${row(I.consult, '컨설팅', "goTo('consulting')", soon('오픈준비중'))}
-      ${row(I.users, '커뮤니티', "showToastMessage('커뮤니티는 준비 중이에요')", soon('준비중'))}
-    </div>
     <div class="mr-sec"><div class="mr-h">설정</div>
       ${row(I.user, '계정', 'openAccountDialog()')}
       ${row(I.msg, '피드백 제안하기', 'openFeedbackDialog()')}
       ${isAdmin ? row(I.tool, 'Admin', 'openAdminDialog()') : ''}
-      ${state.loggedIn ? row(I.refresh, '계정유형 테스트 초기화', '_acctForceReopen()') : ''}
+      ${isAdmin ? row(I.refresh, '계정유형 테스트 초기화', '_acctForceReopen()') : ''}
     </div>
   </div>`;
 }
@@ -11806,7 +11776,7 @@ function _mrProjMenu(e) {
   const m = document.createElement('div');
   m.id = 'vs2-proj-menu';
   m.style.top = (r.bottom + 6) + 'px'; m.style.right = (window.innerWidth - r.right) + 'px';
-  m.innerHTML = `<button onclick="_mrProjPrivate()">${proj.isPublic ? '프로젝트 비공개' : '프로젝트 공개'}</button><button style="color:#e5484d" onclick="_mrProjDelete()">프로젝트 삭제</button>`;
+  m.innerHTML = `<button style="color:#e5484d" onclick="_mrProjDelete()">프로젝트 삭제</button>`;
   document.body.appendChild(m);
   setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }));
 }
