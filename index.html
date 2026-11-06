@@ -18585,6 +18585,17 @@ async function _checkInviteOnLoad() {
   }
 }
 
+// Firebase Auth 사용자(익명 제외)가 준비될 때까지 대기
+function _waitFbAuthUser(ms) {
+  return new Promise(res => {
+    let done = false;
+    const ok = u => u && !u.isAnonymous;
+    try { if (ok(firebase.auth().currentUser)) return res(true); } catch (e) { return res(false); }
+    const unsub = firebase.auth().onAuthStateChanged(u => { if (!done && ok(u)) { done = true; unsub(); res(true); } });
+    setTimeout(() => { if (!done) { done = true; unsub(); res(ok(firebase.auth().currentUser)); } }, ms);
+  });
+}
+
 async function _processInviteToken(token) {
   openDialog('dlg-join-invite');
   const body = document.getElementById('join-invite-body');
@@ -18594,6 +18605,11 @@ async function _processInviteToken(token) {
   const ok = await _initFirebase();
   if (!ok) {
     if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;">Firebase 연결 오류가 발생했습니다.</p>`;
+    return;
+  }
+  // 로그인 직후엔 Firebase Auth 연결이 아직 안 끝났을 수 있음 → 권한 오류 방지 위해 대기
+  if (!(await _waitFbAuthUser(10000))) {
+    if (body) body.innerHTML = `<p style="text-align:center;color:#e05050;font-size:14px;">로그인 연결을 확인하지 못했어요.<br>다시 로그인한 뒤 초대 링크를 열어주세요.</p>`;
     return;
   }
 
