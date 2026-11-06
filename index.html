@@ -2321,6 +2321,17 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 /* 전체 탭 (토스 전체보기 구조) */
 #tab-more { background:#f6f7f9; min-height:80vh; }
 .mr-wrap { max-width:720px; margin:0 auto; padding:12px 16px calc(110px + env(safe-area-inset-bottom,0px)); }
+.hdr-prof { display:none; width:32px; height:32px; margin:0 4px 0 2px; border-radius:50%; border:none; padding:0; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; overflow:hidden; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
+.hdr-prof img { width:100%; height:100%; object-fit:cover; }
+body.vs2-on #screen-main .hdr-prof { display:flex; }
+.mr-info { background:#fff; border-radius:16px; padding:20px; }
+.mr-info-hd { display:flex; align-items:center; gap:8px; }
+.mr-info-hd b { flex:1; min-width:0; font-size:19px; font-weight:700; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mr-info-row { display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-top:1px solid #f2f4f6; font-size:14px; }
+.mr-info-hd + .mr-info-row { border-top:none; margin-top:6px; }
+.mr-info-row span { color:#8b95a1; flex-shrink:0; }
+.mr-info-row em { font-style:normal; color:#191f28; text-align:right; white-space:pre-line; word-break:keep-all; }
+.mr-info-edit { width:100%; margin-top:14px; height:44px; border:none; border-radius:12px; background:#f2f4f6; color:#333d4b; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; }
 .mr-prof, .mr-proj, .mr-row { display:flex; align-items:center; gap:14px; width:100%; border:none; background:none; font-family:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .mr-prof { background:#fff; border-radius:16px; padding:20px; }
 .mr-av { width:56px; height:56px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; overflow:hidden; flex-shrink:0; }
@@ -4364,6 +4375,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     </div>
     <div class="header-actions" style="display:flex;align-items:center;">
       <button id="notif-btn" onclick="openNotifPanel()" title="알림" aria-label="알림" style="display:none;"><svg width="40" height="40" viewBox="14 13.5 40 40" fill="none"><path d="M26.1592 37.6774C27.1183 36.5831 27.6471 35.1777 27.6471 33.7226V30.443C27.6471 27.1208 29.9765 24.4027 33.4706 24H34.5294C38.0235 24.4027 40.3529 27.1208 40.3529 30.443V33.7226C40.3529 35.1777 40.8817 36.5831 41.8408 37.6774L43 39H25L26.1592 37.6774Z" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 41.8999C32.64 43.2332 35.36 43.2332 36 41.8999" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notif-badge" style="display:none;"></span></button>
+      <button id="hdr-prof-btn" class="hdr-prof" onclick="openAccountDialog()" aria-label="내 계정"></button>
       <button id="project-menu-btn" onclick="toggleProjectMenu(event)" title="메뉴" style="display:none;background:none;border:none;padding:0;width:40px;height:40px;cursor:pointer;">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z" fill="white"/>
@@ -4559,7 +4571,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
       <!-- 프로젝트명 (클릭 시 상세정보 접기/펴기) — 상세정보 전체를 카드 하나로, 섹션 사이는 구분선만 -->
       <!-- 공사정보 탭: 도면 / 견적 / 업체 / 팀 -->
-      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button><button data-k="basic" onclick="_ivTab('basic')">기본정보</button></div>
+      <div class="iv-tabs" id="iv-tabs"><button data-k="fp" class="on" onclick="_ivTab('fp')">도면</button><button data-k="co" onclick="_ivTab('co')">업체</button><button data-k="team" onclick="_ivTab('team')">팀</button></div>
       <div class="info-view-card iv-empty" id="iv-tab-empty" style="display:none;"></div>
       <div class="info-view-card" id="iv-team-card" style="padding:22px 24px;display:none;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:16px;font-weight:600;color:#111;">공동 작업자</div><div style="font-size:13px;color:#8b95a1;margin-top:4px;">프로젝트를 함께 보고 편집할 사람을 초대해요</div></div><button onclick="openCollabFromHeader()" style="flex-shrink:0;border:none;background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">초대·관리</button></div></div>
       <div class="info-view-card" id="iv-basic-card" style="overflow:visible;">
@@ -8435,6 +8447,7 @@ function handleMenuLogin() {
   }
 }
 function updateLoginUI() {
+  try { _renderHdrProfile(); } catch (e) {}
   // 프로필 아바타 버튼
   _renderProfileAvatar();
   if (typeof _renderNotifBadge === 'function') _renderNotifBadge();
@@ -11767,23 +11780,38 @@ function _renderMoreTab() {
     refresh: L('<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>'),
   };
   el.innerHTML = `<div class="mr-wrap">
-    <button class="mr-prof" onclick="${state.loggedIn ? 'openAccountDialog()' : 'openLoginDialog()'}">
-      <span class="mr-av">${av}</span>
-      <span class="mr-pt"><b>${esc(state.loggedIn ? (u.name || u.email?.split('@')[0] || '사용자') : '로그인하기')}</b><small>${esc(state.loggedIn ? (u.email || '') : '로그인하고 프로젝트를 저장하세요')}</small></span>${chev}
-    </button>
-    ${proj ? `<button class="mr-proj" onclick="goTo('landing')"><span><small>현재 프로젝트</small><b>${esc(proj.name || '')}</b></span>${_isProjOwner(proj) ? `<span class="mr-proj-more" role="button" aria-label="프로젝트 더보기" onclick="_mrProjMenu(event)"><svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7684"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>` : ''}</button>` : ''}
+    ${_mrInfoCard(proj)}
     <div class="mr-sec"><div class="mr-h">프로젝트</div>
       ${row(I.camera, '현장 사진', "_vs2Go('sitephotos')")}
       ${row(I.layers, '자재 선택', "_vs2Go('matselect')")}
       ${row(I.doc, '인테리어 양해 안내문', 'openNoticeDialog()')}
     </div>
     <div class="mr-sec"><div class="mr-h">설정</div>
-      ${row(I.user, '계정', 'openAccountDialog()')}
       ${row(I.msg, '피드백 제안하기', 'openFeedbackDialog()')}
       ${isAdmin ? row(I.tool, 'Admin', 'openAdminDialog()') : ''}
       ${isAdmin ? row(I.refresh, '계정유형 테스트 초기화', '_acctForceReopen()') : ''}
     </div>
   </div>`;
+}
+// 전체 탭 상단: 프로젝트 기본정보 (예전 공사정보 > 기본정보)
+function _mrInfoCard(proj) {
+  if (!proj) return '';
+  const f = proj.form || {};
+  const s = f.startDate ? formatDate(f.startDate) : '', e = f.endDate ? formatDate(f.endDate) : '';
+  const size = f.size?.[0] ? f.size[0] + (f.sizeExact ? ` (${f.sizeExact}평)` : '') : '';
+  const rows = [['시공종류', f.type?.[0]], ['평형', size], ['진행 방식', (f.method || []).join(', ')],
+    ['공사 기간', s && e ? `${s} ~ ${e}` : s ? `${s} ~` : ''], ['시공 주소', [f.address, f.addressDetail].filter(Boolean).join('\n')], ['메모', f.memo]];
+  const more = _isProjOwner(proj) ? `<span class="mr-proj-more" role="button" aria-label="프로젝트 더보기" onclick="_mrProjMenu(event)"><svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7684"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>` : '';
+  const canEdit = _normalizeRole(proj.myRole) !== '뷰어';
+  return `<div class="mr-info"><div class="mr-info-hd"><b>${esc(proj.name || '')}</b>${more}</div>
+    ${rows.map(([k, v]) => `<div class="mr-info-row"><span>${k}</span><em>${esc(v || '-')}</em></div>`).join('')}
+    ${canEdit ? `<button class="mr-info-edit" onclick="goTo('form');setTimeout(switchToFormEdit,0)">기본정보 수정하기</button>` : ''}</div>`;
+}
+// 헤더 우측 프로필 (계정·로그아웃·탈퇴는 계정 화면에서)
+function _renderHdrProfile() {
+  const b = document.getElementById('hdr-prof-btn'); if (!b) return;
+  const url = state.loggedIn && _getUserAvatarUrl();
+  b.innerHTML = url ? `<img src="${url}" referrerpolicy="no-referrer" alt="">` : esc(state.loggedIn ? _getUserInitial() : '?');
 }
 function _mrProjMenu(e) {
   e.stopPropagation();
@@ -11832,6 +11860,7 @@ function _vs2Sync(tab) {
   document.body.classList.toggle('vs2-sub', _VS2_SUB.includes(tab));
   _vs2MoveInd();
   const mte = document.getElementById('vs2-menu-title'); if (mte) mte.textContent = mt;
+  _renderHdrProfile();
   document.body.classList.toggle('vs2-menu-titled', !!mt);
   document.body.classList.toggle('vs2-proj-titled', group === 'plan');
 }
@@ -14072,7 +14101,7 @@ function switchToFormEdit() { _showInfoViewPanel(false); }
 
 function _loadInfoView() {
   const proj = getProject(); if (!proj) return;
-  setTimeout(() => _ivTab(document.getElementById('form-view-panel')?.dataset.ivtab || 'fp'), 0);
+  setTimeout(() => { const t = document.getElementById('form-view-panel')?.dataset.ivtab; _ivTab(t && t !== 'basic' ? t : 'fp'); }, 0);
   const f = proj.form || {};
   const set = (id, val) => {
     const el = document.getElementById(id); if (!el) return;
