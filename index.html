@@ -2323,7 +2323,6 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .mr-wrap { max-width:720px; margin:0 auto; padding:12px 16px calc(110px + env(safe-area-inset-bottom,0px)); }
 .hdr-prof { display:none; width:32px; height:32px; margin:0 4px 0 2px; border-radius:50%; border:none; padding:0; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; overflow:hidden; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
 .hdr-prof img { width:100%; height:100%; object-fit:cover; }
-body.vs2-on #screen-main .hdr-prof { display:flex; }
 .mr-info { background:#fff; border-radius:16px; padding:20px; }
 .mr-info-hd { display:flex; align-items:center; gap:8px; }
 .mr-info-hd b { flex:1; min-width:0; font-size:19px; font-weight:700; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2361,8 +2360,8 @@ body.vs2-on #screen-main .hdr-prof { display:flex; }
 body.vs2-info #screen-form #form-view-actions { display:none !important; }
 body.vs2-info #form-notif-btn[data-on="1"] { display:block; position:relative; order:9; margin-left:auto; margin-right:-6px; background:none; border:none; padding:0; width:40px; height:40px; cursor:pointer; }
 body.vs2-info #screen-form #form-title { order:1; }
-/* 첫 화면 우측 상단 프로필/로그인 버튼 숨김 (계정은 전체 탭에서) */
-#landing-avatar-btn { display:none !important; }
+/* 첫 화면 우측 상단 프로필: 로그인 상태에서만 표시 → 계정(로그아웃·탈퇴) */
+#landing-avatar-btn.profile-avatar-login { display:none !important; }
 /* 앱 콘텐츠 뷰어: 유튜브 썸네일 → 유튜브 앱에서 재생 */
 .cv-yt-open { position:relative; display:block; width:100%; aspect-ratio:16/9; border:none; padding:0; background:#000; cursor:pointer; overflow:hidden; }
 .cv-yt-open img { width:100%; height:100%; object-fit:cover; display:block; opacity:.92; }
@@ -4200,7 +4199,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
 
   <!-- 프로필 아바타 (서비스 전체 메뉴) -->
   <div style="position:absolute;top:max(env(safe-area-inset-top,0px),20px);right:20px;z-index:2;">
-    <button id="landing-avatar-btn" class="profile-avatar-btn" onclick="toggleLandingMenu(event)" title="메뉴"></button>
+    <button id="landing-avatar-btn" class="profile-avatar-btn" onclick="openAccountDialog()" title="내 계정" aria-label="내 계정"></button>
   </div>
 
   <!-- 타이틀 + 서브카피 -->
