@@ -6888,6 +6888,8 @@ function showToast() {
 function load() {
   const d = localStorage.getItem('vibespace');
   if (d) { try { state = JSON.parse(d); } catch(e) {} }
+  // 로그인된 계정의 것이 아닌 클라우드 프로젝트 캐시 제거 (계정 전환 후 남은 데이터)
+  try { if (state.loggedIn && state.user?.email) _purgeOtherAccountCache(state.user.email); } catch(e) {}
   if (!state.projects || !state.projects.length) initDefaultProject();
   // 분리 저장된 floorplan 이미지 복원
   (state.projects || []).forEach(p => {
@@ -8402,6 +8404,9 @@ async function _fetchAllMyCloudProjects() {
       }
     }));
   }
+  // 다른 계정이 남긴 기기 캐시의 cloudId로 남의 프로젝트가 열리지 않도록, 오너·협업자인 것만 남김
+  const _me = (state.user?.email || '').toLowerCase();
+  return result.filter(pd => (pd.owner?.email || '').toLowerCase() === _me || (pd.collaborators || []).some(c => (c.email || '').toLowerCase() === _me));
 
   return result;
 }
@@ -16504,12 +16509,13 @@ async function _initFirebase() {
 
 // 로그인 계정이 바뀌면 이전 계정의 클라우드 프로젝트를 기기 캐시에서 제거
 function _purgeOtherAccountCache(newEmail) {
-  const prev = localStorage.getItem('vb_last_email') || '';
-  if (newEmail && prev && prev !== newEmail) {
-    state.projects = (state.projects || []).filter(p => !p.cloudId && !p.isCloud);
-    if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
-  }
-  if (newEmail) localStorage.setItem('vb_last_email', newEmail);
+  const me = (newEmail || '').toLowerCase(); if (!me) return;
+  const mine = p => !p.cloudId && !p.isCloud
+    || (p.owner?.email || '').toLowerCase() === me
+    || (p.collaborators || []).some(c => (c.email || '').toLowerCase() === me);
+  state.projects = (state.projects || []).filter(mine);
+  if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
+  localStorage.setItem('vb_last_email', me);
 }
 // Firebase redirect 복귀 후 user 객체로 로그인 처리 (모바일 Google 로그인)
 async function _handleFirebaseUser(user) {
