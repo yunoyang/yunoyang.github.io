@@ -19754,7 +19754,8 @@ function _renderFurnitureCategoryDetail(cat) {
   if (titleEl) titleEl.textContent = cat;
   if (countEl) countEl.textContent = items.length + '개';
   const totalEl = document.getElementById('furniture-detail-total');
-  const catTotal = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  // 선택(구매예정 = 예산 포함) 제품만 합산
+  const catTotal = items.filter(it => _getFurnitureStatus(it) === '구매예정').reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   if (totalEl) totalEl.textContent = catTotal ? catTotal.toLocaleString() + '원' : '';
 
   const rowHtml = (it) => {
