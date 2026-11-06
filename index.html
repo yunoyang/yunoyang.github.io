@@ -8561,6 +8561,11 @@ function doLogout() {
   _notifStop();
   state.loggedIn = false;
   state.user = {email:'', name:''};
+  // 다른 계정으로 로그인했을 때 이전 계정의 클라우드 프로젝트가 보이지 않도록 기기 캐시에서 제거
+  // (클라우드 프로젝트는 다음 로그인 때 해당 계정 것만 다시 불러옴)
+  state.projects = (state.projects || []).filter(p => !p.cloudId && !p.isCloud);
+  if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
+  try { if (window.firebase?.apps?.length) firebase.auth().signOut(); } catch (e) {}
   localStorage.removeItem('vibespace_session'); // 세션 완전 삭제
   save();
   closeAllMenus();
