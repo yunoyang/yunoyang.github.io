@@ -12,6 +12,7 @@ rsync -a --delete \
   --exclude 'www' \
   --exclude 'scripts' \
   --exclude 'functions' \
+  --exclude 'functions-ai' \
   --exclude 'package.json' \
   --exclude 'package-lock.json' \
   --exclude 'capacitor.config.json' \

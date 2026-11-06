@@ -7,6 +7,10 @@
     {
       "source": "functions-account",
       "codebase": "account"
+    },
+    {
+      "source": "functions-ai",
+      "codebase": "ai"
     }
   ]
 }

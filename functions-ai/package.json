@@ -1,0 +1,11 @@
+{
+  "name": "vibespace-functions-ai",
+  "private": true,
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.1.0"
+  }
+}
