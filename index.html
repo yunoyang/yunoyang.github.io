@@ -2321,6 +2321,55 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 /* 전체 탭 (토스 전체보기 구조) */
 #tab-more { background:#f6f7f9; min-height:80vh; }
 .mr-wrap { max-width:720px; margin:0 auto; padding:12px 16px calc(110px + env(safe-area-inset-bottom,0px)); }
+#ptn { position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.4); display:flex; justify-content:center; }
+#ptn .ptn-in { background:#f7f8fa; width:100%; max-width:640px; height:100%; overflow-y:auto; display:flex; flex-direction:column; }
+.ptn-hd { position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:6px; padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px; background:#f7f8fa; }
+.ptn-hd button { width:40px; height:40px; border:none; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.ptn-hd b { font-size:18px; font-weight:700; color:#111; }
+.ptn-body { flex:1; padding:4px 16px 24px; display:flex; flex-direction:column; gap:10px; }
+.ptn-lead { font-size:14px; color:#6b7684; line-height:1.55; margin:0 4px 6px; }
+.ptn-h { font-size:15px; font-weight:700; color:#111; margin:18px 4px 2px; }
+.ptn-list { display:flex; flex-direction:column; gap:8px; }
+.ptn-svc { display:flex; align-items:center; gap:14px; width:100%; padding:16px 18px; background:#fff; border:1.5px solid transparent; border-radius:16px; font-family:inherit; text-align:left; cursor:pointer; }
+.ptn-svc.on { border-color:#111; }
+.ptn-svc.off { opacity:.45; cursor:default; }
+.ptn-chk { width:22px; height:22px; border-radius:50%; border:1.6px solid #c4cad3; flex-shrink:0; box-sizing:border-box; }
+.ptn-svc.on .ptn-chk { border:7px solid #111; }
+.ptn-svc-t { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.ptn-svc-t b { font-size:16px; font-weight:600; color:#111; }
+.ptn-svc-t small { font-size:13px; color:#8b95a1; }
+.ptn-svc em { font-style:normal; font-size:12px; color:#0088ff; white-space:nowrap; }
+.ptn-card, .ptn-bk { background:#fff; border-radius:16px; padding:18px; display:flex; flex-direction:column; }
+.ptn-card-hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
+.ptn-card-hd b { font-size:17px; font-weight:700; color:#111; }
+.ptn-card-hd small { font-size:12px; color:#0088ff; }
+.ptn-row { display:flex; justify-content:space-between; gap:16px; padding:9px 0; font-size:14px; border-bottom:1px solid #f2f4f6; }
+.ptn-row span { color:#8b95a1; flex-shrink:0; }
+.ptn-row em { font-style:normal; color:#191f28; text-align:right; word-break:keep-all; }
+.ptn-row em.miss { color:#e5484d; }
+.ptn-l { font-size:13px; color:#6b7684; margin:14px 0 6px; }
+.ptn-need { color:#e5484d; font-size:12px; margin-left:4px; }
+.ptn-in-f { width:100%; box-sizing:border-box; height:46px; border:1px solid #e5e8eb; border-radius:12px; padding:0 14px; font-size:16px; font-family:inherit; background:#fff; color:#111; }
+.ptn-in-f.need { border-color:#ffb4b6; background:#fffafa; }
+.ptn-partners { display:flex; gap:8px; flex-wrap:wrap; }
+.ptn-partners button { display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 14px; border:1.5px solid #e5e8eb; border-radius:12px; background:#fff; font-size:14px; font-weight:600; color:#111; font-family:inherit; cursor:pointer; }
+.ptn-partners button.on { border-color:#111; }
+.ptn-partners small { font-size:12px; font-weight:400; color:#8b95a1; }
+.ptn-price { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid #f2f4f6; font-size:14px; color:#6b7684; }
+.ptn-price b { font-size:16px; color:#111; }
+.ptn-agree { display:flex; gap:10px; align-items:flex-start; padding:4px; font-size:13px; color:#4e5968; line-height:1.55; cursor:pointer; }
+.ptn-agree input { width:20px; height:20px; accent-color:#111; flex-shrink:0; margin-top:1px; }
+.ptn-ft { position:sticky; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); background:linear-gradient(rgba(247,248,250,0), #f7f8fa 30%); }
+.ptn-cta { width:100%; height:54px; border:none; border-radius:14px; background:#111; color:#fff; font-size:16px; font-weight:600; font-family:inherit; cursor:pointer; }
+.ptn-cta:disabled { background:#d1d6db; cursor:default; }
+.ptn-bk-hd { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
+.ptn-bk-hd b { font-size:16px; font-weight:700; color:#111; }
+.ptn-bk-hd span { font-size:13px; font-weight:600; white-space:nowrap; }
+.ptn-bk-m { font-size:13px; color:#6b7684; margin-top:4px; line-height:1.5; }
+.ptn-acts { display:flex; gap:8px; margin-top:14px; }
+.ptn-acts button { flex:1; height:44px; border-radius:12px; border:1px solid #e5e8eb; background:#fff; font-size:14px; font-weight:600; color:#333d4b; font-family:inherit; cursor:pointer; }
+.ptn-acts button.pri { background:#111; border-color:#111; color:#fff; }
+.ptn-proc-cta { width:100%; margin:10px 0 6px; height:46px; border:none; border-radius:12px; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; }
 .hdr-prof { display:none; width:32px; height:32px; margin:0 4px 0 2px; border-radius:50%; border:none; padding:0; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; overflow:hidden; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
 .hdr-prof img { width:100%; height:100%; object-fit:cover; }
 .mr-info { background:#fff; border-radius:16px; padding:20px; }
@@ -7078,6 +7127,7 @@ const NOTIF_TYPES = {
   invite_accepted: { cat: 'collab',   icon: '🤝' },
   photo:           { cat: 'activity', icon: '📷' },
   meeting:         { cat: 'activity', icon: '📝' },
+  booking:         { cat: 'activity', icon: '🧾' },
 };
 let _notifItems = [], _notifUnsub = null, _notifKey = null, _notifPrefs = null;
 function _notifUserKey(email) { return String(email || '').toLowerCase().replace(/\./g, '_'); }
@@ -7241,6 +7291,7 @@ function _notifOpen(id) {
 }
 function _notifRoute(n) {
   if (n.type === 'invite') { if (n.refId) _processInviteToken(n.refId); return; }
+  if (n.type === 'booking') { n.tab === 'partner' ? openPartnerInbox() : openPartnerService(); return; }
   const proj = state.projects.find(p => p.cloudId && p.cloudId === n.projectId);
   if (!proj) { showToastMessage('프로젝트를 찾을 수 없어요'); return; }
   state.currentProjectId = proj.id; save(); goTo('main'); renderAll();
@@ -11795,6 +11846,8 @@ function _renderMoreTab() {
       ${row(I.camera, '현장 사진', "_vs2Go('sitephotos')")}
       ${row(I.layers, '자재 선택', "_vs2Go('matselect')")}
       ${row(I.doc, '인테리어 양해 안내문', 'openNoticeDialog()')}
+      ${_ptnEnabled() ? row(I.users, '제휴 서비스', 'openPartnerService()') : ''}
+      ${_ptnIsPartner() ? row(I.consult, '제휴 신청 받은함', 'openPartnerInbox()') : ''}
     </div>
     <div class="mr-sec"><div class="mr-h">설정</div>
       ${row(I.msg, '피드백 제안하기', 'openFeedbackDialog()')}
@@ -12384,6 +12437,7 @@ function _renderProcDetailContent(procId) {
           ${(p.companyData||p.company) ? `<svg class="icon" width="16" height="16" style="color:#333;stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-right"/></svg>` : `<svg class="icon" width="16" height="16" style="color:#bbb;stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-plus"/></svg>`}
         </span>
       </div>
+      ${(() => { const sv = _ptnSvcForProc(p.name); return sv && _ptnEnabled() && _ptnPartners(sv.k).length && canEdit() ? `<button class="ptn-proc-cta" onclick="openPartnerService('${sv.k}')">제휴 ${sv.label} 업체에 바로 신청</button>` : ''; })()}
     </div>
     <div style="height:16px;background:#fff;"></div>
     <div style="background:#fff;padding:0 20px;">
@@ -18774,6 +18828,256 @@ function _openProduct(url) {
   if (B) { B.open({ url, presentationStyle: 'popover' }).catch(() => window.open(url, '_blank')); return; }
   window.open(url, '_blank');
 }
+
+// ===== 제휴 서비스 (1단계: 신청 → 업체 수락 → 고객 확정, 결제는 이후 단계) =====
+// 예약 문서: vb_bookings/{id} (양측 조회용 공개 필드) + vb_bookings/{id}/private/info (상세주소·연락처 — 고객 확정 후 업체 열람)
+const PTN_RATE = 0.15; // 예약금 = 견적 × 수수료율 (결제 연동 전엔 표시만)
+const PTN_SERVICES = [
+  { k: 'protect', label: '보양·동의서', match: ['동의서 및 보양', '가설공사', '보양', '동의서'], desc: '엘리베이터 보양, 입주민 동의서 받기 대행', price: 'fixed' },
+  { k: 'wallpaper', label: '도배', match: ['도배'], desc: '벽·천장 도배 시공', price: 'quote' },
+  { k: 'furniture', label: '가구', match: ['가구'], desc: '붙박이장·주방가구 제작 설치', price: 'quote' },
+  { k: 'clean', label: '입주청소', match: ['입주청소'], desc: '공사 후 분진·마감 청소', price: 'fixed' },
+  { k: 'move', label: '이사', match: ['이삿짐정리', '이사'], desc: '포장이사·보관이사', price: 'quote', extra: [['from', '출발지 주소']] },
+];
+// 제휴업체 목록 — test 업체는 관리자에게만 보임 (실제 업체 입점 시 여기에 추가)
+const PTN_PARTNERS = [
+  { id: 'test', name: '테스트 제휴업체', email: 'yunho.yang@naverlabs.com', area: '경기 성남시', services: ['protect', 'wallpaper', 'furniture', 'clean', 'move'], prices: { protect: { base: 300000 }, clean: { perPy: 13000 } }, test: true },
+];
+const PTN_ST = { requested: ['수락 대기', '#8b95a1'], accepted: ['수락됨 · 확정 필요', '#0088ff'], confirmed: ['예약 확정', '#111'], done: ['작업 완료', '#2e7d32'], declined: ['거절됨', '#e5484d'], canceled: ['취소됨', '#b0b8c1'] };
+let _ptnSel = new Set(), _ptnPick = {}, _ptnMine = [], _ptnInbox = [];
+
+function _ptnMe() { return String(state.user?.email || '').toLowerCase(); }
+function _ptnIsAdmin() { return _ptnMe() === String(_ADMIN_EMAIL).toLowerCase(); }
+function _ptnPartners(k) { return PTN_PARTNERS.filter(p => (!p.test || _ptnIsAdmin()) && (!k || p.services.includes(k))); }
+function _ptnEnabled() { return state.loggedIn && _ptnPartners().length > 0; }
+function _ptnIsPartner() { const me = _ptnMe(); return !!me && PTN_PARTNERS.some(p => p.email.toLowerCase() === me); }
+function _ptnSvc(k) { return PTN_SERVICES.find(s => s.k === k); }
+function _ptnSvcForProc(name) { return PTN_SERVICES.find(s => s.match.includes(name)); }
+function _ptnPy(f) { return parseInt(f.sizeExact) || parseInt(f.size?.[0]) || 0; }
+function _ptnPrice(partner, k, f) {
+  const p = partner?.prices?.[k]; if (!p) return 0;
+  return (p.base || 0) + (p.perPy || 0) * _ptnPy(f);
+}
+function _ptnAddDays(d, n) { if (!d) return ''; const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+// 공정 일정에서 알맞은 신청일 제안
+function _ptnSuggestDate(proj, k) {
+  const f = proj.form || {}, procs = (proj.processes || []).filter(p => !p.deleted);
+  const st = n => procs.find(p => p.name === n)?.scheduleStart;
+  if (k === 'protect') return _ptnAddDays(st('철거') || f.startDate, -14);
+  if (k === 'clean') return _ptnAddDays(f.endDate, 1);
+  if (k === 'move') return _ptnAddDays(f.endDate, 2);
+  const svc = _ptnSvc(k); const p = procs.find(x => svc.match.includes(x.name));
+  return p?.scheduleStart || '';
+}
+function _ptnArea(addr) { return String(addr || '').split(/\s+/).slice(0, 3).join(' '); }
+function _ptnWon(n) { return n ? Number(n).toLocaleString() + '원' : '견적 후 안내'; }
+function _ptnDate(d) { return d ? formatDate(d) : '-'; }
+
+function _ptnSheet(html) {
+  let ov = document.getElementById('ptn');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'ptn'; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="ptn-in">${html}</div>`;
+  ov.querySelector('.ptn-in').scrollTop = 0;
+}
+function _ptnClose() { document.getElementById('ptn')?.remove(); }
+function _ptnHd(title, back) {
+  return `<div class="ptn-hd"><button onclick="${back || '_ptnClose()'}" aria-label="뒤로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><b>${title}</b></div>`;
+}
+
+// ── 고객: 서비스 선택 + 내 신청 내역 ──
+async function openPartnerService(preK) {
+  if (!state.loggedIn) { openLoginDialog(); return; }
+  const proj = getProject(); if (!proj) { showToastMessage('프로젝트를 먼저 선택해주세요'); return; }
+  _ptnSel = new Set(preK ? [preK] : []); _ptnPick = {};
+  _ptnRenderHome();
+  await _ptnLoadMine(); _ptnRenderHome();
+}
+function _ptnRenderHome() {
+  const proj = getProject(); if (!proj) return;
+  const cards = PTN_SERVICES.map(s => {
+    const n = _ptnPartners(s.k).length, on = _ptnSel.has(s.k), d = _ptnSuggestDate(proj, s.k);
+    return `<button class="ptn-svc${on ? ' on' : ''}${n ? '' : ' off'}" ${n ? `onclick="_ptnToggle('${s.k}')"` : 'disabled'}>
+      <span class="ptn-chk"></span><span class="ptn-svc-t"><b>${s.label}</b><small>${n ? s.desc : '제휴업체 준비 중'}</small></span>
+      ${n && d ? `<em>${_ptnDate(d)} 추천</em>` : ''}</button>`;
+  }).join('');
+  const mine = _ptnMine.filter(b => b.projectKey === _ptnProjKey(proj));
+  _ptnSheet(`${_ptnHd('제휴 서비스')}
+    <div class="ptn-body">
+      <p class="ptn-lead">공사 정보로 신청서를 자동으로 채워 한 번에 신청해요.<br>업체가 수락하면 확정할 수 있어요.</p>
+      <div class="ptn-list">${cards}</div>
+      ${mine.length ? `<div class="ptn-h">내 신청</div>${mine.map(_ptnMineCard).join('')}` : ''}
+    </div>
+    <div class="ptn-ft"><button class="ptn-cta" ${_ptnSel.size ? '' : 'disabled'} onclick="_ptnRenderForm()">${_ptnSel.size ? `${_ptnSel.size}개 서비스 신청서 확인` : '서비스를 선택하세요'}</button></div>`);
+}
+function _ptnToggle(k) { _ptnSel.has(k) ? _ptnSel.delete(k) : _ptnSel.add(k); _ptnRenderHome(); }
+function _ptnProjKey(proj) { return proj.cloudId || proj.id; }
+
+// 신청서 확인 — 업체 선택 + 자동 작성된 항목 + 비어 있는 칸만 입력
+function _ptnRenderForm() {
+  const proj = getProject(); const f = proj.form || {};
+  const phone = (() => { try { return localStorage.getItem('vb_phone') || ''; } catch (e) { return ''; } })();
+  const forms = [..._ptnSel].map(k => {
+    const s = _ptnSvc(k), ps = _ptnPartners(k);
+    if (!_ptnPick[k]) _ptnPick[k] = ps[0]?.id;
+    const partner = ps.find(p => p.id === _ptnPick[k]) || ps[0];
+    const price = s.price === 'fixed' ? _ptnPrice(partner, k, f) : 0;
+    return `<div class="ptn-card" data-k="${k}">
+      <div class="ptn-card-hd"><b>${s.label}</b></div>
+      <label class="ptn-l">업체</label>
+      <div class="ptn-partners">${ps.map(p => `<button class="${p.id === partner.id ? 'on' : ''}" onclick="_ptnPick['${k}']='${p.id}';_ptnRenderForm()">${esc(p.name)}<small>${esc(p.area || '')}</small></button>`).join('')}</div>
+      <label class="ptn-l">희망일</label><input type="date" class="ptn-in-f" data-f="date" value="${_ptnSuggestDate(proj, k)}">
+      ${(s.extra || []).map(([id, l]) => `<label class="ptn-l">${l} <span class="ptn-need">입력 필요</span></label><input class="ptn-in-f need" data-f="${id}" placeholder="${l}">`).join('')}
+      <label class="ptn-l">요청 사항</label><input class="ptn-in-f" data-f="memo" placeholder="선택">
+      <div class="ptn-price"><span>${s.price === 'fixed' ? '예상 금액' : '금액'}</span><b>${_ptnWon(price)}</b></div>
+    </div>`;
+  }).join('');
+  const rows = [['프로젝트', proj.name], ['시공 주소', [f.address, f.addressDetail].filter(Boolean).join(' ')], ['평형', f.size?.[0] ? f.size[0] + (f.sizeExact ? ` (${f.sizeExact})` : '') : ''], ['공사 기간', f.startDate ? `${_ptnDate(f.startDate)} ~ ${_ptnDate(f.endDate)}` : '']];
+  const names = [...new Set([..._ptnSel].map(k => (_ptnPartners(k).find(p => p.id === _ptnPick[k]) || {}).name).filter(Boolean))];
+  _ptnSheet(`${_ptnHd('신청서 확인', '_ptnRenderHome()')}
+    <div class="ptn-body">
+      <div class="ptn-card"><div class="ptn-card-hd"><b>공사 정보</b><small>자동 입력됨</small></div>
+        ${rows.map(([k, v]) => `<div class="ptn-row"><span>${k}</span><em class="${v ? '' : 'miss'}">${esc(v || '공사정보에서 입력 필요')}</em></div>`).join('')}
+        <label class="ptn-l">연락처 <span class="ptn-need">${phone ? '' : '입력 필요'}</span></label><input id="ptn-phone" class="ptn-in-f${phone ? '' : ' need'}" type="tel" inputmode="tel" placeholder="010-0000-0000" value="${esc(phone)}">
+      </div>
+      ${forms}
+      <label class="ptn-agree"><input type="checkbox" id="ptn-agree"><span>선택한 업체(${esc(names.join(', '))})에 시공 주소·연락처·일정·평형을 전달하는 데 동의해요. 상세 주소와 연락처는 예약을 확정한 뒤에 업체에 공개돼요.</span></label>
+    </div>
+    <div class="ptn-ft"><button class="ptn-cta" onclick="_ptnSubmit()">${_ptnSel.size}건 신청하기</button></div>`);
+}
+
+async function _ptnSubmit() {
+  const proj = getProject(); const f = proj.form || {};
+  const phone = document.getElementById('ptn-phone')?.value.trim();
+  if (!f.address) { alert('공사정보에 시공 주소를 먼저 입력해주세요.'); return; }
+  if (!/^[0-9\-+ ]{9,}$/.test(phone || '')) { alert('연락처를 입력해주세요.'); return; }
+  if (!document.getElementById('ptn-agree')?.checked) { alert('정보 제공에 동의해주세요.'); return; }
+  const items = [...document.querySelectorAll('#ptn .ptn-card[data-k]')].map(c => {
+    const v = {}; c.querySelectorAll('[data-f]').forEach(i => v[i.dataset.f] = i.value.trim()); return { k: c.dataset.k, v };
+  });
+  const miss = items.find(it => !it.v.date || (_ptnSvc(it.k).extra || []).some(([id]) => !it.v[id]));
+  if (miss) { alert(`${_ptnSvc(miss.k).label}: 희망일과 필수 항목을 입력해주세요.`); return; }
+  try { localStorage.setItem('vb_phone', phone); } catch (e) {}
+  const btn = document.querySelector('#ptn .ptn-cta'); if (btn) { btn.disabled = true; btn.textContent = '신청 중…'; }
+  try {
+    if (!(await _initFirebase()) || !(await _waitFbAuthUser(8000))) throw new Error('로그인 연결을 확인하지 못했어요');
+    const me = _ptnMe(), batch = _db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(), sent = [];
+    for (const it of items) {
+      const s = _ptnSvc(it.k), partner = _ptnPartners(it.k).find(p => p.id === _ptnPick[it.k]) || _ptnPartners(it.k)[0];
+      const price = s.price === 'fixed' ? _ptnPrice(partner, it.k, f) : 0;
+      const ref = _db.collection('vb_bookings').doc();
+      batch.set(ref, {
+        service: it.k, serviceLabel: s.label, partnerId: partner.id, partnerName: partner.name, partnerEmail: partner.email.toLowerCase(),
+        customerEmail: me, customerName: state.user?.name || '', projectKey: _ptnProjKey(proj), projectName: proj.name || '',
+        area: _ptnArea(f.address), sizeLabel: f.size?.[0] || '', pyeong: _ptnPy(f), type: f.type?.[0] || '', method: (f.method || []).join(', '),
+        date: it.v.date, memo: it.v.memo || '', extra: Object.fromEntries((s.extra || []).map(([id, l]) => [l, it.v[id] || ''])),
+        priceType: s.price, price, rate: PTN_RATE, deposit: Math.round(price * PTN_RATE), status: 'requested',
+        createdAt: now, updatedAt: now,
+      });
+      batch.set(ref.collection('private').doc('info'), { address: f.address || '', addressDetail: f.addressDetail || '', phone, customerEmail: me, partnerEmail: partner.email.toLowerCase() });
+      sent.push({ partner, s });
+    }
+    await batch.commit();
+    sent.forEach(({ partner, s }) => _vbNotify('booking', [partner.email], { title: '새 제휴 신청', body: `${state.user?.name || '고객'}님이 ${s.label}을(를) 신청했어요`, tab: 'partner' }));
+    showToastMessage(_ti('check') + `${items.length}건 신청했어요. 업체 수락을 기다려 주세요`);
+    _ptnSel = new Set(); await _ptnLoadMine(); _ptnRenderHome();
+  } catch (e) {
+    console.error('[ptn submit]', e);
+    alert('신청하지 못했어요: ' + (e.message || e));
+    if (btn) { btn.disabled = false; btn.textContent = '다시 신청하기'; }
+  }
+}
+
+async function _ptnLoadMine() {
+  try {
+    if (!(await _initFirebase()) || !(await _waitFbAuthUser(8000))) return;
+    const s = await _db.collection('vb_bookings').where('customerEmail', '==', _ptnMe()).get();
+    _ptnMine = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (e) { console.warn('[ptn mine]', e.code || e.message); }
+}
+function _ptnMineCard(b) {
+  const [st, col] = PTN_ST[b.status] || [b.status, '#888'];
+  const act = b.status === 'accepted'
+    ? `<div class="ptn-acts"><button onclick="_ptnCancel('${b.id}')">취소</button><button class="pri" onclick="_ptnConfirm('${b.id}')">예약 확정</button></div>`
+    : b.status === 'requested' ? `<div class="ptn-acts"><button onclick="_ptnCancel('${b.id}')">신청 취소</button></div>`
+    : b.status === 'declined' ? `<div class="ptn-acts"><button class="pri" onclick="openPartnerService('${b.service}')">다른 업체에 다시 신청</button></div>` : '';
+  return `<div class="ptn-bk"><div class="ptn-bk-hd"><b>${esc(b.serviceLabel)}</b><span style="color:${col}">${st}</span></div>
+    <div class="ptn-bk-m">${esc(b.partnerName)} · ${_ptnDate(b.date)}</div>
+    ${b.price ? `<div class="ptn-bk-m">금액 ${_ptnWon(b.price)} · 예약금 ${_ptnWon(b.deposit)} · 잔금 ${_ptnWon(b.price - b.deposit)}</div>` : ''}
+    ${b.declineReason ? `<div class="ptn-bk-m">사유: ${esc(b.declineReason)}</div>` : ''}${act}</div>`;
+}
+async function _ptnSet(id, status, extra) {
+  if (status === 'canceled' && !confirm('이 신청을 취소할까요?')) return false;
+  try {
+    await _db.collection('vb_bookings').doc(id).update({ status, ...(extra || {}), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const b = [..._ptnMine, ..._ptnInbox].find(x => x.id === id);
+    if (b) {
+      const toPartner = _ptnMe() === b.customerEmail;
+      const msg = { accepted: `${b.partnerName}이(가) ${b.serviceLabel} 신청을 수락했어요. 확정해 주세요`, declined: `${b.partnerName}이(가) ${b.serviceLabel} 신청을 거절했어요`, confirmed: `${b.customerName || '고객'}님이 ${b.serviceLabel} 예약을 확정했어요`, done: `${b.serviceLabel} 작업이 완료 처리됐어요`, canceled: `${b.serviceLabel} 예약이 취소됐어요` }[status];
+      if (msg) _vbNotify('booking', [toPartner ? b.partnerEmail : b.customerEmail], { title: '제휴 서비스', body: msg, tab: toPartner ? 'partner' : 'partner-mine' });
+    }
+    return true;
+  } catch (e) { alert('처리하지 못했어요: ' + (e.message || e)); return false; }
+}
+// 고객 확정 (결제 연동 후엔 이 단계에서 예약금 결제) → 해당 공정에 업체·일정 반영
+async function _ptnConfirm(id) {
+  const b = _ptnMine.find(x => x.id === id); if (!b) return;
+  if (!confirm(`${b.partnerName} · ${b.serviceLabel} · ${_ptnDate(b.date)}\n예약을 확정할까요?\n확정하면 업체에 상세 주소와 연락처가 공개돼요.`)) return;
+  if (!(await _ptnSet(id, 'confirmed', { confirmedAt: firebase.firestore.FieldValue.serverTimestamp() }))) return;
+  const proj = getProject(), svc = _ptnSvc(b.service);
+  const p = proj && (proj.processes || []).find(x => !x.deleted && svc?.match.includes(x.name));
+  if (p && canEdit()) {
+    p.company = b.partnerName; p.scheduleStart = b.date; p.scheduleEnd = p.scheduleEnd && p.scheduleEnd >= b.date ? p.scheduleEnd : b.date;
+    save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll?.();
+  }
+  showToastMessage(_ti('check') + '예약을 확정했어요' + (p ? ` · ${p.name} 공정에 반영했어요` : ''));
+  await _ptnLoadMine(); _ptnRenderHome();
+}
+
+// ── 제휴업체: 신청 받은함 ──
+async function openPartnerInbox() {
+  if (!state.loggedIn) { openLoginDialog(); return; }
+  _ptnSheet(`${_ptnHd('제휴 신청 받은함')}<div class="ptn-body"><p class="ptn-lead">불러오는 중…</p></div>`);
+  try {
+    if (!(await _initFirebase()) || !(await _waitFbAuthUser(8000))) throw new Error('로그인 연결 실패');
+    const s = await _db.collection('vb_bookings').where('partnerEmail', '==', _ptnMe()).get();
+    _ptnInbox = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    await Promise.all(_ptnInbox.filter(b => b.status === 'confirmed' || b.status === 'done').map(async b => {
+      try { const p = await _db.collection('vb_bookings').doc(b.id).collection('private').doc('info').get(); b.priv = p.data(); } catch (e) {}
+    }));
+  } catch (e) { _ptnSheet(`${_ptnHd('제휴 신청 받은함')}<div class="ptn-body"><p class="ptn-lead">불러오지 못했어요: ${esc(e.message || '')}</p></div>`); return; }
+  _ptnRenderInbox();
+}
+function _ptnRenderInbox() {
+  const card = b => {
+    const [st, col] = PTN_ST[b.status] || [b.status, '#888'];
+    const rows = [['서비스', b.serviceLabel], ['희망일', _ptnDate(b.date)], ['지역', b.area], ['평형', b.pyeong ? `${b.pyeong}평` : b.sizeLabel], ['시공', [b.type, b.method].filter(Boolean).join(' · ')],
+      ...Object.entries(b.extra || {}), ['요청 사항', b.memo], ['금액', b.price ? _ptnWon(b.price) : '']];
+    if (b.priv) rows.push(['고객', b.customerName], ['연락처', b.priv.phone], ['상세 주소', [b.priv.address, b.priv.addressDetail].filter(Boolean).join(' ')]);
+    const act = b.status === 'requested'
+      ? `${b.priceType === 'quote' ? `<label class="ptn-l">견적 금액 (원)</label><input class="ptn-in-f" id="ptn-q-${b.id}" type="number" inputmode="numeric" placeholder="예: 1200000">` : ''}
+         <div class="ptn-acts"><button onclick="_ptnDecline('${b.id}')">거절</button><button class="pri" onclick="_ptnAccept('${b.id}')">수락</button></div>`
+      : b.status === 'confirmed' ? `<div class="ptn-acts"><button class="pri" onclick="_ptnDone('${b.id}')">작업 완료</button></div>` : '';
+    return `<div class="ptn-bk"><div class="ptn-bk-hd"><b>${esc(b.serviceLabel)} · ${esc(b.projectName || '')}</b><span style="color:${col}">${st}</span></div>
+      ${rows.filter(([, v]) => v).map(([k, v]) => `<div class="ptn-row"><span>${esc(k)}</span><em>${esc(String(v))}</em></div>`).join('')}
+      ${b.status === 'accepted' ? '<div class="ptn-bk-m">고객 확정을 기다리는 중이에요. 확정되면 상세 주소와 연락처가 보여요.</div>' : ''}${act}</div>`;
+  };
+  _ptnSheet(`${_ptnHd('제휴 신청 받은함')}<div class="ptn-body">${_ptnInbox.length ? _ptnInbox.map(card).join('') : '<p class="ptn-lead">아직 들어온 신청이 없어요</p>'}</div>`);
+}
+async function _ptnAccept(id) {
+  const b = _ptnInbox.find(x => x.id === id); if (!b) return;
+  let price = b.price;
+  if (b.priceType === 'quote') { price = parseInt(document.getElementById('ptn-q-' + id)?.value) || 0; if (!price) { alert('견적 금액을 입력해주세요.'); return; } }
+  if (await _ptnSet(id, 'accepted', { price, deposit: Math.round(price * (b.rate || PTN_RATE)), acceptedAt: firebase.firestore.FieldValue.serverTimestamp() })) openPartnerInbox();
+}
+async function _ptnDecline(id) {
+  const r = prompt('거절 사유 (고객에게 보여요)', '해당 날짜 일정 불가'); if (r === null) return;
+  if (await _ptnSet(id, 'declined', { declineReason: r })) openPartnerInbox();
+}
+async function _ptnDone(id) {
+  if (!confirm('작업 완료로 처리할까요?')) return;
+  if (await _ptnSet(id, 'done', { doneAt: firebase.firestore.FieldValue.serverTimestamp() })) openPartnerInbox();
+}
+async function _ptnCancel(id) { if (await _ptnSet(id, 'canceled')) { await _ptnLoadMine(); _ptnRenderHome(); } }
 
 function _ti(type) {
   const a = 'width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px;flex-shrink:0;"';

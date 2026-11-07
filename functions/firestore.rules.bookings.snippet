@@ -1,0 +1,24 @@
+// 제휴 서비스 예약 — 기존 firestore.rules 의 match /databases/{database}/documents { ... } 안에 추가
+// 고객(customerEmail)과 제휴업체(partnerEmail)만 읽고 수정할 수 있음.
+// 상세 주소·연락처(private/info)는 고객이 '예약 확정'한 뒤에만 업체가 읽을 수 있음.
+match /vb_bookings/{id} {
+  function me() { return request.auth.token.email.lower(); }
+  function party(d) { return request.auth != null && (d.customerEmail == me() || d.partnerEmail == me()); }
+
+  allow create: if request.auth != null
+    && request.resource.data.customerEmail == me()
+    && request.resource.data.status == 'requested';
+  allow read: if party(resource.data);
+  allow update: if party(resource.data)
+    && request.resource.data.customerEmail == resource.data.customerEmail
+    && request.resource.data.partnerEmail == resource.data.partnerEmail;
+
+  match /private/{doc} {
+    function bk() { return get(/databases/$(database)/documents/vb_bookings/$(id)).data; }
+    allow create: if request.auth != null
+      && getAfter(/databases/$(database)/documents/vb_bookings/$(id)).data.customerEmail == me();
+    allow read: if request.auth != null && (
+      bk().customerEmail == me()
+      || (bk().partnerEmail == me() && bk().status in ['confirmed', 'done']));
+  }
+}
