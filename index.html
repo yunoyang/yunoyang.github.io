@@ -2628,6 +2628,16 @@ body.vs2-info #screen-form #form-title { order:1; }
 .chk-item { display:flex; align-items:center; gap:8px; cursor:pointer; }
 .chk-item input[type="checkbox"],
 .chk-item input[type="radio"] { width:18px; height:18px; accent-color:var(--primary); cursor:pointer; flex-shrink:0; }
+/* 라디오: 블랙 (선택 = 두꺼운 링 + 흰 점, 미선택 = 블랙 외곽선) */
+.chk-item input[type="radio"] { -webkit-appearance:none; appearance:none; width:20px; height:20px; margin:0; border:1.6px solid #111; border-radius:50%; background:#fff; transition:border-width .12s; }
+.chk-item input[type="radio"]:checked { border-width:6px; }
+.chk-item input[type="radio"]:checked + label { color:#111; }
+.method-list { display:flex; flex-direction:column; gap:14px; }
+.method-item { display:flex; align-items:center; gap:14px; cursor:pointer; }
+.method-item .chk-item { flex-shrink:0; width:92px; }
+.method-name { font-size:16px; color:#aaa; }
+.method-item input:checked + .method-name { color:#111; font-weight:500; }
+.method-desc { font-size:13px; color:#8b95a1; line-height:1.45; word-break:keep-all; }
 .chk-item label { font-size:16px; color:#aaa; cursor:pointer; }
 .chk-item input:checked + label { color:#111; font-weight:500; }
 .chk-item input[disabled] + label { color:#ddd; cursor:not-allowed; }
@@ -4710,36 +4720,6 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
     <!-- ▶ EDIT MODE (기존 폼) -->
     <div id="form-edit-panel" style="display:contents;">
     <div class="form-body">
-      <div class="form-group" id="floorplan-group">
-        <span class="form-label">도면 이미지 <span style="font-weight:400;color:#aaa;font-size:13px;">(최대 3장, 선택)</span></span>
-        <div class="floorplan-multi-scroll" id="floorplan-multi-scroll">
-          <div class="floorplan-slot" id="fp-slot-0" style="position:relative;">
-            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
-              <input type="file" id="fp-input-0" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,0)">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span style="font-size:12px;color:#aaa;">도면 추가</span>
-            </label>
-          </div>
-          <div class="floorplan-slot" id="fp-slot-1" style="position:relative;">
-            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
-              <input type="file" id="fp-input-1" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,1)">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span style="font-size:12px;color:#aaa;">도면 추가</span>
-            </label>
-          </div>
-          <div class="floorplan-slot" id="fp-slot-2" style="position:relative;">
-            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
-              <input type="file" id="fp-input-2" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,2)">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span style="font-size:12px;color:#aaa;">도면 추가</span>
-            </label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <span class="form-label">3D 도면 링크 <span style="font-weight:400;color:#aaa;font-size:13px;">(선택)</span></span>
-        <input class="addr-input" id="f-floorplan-link" placeholder="https://planner.archisketch.com/..." oninput="saveFormData()" style="font-size:13px;">
-      </div>
       <div class="form-group">
         <span class="form-label">프로젝트명</span>
         <input class="addr-input" id="f-project-name" placeholder="예: 서울 마포 34평 리모델링" oninput="saveFormData()">
@@ -4777,9 +4757,10 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       </div>
       <div class="form-group">
         <span class="form-label">진행 방식</span>
-        <div class="checkbox-row">
-          <div class="chk-item"><input type="checkbox" id="f-self" checked onchange="saveFormData()"><label for="f-self">반셀프</label></div>
-          <div class="chk-item"><input type="checkbox" id="f-turnkey" onchange="saveFormData()"><label for="f-turnkey">턴키</label></div>
+        <div class="method-list">
+          <label class="method-item"><span class="chk-item"><input type="radio" name="f-method" id="f-self" value="반셀프" checked onchange="saveFormData()"><span class="method-name">반셀프</span></span><span class="method-desc">직접 모든 공사를 진행하는 방식</span></label>
+          <label class="method-item"><span class="chk-item"><input type="radio" name="f-method" id="f-halfturnkey" value="반턴키" onchange="saveFormData()"><span class="method-name">반턴키</span></span><span class="method-desc">플래닝, 구조공사, 마감공사를 부분적으로 시공사에게 맡기는 방식</span></label>
+          <label class="method-item"><span class="chk-item"><input type="radio" name="f-method" id="f-turnkey" value="턴키" onchange="saveFormData()"><span class="method-name">턴키</span></span><span class="method-desc">모든 공사를 시공사에게 맡기는 방식</span></label>
         </div>
       </div>
       <div class="form-group">
@@ -4805,6 +4786,32 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       <div class="form-group">
         <span class="form-label">메모</span>
         <textarea class="textarea-field" id="f-memo" onchange="saveFormData()" placeholder="업체에 전달할 사항, 요청 사항 등을 메모해두세요"></textarea>
+      </div>
+      <div class="form-group" id="floorplan-group">
+        <span class="form-label">도면 이미지 <span style="font-weight:400;color:#aaa;font-size:13px;">(최대 3장, 선택)</span></span>
+        <div class="floorplan-multi-scroll" id="floorplan-multi-scroll">
+          <div class="floorplan-slot" id="fp-slot-0" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-0" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,0)">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
+          </div>
+          <div class="floorplan-slot" id="fp-slot-1" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-1" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,1)">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
+          </div>
+          <div class="floorplan-slot" id="fp-slot-2" style="position:relative;">
+            <label style="position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;">
+              <input type="file" id="fp-input-2" accept="image/*" style="display:none;" onchange="_fpSlotUpload(event,2)">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8cdd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style="font-size:12px;color:#aaa;">도면 추가</span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-footer">
@@ -14010,8 +14017,8 @@ function loadFormData() {
     const sr2 = document.querySelector('input[name="f-size"]:checked');
     if (sr2) exactWrap.classList.add('show'); else exactWrap.classList.remove('show');
   }
-  document.getElementById('f-self').checked = f.method.includes('반셀프');
-  document.getElementById('f-turnkey').checked = f.method.includes('턴키');
+  const _m = (f.method || []).includes('반턴키') ? '반턴키' : (f.method || []).includes('턴키') && !(f.method || []).includes('반셀프') ? '턴키' : '반셀프';
+  const _mr = document.querySelector(`input[name="f-method"][value="${_m}"]`); if (_mr) _mr.checked = true;
   document.getElementById('f-start').value = f.startDate || '';
   document.getElementById('f-end').value = f.endDate || '';
   _updateDateBtn('f-start', f.startDate || '');
@@ -14042,15 +14049,15 @@ function saveFormData() {
   const sizeExact = document.getElementById('f-size-exact')?.value.trim();
   f.sizeExact = sizeExact ? parseInt(sizeExact) + '평' : '';
   f.method = [];
-  if (document.getElementById('f-self').checked) f.method.push('반셀프');
-  if (document.getElementById('f-turnkey').checked) f.method.push('턴키');
+  const mr = document.querySelector('input[name="f-method"]:checked');
+  f.method = [mr ? mr.value : '반셀프'];
   f.startDate = document.getElementById('f-start').value;
   f.endDate = document.getElementById('f-end').value;
   f.memo = document.getElementById('f-memo').value;
   f.address = document.getElementById('f-address').value;
   f.addressDetail = document.getElementById('f-address-detail').value;
-  const fpLink = document.getElementById('f-floorplan-link')?.value.trim();
-  proj.floorplanLink = fpLink || '';
+  const fpLinkIn = document.getElementById('f-floorplan-link'); // 입력란 제거됨 — 있을 때만 갱신(기존 링크 보존)
+  if (fpLinkIn) proj.floorplanLink = fpLinkIn.value.trim();
   save();
 }
 
