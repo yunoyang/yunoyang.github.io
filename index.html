@@ -8978,6 +8978,7 @@ function _restoreTabFromHash() {
 }
 
 function switchMainTab(tab, btn) {
+  if (tab === 'content') tab = 'meeting'; // 컨텐츠 탭 숨김 — 저장된 탭/링크로 들어와도 기록으로
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '#tab=' + tab);
@@ -11860,7 +11861,7 @@ function _vs2Sync(tab) {
     const on = b.dataset.tab === group; b.classList.toggle('on', on); b.innerHTML = _vs2Icon(b.dataset.tab, on) + `<span class="vs2-sr">${b.getAttribute('aria-label')}</span>`;
   });
   _vs2MoveInd();
-  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['furniture', '제품'], ['style', '이미지']], meeting: [['meeting', '기록'], ['docs', '자료'], ['content', '컨텐츠']] }[group];
+  const SEG = { plan: [['plan', '공정'], ['calendar', '일정']], style: [['furniture', '제품'], ['style', '이미지']], meeting: [['meeting', '기록'], ['docs', '자료']] }[group]; // 컨텐츠 탭 숨김
   const seg = document.getElementById('vs2-seg');
   if (seg) { seg.style.display = SEG ? '' : 'none'; if (SEG) { seg.innerHTML = SEG.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}" onclick="_vs2Go('${k}')">${l}</button>`).join(''); if (_tabIndPos.vs2seg_g !== group) delete _tabIndPos['vs2-seg']; _tabIndPos.vs2seg_g = group; _moveTabInd(seg); } }
   const ov = document.getElementById('vs2-overview'); if (ov) ov.style.display = group === 'plan' ? '' : 'none';
