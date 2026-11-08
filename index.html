@@ -20482,7 +20482,8 @@ function _renderFurnitureCategoryDetail(cat) {
 
   el.innerHTML = items.length === 0
     ? `<div style="text-align:center;padding:60px 20px;font-size:14px;color:#aaa;">이 카테고리에 제품이 없습니다</div>`
-    : `<div style="display:flex;flex-direction:column;gap:10px;">${items.map(it => rowHtml(it)).join('')}</div>`;
+    // 선택(구매예정 = 예산 포함) 제품을 맨 위로, 그 안에선 기존 순서 유지
+    : `<div style="display:flex;flex-direction:column;gap:10px;">${[...items].sort((a, b) => (_getFurnitureStatus(b) === '구매예정') - (_getFurnitureStatus(a) === '구매예정')).map(it => rowHtml(it)).join('')}</div>`;
 }
 
 // 카테고리별 공유 링크: 제품 목록 스냅샷을 vb_exports에 저장 (프로젝트명·연락처 제외)
