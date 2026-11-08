@@ -4400,9 +4400,11 @@ async function loadCatalogPage() {
   if (gs && !gs.options.length) gs.innerHTML = ['<option value="">전체 그룹</option>', ...CAT_GROUPS.map(g => `<option>${g}</option>`)].join('');
   _catAuthLabel();
   document.getElementById('cat-grid').innerHTML = '<div style="color:#aaa;padding:30px;">불러오는 중...</div>';
+  let err = '';
   try { const d = await _catRef().get(); _catItems = d.exists ? (d.data().items || {}) : {}; }
-  catch (e) { document.getElementById('cat-grid').innerHTML = `<div style="color:#e5484d;padding:30px;">불러오기 실패: ${e.message}</div>`; return; }
+  catch (e) { _catItems = {}; err = e.code === 'permission-denied' ? 'Firestore 규칙에 vb_catalog 읽기/쓰기 허용이 아직 없어요. Firebase 콘솔 → Firestore → 규칙에 vb_catalog 규칙을 추가해 주세요. (유저 등록 제품 탭은 그대로 볼 수 있어요)' : '카탈로그 불러오기 실패: ' + e.message; }
   catRender();
+  if (err) document.getElementById('cat-grid').insertAdjacentHTML('afterbegin', `<div style="grid-column:1/-1;color:#e5484d;background:#fff5f5;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;">${err}</div>`);
 }
 function catRender() {
   const g = document.getElementById('cat-f-group')?.value, q = (document.getElementById('cat-f-q')?.value || '').trim();
