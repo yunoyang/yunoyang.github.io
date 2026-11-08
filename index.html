@@ -8645,10 +8645,14 @@ function _avatarColor(str) {
 }
 function doLogout() {
   _notifStop();
+  const _outEmail = String(state.user?.email || '').toLowerCase();
   state.loggedIn = false;
   state.user = {email:'', name:''};
   // 다른 계정으로 로그인했을 때 이전 계정의 클라우드 프로젝트가 보이지 않도록 기기 캐시에서 제거
   // (클라우드 프로젝트는 다음 로그인 때 해당 계정 것만 다시 불러옴)
+  // 로그인 상태에서 만든 로컬 전용 프로젝트(업로드 전)는 만든 계정 몫으로 따로 보관 → 그 계정 재로그인 시 복원
+  _stampLocalOwner(_outEmail); // 로그아웃 직전 계정 = 표시 없는 로컬 프로젝트의 주인
+  _stashAccountLocals('');
   state.projects = (state.projects || []).filter(p => !p.cloudId && !p.isCloud);
   if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
   try { if (window.firebase?.apps?.length) firebase.auth().signOut(); } catch (e) {}
@@ -8664,6 +8668,7 @@ let formMode = 'edit';
 function startNewProject() { requireLogin(_startNewProject); }
 function _startNewProject() {
   const proj = createDefaultProject('새 시공 프로젝트', false);
+  proj.createdBy = String(state.user?.email || '').toLowerCase();
   state.projects.push(proj);
   state.currentProjectId = proj.id;
   save();
@@ -8866,6 +8871,7 @@ function promptNewProject() {
   if (!name || !name.trim()) return;
   requireLogin(() => {
     const proj = createDefaultProject(name.trim(), false);
+    proj.createdBy = String(state.user?.email || '').toLowerCase();
     state.projects.push(proj);
     state.currentProjectId = proj.id;
     save();
@@ -16610,12 +16616,41 @@ async function _initFirebase() {
 // 로그인 계정이 바뀌면 이전 계정의 클라우드 프로젝트를 기기 캐시에서 제거
 function _purgeOtherAccountCache(newEmail) {
   const me = (newEmail || '').toLowerCase(); if (!me) return;
+  _stampLocalOwner(String(localStorage.getItem('vb_last_email') || '').toLowerCase()); // 표시 없는 옛 로컬 프로젝트 = 직전 계정 것
+  _stashAccountLocals(me);
   const mine = p => !p.cloudId && !p.isCloud
     || (p.owner?.email || '').toLowerCase() === me
     || (p.collaborators || []).some(c => (c.email || '').toLowerCase() === me);
   state.projects = (state.projects || []).filter(mine);
   if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
   localStorage.setItem('vb_last_email', me);
+  // 이 계정이 예전에 이 기기에서 만들고 업로드 전이던 프로젝트 복원
+  try {
+    const k = 'vb_acct_stash_' + me, st = JSON.parse(localStorage.getItem(k) || '[]');
+    st.forEach(p => { if (!state.projects.some(x => x.id === p.id)) state.projects.push(p); });
+    localStorage.removeItem(k);
+  } catch (e) {}
+}
+function _stampLocalOwner(email) {
+  if (!email) return;
+  (state.projects || []).forEach(p => { if (!p.cloudId && !p.isCloud && !p.createdBy && p.name !== '정자동 아파트 플랜') p.createdBy = email; });
+}
+// 다른 계정(또는 로그아웃 시 모든 계정)이 만든 로컬 전용 프로젝트를 계정별로 떼어 보관
+function _stashAccountLocals(keepEmail) {
+  const out = (state.projects || []).filter(p => !p.cloudId && !p.isCloud && p.createdBy && p.createdBy !== keepEmail);
+  if (!out.length) return;
+  const by = {};
+  out.forEach(p => (by[p.createdBy] = by[p.createdBy] || []).push(p));
+  Object.entries(by).forEach(([em, list]) => {
+    const k = 'vb_acct_stash_' + em;
+    try {
+      const prev = JSON.parse(localStorage.getItem(k) || '[]').filter(p => !list.some(x => x.id === p.id));
+      localStorage.setItem(k, JSON.stringify([...prev, ...list]));
+    } catch (e) { console.warn('[stash]', e); }
+  });
+  const ids = new Set(out.map(p => p.id));
+  state.projects = state.projects.filter(p => !ids.has(p.id));
+  if (!state.projects.some(p => p.id === state.currentProjectId)) state.currentProjectId = state.projects[0]?.id || null;
 }
 // Firebase redirect 복귀 후 user 객체로 로그인 처리 (모바일 Google 로그인)
 async function _handleFirebaseUser(user) {
