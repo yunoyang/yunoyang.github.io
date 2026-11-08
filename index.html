@@ -2369,6 +2369,15 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .ptn-acts { display:flex; gap:8px; margin-top:14px; }
 .ptn-acts button { flex:1; height:44px; border-radius:12px; border:1px solid #e5e8eb; background:#fff; font-size:14px; font-weight:600; color:#333d4b; font-family:inherit; cursor:pointer; }
 .ptn-acts button.pri { background:#111; border-color:#111; color:#fff; }
+.tpl-rec { display:inline-block; margin-left:6px; padding:2px 7px; border-radius:6px; background:#e8f3ff; color:#0088ff; font-size:11px; font-weight:700; vertical-align:2px; }
+.tpl-list { padding:6px 18px; }
+.tpl-row { display:flex; align-items:center; gap:12px; width:100%; padding:12px 0; border:none; border-bottom:1px solid #f2f4f6; background:none; font-family:inherit; text-align:left; cursor:pointer; }
+.tpl-row:last-child { border-bottom:none; }
+.tpl-row b { flex:1; font-size:15px; font-weight:500; color:#b0b8c1; text-decoration:line-through; }
+.tpl-row.on b { color:#111; text-decoration:none; }
+.tpl-row small { font-size:13px; color:#8b95a1; white-space:nowrap; }
+.tpl-cb { width:20px; height:20px; border-radius:6px; border:1.6px solid #c4cad3; box-sizing:border-box; flex-shrink:0; }
+.tpl-row.on .tpl-cb { background:#111 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/14px no-repeat; border-color:#111; }
 .ptn-proc-cta { width:100%; margin:10px 0 6px; height:46px; border:none; border-radius:12px; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; }
 .hdr-prof { display:none; width:32px; height:32px; margin:0 4px 0 2px; border-radius:50%; border:none; padding:0; background:#111; color:#fff; font-size:14px; font-weight:600; font-family:inherit; overflow:hidden; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
 .hdr-prof img { width:100%; height:100%; object-fit:cover; }
@@ -12003,7 +12012,7 @@ function _vs2RenderTimeline() {
   const today = _vs2Today();
   const procs = (proj.processes || []).filter(p => !p.deleted);
   if (!procs.length) {
-    el.innerHTML = `<div class="vs2-h">공정 0</div><div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">등록된 공정이 없어요<br><button onclick="addDefaultProcesses()" style="margin-top:16px;background:#111;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;">기본 공정 불러오기</button></div>`;
+    el.innerHTML = `<div class="vs2-h">공정 0</div><div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">아직 공정이 없어요<br>공사 범위에 맞는 템플릿을 고르면<br>공정과 일정이 자동으로 채워져요<br><button onclick="openProcTemplates()" style="margin-top:16px;background:#111;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;cursor:pointer;font-family:inherit;">공정 템플릿 고르기</button></div>`;
     return;
   }
   // Figma VSD 1-113: 플래닝 · 철거 · 구조공사 · 마감공사 · 입주 그룹 (철거는 구조공사에서 따로 분리)
@@ -12103,7 +12112,7 @@ function renderWorkCards() {
   if (!proj.processes.length) {
     container.innerHTML = `<div style="text-align:center;padding:60px 20px;grid-column:1/-1;">
       <div style="font-size:14px;color:#aaa;margin-bottom:20px;">등록된 공정이 없습니다</div>
-      <button onclick="addDefaultProcesses()" style="background:#222;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:400;cursor:pointer;letter-spacing:-0.02em;">기본공정 추가</button>
+      <button onclick="openProcTemplates()" style="background:#222;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:400;cursor:pointer;letter-spacing:-0.02em;font-family:inherit;">공정 템플릿 고르기</button>
     </div>`;
     return;
   }
@@ -12219,6 +12228,95 @@ function renderWorkCards() {
       }
     }
   });
+}
+
+// ===== 공정 템플릿: 빈 프로젝트에서 템플릿 고르기 → 미리보기(빼기) → 일정 자동 배치 =====
+// [공정명, 기본 작업일수(일요일 제외)] — 순서대로 이어서 배치
+const PROC_TEMPLATES = [
+  { k: 'full', label: '전체 리모델링', desc: '철거부터 입주청소까지 집 전체를 고치는 경우', items: [['실측', 1], ['도면설계', 5], ['동의서 및 보양', 1], ['철거', 3], ['샷시', 1], ['설비', 2], ['전기', 2], ['목공', 7], ['시스템에어컨', 1], ['타일', 5], ['위생도기', 1], ['필름', 3], ['도배', 3], ['마루', 2], ['조명', 1], ['가구', 3], ['실리콘', 1], ['입주청소', 1]] },
+  { k: 'partial', label: '부분 리모델링 (주방·욕실)', desc: '주방이나 욕실 등 일부 공간만 고치는 경우', items: [['실측', 1], ['동의서 및 보양', 1], ['철거', 2], ['설비', 2], ['타일', 4], ['위생도기', 1], ['가구', 2], ['실리콘', 1], ['입주청소', 1]] },
+  { k: 'finish', label: '마감만 (도배·마루·조명)', desc: '구조 변경 없이 마감재만 바꾸는 경우', items: [['실측', 1], ['도배', 3], ['마루', 2], ['조명', 1], ['입주청소', 1]] },
+];
+let _tplK = null, _tplOff = new Set();
+
+function _tplYmd(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }
+function _tplAddWork(d, n) { // n 작업일 뒤 (일요일 제외)
+  const x = new Date(d + 'T00:00:00');
+  while (n > 0) { x.setDate(x.getDate() + 1); if (x.getDay() !== 0) n--; }
+  return _tplYmd(x);
+}
+function _tplNextWorkday(d) { const x = new Date(d + 'T00:00:00'); while (x.getDay() === 0) x.setDate(x.getDate() + 1); return _tplYmd(x); }
+function _tplStart(proj) {
+  if (proj.form?.startDate) return _tplNextWorkday(proj.form.startDate);
+  const x = new Date(); x.setDate(x.getDate() + ((8 - x.getDay()) % 7 || 7)); // 다음 주 월요일
+  return _tplYmd(x);
+}
+function _tplSchedule(proj, items) {
+  let cur = _tplStart(proj);
+  return items.map(([name, days]) => {
+    const s = cur, e = _tplAddWork(s, Math.max(0, days - 1));
+    cur = _tplAddWork(e, 1);
+    return { name, s, e, days };
+  });
+}
+function _tplWeeks(sch) { if (!sch.length) return 0; return Math.max(1, Math.round((new Date(sch.at(-1).e) - new Date(sch[0].s)) / 864e5 / 7)); }
+function _tplRecommend(proj) {
+  const f = proj.form || {};
+  if ((f.method || []).includes('턴키')) return 'full';
+  return 'full';
+}
+
+function openProcTemplates() {
+  const proj = getProject(); if (!proj) return;
+  if (!canEdit()) { showToastMessage('보기 권한에선 공정을 추가할 수 없어요'); return; }
+  _tplK = null; _tplOff = new Set();
+  const rec = _tplRecommend(proj);
+  const card = t => {
+    const sch = _tplSchedule(proj, t.items);
+    return `<button class="ptn-svc" onclick="_tplPick('${t.k}')"><span class="ptn-svc-t"><b>${t.label}${t.k === rec ? ' <span class="tpl-rec">추천</span>' : ''}</b><small>${t.desc}</small><small>공정 ${t.items.length}개 · 약 ${_tplWeeks(sch)}주</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b8c1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+  };
+  _ptnSheet(`${_ptnHd('공정 템플릿')}
+    <div class="ptn-body">
+      <p class="ptn-lead">공사 범위에 맞는 템플릿을 고르면 공정과 일정이 자동으로 채워져요.<br>추가한 뒤에도 공정과 날짜는 자유롭게 바꿀 수 있어요.</p>
+      <div class="ptn-list">${PROC_TEMPLATES.map(card).join('')}
+        <button class="ptn-svc" onclick="_ptnClose()"><span class="ptn-svc-t"><b>직접 만들기</b><small>빈 상태에서 공정을 하나씩 추가해요</small></span></button>
+      </div>
+    </div>`);
+}
+function _tplPick(k) { _tplK = k; _tplOff = new Set(); _tplRenderPreview(); }
+function _tplToggle(name) { _tplOff.has(name) ? _tplOff.delete(name) : _tplOff.add(name); _tplRenderPreview(); }
+function _tplRenderPreview() {
+  const proj = getProject(), t = PROC_TEMPLATES.find(x => x.k === _tplK); if (!proj || !t) return;
+  const sch = _tplSchedule(proj, t.items.filter(([n]) => !_tplOff.has(n)));
+  const at = Object.fromEntries(sch.map(x => [x.name, x]));
+  const rows = t.items.map(([n]) => {
+    const on = !_tplOff.has(n), x = at[n];
+    return `<button class="tpl-row${on ? ' on' : ''}" onclick="_tplToggle('${n}')"><span class="tpl-cb"></span><b>${n}</b><small>${on && x ? `${formatDate(x.s).slice(5)}${x.e !== x.s ? ' ~ ' + formatDate(x.e).slice(5) : ''}` : '빼기'}</small></button>`;
+  }).join('');
+  const n = sch.length;
+  _ptnSheet(`${_ptnHd(t.label, 'openProcTemplates()')}
+    <div class="ptn-body">
+      <p class="ptn-lead">${sch.length ? `${formatDate(sch[0].s)} 시작 · 약 ${_tplWeeks(sch)}주 · 일요일 제외` : '공정을 하나 이상 선택하세요'}<br>${proj.form?.startDate ? '공사 기본정보의 시작일 기준이에요.' : '시작일이 없어서 다음 주 월요일 기준으로 잡았어요.'} 필요 없는 공정은 눌러서 빼세요.</p>
+      <div class="ptn-card tpl-list">${rows}</div>
+    </div>
+    <div class="ptn-ft"><button class="ptn-cta" ${n ? '' : 'disabled'} onclick="_tplApply()">공정 ${n}개 추가하기</button></div>`);
+}
+function _tplApply() {
+  const proj = getProject(), t = PROC_TEMPLATES.find(x => x.k === _tplK); if (!proj || !t) return;
+  const sch = _tplSchedule(proj, t.items.filter(([n]) => !_tplOff.has(n)));
+  if (!sch.length) return;
+  const have = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.name));
+  const add = sch.filter(x => !have.has(x.name)).map((x, i) => ({
+    id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2, 6),
+    name: x.name, type: x.name, scheduleStart: x.s, scheduleEnd: x.e, company: '', details: [],
+  }));
+  proj.processes = [...(proj.processes || []), ...add];
+  const f = proj.form || (proj.form = {});
+  if (!f.startDate) f.startDate = sch[0].s;
+  if (!f.endDate || f.endDate < sch.at(-1).e) f.endDate = sch.at(-1).e;
+  save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {}
+  _ptnClose(); renderAll();
+  showToastMessage(_ti('check') + `공정 ${add.length}개와 일정을 추가했어요`);
 }
 
 function addDefaultProcesses() {
@@ -14497,6 +14595,8 @@ function saveFormAndBack() {
     trackEvent('project', 'create', _np?.name || '');
     goTo('main');
     renderAll();
+    // 새 프로젝트: 공정이 비어 있으면 템플릿 고르기를 바로 띄움
+    if (!(_np?.processes || []).some(p => !p.deleted) && canEdit()) setTimeout(openProcTemplates, 350);
   } else {
     // 편집 완료 → 보기 모드로 전환
     _showInfoViewPanel(true);
@@ -18893,7 +18993,7 @@ function _ptnPrice(partner, k, f) {
   const p = partner?.prices?.[k]; if (!p) return 0;
   return (p.base || 0) + (p.perPy || 0) * _ptnPy(f);
 }
-function _ptnAddDays(d, n) { if (!d) return ''; const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+function _ptnAddDays(d, n) { if (!d) return ''; const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return _tplYmd(x); }
 // 공정 일정에서 알맞은 신청일 제안
 function _ptnSuggestDate(proj, k) {
   const f = proj.form || {}, procs = (proj.processes || []).filter(p => !p.deleted);
