@@ -311,14 +311,20 @@ button, input, textarea, select { font-family:var(--font); }
 
 /* ===== AUTOSAVE ===== */
 .autosave-toast {
-  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
-  background:rgba(30,30,30,0.8); color:#fff; font-size:14px; font-weight:500;
-  padding:11px 20px; border-radius:20px; z-index:99999;
-  opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;
+  position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:50%; transform:translate(-50%,-12px);
+  width:calc(100% - 32px); max-width:420px; box-sizing:border-box;
+  display:flex; align-items:center; gap:10px;
+  background:#fff; color:#191f28; font-size:15px; font-weight:500; line-height:1.4;
+  padding:15px 18px; border-radius:14px; z-index:99999;
+  box-shadow:0 8px 24px rgba(30,40,90,.12), 0 1px 3px rgba(0,0,0,.06);
+  opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
 }
-.autosave-toast.show { opacity:1; }
-.autosave-toast.act { pointer-events:auto; cursor:pointer; }
-.autosave-toast.act::after { content:' ›'; font-weight:700; }
+.autosave-toast.show { opacity:1; transform:translate(-50%,0); }
+.autosave-toast svg { color:#4e5968; margin:0 !important; width:20px; height:20px; }
+.autosave-toast .t-msg { flex:1; min-width:0; }
+.autosave-toast svg:has(polyline[points="20 6 9 17 4 12"]) { color:#12b886; }
+.autosave-toast .t-act { flex-shrink:0; margin-left:8px; border:none; background:none; padding:4px 0; color:#4c5fd5; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; }
+.autosave-toast.act { pointer-events:auto; }
 
 /* ===== SUMMARY ===== */
 .summary-wrap { padding:18px 20px 16px; background:#fff; flex-shrink:0; }
@@ -6995,13 +7001,7 @@ function save() {
   }
 }
 let toastTimer = null;
-function showToast() {
-  const el = document.getElementById('autosave-toast');
-  if (!el) return;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
-}
+function showToast() { showToastMessage(_ti('check') + '저장됨', 1600); }
 
 function load() {
   const d = localStorage.getItem('vibespace');
@@ -12314,12 +12314,12 @@ function _tplSheetOpen(html) {
 function _tplClose() { const ov = document.getElementById('tpl-sheet'); if (!ov) return; ov.classList.remove('on'); setTimeout(() => ov.remove(), 250); }
 
 // 누르면 동작하는 토스트 (탭하면 fn 실행)
-function showActionToast(msg, fn) {
+function showActionToast(msg, fn, label) {
   const el = document.getElementById('autosave-toast'); if (!el) return;
-  showToastMessage(msg);
+  showToastMessage(msg, 4000);
+  el.insertAdjacentHTML('beforeend', `<button class="t-act">${label || '입력하기'}</button>`);
   el.classList.add('act');
-  el.onclick = () => { el.classList.remove('show', 'act'); el.onclick = null; fn(); };
-  setTimeout(() => { el.classList.remove('act'); el.onclick = null; }, 2800);
+  el.querySelector('.t-act').onclick = () => { el.classList.remove('show', 'act'); fn(); };
 }
 // 공사 일정 수정 화면으로 (기본정보 편집 → 시공일정 위치로 스크롤)
 function _goEditSchedule() {
@@ -19311,14 +19311,15 @@ function _ti(type) {
   return map[type] || '';
 }
 
-function showToastMessage(msg) {
+function showToastMessage(msg, ms) {
   const el = document.getElementById('autosave-toast');
   if (!el) return;
-  el.innerHTML = msg;
+  const m = String(msg).match(/^\s*(<svg[\s\S]*?<\/svg>)([\s\S]*)$/);
+  el.innerHTML = m ? `${m[1]}<span class="t-msg">${m[2]}</span>` : `<span class="t-msg">${msg}</span>`;
   el.classList.remove('act'); el.onclick = null;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.classList.remove('show'); el.textContent = '저장됨'; }, 2800);
+  toastTimer = setTimeout(() => { el.classList.remove('show', 'act'); }, ms || 2800);
 }
 
 // ===== FLOOR PLAN IMAGE =====
