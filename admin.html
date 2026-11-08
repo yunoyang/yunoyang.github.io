@@ -441,6 +441,9 @@ tr:hover td { background:#fafbfe; }
 .empty-state p { font-size:14px; }
 
 /* ===== LOGIN GATE ===== */
+.cat-tabs { display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid #eef0f3; }
+.cat-tabs button { border:none; background:none; padding:10px 14px; font-size:14px; font-weight:600; color:#999; cursor:pointer; font-family:var(--font); border-bottom:2px solid transparent; margin-bottom:-1px; }
+.cat-tabs button.on { color:#111; border-bottom-color:#111; }
 .cat-btn { padding:8px 14px; border:1px solid var(--border,#e5e8eb); background:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font); color:#333; }
 .cat-btn.pri { background:var(--primary); border-color:var(--primary); color:#fff; }
 .cat-btn.del { color:#e5484d; }
@@ -1700,12 +1703,25 @@ service cloud.firestore {
             <button class="cat-btn pri" onclick="catEdit()">+ 제품 추가</button>
           </div>
         </div>
+        <div id="cat-tabs" class="cat-tabs"><button data-t="catalog" class="on" onclick="catTab('catalog')">카탈로그</button><button data-t="user" onclick="catTab('user')">유저 등록 제품</button></div>
+        <div id="cat-pane-user" style="display:none;">
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+            <select id="up-f-proj" onchange="upRender()" class="cat-in" style="width:200px;"></select>
+            <input id="up-f-q" oninput="upRender()" class="cat-in" placeholder="제품명·브랜드 검색" style="width:220px;">
+            <button class="cat-btn" onclick="upLoad()">새로고침</button>
+            <button class="cat-btn pri" onclick="upBulkAdd()">보이는 제품 카탈로그에 모두 추가</button>
+            <span id="up-count" style="align-self:center;font-size:13px;color:var(--text-muted);"></span>
+          </div>
+          <div id="up-grid" class="cat-grid"></div>
+        </div>
+        <div id="cat-pane-catalog">
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
           <select id="cat-f-group" onchange="catRender()" class="cat-in" style="width:160px;"></select>
           <input id="cat-f-q" oninput="catRender()" class="cat-in" placeholder="제품명 검색" style="width:220px;">
           <span id="cat-count" style="align-self:center;font-size:13px;color:var(--text-muted);"></span>
         </div>
         <div id="cat-grid" class="cat-grid"></div>
+        </div>
       </div>
 
       <!-- ===== 피드백 & 아이디어 페이지 ===== -->
@@ -4233,6 +4249,95 @@ function _esc(s) {
 }
 
 // ===== TOAST =====
+// ── 유저 등록 제품: 모든 프로젝트(vb_projects.projectData.furnitureItems)를 모아 보기 → 카탈로그로 옮기기 ──
+let _catTab = 'catalog', _upItems = [];
+const _UP_GROUP = { '조명': '조명·전기', '다운라이트': '조명·전기', '손잡이': '문·하드웨어', '욕실': '욕실', '에어컨': '냉난방', '수납장/옷장': '수납·마무리', '기타': '수납·마무리' };
+function catTab(t) {
+  _catTab = t;
+  document.querySelectorAll('#cat-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.getElementById('cat-pane-catalog').style.display = t === 'catalog' ? '' : 'none';
+  document.getElementById('cat-pane-user').style.display = t === 'user' ? '' : 'none';
+  if (t === 'user') upLoad();
+}
+function _upKey(it) {
+  const u = String(it.url || '').trim().replace(/[?#].*$/, '').toLowerCase();
+  return u || String(it.name || '').replace(/\s+/g, '').toLowerCase();
+}
+async function upLoad() {
+  if (!_adminDb) initFirestoreAdmin();
+  const grid = document.getElementById('up-grid');
+  if (!_fbData.loaded) {
+    grid.innerHTML = '<div style="color:#aaa;padding:30px;">프로젝트 불러오는 중...</div>';
+    try { const snap = await _adminDb.collection('vb_projects').get(); _fbData.projects = snap.docs.map(d => ({ id: d.id, ...d.data() })); }
+    catch (e) { grid.innerHTML = `<div style="color:#e5484d;padding:30px;">불러오기 실패: ${e.message}</div>`; return; }
+  }
+  const map = new Map();
+  _fbData.projects.forEach(p => {
+    const pname = p.projectData?.name || p.meta?.projectName || p.meta?.name || p.id;
+    const owner = p.meta?.owner?.email || p.ownerEmail || '';
+    (p.projectData?.furnitureItems || []).filter(it => it && !it.deleted && it.name).forEach(it => {
+      const k = _upKey(it);
+      const g = map.get(k) || { key: k, name: it.name, brand: it.brand || '', category: it.category || '기타', url: it.url || '', img: '', price: 0, size: it.size || '', note: it.note || '', projects: [], picked: 0, owners: new Set(), catalogId: it.catalogId || '' };
+      if (!g.img && it.imageUrl && !String(it.imageUrl).startsWith('data:')) g.img = it.imageUrl;
+      if (!g.price && it.price) g.price = it.price;
+      if (!g.url && it.url) g.url = it.url;
+      g.projects.push({ id: p.id, name: pname }); if (owner) g.owners.add(owner);
+      if ((it.status || '') === '구매예정') g.picked++;
+      map.set(k, g);
+    });
+  });
+  _upItems = [...map.values()].sort((a, b) => b.projects.length - a.projects.length || b.picked - a.picked);
+  const ps = document.getElementById('up-f-proj');
+  const projNames = [...new Map(_fbData.projects.filter(p => (p.projectData?.furnitureItems || []).some(i => i && !i.deleted && i.name)).map(p => [p.id, p.projectData?.name || p.id])).entries()];
+  ps.innerHTML = ['<option value="">전체 프로젝트</option>', ...projNames.map(([id, n]) => `<option value="${id}">${n}</option>`)].join('');
+  upRender();
+}
+function _upFiltered() {
+  const pid = document.getElementById('up-f-proj')?.value, q = (document.getElementById('up-f-q')?.value || '').trim();
+  return _upItems.filter(it => (!pid || it.projects.some(p => p.id === pid)) && (!q || (it.name + it.brand).includes(q)));
+}
+function _upInCatalog(it) { return Object.values(_catItems).some(c => (it.catalogId && c.id === it.catalogId) || (it.url && (c.cp === it.url || c.nv === it.url)) || c.name === it.name); }
+function upRender() {
+  const list = _upFiltered();
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  document.getElementById('up-count').textContent = `${list.length}개 제품 · ${_fbData.projects.length}개 프로젝트에서 모음`;
+  document.getElementById('up-grid').innerHTML = list.length ? list.map(it => {
+    const i = _upItems.indexOf(it), inCat = _upInCatalog(it), host = (it.url.match(/^https?:\/\/([^/]+)/) || [])[1] || '';
+    return `<div class="cat-item">
+      <div class="ph" style="${it.img ? `background-image:url('${esc(it.img)}')` : ''}">${it.img ? '' : '사진 없음'}</div>
+      <div class="bd"><small>${esc(it.category)}${it.brand ? ' · ' + esc(it.brand) : ''}</small><b>${esc(it.name)}</b>
+      ${it.price ? `<small style="color:#111;font-weight:700;">${Number(it.price).toLocaleString()}원</small>` : ''}
+      <small>${it.projects.length}개 프로젝트${it.picked ? ` · 선택 ${it.picked}` : ''} — ${esc([...new Set(it.projects.map(p => p.name))].slice(0, 3).join(', '))}</small>
+      ${host ? `<small><a href="${esc(it.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--primary);">${esc(host)}</a></small>` : ''}
+      <div class="cat-tags">${inCat ? '<span class="ok">카탈로그에 있음</span>' : `<button class="cat-btn" style="padding:5px 10px;font-size:12px;" onclick="upToCatalog(${i})">카탈로그에 추가</button>`}</div></div></div>`;
+  }).join('') : '<div style="color:#aaa;padding:30px;">유저가 등록한 제품이 없어요</div>';
+}
+function _upAsCatalog(it) {
+  const isCp = /coupang\.com/i.test(it.url), isNv = /naver\.com|naver\.me/i.test(it.url);
+  return { name: it.name, g: _UP_GROUP[it.category] || '가구·가전', fc: it.category || '기타', tip: [it.brand, it.size].filter(Boolean).join(' · '),
+    cp: isCp ? it.url : '', nv: isNv ? it.url : '', q: it.name, img: it.img, price: it.price || 0, unit: '개', qt: 'fixed', qv: 1, procs: [], hidden: false };
+}
+// 하나: 편집창을 미리 채워서 열기 (확인 후 저장)
+function upToCatalog(i) {
+  const it = _upItems[i]; if (!it) return;
+  catEdit(); const c = _upAsCatalog(it), $ = k => document.getElementById('cat-m-' + k);
+  $('name').value = c.name; $('g').value = c.g; $('fc').value = CAT_FCATS.includes(c.fc) ? c.fc : '기타'; $('tip').value = c.tip;
+  $('cp').value = c.cp; $('nv').value = c.nv; $('q').value = c.q; $('imgurl').value = c.img || ''; $('price').value = c.price || '';
+  if (!c.cp && !c.nv && it.url) $('tip').value = (c.tip ? c.tip + ' · ' : '') + '원본 링크: ' + it.url;
+  catPrev();
+}
+// 여러 개: 지금 필터된 제품 중 카탈로그에 없는 것 전부 추가 (기본은 숨김 상태 → 검토 후 켜기)
+async function upBulkAdd() {
+  const add = _upFiltered().filter(it => !_upInCatalog(it));
+  if (!add.length) { showToast('추가할 새 제품이 없어요'); return; }
+  if (!confirm(`카탈로그에 없는 제품 ${add.length}개를 추가할까요?\n앱에 바로 노출되지 않도록 '숨김' 상태로 들어가요. 검토 후 숨김을 꺼 주세요.`)) return;
+  if (!(await _catEnsureAuth())) return;
+  const base = Object.keys(_catItems).length, items = {};
+  add.forEach((it, n) => { const id = 'u_' + Date.now().toString(36) + n; items[id] = { ..._upAsCatalog(it), id, hidden: true, order: base + n, from: 'user' }; });
+  try { await _catRef().set({ items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); Object.assign(_catItems, items); upRender(); showToast(`${add.length}개를 숨김 상태로 추가했어요`); }
+  catch (e) { alert('저장 실패: ' + e.message); }
+}
+
 // ===== 제품 카탈로그 (vb_catalog/products · items.{id}) =====
 const CAT_GROUPS = ['조명·전기', '욕실', '주방', '바닥·벽', '문·하드웨어', '냉난방', '수납·마무리', '가구·가전'];
 const CAT_FCATS = ['소파', '라운지체어', '침대/매트리스', '식탁/의자', '책상', '수납장/옷장', '조명', '다운라이트', '손잡이', '욕실', '냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐', '기타'];
@@ -4351,7 +4456,7 @@ async function catSave() {
     qt: $('qt').value, qv: parseFloat($('qv').value) || 1, procs: [...document.querySelectorAll('#cat-m-procs input:checked')].map(i => i.value), hidden: $('hidden').checked,
     order: _catItems[id]?.order ?? Object.keys(_catItems).length };
   if (!(await _catEnsureAuth())) return;
-  try { await _catRef().set({ items: { [id]: it }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); _catItems[id] = it; catClose(); catRender(); showToast('저장했어요 · 앱에 바로 반영돼요'); }
+  try { await _catRef().set({ items: { [id]: it }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); _catItems[id] = it; catClose(); catRender(); if (_catTab === 'user') upRender(); showToast('저장했어요 · 앱에 바로 반영돼요'); }
   catch (e) { alert('저장 실패: ' + e.message); }
 }
 async function catDelete() {
