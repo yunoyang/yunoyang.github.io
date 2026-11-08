@@ -22,3 +22,9 @@ match /vb_bookings/{id} {
       || (bk().partnerEmail == me() && bk().status in ['confirmed', 'done']));
   }
 }
+
+// 추천 제품 카탈로그 — 누구나 읽기, 관리자만 쓰기 (제휴 링크 cp/nv 를 콘솔에서 바꾸면 앱 재배포 없이 반영)
+match /vb_catalog/{doc} {
+  allow read: if true;
+  allow write: if request.auth != null && request.auth.token.email == 'yunho.yang@naverlabs.com';
+}

@@ -2407,6 +2407,27 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .tpl-card.plain { border-style:dashed; }
 .tpl-sum { font-size:13px; color:#6b7684; line-height:1.5; margin:2px 0; }
 .tpl-warn { font-size:13px; color:#e5484d; background:#fff6f6; border-radius:10px; padding:10px 12px; line-height:1.5; }
+.cat-banner { display:flex; align-items:center; gap:12px; width:100%; margin-bottom:8px; padding:16px 18px; border:none; border-radius:16px; background:#111; color:#fff; font-family:inherit; text-align:left; cursor:pointer; }
+.cat-banner span { flex:1; display:flex; flex-direction:column; gap:3px; }
+.cat-banner b { font-size:15px; font-weight:700; }
+.cat-banner small { font-size:12.5px; color:rgba(255,255,255,.7); }
+.cat-chips { display:flex; gap:6px; overflow-x:auto; margin:0 -16px; padding:0 16px 4px; scrollbar-width:none; }
+.cat-chips::-webkit-scrollbar { display:none; }
+.cat-chips button { flex-shrink:0; height:34px; padding:0 14px; border-radius:17px; border:1px solid #e5e8eb; background:#fff; font-size:13.5px; color:#4e5968; font-family:inherit; cursor:pointer; }
+.cat-chips button.on { background:#111; border-color:#111; color:#fff; font-weight:600; }
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
+.cat-card { background:#fff; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:4px; }
+.cat-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.cat-g { font-size:12px; color:#8b95a1; }
+.cat-n { font-size:12px; font-weight:700; color:#0088ff; background:#e8f3ff; border-radius:6px; padding:2px 7px; }
+.cat-card b { font-size:16px; font-weight:600; color:#111; }
+.cat-card small { font-size:13px; color:#8b95a1; line-height:1.45; }
+.cat-links { display:flex; gap:6px; margin-top:10px; }
+.cat-links button { height:36px; padding:0 12px; border-radius:10px; border:1px solid #e5e8eb; background:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+.cat-cp { color:#e3242b; } .cat-nv { color:#03a94d; }
+.cat-links .cat-add { margin-left:auto; background:#111; border-color:#111; color:#fff; padding:0 16px; }
+.cat-links .cat-add.on { background:#f2f4f6; border-color:#f2f4f6; color:#8b95a1; }
+.cat-disc { font-size:11.5px; color:#8b95a1; line-height:1.5; margin:8px 4px 0; }
 .tpl-rec { display:inline-block; margin-left:6px; padding:2px 7px; border-radius:6px; background:#e8f3ff; color:#0088ff; font-size:11px; font-weight:700; vertical-align:2px; }
 .tpl-list { padding:0 2px; }
 .tpl-row { display:flex; align-items:center; gap:12px; width:100%; padding:12px 0; border:none; border-bottom:1px solid #f2f4f6; background:none; font-family:inherit; text-align:left; cursor:pointer; }
@@ -11900,6 +11921,7 @@ function _renderMoreTab() {
       ${row(I.msg, '피드백 제안하기', 'openFeedbackDialog()')}
       ${isAdmin ? row(I.tool, 'Admin', 'openAdminDialog()') : ''}
       ${isAdmin ? row(I.refresh, '계정유형 테스트 초기화', '_acctForceReopen()') : ''}
+      ${isAdmin ? row(I.layers, '제품 카탈로그 클라우드 저장', '_catPushToCloud()') : ''}
     </div>
   </div>`;
 }
@@ -12396,6 +12418,127 @@ function _tplApply() {
   save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {}
   _tplClose(); renderAll();
   showToastMessage(_ti('check') + `공정 ${add.length}개와 일정을 추가했어요`);
+}
+
+// ===== 추천 제품 카탈로그: 공정·평형 기준 추천 → 쿠팡/네이버 링크 카드 → 제품 탭에 담기 =====
+// 카탈로그 원본은 코드(PRODUCT_CATALOG), 운영 중 수정본은 Firestore vb_catalog/products (관리자 동기화)
+// q: 검색어 / cp·nv: 제휴 링크(쿠팡 파트너스·네이버 쇼핑커넥트) — 비어 있으면 검색 링크로 대체
+// procs: 이 공정이 있으면 추천 (빈 배열 = 항상) / qty(py, rooms, baths): 추천 수량
+const CATALOG_GROUPS = ['조명·전기', '욕실', '주방', '바닥·벽', '문·하드웨어', '냉난방', '수납·마무리'];
+const PRODUCT_CATALOG = [
+  { id: 'dl', g: '조명·전기', fc: '다운라이트', name: 'LED 다운라이트 3인치', tip: '거실·주방·복도용. 평당 약 0.4개', procs: ['전기', '조명', '목공'], qty: (py) => Math.round(py * 0.4), unit: '개', q: 'LED 다운라이트 3인치' },
+  { id: 'roomlight', g: '조명·전기', fc: '조명', name: 'LED 방등 (슬림 평판)', tip: '방마다 1개', procs: ['전기', '조명'], qty: (py, r) => r, unit: '개', q: 'LED 방등 슬림 평판' },
+  { id: 'linelight', g: '조명·전기', fc: '조명', name: '간접조명 LED 라인바', tip: '우물천장·커튼박스 간접등', procs: ['조명', '목공'], qty: (py) => Math.max(2, Math.round(py / 6)), unit: '개', q: '간접조명 LED 라인바 T5' },
+  { id: 'sensor', g: '조명·전기', fc: '조명', name: '현관 센서등', tip: '현관·팬트리', procs: ['전기', '조명'], qty: () => 1, unit: '개', q: '현관 센서등 LED' },
+  { id: 'switch', g: '조명·전기', fc: '기타', name: '매립 스위치', tip: '방·거실·주방·욕실 입구 기준', procs: ['전기'], qty: (py) => Math.round(py / 2.5), unit: '개', q: '매립 스위치 디자인' },
+  { id: 'outlet', g: '조명·전기', fc: '기타', name: '매립 콘센트 (2구)', tip: '전체 교체 기준', procs: ['전기'], qty: (py) => Math.round(py / 1.5), unit: '개', q: '매립 콘센트 2구 디자인' },
+  { id: 'doorlock', g: '조명·전기', fc: '기타', name: '현관 디지털 도어락', tip: '푸시풀 타입', procs: [], qty: () => 1, unit: '개', q: '푸시풀 디지털 도어락' },
+  { id: 'toilet', g: '욕실', fc: '욕실', name: '양변기 (원피스)', tip: '욕실마다 1개', procs: ['위생도기', '욕실', '타일'], qty: (py, r, b) => b, unit: '개', q: '원피스 양변기' },
+  { id: 'basin', g: '욕실', fc: '욕실', name: '세면대', tip: '반다리·탑볼 중 선택', procs: ['위생도기', '욕실', '타일'], qty: (py, r, b) => b, unit: '개', q: '욕실 세면대 반다리' },
+  { id: 'bfaucet', g: '욕실', fc: '욕실', name: '세면대 수전', tip: '원홀 레버형', procs: ['위생도기', '욕실'], qty: (py, r, b) => b, unit: '개', q: '세면대 수전 원홀' },
+  { id: 'shower', g: '욕실', fc: '욕실', name: '해바라기 샤워 수전', tip: '선반형 추천', procs: ['위생도기', '욕실'], qty: (py, r, b) => b, unit: '개', q: '해바라기 샤워 수전 선반형' },
+  { id: 'bcab', g: '욕실', fc: '욕실', name: '욕실장 (거울 수납장)', tip: '슬라이드·플랩형', procs: ['위생도기', '욕실', '타일'], qty: (py, r, b) => b, unit: '개', q: '욕실장 거울 수납장' },
+  { id: 'fan', g: '욕실', fc: '욕실', name: '욕실 환풍기', tip: '역류방지 댐퍼 포함 모델', procs: ['설비', '전기', '위생도기', '욕실'], qty: (py, r, b) => b, unit: '개', q: '욕실 환풍기 역류방지' },
+  { id: 'bacc', g: '욕실', fc: '욕실', name: '욕실 액세서리 세트', tip: '수건걸이·휴지걸이·선반', procs: ['위생도기', '욕실'], qty: (py, r, b) => b, unit: '세트', q: '욕실 액세서리 세트 수건걸이' },
+  { id: 'partition', g: '욕실', fc: '욕실', name: '샤워 유리 파티션', tip: '8mm 강화유리', procs: ['위생도기', '욕실', '타일'], qty: (py, r, b) => b, unit: '개', q: '샤워 파티션 강화유리' },
+  { id: 'drain', g: '욕실', fc: '욕실', name: '트렌치 배수구 (유가)', tip: '타일 시공 전에 준비', procs: ['타일', '욕실'], qty: (py, r, b) => b, unit: '개', q: '트렌치 유가 배수구' },
+  { id: 'sinkbowl', g: '주방', fc: '기타', name: '사각 싱크볼', tip: '언더싱크 850 기준', procs: ['가구', '싱크'], qty: () => 1, unit: '개', q: '사각 싱크볼 850' },
+  { id: 'kfaucet', g: '주방', fc: '기타', name: '주방 수전 (풀아웃)', tip: '거위목 풀아웃', procs: ['가구', '싱크'], qty: () => 1, unit: '개', q: '주방 수전 풀아웃' },
+  { id: 'induction', g: '주방', fc: '전자레인지/오븐', name: '빌트인 인덕션 (3구)', tip: '전용 전기 배선 확인', procs: ['가구', '싱크', '전기'], qty: () => 1, unit: '대', q: '빌트인 인덕션 3구' },
+  { id: 'hood', g: '주방', fc: '기타', name: '슬림 레인지후드', tip: '상부장 폭에 맞추기', procs: ['가구', '싱크'], qty: () => 1, unit: '대', q: '슬림 레인지후드' },
+  { id: 'dishwasher', g: '주방', fc: '기타', name: '빌트인 식기세척기', tip: '12인용, 하부장 자리 확보', procs: ['가구', '싱크', '설비'], qty: () => 1, unit: '대', q: '빌트인 식기세척기 12인용' },
+  { id: 'floor', g: '바닥·벽', fc: '기타', name: '강마루', tip: '공급면적 약 75% 기준 시공 면적', procs: ['마루'], qty: (py) => Math.round(py * 3.3 * 0.75), unit: '㎡', q: '강마루' },
+  { id: 'wallpaper', g: '바닥·벽', fc: '기타', name: '실크 벽지', tip: '벽·천장 포함, 1롤 약 16.5㎡', procs: ['도배'], qty: (py) => Math.round(py * 0.75), unit: '롤', q: '실크 벽지' },
+  { id: 'film', g: '바닥·벽', fc: '기타', name: '인테리어 필름 (문·몰딩)', tip: '방문·욕실문 기준', procs: ['필름'], qty: (py, r, b) => r + b + 1, unit: '짝', q: '인테리어 필름 문' },
+  { id: 'handle', g: '문·하드웨어', fc: '손잡이', name: '도어 레버 손잡이', tip: '방문·욕실문 (욕실은 욕실용)', procs: ['목공', '필름'], qty: (py, r, b) => r + b, unit: '개', q: '도어 레버 손잡이' },
+  { id: 'stopper', g: '문·하드웨어', fc: '손잡이', name: '도어 스토퍼', tip: '바닥 매립·마그네틱', procs: ['목공', '필름', '마루'], qty: (py, r, b) => r + b, unit: '개', q: '마그네틱 도어 스토퍼' },
+  { id: 'middoor', g: '문·하드웨어', fc: '기타', name: '현관 중문 (3연동)', tip: '현관 폭 실측 후 주문', procs: ['목공', '중문'], qty: () => 1, unit: '세트', q: '3연동 중문' },
+  { id: 'sysac', g: '냉난방', fc: '에어컨', name: '시스템에어컨', tip: '거실 + 방 수 기준', procs: ['시스템에어컨'], qty: (py, r) => r + 1, unit: '대', q: '시스템에어컨' },
+  { id: 'closet', g: '수납·마무리', fc: '수납장/옷장', name: '붙박이장', tip: '안방 기준 1세트', procs: ['가구'], qty: () => 1, unit: '세트', q: '붙박이장' },
+  { id: 'shoes', g: '수납·마무리', fc: '수납장/옷장', name: '현관 신발장', tip: '천장 높이 확인', procs: ['가구'], qty: () => 1, unit: '세트', q: '현관 신발장' },
+  { id: 'blind', g: '수납·마무리', fc: '기타', name: '블라인드·커튼', tip: '창 수 기준', procs: [], qty: (py, r) => r + 1, unit: '창', q: '우드 블라인드' },
+];
+const CATALOG_AFFILIATE = { coupang: false, naver: false }; // 제휴 링크 승인 후 true → 하단 고지 문구 노출
+let _catRemote = null, _catGroup = '전체';
+
+function _catLinks(it) {
+  return {
+    cp: it.cp || `https://www.coupang.com/np/search?q=${encodeURIComponent(it.q || it.name)}`,
+    nv: it.nv || `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(it.q || it.name)}`,
+  };
+}
+function _catHome(proj) {
+  const f = proj.form || {}, py = parseInt(f.sizeExact) || parseInt(f.size?.[0]) || 30;
+  const rooms = py < 20 ? 2 : py < 40 ? 3 : 4, baths = py < 30 ? 1 : 2;
+  return { py, rooms, baths };
+}
+function _catItems() {
+  // Firestore 수정본이 있으면 링크·문구를 덮어씀 (수량 공식은 코드 기준 유지)
+  const remote = _catRemote || {};
+  return PRODUCT_CATALOG.map(it => ({ ...it, ...(remote[it.id] || {}), qty: it.qty })).filter(it => !it.hidden);
+}
+function _catRecommend(proj) {
+  const procs = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.name));
+  const h = _catHome(proj);
+  const items = _catItems().filter(it => !procs.size || !it.procs.length || it.procs.some(p => procs.has(p)));
+  return items.map(it => ({ ...it, n: Math.max(1, it.qty(h.py, h.rooms, h.baths)) }));
+}
+async function _catLoadRemote() {
+  if (_catRemote) return;
+  try {
+    if (!(await _initFirebase())) return;
+    const d = await _db.collection('vb_catalog').doc('products').get();
+    _catRemote = d.exists ? (d.data().items || {}) : {};
+  } catch (e) { _catRemote = {}; console.warn('[catalog]', e.code || e.message); }
+}
+
+async function openProductCatalog(group) {
+  const proj = getProject(); if (!proj) return;
+  _catGroup = group || '전체';
+  _catRender();
+  await _catLoadRemote(); _catRender();
+}
+function _catRender() {
+  const proj = getProject(); if (!proj) return;
+  const h = _catHome(proj), all = _catRecommend(proj);
+  const have = new Set(_getFurnitureItems().map(i => i.catalogId).filter(Boolean));
+  const groups = CATALOG_GROUPS.filter(g => all.some(it => it.g === g));
+  const list = _catGroup === '전체' ? all : all.filter(it => it.g === _catGroup);
+  const card = it => {
+    const L = _catLinks(it), added = have.has(it.id);
+    return `<div class="cat-card">
+      <div class="cat-top"><span class="cat-g">${esc(it.g)}</span><span class="cat-n">추천 ${it.n}${esc(it.unit)}</span></div>
+      <b>${esc(it.name)}</b><small>${esc(it.tip || '')}</small>
+      <div class="cat-links"><button onclick="_openProduct('${L.cp}')"><span class="cat-cp">쿠팡</span></button><button onclick="_openProduct('${L.nv}')"><span class="cat-nv">네이버</span></button>
+      <button class="cat-add${added ? ' on' : ''}" ${added || !canEdit() ? 'disabled' : ''} onclick="_catAdd('${it.id}')">${added ? '담음' : '담기'}</button></div>
+    </div>`;
+  };
+  const procN = (proj.processes || []).filter(p => !p.deleted).length;
+  _ptnSheet(`${_ptnHd('추천 제품')}
+    <div class="ptn-body">
+      <p class="ptn-lead">${h.py}평 · 방 ${h.rooms} · 욕실 ${h.baths} 기준${procN ? `, 공정 ${procN}개에 맞춘` : ''} 추천이에요.<br>수량은 참고용이에요. 실측 후 조정하세요.</p>
+      <div class="cat-chips">${['전체', ...groups].map(g => `<button class="${g === _catGroup ? 'on' : ''}" onclick="_catGroup='${g}';_catRender()">${g}${g === '전체' ? ` ${all.length}` : ''}</button>`).join('')}</div>
+      <div class="cat-grid">${list.map(card).join('')}</div>
+      ${CATALOG_AFFILIATE.coupang || CATALOG_AFFILIATE.naver ? '<p class="cat-disc">이 페이지의 일부 링크는 쿠팡 파트너스·네이버 쇼핑커넥트 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.</p>' : ''}
+    </div>`);
+}
+async function _catAdd(id) {
+  const proj = getProject(); if (!proj || !canEdit()) return;
+  const it = _catRecommend(proj).find(x => x.id === id); if (!it) return;
+  if (!proj.furnitureItems) proj.furnitureItems = [];
+  proj.furnitureItems.unshift({ id: 'fi_' + Date.now(), catalogId: it.id, name: it.name, brand: '', status: '미선택', qty: it.unit === '개' || it.unit === '대' || it.unit === '세트' ? it.n : 1,
+    price: 0, size: it.unit === '개' || it.unit === '대' || it.unit === '세트' ? '' : `${it.n}${it.unit}`, url: _catLinks(it).cp, note: it.tip || '', imageUrl: '', category: it.fc, createdAt: Date.now() });
+  save();
+  try { if (proj.isCloud && proj.cloudId && _db) { _isProjOwner(proj) ? _syncProjToCloud(proj) : _syncFurnitureToCloud(proj); } } catch (e) {}
+  showToastMessage(_ti('check') + `${it.name}을(를) 제품 목록에 담았어요`);
+  _catRender(); try { renderFurnitureTab(); } catch (e) {}
+}
+// 관리자: 코드 카탈로그의 링크·문구를 Firestore에 올림 (이후 콘솔에서 cp/nv 제휴 링크만 바꾸면 앱 재배포 없이 반영)
+async function _catPushToCloud() {
+  if (!(await _initFirebase())) return;
+  const items = Object.fromEntries(PRODUCT_CATALOG.map(({ qty, ...rest }) => [rest.id, { ...rest, ...((_catRemote || {})[rest.id] || {}) }]));
+  try { await _db.collection('vb_catalog').doc('products').set({ items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); _catRemote = items; showToastMessage(_ti('check') + `카탈로그 ${PRODUCT_CATALOG.length}개를 저장했어요`); }
+  catch (e) { alert('저장 실패: ' + (e.message || e)); }
 }
 
 function addDefaultProcesses() {
@@ -20241,7 +20384,9 @@ function _renderFurnitureCategoryGrid() {
       </div>`;
   };
 
+  const _recN = getProject() ? _catRecommend(getProject()).length : 0;
   el.innerHTML = `
+    ${_recN ? `<button class="cat-banner" onclick="openProductCatalog()"><span><b>우리 집 맞춤 추천 제품 ${_recN}개</b><small>평형과 공정에 맞춰 필요한 제품과 수량을 골라 드려요</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>` : ''}
     <div style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:4px;border:1px solid #eef0f5;">
       <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">예산 현황</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
