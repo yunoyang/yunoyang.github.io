@@ -441,6 +441,34 @@ tr:hover td { background:#fafbfe; }
 .empty-state p { font-size:14px; }
 
 /* ===== LOGIN GATE ===== */
+.cat-btn { padding:8px 14px; border:1px solid var(--border,#e5e8eb); background:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font); color:#333; }
+.cat-btn.pri { background:var(--primary); border-color:var(--primary); color:#fff; }
+.cat-btn.del { color:#e5484d; }
+.cat-in { height:36px; border:1px solid #e5e8eb; border-radius:8px; padding:0 10px; font-size:13px; font-family:var(--font); width:100%; box-sizing:border-box; background:#fff; }
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.cat-item { background:#fff; border:1px solid #eef0f3; border-radius:12px; overflow:hidden; cursor:pointer; }
+.cat-item.hid { opacity:.45; }
+.cat-item .ph { aspect-ratio:4/3; background:#f4f5f7 center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:12px; }
+.cat-item .bd { padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
+.cat-item .bd b { font-size:14px; }
+.cat-item .bd small { font-size:12px; color:#888; }
+.cat-tags { display:flex; gap:4px; margin-top:4px; flex-wrap:wrap; }
+.cat-tags span { font-size:11px; padding:2px 6px; border-radius:5px; background:#f2f4f6; color:#666; }
+.cat-tags span.ok { background:#e8f7ee; color:#0a8a43; }
+.cat-ov { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9999; display:none; align-items:center; justify-content:center; }
+.cat-ov.on { display:flex; }
+.cat-box { background:#fff; border-radius:14px; width:560px; max-width:calc(100% - 32px); max-height:90vh; display:flex; flex-direction:column; }
+.cat-box-hd { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #f0f0f0; }
+.cat-box-hd button { border:none; background:none; font-size:18px; cursor:pointer; }
+.cat-box-bd { padding:16px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+.cat-box-bd label { font-size:12px; font-weight:600; color:#666; display:flex; flex-direction:column; gap:4px; }
+.cat-box-ft { display:flex; gap:8px; padding:12px 20px; border-top:1px solid #f0f0f0; }
+.cat-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.cat-img-row { display:flex; gap:12px; align-items:stretch; }
+.cat-img-prev { width:120px; height:90px; border-radius:10px; background:#f4f5f7 center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:12px; flex-shrink:0; }
+.cat-procs { display:flex; flex-wrap:wrap; gap:6px; }
+.cat-procs label { flex-direction:row !important; align-items:center; gap:4px !important; font-weight:500 !important; padding:5px 9px; border:1px solid #e5e8eb; border-radius:7px; cursor:pointer; }
+.cat-chk { flex-direction:row !important; align-items:center; gap:6px !important; }
 #login-gate {
   position:fixed; inset:0; background:#0f1729;
   display:flex; align-items:center; justify-content:center; z-index:999;
@@ -672,6 +700,10 @@ tr:hover td { background:#fafbfe; }
       <div class="nav-item" id="nav-style-images" onclick="showPage('style-images',this)">
         <i data-lucide="image"></i>
         <span>스타일 이미지</span>
+      </div>
+      <div class="nav-item" id="nav-catalog" onclick="showPage('catalog',this)">
+        <i data-lucide="shopping-bag"></i>
+        <span>제품 카탈로그</span>
       </div>
       <div class="nav-item" id="nav-feedback" onclick="showPage('feedback',this);loadFeedback()">
         <i data-lucide="message-square"></i>
@@ -1653,6 +1685,27 @@ service cloud.firestore {
         <!-- 이미지 그리드 -->
         <div id="style-images-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
         <div id="style-images-empty" style="display:none;text-align:center;padding:60px;color:#bbb;font-size:14px;">업로드된 이미지가 없습니다</div>
+      </div>
+
+      <!-- ===== 제품 카탈로그 ===== -->
+      <div class="page" id="page-catalog">
+        <div class="section-header" style="margin-bottom:16px;">
+          <div>
+            <h1 class="section-title">제품 카탈로그</h1>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">앱 '추천 제품'에 보이는 제품 · 저장하면 앱에 바로 반영돼요</p>
+          </div>
+          <div class="section-actions" style="display:flex;gap:8px;">
+            <span id="cat-auth" style="font-size:12px;color:var(--text-muted);align-self:center;"></span>
+            <button class="cat-btn" onclick="catSeed()">기본 제품 불러오기</button>
+            <button class="cat-btn pri" onclick="catEdit()">+ 제품 추가</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <select id="cat-f-group" onchange="catRender()" class="cat-in" style="width:160px;"></select>
+          <input id="cat-f-q" oninput="catRender()" class="cat-in" placeholder="제품명 검색" style="width:220px;">
+          <span id="cat-count" style="align-self:center;font-size:13px;color:var(--text-muted);"></span>
+        </div>
+        <div id="cat-grid" class="cat-grid"></div>
       </div>
 
       <!-- ===== 피드백 & 아이디어 페이지 ===== -->
@@ -3038,6 +3091,7 @@ const pageTitles = {
   contractors: ['업체 DB', '시공 업체 데이터베이스 관리'],
   tips: ['시공팁 편집', '공정별 체크리스트 · 꿀팁 · 피드 관리'],
   'style-images': ['스타일 이미지', '사용자 업로드 이미지 현황'],
+  catalog: ['제품 카탈로그', '앱 추천 제품 · 사진 · 제휴 링크 관리'],
 };
 
 function showPage(name, navEl) {
@@ -3054,6 +3108,7 @@ function showPage(name, navEl) {
   if (name === 'companies') loadCompaniesPage();
   if (name === 'tips') loadTipsPage();
   if (name === 'style-images') loadStyleImages();
+  if (name === 'catalog') loadCatalogPage();
   setTimeout(lucide.createIcons, 60);
 }
 
@@ -4178,6 +4233,143 @@ function _esc(s) {
 }
 
 // ===== TOAST =====
+// ===== 제품 카탈로그 (vb_catalog/products · items.{id}) =====
+const CAT_GROUPS = ['조명·전기', '욕실', '주방', '바닥·벽', '문·하드웨어', '냉난방', '수납·마무리', '가구·가전'];
+const CAT_FCATS = ['소파', '라운지체어', '침대/매트리스', '식탁/의자', '책상', '수납장/옷장', '조명', '다운라이트', '손잡이', '욕실', '냉장고', '세탁기/건조기', '에어컨', '청소기', 'TV', '전자레인지/오븐', '기타'];
+const CAT_PROCS = ['실측', '도면설계', '동의서 및 보양', '가설공사', '철거', '샷시', '설비', '전기', '목공', '중문', '시스템에어컨', '타일', '위생도기', '욕실', '싱크', '필름', '도배', '마루', '조명', '가구', '실리콘', '입주청소', '이삿짐정리'];
+const CAT_ADMIN = 'yunho.yang@naverlabs.com';
+// 앱 코드의 기본 31개와 동일 (수량 규칙을 데이터로)
+const CAT_SEED = [
+  ['dl', '조명·전기', '다운라이트', 'LED 다운라이트 3인치', '거실·주방·복도용. 평당 약 0.4개', ['전기', '조명', '목공'], 'perPy', 0.4, '개'],
+  ['roomlight', '조명·전기', '조명', 'LED 방등 (슬림 평판)', '방마다 1개', ['전기', '조명'], 'rooms', 1, '개'],
+  ['linelight', '조명·전기', '조명', '간접조명 LED 라인바', '우물천장·커튼박스 간접등', ['조명', '목공'], 'perPy', 0.17, '개'],
+  ['sensor', '조명·전기', '조명', '현관 센서등', '현관·팬트리', ['전기', '조명'], 'fixed', 1, '개'],
+  ['switch', '조명·전기', '기타', '매립 스위치', '방·거실·주방·욕실 입구 기준', ['전기'], 'perPy', 0.4, '개'],
+  ['outlet', '조명·전기', '기타', '매립 콘센트 (2구)', '전체 교체 기준', ['전기'], 'perPy', 0.67, '개'],
+  ['doorlock', '조명·전기', '기타', '현관 디지털 도어락', '푸시풀 타입', [], 'fixed', 1, '개'],
+  ['toilet', '욕실', '욕실', '양변기 (원피스)', '욕실마다 1개', ['위생도기', '욕실', '타일'], 'baths', 1, '개'],
+  ['basin', '욕실', '욕실', '세면대', '반다리·탑볼 중 선택', ['위생도기', '욕실', '타일'], 'baths', 1, '개'],
+  ['bfaucet', '욕실', '욕실', '세면대 수전', '원홀 레버형', ['위생도기', '욕실'], 'baths', 1, '개'],
+  ['shower', '욕실', '욕실', '해바라기 샤워 수전', '선반형 추천', ['위생도기', '욕실'], 'baths', 1, '개'],
+  ['bcab', '욕실', '욕실', '욕실장 (거울 수납장)', '슬라이드·플랩형', ['위생도기', '욕실', '타일'], 'baths', 1, '개'],
+  ['fan', '욕실', '욕실', '욕실 환풍기', '역류방지 댐퍼 포함 모델', ['설비', '전기', '위생도기', '욕실'], 'baths', 1, '개'],
+  ['bacc', '욕실', '욕실', '욕실 액세서리 세트', '수건걸이·휴지걸이·선반', ['위생도기', '욕실'], 'baths', 1, '세트'],
+  ['partition', '욕실', '욕실', '샤워 유리 파티션', '8mm 강화유리', ['위생도기', '욕실', '타일'], 'baths', 1, '개'],
+  ['drain', '욕실', '욕실', '트렌치 배수구 (유가)', '타일 시공 전에 준비', ['타일', '욕실'], 'baths', 1, '개'],
+  ['sinkbowl', '주방', '기타', '사각 싱크볼', '언더싱크 850 기준', ['가구', '싱크'], 'fixed', 1, '개'],
+  ['kfaucet', '주방', '기타', '주방 수전 (풀아웃)', '거위목 풀아웃', ['가구', '싱크'], 'fixed', 1, '개'],
+  ['induction', '주방', '전자레인지/오븐', '빌트인 인덕션 (3구)', '전용 전기 배선 확인', ['가구', '싱크', '전기'], 'fixed', 1, '대'],
+  ['hood', '주방', '기타', '슬림 레인지후드', '상부장 폭에 맞추기', ['가구', '싱크'], 'fixed', 1, '대'],
+  ['dishwasher', '주방', '기타', '빌트인 식기세척기', '12인용, 하부장 자리 확보', ['가구', '싱크', '설비'], 'fixed', 1, '대'],
+  ['floor', '바닥·벽', '기타', '강마루', '공급면적 약 75% 기준 시공 면적', ['마루'], 'area', 0.75, '㎡'],
+  ['wallpaper', '바닥·벽', '기타', '실크 벽지', '벽·천장 포함, 1롤 약 16.5㎡', ['도배'], 'perPy', 0.75, '롤'],
+  ['film', '바닥·벽', '기타', '인테리어 필름 (문·몰딩)', '방문·욕실문 기준', ['필름'], 'roomsBaths', 1, '짝'],
+  ['handle', '문·하드웨어', '손잡이', '도어 레버 손잡이', '방문·욕실문 (욕실은 욕실용)', ['목공', '필름'], 'roomsBaths', 1, '개'],
+  ['stopper', '문·하드웨어', '손잡이', '도어 스토퍼', '바닥 매립·마그네틱', ['목공', '필름', '마루'], 'roomsBaths', 1, '개'],
+  ['middoor', '문·하드웨어', '기타', '현관 중문 (3연동)', '현관 폭 실측 후 주문', ['목공', '중문'], 'fixed', 1, '세트'],
+  ['sysac', '냉난방', '에어컨', '시스템에어컨', '거실 + 방 수 기준', ['시스템에어컨'], 'roomsPlus', 1, '대'],
+  ['closet', '수납·마무리', '수납장/옷장', '붙박이장', '안방 기준 1세트', ['가구'], 'fixed', 1, '세트'],
+  ['shoes', '수납·마무리', '수납장/옷장', '현관 신발장', '천장 높이 확인', ['가구'], 'fixed', 1, '세트'],
+  ['blind', '수납·마무리', '기타', '블라인드·커튼', '창 수 기준', [], 'roomsPlus', 1, '창'],
+].map((r, i) => ({ id: r[0], g: r[1], fc: r[2], name: r[3], tip: r[4], procs: r[5], qt: r[6], qv: r[7], unit: r[8], q: r[3], order: i }));
+let _catItems = {}, _catEditId = null;
+
+function _catRef() { return _adminDb.collection('vb_catalog').doc('products'); }
+// 쓰기는 관리자 Google 계정으로만 (Firestore 규칙). 익명 상태면 Google 로그인 팝업
+async function _catEnsureAuth() {
+  const auth = firebase.auth(firebase.app('admin'));
+  if (auth.currentUser?.email === CAT_ADMIN) return true;
+  try {
+    const r = await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    if (r.user?.email !== CAT_ADMIN) { alert('관리자 계정(' + CAT_ADMIN + ')으로 로그인해야 저장할 수 있어요.'); return false; }
+    _catAuthLabel(); return true;
+  } catch (e) { alert('Google 인증 실패: ' + e.message); return false; }
+}
+function _catAuthLabel() {
+  const u = firebase.auth(firebase.app('admin')).currentUser, el = document.getElementById('cat-auth');
+  if (el) el.textContent = u?.email === CAT_ADMIN ? '✓ ' + u.email : '저장 시 관리자 Google 인증 필요';
+}
+async function loadCatalogPage() {
+  if (!_adminDb) initFirestoreAdmin();
+  const gs = document.getElementById('cat-f-group');
+  if (gs && !gs.options.length) gs.innerHTML = ['<option value="">전체 그룹</option>', ...CAT_GROUPS.map(g => `<option>${g}</option>`)].join('');
+  _catAuthLabel();
+  document.getElementById('cat-grid').innerHTML = '<div style="color:#aaa;padding:30px;">불러오는 중...</div>';
+  try { const d = await _catRef().get(); _catItems = d.exists ? (d.data().items || {}) : {}; }
+  catch (e) { document.getElementById('cat-grid').innerHTML = `<div style="color:#e5484d;padding:30px;">불러오기 실패: ${e.message}</div>`; return; }
+  catRender();
+}
+function catRender() {
+  const g = document.getElementById('cat-f-group')?.value, q = (document.getElementById('cat-f-q')?.value || '').trim();
+  const list = Object.values(_catItems).filter(it => (!g || it.g === g) && (!q || (it.name || '').includes(q)))
+    .sort((a, b) => CAT_GROUPS.indexOf(a.g) - CAT_GROUPS.indexOf(b.g) || (a.order ?? 999) - (b.order ?? 999));
+  document.getElementById('cat-count').textContent = `${list.length}개`;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  document.getElementById('cat-grid').innerHTML = list.length ? list.map(it => `<div class="cat-item${it.hidden ? ' hid' : ''}" onclick="catEdit('${it.id}')">
+    <div class="ph" style="${it.img ? `background-image:url('${esc(it.img)}')` : ''}">${it.img ? '' : '사진 없음'}</div>
+    <div class="bd"><small>${esc(it.g)}</small><b>${esc(it.name)}</b><small>${esc(it.tip || '')}</small>
+    <div class="cat-tags"><span class="${it.cp ? 'ok' : ''}">쿠팡 ${it.cp ? '링크' : '검색'}</span><span class="${it.nv ? 'ok' : ''}">네이버 ${it.nv ? '링크' : '검색'}</span>${it.price ? `<span>${Number(it.price).toLocaleString()}원</span>` : ''}${it.hidden ? '<span>숨김</span>' : ''}</div></div></div>`).join('')
+    : '<div style="color:#aaa;padding:30px;">제품이 없어요. "기본 제품 불러오기"로 31개를 넣을 수 있어요.</div>';
+}
+function catEdit(id) {
+  _catEditId = id || null;
+  const it = id ? _catItems[id] : { g: CAT_GROUPS[0], fc: '기타', qt: 'fixed', qv: 1, unit: '개', procs: [] };
+  const $ = k => document.getElementById('cat-m-' + k);
+  $('title').textContent = id ? '제품 수정' : '제품 추가';
+  $('g').innerHTML = CAT_GROUPS.map(g => `<option${g === it.g ? ' selected' : ''}>${g}</option>`).join('');
+  $('fc').innerHTML = CAT_FCATS.map(g => `<option${g === it.fc ? ' selected' : ''}>${g}</option>`).join('');
+  ['name', 'tip', 'cp', 'nv', 'q', 'price', 'unit'].forEach(k => $(k).value = it[k] ?? '');
+  $('imgurl').value = it.img || ''; $('qt').value = it.qt || 'fixed'; $('qv').value = it.qv ?? 1; $('hidden').checked = !!it.hidden;
+  $('procs').innerHTML = CAT_PROCS.map(p => `<label><input type="checkbox" value="${p}"${(it.procs || []).includes(p) ? ' checked' : ''}>${p}</label>`).join('');
+  $('del').style.visibility = id ? 'visible' : 'hidden';
+  catPrev(); document.getElementById('cat-modal').classList.add('on');
+}
+function catClose() { document.getElementById('cat-modal').classList.remove('on'); }
+function catPrev() {
+  const u = document.getElementById('cat-m-imgurl').value.trim(), el = document.getElementById('cat-m-img');
+  el.style.backgroundImage = u ? `url('${u.replace(/'/g, '%27')}')` : ''; el.textContent = u ? '' : '사진 없음';
+}
+async function catUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  if (!_adminStorage) { alert('Storage 초기화 실패. 새로고침해 주세요.'); return; }
+  if (!(await _catEnsureAuth())) return;
+  const el = document.getElementById('cat-m-img'); el.textContent = '업로드 중…';
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  try {
+    const snap = await _adminStorage.ref().child(`vb_catalog_images/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`).put(file, { contentType: file.type });
+    document.getElementById('cat-m-imgurl').value = await snap.ref.getDownloadURL(); catPrev();
+  } catch (e) { el.textContent = '실패'; alert('사진 업로드 실패: ' + e.message + '\nStorage 규칙에 vb_catalog_images 쓰기 허용이 필요할 수 있어요.'); }
+  input.value = '';
+}
+async function catSave() {
+  const $ = k => document.getElementById('cat-m-' + k);
+  const name = $('name').value.trim(); if (!name) { alert('제품명을 입력해 주세요.'); return; }
+  const url = v => { v = v.trim(); return !v || /^https?:\/\//.test(v) ? v : 'https://' + v; };
+  const id = _catEditId || 'c_' + Date.now().toString(36);
+  const it = { ...(_catItems[id] || {}), id, name, g: $('g').value, fc: $('fc').value, tip: $('tip').value.trim(), cp: url($('cp').value), nv: url($('nv').value),
+    q: $('q').value.trim() || name, img: $('imgurl').value.trim(), price: parseInt($('price').value) || 0, unit: $('unit').value.trim() || '개',
+    qt: $('qt').value, qv: parseFloat($('qv').value) || 1, procs: [...document.querySelectorAll('#cat-m-procs input:checked')].map(i => i.value), hidden: $('hidden').checked,
+    order: _catItems[id]?.order ?? Object.keys(_catItems).length };
+  if (!(await _catEnsureAuth())) return;
+  try { await _catRef().set({ items: { [id]: it }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); _catItems[id] = it; catClose(); catRender(); showToast('저장했어요 · 앱에 바로 반영돼요'); }
+  catch (e) { alert('저장 실패: ' + e.message); }
+}
+async function catDelete() {
+  if (!_catEditId || !confirm('이 제품을 카탈로그에서 삭제할까요? (숨기기를 쓰면 나중에 다시 켤 수 있어요)')) return;
+  if (!(await _catEnsureAuth())) return;
+  try { await _catRef().update({ ['items.' + _catEditId]: firebase.firestore.FieldValue.delete() }); delete _catItems[_catEditId]; catClose(); catRender(); showToast('삭제했어요'); }
+  catch (e) { alert('삭제 실패: ' + e.message); }
+}
+async function catSeed() {
+  const miss = CAT_SEED.filter(s => !_catItems[s.id]);
+  if (!miss.length) { showToast('기본 제품이 이미 모두 있어요'); return; }
+  if (!confirm(`기본 제품 ${miss.length}개를 추가할까요? (이미 있는 제품은 건드리지 않아요)`)) return;
+  if (!(await _catEnsureAuth())) return;
+  const items = Object.fromEntries(miss.map(s => [s.id, s]));
+  try { await _catRef().set({ items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); Object.assign(_catItems, items); catRender(); showToast(`${miss.length}개 추가했어요`); }
+  catch (e) { alert('저장 실패: ' + e.message); }
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -4411,5 +4603,35 @@ function closeUserModal() {
   </div>
 </div>
 
+<!-- 제품 카탈로그 편집 -->
+<div id="cat-modal" class="cat-ov" onclick="if(event.target===this)catClose()">
+  <div class="cat-box">
+    <div class="cat-box-hd"><b id="cat-m-title">제품</b><button onclick="catClose()">✕</button></div>
+    <div class="cat-box-bd">
+      <div class="cat-img-row">
+        <div id="cat-m-img" class="cat-img-prev">사진 없음</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <label class="cat-btn" style="text-align:center;">사진 업로드<input type="file" accept="image/*" style="display:none" onchange="catUpload(this)"></label>
+          <input id="cat-m-imgurl" class="cat-in" placeholder="또는 이미지 URL 붙여넣기" oninput="catPrev()">
+        </div>
+      </div>
+      <label>제품명 *<input id="cat-m-name" class="cat-in"></label>
+      <div class="cat-2"><label>추천 그룹<select id="cat-m-g" class="cat-in"></select></label><label>앱 제품 카테고리 (담을 때)<select id="cat-m-fc" class="cat-in"></select></label></div>
+      <label>설명 한 줄<input id="cat-m-tip" class="cat-in" placeholder="예: 거실·주방·복도용"></label>
+      <label>쿠팡 링크 (파트너스 링크 권장)<input id="cat-m-cp" class="cat-in" placeholder="https://link.coupang.com/..."></label>
+      <label>네이버 링크 (쇼핑커넥트 링크 권장)<input id="cat-m-nv" class="cat-in" placeholder="https://..."></label>
+      <label>링크가 비었을 때 쓸 검색어<input id="cat-m-q" class="cat-in"></label>
+      <div class="cat-2"><label>참고 가격 (원)<input id="cat-m-price" class="cat-in" type="number"></label><label>단위<input id="cat-m-unit" class="cat-in" placeholder="개 · 대 · 세트 · ㎡ · 롤"></label></div>
+      <div class="cat-2"><label>추천 수량 기준<select id="cat-m-qt" class="cat-in">
+        <option value="fixed">고정 개수</option><option value="perPy">평당 개수 (평수 × 값)</option><option value="area">면적 (평수 × 3.3 × 값 ㎡)</option>
+        <option value="rooms">방 수 × 값</option><option value="baths">욕실 수 × 값</option><option value="roomsBaths">(방+욕실) × 값</option><option value="roomsPlus">방 수 + 값</option></select></label>
+        <label>값<input id="cat-m-qv" class="cat-in" type="number" step="0.05" value="1"></label></div>
+      <label>추천할 공정 (하나라도 있으면 추천 · 비우면 항상)</label>
+      <div id="cat-m-procs" class="cat-procs"></div>
+      <label class="cat-chk"><input type="checkbox" id="cat-m-hidden"> 앱에서 숨기기</label>
+    </div>
+    <div class="cat-box-ft"><button class="cat-btn del" id="cat-m-del" onclick="catDelete()">삭제</button><span style="flex:1"></span><button class="cat-btn" onclick="catClose()">취소</button><button class="cat-btn pri" onclick="catSave()">저장</button></div>
+  </div>
+</div>
 </body>
 </html>

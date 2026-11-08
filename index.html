@@ -2417,6 +2417,8 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .cat-chips button.on { background:#111; border-color:#111; color:#fff; font-weight:600; }
 .cat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
 .cat-card { background:#fff; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:4px; }
+.cat-img { margin:-16px -16px 10px; aspect-ratio:4/3; background:#f4f5f7 center/cover no-repeat; border-radius:16px 16px 0 0; }
+.cat-price { font-size:15px; font-weight:700; color:#111; margin-top:4px; }
 .cat-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
 .cat-g { font-size:12px; color:#8b95a1; }
 .cat-n { font-size:12px; font-weight:700; color:#0088ff; background:#e8f3ff; border-radius:6px; padding:2px 7px; }
@@ -11921,7 +11923,6 @@ function _renderMoreTab() {
       ${row(I.msg, '피드백 제안하기', 'openFeedbackDialog()')}
       ${isAdmin ? row(I.tool, 'Admin', 'openAdminDialog()') : ''}
       ${isAdmin ? row(I.refresh, '계정유형 테스트 초기화', '_acctForceReopen()') : ''}
-      ${isAdmin ? row(I.layers, '제품 카탈로그 클라우드 저장', '_catPushToCloud()') : ''}
     </div>
   </div>`;
 }
@@ -12424,7 +12425,7 @@ function _tplApply() {
 // 카탈로그 원본은 코드(PRODUCT_CATALOG), 운영 중 수정본은 Firestore vb_catalog/products (관리자 동기화)
 // q: 검색어 / cp·nv: 제휴 링크(쿠팡 파트너스·네이버 쇼핑커넥트) — 비어 있으면 검색 링크로 대체
 // procs: 이 공정이 있으면 추천 (빈 배열 = 항상) / qty(py, rooms, baths): 추천 수량
-const CATALOG_GROUPS = ['조명·전기', '욕실', '주방', '바닥·벽', '문·하드웨어', '냉난방', '수납·마무리'];
+const CATALOG_GROUPS = ['조명·전기', '욕실', '주방', '바닥·벽', '문·하드웨어', '냉난방', '수납·마무리', '가구·가전'];
 const PRODUCT_CATALOG = [
   { id: 'dl', g: '조명·전기', fc: '다운라이트', name: 'LED 다운라이트 3인치', tip: '거실·주방·복도용. 평당 약 0.4개', procs: ['전기', '조명', '목공'], qty: (py) => Math.round(py * 0.4), unit: '개', q: 'LED 다운라이트 3인치' },
   { id: 'roomlight', g: '조명·전기', fc: '조명', name: 'LED 방등 (슬림 평판)', tip: '방마다 1개', procs: ['전기', '조명'], qty: (py, r) => r, unit: '개', q: 'LED 방등 슬림 평판' },
@@ -12472,10 +12473,19 @@ function _catHome(proj) {
   const rooms = py < 20 ? 2 : py < 40 ? 3 : 4, baths = py < 30 ? 1 : 2;
   return { py, rooms, baths };
 }
+// 어드민 수량 규칙 → 수량 함수
+const _CAT_QT = { fixed: v => () => v, perPy: v => py => Math.round(py * v), area: v => py => Math.round(py * 3.3 * v), rooms: v => (py, r) => Math.round(r * v), baths: v => (py, r, b) => Math.round(b * v), roomsBaths: v => (py, r, b) => Math.round((r + b) * v), roomsPlus: v => (py, r) => r + Math.round(v) };
 function _catItems() {
-  // Firestore 수정본이 있으면 링크·문구를 덮어씀 (수량 공식은 코드 기준 유지)
+  // 어드민(Firestore) 데이터가 있으면 그게 기준 — 코드 카탈로그는 기본값/대체용
   const remote = _catRemote || {};
-  return PRODUCT_CATALOG.map(it => ({ ...it, ...(remote[it.id] || {}), qty: it.qty })).filter(it => !it.hidden);
+  const base = Object.fromEntries(PRODUCT_CATALOG.map(it => [it.id, it]));
+  const ids = Object.keys(remote).length ? Object.keys(remote) : Object.keys(base);
+  return ids.map(id => {
+    const it = { ...(base[id] || {}), ...(remote[id] || {}) };
+    it.qty = remote[id]?.qt && _CAT_QT[remote[id].qt] ? _CAT_QT[remote[id].qt](Number(remote[id].qv) || 1) : (base[id]?.qty || (() => 1));
+    it.procs = it.procs || []; it.g = it.g || '수납·마무리';
+    return it;
+  }).filter(it => !it.hidden && it.name).sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 function _catRecommend(proj) {
   const procs = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.name));
@@ -12506,9 +12516,9 @@ function _catRender() {
   const list = _catGroup === '전체' ? all : all.filter(it => it.g === _catGroup);
   const card = it => {
     const L = _catLinks(it), added = have.has(it.id);
-    return `<div class="cat-card">
+    return `<div class="cat-card">${it.img ? `<div class="cat-img" style="background-image:url('${String(it.img).replace(/'/g, '%27')}')"></div>` : ''}
       <div class="cat-top"><span class="cat-g">${esc(it.g)}</span><span class="cat-n">추천 ${it.n}${esc(it.unit)}</span></div>
-      <b>${esc(it.name)}</b><small>${esc(it.tip || '')}</small>
+      <b>${esc(it.name)}</b><small>${esc(it.tip || '')}</small>${it.price ? `<div class="cat-price">${Number(it.price).toLocaleString()}원~</div>` : ''}
       <div class="cat-links"><button onclick="_openProduct('${L.cp}')"><span class="cat-cp">쿠팡</span></button><button onclick="_openProduct('${L.nv}')"><span class="cat-nv">네이버</span></button>
       <button class="cat-add${added ? ' on' : ''}" ${added || !canEdit() ? 'disabled' : ''} onclick="_catAdd('${it.id}')">${added ? '담음' : '담기'}</button></div>
     </div>`;
@@ -12527,7 +12537,7 @@ async function _catAdd(id) {
   const it = _catRecommend(proj).find(x => x.id === id); if (!it) return;
   if (!proj.furnitureItems) proj.furnitureItems = [];
   proj.furnitureItems.unshift({ id: 'fi_' + Date.now(), catalogId: it.id, name: it.name, brand: '', status: '미선택', qty: it.unit === '개' || it.unit === '대' || it.unit === '세트' ? it.n : 1,
-    price: 0, size: it.unit === '개' || it.unit === '대' || it.unit === '세트' ? '' : `${it.n}${it.unit}`, url: _catLinks(it).cp, note: it.tip || '', imageUrl: '', category: it.fc, createdAt: Date.now() });
+    price: Number(it.price) || 0, size: it.unit === '개' || it.unit === '대' || it.unit === '세트' ? '' : `${it.n}${it.unit}`, url: _catLinks(it).cp, note: it.tip || '', imageUrl: it.img || '', category: it.fc || '기타', createdAt: Date.now() });
   save();
   try { if (proj.isCloud && proj.cloudId && _db) { _isProjOwner(proj) ? _syncProjToCloud(proj) : _syncFurnitureToCloud(proj); } } catch (e) {}
   showToastMessage(_ti('check') + `${it.name}을(를) 제품 목록에 담았어요`);
