@@ -2430,7 +2430,14 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .cat-links .cat-add { margin-left:auto; background:#111; border-color:#111; color:#fff; padding:0 16px; }
 .cat-links .cat-add.on { background:#f2f4f6; border-color:#f2f4f6; color:#8b95a1; }
 .cat-disc { font-size:11.5px; color:#8b95a1; line-height:1.5; margin:8px 4px 0; }
-.fd-body { flex:1; display:flex; flex-direction:column; }
+.fd-body { display:flex; flex-direction:column; max-width:640px; margin:0 auto; width:100%; }
+#fd-page { position:fixed; inset:0; z-index:9000; background:#fff; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .26s cubic-bezier(.22,1,.36,1); }
+#fd-page.on { transform:none; }
+.fd-hd { display:flex; align-items:center; gap:4px; padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px; border-bottom:1px solid #f2f4f6; flex-shrink:0; background:#fff; }
+.fd-hd button { width:44px; height:44px; border:none; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.fd-hd b { flex:1; text-align:center; font-size:17px; font-weight:600; color:#111; margin-right:44px; }
+.fd-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+#fd-page .ptn-ft { background:#fff; border-top:1px solid #f2f4f6; max-width:640px; margin:0 auto; width:100%; box-sizing:border-box; }
 .fd-gal { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; background:#fff; }
 .fd-gal::-webkit-scrollbar { display:none; }
 .fd-slide { position:relative; flex:0 0 100%; scroll-snap-align:start; aspect-ratio:1; background:#fff; display:flex; align-items:center; justify-content:center; }
@@ -21315,9 +21322,25 @@ function _onSitePhotoAddPick(input) {
 let _fdId = null;
 function _fdItem() { return (getProject()?.furnitureItems || []).find(i => i.id === _fdId); }
 function _fdImgs(it) { return [it.imageUrl, ...(it.images || [])].filter(Boolean); }
-function openFurnitureDetail(id) { _fdId = id; _fdRender(); }
+// 팝업이 아닌 전체 화면 페이지 (오른쪽에서 밀려 들어옴, 뒤로가기로 닫힘)
+function openFurnitureDetail(id) {
+  _fdId = id;
+  let pg = document.getElementById('fd-page');
+  if (!pg) { pg = document.createElement('div'); pg.id = 'fd-page'; document.body.appendChild(pg); }
+  _fdRender();
+  requestAnimationFrame(() => pg.classList.add('on'));
+  try { history.pushState({ fd: id }, ''); } catch (e) {}
+}
+function _fdClose(fromPop) {
+  const pg = document.getElementById('fd-page'); if (!pg) return;
+  pg.classList.remove('on'); setTimeout(() => pg.remove(), 260);
+  try { renderFurnitureTab(); const c = document.getElementById('furniture-detail-title')?.textContent; if (c && typeof _renderFurnitureCategoryDetail === 'function') _renderFurnitureCategoryDetail(c); } catch (e) {}
+  if (!fromPop && history.state?.fd) history.back();
+}
+window.addEventListener('popstate', () => { if (document.getElementById('fd-page')) _fdClose(true); });
+function _fdPage(html) { const pg = document.getElementById('fd-page'); if (!pg) return; const sc = pg.querySelector('.fd-scroll')?.scrollTop || 0; pg.innerHTML = html; const n = pg.querySelector('.fd-scroll'); if (n) n.scrollTop = sc; }
 function _fdRender() {
-  const it = _fdItem(); if (!it) { _ptnClose(); return; }
+  const it = _fdItem(); if (!it) { _fdClose(); return; }
   const imgs = _fdImgs(it), edit = canEdit(), status = _getFurnitureStatus(it), picked = status === '구매예정';
   const qty = it.qty || 1, price = it.price || 0;
   const gallery = imgs.length
@@ -21325,8 +21348,8 @@ function _fdRender() {
        ${imgs.length > 1 ? `<div class="fd-dots">${imgs.map((_, i) => `<span class="${i ? '' : 'on'}"></span>`).join('')}</div>` : ''}`
     : `<div class="fd-empty">사진이 없어요</div>`;
   const rows = [['카테고리', it.category || '기타'], ['수량', `${qty}개`], ['사이즈', it.size], ['메모', it.note]].filter(([, v]) => v);
-  _ptnSheet(`${_ptnHd(esc(it.category || '제품'), "_ptnClose();try{renderFurnitureTab()}catch(e){}")}
-    <div class="fd-body">
+  _fdPage(`<div class="fd-hd"><button onclick="_fdClose()" aria-label="뒤로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><b>${esc(it.category || '제품')}</b><span></span></div>
+    <div class="fd-scroll"><div class="fd-body">
       ${gallery}
       ${edit ? `<label class="fd-add">＋ 사진 추가<input type="file" accept="image/*" multiple style="display:none" onchange="_fdAddImgs(this)"></label>` : ''}
       <div class="fd-info">
@@ -21339,9 +21362,9 @@ function _fdRender() {
         </div>
         ${rows.length ? `<div class="fd-rows">${rows.map(([k, v]) => `<div class="ptn-row"><span>${k}</span><em style="white-space:pre-line;">${esc(v)}</em></div>`).join('')}</div>` : ''}
       </div>
-    </div>
+    </div></div>
     <div class="ptn-ft fd-ft">
-      ${edit ? `<button class="fd-edit" onclick="_ptnClose();_editFurnitureItem('${it.id}')">수정</button>` : ''}
+      ${edit ? `<button class="fd-edit" onclick="_fdClose();_editFurnitureItem('${it.id}')">수정</button>` : ''}
       <button class="ptn-cta" ${it.url ? `onclick="_openProduct('${String(it.url).replace(/'/g, '%27')}')"` : 'disabled'}>${it.url ? '구매하기' : '구매 링크 없음'}</button>
     </div>`);
 }
