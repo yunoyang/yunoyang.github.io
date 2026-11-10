@@ -2435,7 +2435,7 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 #fd-page.on { transform:none; }
 .fd-hd { display:flex; align-items:center; gap:4px; padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px; border-bottom:1px solid #f2f4f6; flex-shrink:0; background:#fff; }
 .fd-hd button { width:44px; height:44px; border:none; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-.fd-hd b { flex:1; text-align:center; font-size:17px; font-weight:600; color:#111; margin-right:44px; }
+.fd-hd b { flex:1; text-align:center; font-size:17px; font-weight:600; color:#111; }
 .fd-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 #fd-page .ptn-ft { background:#fff; border-top:1px solid #f2f4f6; max-width:640px; margin:0 auto; width:100%; box-sizing:border-box; }
 .fd-gal { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; background:#fff; }
@@ -2459,6 +2459,17 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .fd-chip.bought { border-color:#111; background:#111; color:#fff; }
 .fd-chip.own { display:inline-flex; align-items:center; color:#2e7d32; }
 .fd-rows { margin-top:8px; }
+.fd-quick { margin-top:8px; border-top:1px solid #f2f4f6; }
+.fd-q { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:56px; border-bottom:1px solid #f2f4f6; }
+.fd-q > span { font-size:14px; color:#8b95a1; flex-shrink:0; }
+.fd-step { display:flex; align-items:center; border:1px solid #e5e8eb; border-radius:10px; overflow:hidden; }
+.fd-step button { width:40px; height:38px; border:none; background:#fff; font-size:18px; color:#333d4b; cursor:pointer; font-family:inherit; }
+.fd-step button:disabled { color:#d1d6db; }
+.fd-step b { min-width:40px; text-align:center; font-size:16px; font-weight:600; }
+.fd-won { display:flex; align-items:center; gap:6px; }
+.fd-won input { width:140px; height:40px; border:1px solid #e5e8eb; border-radius:10px; padding:0 12px; font-size:16px; text-align:right; font-family:inherit; }
+.fd-won em { font-style:normal; font-size:15px; color:#4e5968; }
+.fd-q select { height:40px; border:1px solid #e5e8eb; border-radius:10px; padding:0 10px; font-size:15px; font-family:inherit; background:#fff; min-width:150px; }
 .fd-ft { display:flex; gap:8px; }
 .fd-edit { flex:0 0 96px; height:54px; border-radius:14px; border:1px solid #e5e8eb; background:#fff; font-size:16px; font-weight:600; color:#333d4b; font-family:inherit; cursor:pointer; }
 .fd-badge { font-size:12px; font-weight:700; color:#fff; background:#111; border-radius:6px; padding:3px 8px; }
@@ -20505,9 +20516,7 @@ function _renderFurnitureCategoryDetail(cat) {
               ${unitPrice ? `<div style="font-size:14px;color:#555;margin-top:4px;">${qty > 1 ? `${unitPrice.toLocaleString()}원 × ${qty} = ${totalPrice.toLocaleString()}원` : `${totalPrice.toLocaleString()}원`}</div>` : ''}
               ${it.size ? `<div style="font-size:14px;color:#aaa;margin-top:2px;">${esc(it.size)}</div>` : ''}
             </div>
-            <button onclick="event.stopPropagation();_openFurnitureMenu('${it.id}')" style="flex-shrink:0;width:28px;height:28px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#555"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-            </button>
+
           </div>
           ${status === '보유중' ? `<div style="margin-top:10px;"><span style="font-size:14px;color:#2e7d32;">보유중</span></div>` : `
           <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -21347,8 +21356,13 @@ function _fdRender() {
     ? `<div class="fd-gal" onscroll="_fdDots(this)">${imgs.map((u, i) => `<div class="fd-slide"><img src="${esc(u)}" alt="" referrerpolicy="no-referrer">${edit && i > 0 ? `<button class="fd-del" onclick="_fdDelImg(${i})" aria-label="사진 삭제">✕</button>` : ''}</div>`).join('')}</div>
        ${imgs.length > 1 ? `<div class="fd-dots">${imgs.map((_, i) => `<span class="${i ? '' : 'on'}"></span>`).join('')}</div>` : ''}`
     : `<div class="fd-empty">사진이 없어요</div>`;
-  const rows = [['카테고리', it.category || '기타'], ['수량', `${qty}개`], ['사이즈', it.size], ['메모', it.note]].filter(([, v]) => v);
-  _fdPage(`<div class="fd-hd"><button onclick="_fdClose()" aria-label="뒤로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><b>${esc(it.category || '제품')}</b><span></span></div>
+  const rows = (edit ? [['사이즈', it.size], ['메모', it.note]] : [['카테고리', it.category || '기타'], ['수량', `${qty}개`], ['사이즈', it.size], ['메모', it.note]]).filter(([, v]) => v);
+  const quick = edit ? `<div class="fd-quick">
+      <div class="fd-q"><span>수량</span><div class="fd-step"><button onclick="_fdSet('qty', ${Math.max(1, qty - 1)})" ${qty <= 1 ? 'disabled' : ''}>−</button><b>${qty}</b><button onclick="_fdSet('qty', ${qty + 1})">＋</button></div></div>
+      <div class="fd-q"><span>가격 (1개)</span><div class="fd-won"><input type="text" inputmode="numeric" value="${price ? price.toLocaleString() : ''}" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',')" onchange="_fdSet('price', parseInt(this.value.replace(/,/g,''))||0)"><em>원</em></div></div>
+      <div class="fd-q"><span>카테고리</span><select onchange="_fdSet('category', this.value)">${FURNITURE_CATEGORIES.map(c => `<option${c === (it.category || '기타') ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+    </div>` : '';
+  _fdPage(`<div class="fd-hd"><button onclick="_fdClose()" aria-label="뒤로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><b>${esc(it.category || '제품')}</b>${edit ? `<button onclick="_fdDelete()" aria-label="삭제"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#e5484d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : '<span style="width:44px"></span>'}</div>
     <div class="fd-scroll"><div class="fd-body">
       ${gallery}
       ${edit ? `<label class="fd-add">＋ 사진 추가<input type="file" accept="image/*" multiple style="display:none" onchange="_fdAddImgs(this)"></label>` : ''}
@@ -21360,6 +21374,7 @@ function _fdRender() {
           ${status === '보유중' ? '<span class="fd-chip own">보유중</span>' : `<button class="fd-chip${picked ? ' on' : ''}" ${edit ? `onclick="_toggleFurniturePending('${it.id}');_fdRender()"` : 'disabled'}>${picked ? '✓ 선택 · 예산 포함' : '선택하기'}</button>`}
           <button class="fd-chip${it.bought ? ' bought' : ''}" ${edit ? `onclick="_fdToggleBought()"` : 'disabled'}>${it.bought ? `✓ 구매완료${it.boughtAt ? ' · ' + new Date(it.boughtAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''}` : '구매완료 표시'}</button>
         </div>
+        ${quick}
         ${rows.length ? `<div class="fd-rows">${rows.map(([k, v]) => `<div class="ptn-row"><span>${k}</span><em style="white-space:pre-line;">${esc(v)}</em></div>`).join('')}</div>` : ''}
       </div>
     </div></div>
@@ -21375,6 +21390,16 @@ function _fdDots(el) {
 function _fdSave(it) {
   it.updatedAt = Date.now(); save();
   const proj = getProject(); try { if (proj?.cloudId) _syncFurnitureToCloud(proj); } catch (e) {}
+}
+function _fdSet(k, v) {
+  const it = _fdItem(); if (!it || !canEdit()) return;
+  it[k] = v; _fdSave(it); _fdRender();
+  if (k === 'category') showToastMessage(_ti('check') + `${v}(으)로 옮겼어요`);
+}
+function _fdDelete() {
+  const it = _fdItem(); if (!it || !canEdit() || !confirm(`'${it.name}'을(를) 삭제할까요?`)) return;
+  it.deleted = true; _fdSave(it); _fdClose();
+  showToastMessage(_ti('check') + '삭제했어요');
 }
 function _fdToggleBought() {
   const it = _fdItem(); if (!it) return;
