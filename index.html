@@ -19394,6 +19394,8 @@ async function _ptnConfirm(id) {
   const p = proj && (proj.processes || []).find(x => !x.deleted && svc?.match.includes(x.name));
   if (p && canEdit()) {
     p.company = b.partnerName; p.scheduleStart = b.date; p.scheduleEnd = p.scheduleEnd && p.scheduleEnd >= b.date ? p.scheduleEnd : b.date;
+    // updatedAt을 갱신하지 않으면 _mergeOneProcess(동률이면 클라우드 우선)가 변경 전 클라우드 공정을 채택해 업체·일정이 되돌아감
+    p.updatedAt = Date.now();
     save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll?.();
   }
   showToastMessage(_ti('check') + '예약을 확정했어요' + (p ? ` · ${p.name} 공정에 반영했어요` : ''));
@@ -19987,6 +19989,9 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
+// 공유 링크는 'load'(모든 이미지·외부 스크립트 로드 완료)를 기다리지 않고 DOM 준비되면 바로 표시
+// — 느리거나 막힌 외부 리소스(구글 로그인 SDK 등) 때문에 load가 늦거나 안 오면 화면이 빈 채로 남던 문제
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => _checkExportOnLoad()); else _checkExportOnLoad();
 window.addEventListener('load', () => {
   // OAuth redirect 복귀 처리 (레거시 manual redirect → id_token hash)
   _checkOAuthRedirect();
@@ -20001,7 +20006,7 @@ window.addEventListener('load', () => {
       if (!state.loggedIn && !_isMobileLoad) google.accounts.id.prompt();
     } catch(e) {}
   }
-  // 공사계획 공유 링크 뷰어
+  // 공사계획 공유 링크 뷰어 (DOMContentLoaded에서 이미 실행됐으면 건너뜀)
   _checkExportOnLoad();
   // 회의록 공유 URL 뷰어
   _checkMeetingShareUrl();
@@ -20234,10 +20239,13 @@ function _infoShareSheet(url, title, text) {
 }
 
 // ===== 공사계획 공유 링크 뷰어 (Firestore 공개 읽기, 인증 불필요) =====
+let _exportShown = false;
+window.addEventListener('pageshow', e => { if (e.persisted && new URLSearchParams(location.search).get('export')) { _exportShown = false; _checkExportOnLoad(); } });
 async function _checkExportOnLoad() {
   const params = new URLSearchParams(window.location.search);
   const exportId = params.get('export');
-  if (!exportId) return;
+  if (!exportId || _exportShown) return;
+  _exportShown = true;
 
   const screen = document.getElementById('screen-export-view');
   if (!screen) return;
