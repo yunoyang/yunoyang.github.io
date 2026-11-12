@@ -20584,7 +20584,7 @@ function _renderFurnitureCategoryDetail(cat) {
 }
 
 // 카테고리별 공유 링크: 제품 목록 스냅샷을 vb_exports에 저장 (프로젝트명·연락처 제외)
-function _furnShareHtml(cat, items) {
+function _furnShareHtml(cat, items, opts) {
   const http = u => /^https?:\/\//.test(u || '') ? u.replace(/["'<>]/g, c => '%' + c.charCodeAt(0).toString(16)) : ''; // esc는 따옴표를 막지 않음
   // 선택(구매예정) 제품을 위로, 나머지는 딤 처리
   const rank = it => ({ '구매예정': 0, '보유중': 1 }[_getFurnitureStatus(it)] ?? 2);
@@ -20607,20 +20607,38 @@ function _furnShareHtml(cat, items) {
         ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#333d4b;text-decoration:underline;">제품 링크</a>` : ''}
       </div></div>`;
   }).join('');
+  if (opts?.section) return `<div style="font-size:15px;color:#555;margin-bottom:16px;">제품 ${items.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${items.some(i => i.bought) ? ` · 구매완료 ${items.filter(i => i.bought).length}개` : ''}</div>${cards}`;
   return `<div style="max-width:560px;margin:0 auto;padding:24px 16px 48px;font-family:var(--font);background:#fff;"><h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 4px;">${esc(cat)}</h1><div style="font-size:15px;color:#555;margin-bottom:20px;">제품 ${items.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${items.some(i => i.bought) ? ` · 구매완료 ${items.filter(i => i.bought).length}개` : ''}</div>${cards}</div>`;
+}
+function _furnShareAllHtml(activeCat, allItems, title) {
+  const cats = FURNITURE_CATEGORIES.filter(c => allItems.some(it => (it.category || '기타') === c));
+  allItems.forEach(it => { const c = it.category || '기타'; if (!cats.includes(c)) cats.push(c); });
+  const active = cats.includes(activeCat) ? activeCat : '전체';
+  const tabs = ['전체', ...cats];
+  const picked = allItems.filter(it => _getFurnitureStatus(it) === '구매예정'), total = picked.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  const sw = "var r=this.closest('.vfs');r.querySelectorAll('.vfs-tab').forEach(function(b){var on=b===this;b.style.background=on?'#111':'#fff';b.style.color=on?'#fff':'#4e5968';b.style.borderColor=on?'#111':'#e5e8eb';},this);var k=this.getAttribute('data-k');r.querySelectorAll('.vfs-sec').forEach(function(s){s.style.display=(k==='전체'||s.getAttribute('data-k')===k)?'':'none';});r.querySelectorAll('.vfs-h').forEach(function(h){h.style.display=k==='전체'?'':'none';});";
+  const tabBtn = c => { const on = c === active, n = c === '전체' ? allItems.length : allItems.filter(it => (it.category || '기타') === c).length;
+    return `<button class="vfs-tab" data-k="${esc(c)}" onclick="${sw}" style="flex-shrink:0;height:36px;padding:0 14px;border-radius:18px;border:1px solid ${on ? '#111' : '#e5e8eb'};background:${on ? '#111' : '#fff'};color:${on ? '#fff' : '#4e5968'};font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;">${esc(c)} ${n}</button>`; };
+  const secs = cats.map(c => { const its = allItems.filter(it => (it.category || '기타') === c);
+    return `<div class="vfs-sec" data-k="${esc(c)}" style="${active === '전체' || active === c ? '' : 'display:none;'}"><h2 class="vfs-h" style="font-size:18px;font-weight:700;color:#111;margin:20px 0 4px;${active === '전체' ? '' : 'display:none;'}">${esc(c)}</h2>${_furnShareHtml(c, its, { section: true })}</div>`; }).join('');
+  return `<div class="vfs" style="max-width:560px;margin:0 auto;padding:24px 16px 48px;font-family:var(--font);background:#fff;">
+    <h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 4px;">${esc(title || '제품 목록')}</h1>
+    <div style="font-size:15px;color:#555;margin-bottom:14px;">제품 ${allItems.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${allItems.some(i => i.bought) ? ` · 구매완료 ${allItems.filter(i => i.bought).length}개` : ''}</div>
+    <div style="position:sticky;top:0;z-index:2;background:#fff;margin:0 -16px 8px;padding:8px 16px;display:flex;gap:6px;overflow-x:auto;">${tabs.map(tabBtn).join('')}</div>
+    ${secs}</div>`;
 }
 async function _furnShareCategory() {
   const cat = _furnitureCategoryView; if (!cat) return;
-  const items = _getFurnitureItems().filter(it => (it.category || '기타') === cat);
+  const items = _getFurnitureItems();
   if (!items.length) { showToastMessage('공유할 제품이 없습니다'); return; }
   try {
     const ok = await _initFirebase(); if (!ok || !_db) throw new Error('Firebase');
     if (!firebase.auth().currentUser) { try { await firebase.auth().signInAnonymously(); } catch (e) {} }
-    const html = _furnShareHtml(cat, items);
+    const html = _furnShareAllHtml(cat, items, (getProject()?.name || '') + ' 제품 목록');
     if (html.length > 900000) throw new Error('too large');
     // 같은 카테고리는 같은 링크를 갱신 (예전 링크로 들어와도 최신 상태가 보이게)
     const proj = getProject(); proj.furnShareIds = proj.furnShareIds || {};
-    const id = proj.furnShareIds[cat] || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7));
+    const id = proj.furnShareIds[cat] || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)); // 카테고리별 링크 — 열면 그 탭이 먼저 보임
     await _db.collection('vb_exports').doc(id).set({ html, ownerEmail: state.user?.email || '', projectName: cat, kind: 'products', projectKey: proj.cloudId || proj.id, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
     if (!proj.furnShareIds[cat]) { proj.furnShareIds[cat] = id; save(); }
     _infoShareSheet(`https://vibespacekorea.com/?export=${id}`, cat, `[${cat}] 제품 목록입니다.`);
