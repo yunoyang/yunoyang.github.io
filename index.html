@@ -3860,6 +3860,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 }
 .landing-btn-google:hover { filter:drop-shadow(0px 2px 6px rgba(0,0,0,0.1)); }
 .landing-btn-google:active { transform:scale(.97); }
+.landing-btn-start { background:#111 !important; color:#fff !important; margin-bottom:8px; }
 .landing-btn-google svg { width:18px; height:18px; flex-shrink:0; }
 
 /* ===== LOGIN GATE ===== */
@@ -4416,6 +4417,8 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
       <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </button>
     </div>
+    <!-- 비로그인: 프로젝트 시작하기 (로그인 없이) -->
+    <button class="landing-btn-google landing-btn-start" id="landing-btn-start" onclick="landingGuestStart()" style="display:none;"><span>프로젝트 시작하기</span><svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
     <!-- 비로그인: 구글 로그인 -->
     <button class="landing-btn-google" id="landing-btn-google" onclick="_isNativeApp() ? triggerGoogleLogin() : openDialog('dlg-login')">
       <span>구글 로그인</span>
@@ -8643,12 +8646,12 @@ function updateLoginUI() {
     if (projName && proj) projName.textContent = proj.name || '내 프로젝트';
     _renderLandingProjects();
   } else if (true) {
-    // 비로그인: 이 기기에 저장되는 프로젝트 목록 + 아래에 로그인 버튼 (App Store 5.1.1(v) — 계정 없이 쓰는 기능은 로그인 없이)
+    // 비로그인: [프로젝트 시작하기] [구글 로그인] [Apple 로그인] 캡슐 버튼 (App Store 5.1.1(v) — 로그인 없이 시작 가능)
+    const pl = document.getElementById('landing-plist'); if (pl) pl.innerHTML = '';
     if (googleBtn) googleBtn.style.display = '';
     if (appleBtn) appleBtn.style.display = (window.Capacitor && Capacitor.getPlatform && Capacitor.getPlatform() === 'ios') ? '' : 'none';
     if (newBtn) newBtn.style.display = 'none';
     if (projCard) projCard.style.display = 'none';
-    _renderLandingProjects();
   } else {
     const pl = document.getElementById('landing-plist'); if (pl) pl.innerHTML = '';
     // 비로그인: 구글 로그인 버튼만
@@ -8660,6 +8663,15 @@ function updateLoginUI() {
   // Show/hide login gate on main screen
   const loginGate = document.getElementById('main-login-gate');
   if (loginGate) loginGate.style.display = 'none';
+  const startBtn = document.getElementById('landing-btn-start');
+  if (startBtn) startBtn.style.display = state.loggedIn ? 'none' : '';
+}
+// 비로그인 시작: 이 기기에서 만든 프로젝트가 있으면 그걸 열고, 없으면 새 프로젝트
+function landingGuestStart() {
+  const own = (state.projects || []).filter(p => p.name !== '정자동 아파트 플랜' && !p.cloudId);
+  if (!own.length) { startNewProject(); return; }
+  const cur = own.find(p => p.id === state.currentProjectId) || own[own.length - 1];
+  state.currentProjectId = cur.id; save(); goTo('main'); renderAll();
 }
 // 계정이 꼭 필요한 기능(사진·파일 업로드, 동기화, 공유, 공동작업)에서만 로그인
 function requireAccount(action, why) {
