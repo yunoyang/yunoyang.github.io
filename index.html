@@ -2476,6 +2476,10 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 .fd-edit { flex:0 0 96px; height:54px; border-radius:14px; border:1px solid #e5e8eb; background:#fff; font-size:16px; font-weight:600; color:#333d4b; font-family:inherit; cursor:pointer; }
 .fd-badge { font-size:12px; font-weight:700; color:#fff; background:#111; border-radius:6px; padding:3px 8px; }
 .landing-guest { display:block; margin:12px auto 0; border:none; background:none; font-family:inherit; font-size:15px; font-weight:500; color:#4e5968; text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:8px 12px; }
+#login-banner { display:flex; align-items:center; gap:8px; margin:6px 16px 4px; padding:10px 8px 10px 14px; border-radius:12px; background:#f2f6ff; color:#33415c; font-size:13px; line-height:1.4; }
+#login-banner span { flex:1; min-width:0; }
+#login-banner .lb-go { flex-shrink:0; height:30px; padding:0 12px; border:none; border-radius:15px; background:#111; color:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+#login-banner .lb-x { flex-shrink:0; width:28px; height:28px; border:none; background:none; color:#8b95a1; font-size:13px; cursor:pointer; }
 .tpl-rec { display:inline-block; margin-left:6px; padding:2px 7px; border-radius:6px; background:#e8f3ff; color:#0088ff; font-size:11px; font-weight:700; vertical-align:2px; }
 .tpl-list { padding:0 2px; }
 .tpl-row { display:flex; align-items:center; gap:12px; width:100%; padding:12px 0; border:none; border-bottom:1px solid #f2f4f6; background:none; font-family:inherit; text-align:left; cursor:pointer; }
@@ -8622,6 +8626,7 @@ function handleMenuLogin() {
 }
 function updateLoginUI() {
   try { _renderHdrProfile(); } catch (e) {}
+  try { _renderLoginBanner(); } catch (e) {}
   // 프로필 아바타 버튼
   _renderProfileAvatar();
   if (typeof _renderNotifBadge === 'function') _renderNotifBadge();
@@ -8680,14 +8685,40 @@ function requireAccount(action, why) {
   showToastMessage(why || '사진을 저장하려면 로그인이 필요해요', 3000);
   openLoginDialog();
 }
-// 비로그인으로 공정을 몇 개 만들면 로그인을 권함 (강제 아님, 세션당 한 번)
+// 비로그인 사용자에게 로그인 권유 (강제 아님) — 애착이 생긴 순간에, 세션당 한 번
+// 조건: 공정 3개 이상 · 공정 템플릿 적용 · 견적 금액 생김 · 제품 5개 이상 · 사흘 만에 다시 방문
 let _loginNudged = false;
-function _maybeLoginNudge() {
+function _maybeLoginNudge(force) {
   if (state.loggedIn || _loginNudged) return;
-  const n = (getProject()?.processes || []).filter(p => !p.deleted).length;
-  if (n < 3) return;
+  const proj = getProject();
+  const procs = (proj?.processes || []).filter(p => !p.deleted).length;
+  const prods = (proj?.furnitureItems || []).filter(i => !i.deleted).length;
+  if (!force && procs < 3 && prods < 5) return;
   _loginNudged = true;
-  setTimeout(() => showActionToast('로그인하면 다른 기기에서도 볼 수 있어요', openLoginDialog, '로그인'), 600);
+  setTimeout(() => showActionToast('지금까지 만든 계획을 안전하게 보관하세요. 로그인하면 그대로 이어져요', openLoginDialog, '로그인'), 600);
+}
+// 메인 상단 띠 배너: 이 기기에만 저장 중임을 알림 (닫으면 3일간 숨김)
+function _renderLoginBanner() {
+  const hd = document.querySelector('#main-scroll > .header'); if (!hd) return;
+  let b = document.getElementById('login-banner');
+  let hideUntil = 0; try { hideUntil = +localStorage.getItem('vb_lbanner_until') || 0; } catch (e) {}
+  const show = !state.loggedIn && Date.now() > hideUntil && (state.projects || []).some(p => !p.cloudId && p.name !== '정자동 아파트 플랜');
+  if (!show) { b?.remove(); return; }
+  if (!b) {
+    b = document.createElement('div'); b.id = 'login-banner';
+    b.innerHTML = `<span>이 기기에만 저장 중이에요 · 로그인하면 폰을 바꿔도 그대로</span><button class="lb-go" onclick="openLoginDialog()">로그인</button><button class="lb-x" aria-label="닫기" onclick="_hideLoginBanner()">✕</button>`;
+    hd.insertAdjacentElement('afterend', b);
+  }
+}
+function _hideLoginBanner() {
+  try { localStorage.setItem('vb_lbanner_until', String(Date.now() + 3 * 864e5)); } catch (e) {}
+  document.getElementById('login-banner')?.remove();
+}
+// 사흘 이상 지나 다시 열었을 때 한 번 권유
+function _checkReturnNudge() {
+  if (state.loggedIn) return;
+  let last = 0; try { last = +localStorage.getItem('vb_last_open') || 0; localStorage.setItem('vb_last_open', String(Date.now())); } catch (e) {}
+  if (last && Date.now() - last > 3 * 864e5 && (state.projects || []).some(p => !p.cloudId && p.name !== '정자동 아파트 플랜')) setTimeout(() => _maybeLoginNudge(true), 2500);
 }
 
 function _getUserAvatarUrl() {
@@ -12504,7 +12535,7 @@ function _tplApply() {
   save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {}
   _tplClose(); renderAll();
   showToastMessage(_ti('check') + `공정 ${add.length}개와 일정을 추가했어요`);
-  _maybeLoginNudge();
+  _maybeLoginNudge(true);
 }
 
 // ===== 추천 제품 카탈로그: 공정·평형 기준 추천 → 쿠팡/네이버 링크 카드 → 제품 탭에 담기 =====
@@ -12627,6 +12658,7 @@ async function _catAdd(id) {
   save();
   try { if (proj.isCloud && proj.cloudId && _db) { _isProjOwner(proj) ? _syncProjToCloud(proj) : _syncFurnitureToCloud(proj); } } catch (e) {}
   showToastMessage(_ti('check') + `${it.name}을(를) 제품 목록에 담았어요`);
+  _maybeLoginNudge();
   _catRender(); try { renderFurnitureTab(); } catch (e) {}
 }
 // 관리자: 코드 카탈로그의 링크·문구를 Firestore에 올림 (이후 콘솔에서 cp/nv 제휴 링크만 바꾸면 앱 재배포 없이 반영)
@@ -16059,6 +16091,7 @@ function _estSave() {
   const proj = getProject(); if (!proj || !proj.estimate) return;
   proj.estimate.updatedAt = Date.now();
   save(); _estSyncCloud(proj);
+  if (!state.loggedIn && (proj.estimate.groups || []).some(g => (g.items || []).some(i => (i.price || i.amount || i.cost || 0) > 0))) _maybeLoginNudge(true);
 }
 // 오너는 전체 sync, 편집자는 estimate 필드만 read-merge-write — 예전엔 편집자도 _syncProjToCloud
 // (projectData 전체 덮어쓰기)를 호출해 "공동작업자는 projectData 전체를 쓰지 않는다" 규칙을 깨고
@@ -16873,6 +16906,7 @@ function _estApplyImport(groups, meta) {
 }
 
 function renderAll() {
+  try { _renderLoginBanner(); } catch (e) {}
   try { const _p = getProject(); if (_p && _p.myRole !== '뷰어' && _estSeedDefault(_p)) { save(); _estSyncCloud(_p); } } catch(e) {}
   try { const _p = getProject(); if (_p && _estRelink(_p) && _p.myRole !== '뷰어') { _p.estimate.updatedAt = Date.now(); save(); _estSyncCloud(_p); } } catch(e) {}
   const proj = getProject();
@@ -20091,6 +20125,7 @@ initSession(); // 세션 만료 여부 즉시 확인 (load() 직후 실행)
 trackInit();
 goTo('landing');
 updateLoginUI();
+_checkReturnNudge();
 // 공유 링크는 'load'(모든 이미지·외부 스크립트 로드 완료)를 기다리지 않고 DOM 준비되면 바로 표시
 // — 느리거나 막힌 외부 리소스(구글 로그인 SDK 등) 때문에 load가 늦거나 안 오면 화면이 빈 채로 남던 문제
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => _checkExportOnLoad()); else _checkExportOnLoad();
@@ -21845,6 +21880,7 @@ async function _saveFurnitureItem() {
   } else {
     savedItem = { id: 'fi_' + Date.now(), ...fields, createdAt: Date.now() };
     proj.furnitureItems.unshift(savedItem);
+    setTimeout(() => _maybeLoginNudge(), 800);
   }
   save();
   // save()의 클라우드 sync는 fire-and-forget이라 여기서 명시적으로 완료를 기다린다
