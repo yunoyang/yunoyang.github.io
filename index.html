@@ -17771,7 +17771,7 @@ function _syncProjToCloud(proj) {
     }));
     // furnitureItems 이미지도 base64면 제거 (Storage 업로드 실패 시 로컬 폴백된 대용량 data URL)
     const _dropDataImg = it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it;
-    if (Array.isArray(projData.furnitureItems)) projData.furnitureItems = projData.furnitureItems.map(_dropDataImg);
+    if (Array.isArray(projData.furnitureItems)) projData.furnitureItems = projData.furnitureItems.map(_stripFurniDataImgs);
     // 스펙북 자재(materialItems) 이미지도 동일 — _syncMaterialItemsToCloud에선 제거하는데 여기서만
     // 빠져 있어서, 스펙북 사진 업로드가 실패해 남은 1200px data URL이 owner 전체 sync에 그대로
     // 실려 문서가 1MB를 넘기면 다른 모든 데이터 타입의 sync까지 통째로 실패할 수 있었음
@@ -17886,6 +17886,16 @@ async function _syncStyleImagesToCloud(proj) {
   }
 }
 
+// 제품 base64 이미지 제거 — 제품 상세의 여러 장 사진(images 배열, _fdAddImgs)은 Storage 업로드를 못 하면
+// data URL로 남는데, 예전엔 대표 이미지(imageUrl)만 걸러서 images 배열의 base64가 그대로 Firestore에
+// 실렸음 → 문서가 1MB를 넘기면 다른 모든 데이터 타입의 sync까지 통째로 실패할 수 있음
+function _stripFurniDataImgs(it) {
+  if (!it) return it;
+  let out = it;
+  if (it.imageUrl && String(it.imageUrl).startsWith('data:')) out = { ...out, imageUrl: '' };
+  if (Array.isArray(it.images) && it.images.some(u => !u || String(u).startsWith('data:'))) out = { ...out, images: it.images.filter(u => u && !String(u).startsWith('data:')) };
+  return out;
+}
 async function _syncFurnitureToCloud(proj) {
   if (!proj?.cloudId) return;
   // 뷰어도 허용 — 가구·가전 추가/사진 업로드 화면이 뷰어에게도 열려 있는 경로가 있어,
@@ -17899,7 +17909,7 @@ async function _syncFurnitureToCloud(proj) {
     const cloudFurniture = snap.data()?.projectData?.furnitureItems || [];
     const merged = _mergeListById(proj.furnitureItems, cloudFurniture, { newFirst: true, type: 'furnitureItem' });
     // base64 이미지는 Firestore에 저장하지 않음 (1MB 문서 제한 방지)
-    const mergedForCloud = merged.map(it => (it.imageUrl && it.imageUrl.startsWith('data:')) ? { ...it, imageUrl: '' } : it);
+    const mergedForCloud = merged.map(_stripFurniDataImgs);
     await _db.collection('vb_projects').doc(proj.cloudId).update({
       'projectData.furnitureItems': mergedForCloud,
       'meta.updatedAt': firebase.firestore.FieldValue.serverTimestamp(),
@@ -21450,6 +21460,8 @@ async function _fdAddImgs(input) {
   const proj = getProject();
   showToastMessage(`사진 ${files.length}장 올리는 중…`, 6000);
   const ok = await _initFirebase();
+  // 모바일은 auth 세션 복원이 늦어 업로드가 storage/unauthorized로 실패할 수 있음 — 다른 사진 업로드 경로와 동일하게 대기
+  if (ok) await _waitForFirebaseUser(4000);
   for (const f of files) {
     try {
       const raw = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
