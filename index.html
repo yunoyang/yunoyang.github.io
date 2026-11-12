@@ -20592,9 +20592,9 @@ function _furnShareHtml(cat, items, opts) {
   const picked = items.filter(it => rank(it) === 0);
   const total = picked.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
   const cards = sorted.map(it => {
-    const qty = it.qty || 1, price = (it.price || 0) * qty, img = http(it.imageUrl), url = http(it.url), r = rank(it);
+    const qty = it.qty || 1, price = (it.price || 0) * qty, img = http(it.imageUrl), url = http(it.url), r = it.bought && rank(it) === 2 ? 3 : rank(it); // 구매완료는 흐리게 하지 않음
     const tag = (t, st) => `<span style="display:inline-block;margin:0 4px 4px 0;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;${st}">${t}</span>`;
-    const badge = (r === 2 ? '' : tag(r === 0 ? '선택' : '보유중', r === 0 ? 'background:#111;color:#fff;' : 'background:#f2f4f6;color:#4e5968;'))
+    const badge = (r >= 2 ? '' : tag(r === 0 ? '선택' : '보유중', r === 0 ? 'background:#111;color:#fff;' : 'background:#f2f4f6;color:#4e5968;'))
       + (it.bought ? tag('✓ 구매완료' + (it.boughtAt ? ' · ' + new Date(it.boughtAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''), 'background:#e8f7ee;color:#0a8a43;') : '');
     return `<div style="display:flex;gap:12px;padding:12px;border:${r === 0 ? '1.5px solid #111' : '1px solid #eef0f5'};border-radius:14px;margin-bottom:10px;${r === 2 ? 'opacity:.45;' : ''}">
       ${img ? `<img src="${esc(img)}" alt="" style="width:88px;height:88px;object-fit:cover;border-radius:10px;flex-shrink:0;">` : ''}
@@ -20607,25 +20607,33 @@ function _furnShareHtml(cat, items, opts) {
         ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#333d4b;text-decoration:underline;">제품 링크</a>` : ''}
       </div></div>`;
   }).join('');
+  if (opts?.cardsOnly) return cards;
   if (opts?.section) return `<div style="font-size:15px;color:#555;margin-bottom:16px;">제품 ${items.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${items.some(i => i.bought) ? ` · 구매완료 ${items.filter(i => i.bought).length}개` : ''}</div>${cards}`;
   return `<div style="max-width:560px;margin:0 auto;padding:24px 16px 48px;font-family:var(--font);background:#fff;"><h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 4px;">${esc(cat)}</h1><div style="font-size:15px;color:#555;margin-bottom:20px;">제품 ${items.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${items.some(i => i.bought) ? ` · 구매완료 ${items.filter(i => i.bought).length}개` : ''}</div>${cards}</div>`;
 }
+// 공유 페이지: 탭은 '구매예정'(선택했지만 아직 안 산 것) / '구매완료' 두 개, 각 탭 안은 카테고리별 묶음
 function _furnShareAllHtml(activeCat, allItems, title) {
-  const cats = FURNITURE_CATEGORIES.filter(c => allItems.some(it => (it.category || '기타') === c));
-  allItems.forEach(it => { const c = it.category || '기타'; if (!cats.includes(c)) cats.push(c); });
-  const active = cats.includes(activeCat) ? activeCat : '전체';
-  const tabs = ['전체', ...cats];
-  const picked = allItems.filter(it => _getFurnitureStatus(it) === '구매예정'), total = picked.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-  const sw = "var r=this.closest('.vfs');r.querySelectorAll('.vfs-tab').forEach(function(b){var on=b===this;b.style.background=on?'#111':'#fff';b.style.color=on?'#fff':'#4e5968';b.style.borderColor=on?'#111':'#e5e8eb';},this);var k=this.getAttribute('data-k');r.querySelectorAll('.vfs-sec').forEach(function(s){s.style.display=(k==='전체'||s.getAttribute('data-k')===k)?'':'none';});r.querySelectorAll('.vfs-h').forEach(function(h){h.style.display=k==='전체'?'':'none';});";
-  const tabBtn = c => { const on = c === active, n = c === '전체' ? allItems.length : allItems.filter(it => (it.category || '기타') === c).length;
-    return `<button class="vfs-tab" data-k="${esc(c)}" onclick="${sw}" style="flex-shrink:0;height:36px;padding:0 14px;border-radius:18px;border:1px solid ${on ? '#111' : '#e5e8eb'};background:${on ? '#111' : '#fff'};color:${on ? '#fff' : '#4e5968'};font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;">${esc(c)} ${n}</button>`; };
-  const secs = cats.map(c => { const its = allItems.filter(it => (it.category || '기타') === c);
-    return `<div class="vfs-sec" data-k="${esc(c)}" style="${active === '전체' || active === c ? '' : 'display:none;'}"><h2 class="vfs-h" style="font-size:18px;font-weight:700;color:#111;margin:20px 0 4px;${active === '전체' ? '' : 'display:none;'}">${esc(c)}</h2>${_furnShareHtml(c, its, { section: true })}</div>`; }).join('');
+  const groups = {
+    '구매예정': allItems.filter(it => !it.bought && _getFurnitureStatus(it) === '구매예정'),
+    '구매완료': allItems.filter(it => it.bought),
+  };
+  const active = groups['구매예정'].length || !groups['구매완료'].length ? '구매예정' : '구매완료';
+  const sum = its => its.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+  const sw = "var r=this.closest('.vfs');r.querySelectorAll('.vfs-tab').forEach(function(b){var on=b===this;b.style.background=on?'#111':'#fff';b.style.color=on?'#fff':'#4e5968';b.style.borderColor=on?'#111':'#e5e8eb';},this);var k=this.getAttribute('data-k');r.querySelectorAll('.vfs-sec').forEach(function(s){s.style.display=s.getAttribute('data-k')===k?'':'none';});";
+  const tabBtn = k => { const on = k === active;
+    return `<button class="vfs-tab" data-k="${k}" onclick="${sw}" style="flex:1;height:44px;border-radius:12px;border:1px solid ${on ? '#111' : '#e5e8eb'};background:${on ? '#111' : '#fff'};color:${on ? '#fff' : '#4e5968'};font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;">${k} ${groups[k].length}</button>`; };
+  const section = k => {
+    const its = groups[k];
+    const cats = [...new Set([...FURNITURE_CATEGORIES, ...its.map(it => it.category || '기타')])].filter(c => its.some(it => (it.category || '기타') === c));
+    const body = its.length ? cats.map(c => { const ci = its.filter(it => (it.category || '기타') === c);
+      return `<h2 style="font-size:17px;font-weight:700;color:#111;margin:22px 0 10px;">${esc(c)} <span style="font-size:14px;font-weight:500;color:#8b95a1;">${ci.length}개${sum(ci) ? ' · ' + sum(ci).toLocaleString() + '원' : ''}</span></h2>${_furnShareHtml(c, ci, { cardsOnly: true })}`; }).join('')
+      : `<div style="text-align:center;padding:48px 0;color:#aaa;font-size:14px;">${k} 제품이 없어요</div>`;
+    return `<div class="vfs-sec" data-k="${k}" style="${k === active ? '' : 'display:none;'}"><div style="font-size:15px;color:#555;margin-top:6px;">${its.length}개${sum(its) ? ` · ${sum(its).toLocaleString()}원` : ''}</div>${body}</div>`;
+  };
   return `<div class="vfs" style="max-width:560px;margin:0 auto;padding:24px 16px 48px;font-family:var(--font);background:#fff;">
-    <h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 4px;">${esc(title || '제품 목록')}</h1>
-    <div style="font-size:15px;color:#555;margin-bottom:14px;">제품 ${allItems.length}개 · 선택 ${picked.length}개${total ? ` · ${total.toLocaleString()}원` : ''}${allItems.some(i => i.bought) ? ` · 구매완료 ${allItems.filter(i => i.bought).length}개` : ''}</div>
-    <div style="position:sticky;top:0;z-index:2;background:#fff;margin:0 -16px 8px;padding:8px 16px;display:flex;gap:6px;overflow-x:auto;">${tabs.map(tabBtn).join('')}</div>
-    ${secs}</div>`;
+    <h1 style="font-size:22px;font-weight:700;color:#111;margin:0 0 14px;">${esc(title || '제품 목록')}</h1>
+    <div style="display:flex;gap:8px;margin-bottom:6px;">${tabBtn('구매예정')}${tabBtn('구매완료')}</div>
+    ${section('구매예정')}${section('구매완료')}</div>`;
 }
 async function _furnShareCategory() {
   const cat = _furnitureCategoryView; if (!cat) return;
