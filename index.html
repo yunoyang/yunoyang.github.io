@@ -2480,6 +2480,11 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 #login-banner span { flex:1; min-width:0; }
 #login-banner .lb-go { flex-shrink:0; height:30px; padding:0 12px; border:none; border-radius:15px; background:#111; color:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
 #login-banner .lb-x { flex-shrink:0; width:28px; height:28px; border:none; background:none; color:#8b95a1; font-size:13px; cursor:pointer; }
+.pv-objinfo { position:absolute; left:12px; right:12px; bottom:12px; z-index:3; display:flex; align-items:center; gap:10px; padding:10px 10px 10px 14px; background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.14); }
+.pv-objinfo > div { flex:1; min-width:0; display:flex; flex-direction:column; }
+.pv-objinfo b { font-size:15px; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pv-objinfo small { font-size:12.5px; color:#6b7684; }
+.pv-objinfo button { width:30px; height:30px; border:none; background:#f2f4f6; border-radius:50%; color:#6b7684; cursor:pointer; flex-shrink:0; }
 .tpl-rec { display:inline-block; margin-left:6px; padding:2px 7px; border-radius:6px; background:#e8f3ff; color:#0088ff; font-size:11px; font-weight:700; vertical-align:2px; }
 .tpl-list { padding:0 2px; }
 .tpl-row { display:flex; align-items:center; gap:12px; width:100%; padding:12px 0; border:none; border-bottom:1px solid #f2f4f6; background:none; font-family:inherit; text-align:left; cursor:pointer; }
@@ -16333,6 +16338,9 @@ function _planSvg(pm, opts) {
     s += `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#222" stroke-width="120"/>`;
     (pm.walls || []).forEach(w => { s += `<line x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}" stroke="${w.type === '신설' ? '#e53935' : '#222'}" stroke-width="140" stroke-linecap="square"/>`; });
   }
+  // 3D 모델에서 뽑은 물건(가구·위생도기 등) 윤곽 — 큰 것부터 그려 작은 물건이 위에서 눌리게
+  if (opts.objs) opts.objs.forEach(o => { const on = opts.objSel === o.id;
+    s += `<rect data-obj="${o.id}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="30" fill="${on ? 'rgba(47,107,255,.32)' : 'rgba(47,107,255,.05)'}" stroke="${on ? '#2f6bff' : 'rgba(47,107,255,.45)'}" stroke-width="${on ? 55 : 18}" style="cursor:pointer"/>`; });
   if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="110" fill="${m.c}" stroke="#fff" stroke-width="35" opacity=".9" pointer-events="none"/>`; });
   if (opts.sel && layer) { const z = pm.zones.find(q => q.id === opts.sel); if (z) { const bb = _planBBox(z.poly); s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="300" font-weight="800" fill="#e8731a" stroke="#fff" stroke-width="60" paint-order="stroke" pointer-events="none">${esc(z.name)}</text>`; } }
   return s + '</svg>';
@@ -16475,13 +16483,37 @@ function _planBindStage() {
     const wasTap = pts.size === 1 && !moved;
     pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
     if (wasTap && e.type === 'pointerup') {
-      const el = document.elementFromPoint(e.clientX, e.clientY), zid = el && el.getAttribute && el.getAttribute('data-zone');
-      if (zid) _planSelect(zid);
+      const el = document.elementFromPoint(e.clientX, e.clientY), oid = el && el.getAttribute && el.getAttribute('data-obj');
+      const zid = el && el.getAttribute && el.getAttribute('data-zone');
+      if (oid) _planSelectObj(oid);
+      else if (zid) { _planObjSel = null; _planSelect(zid); }
     }
     if (pts.size === 0) start = null;
   };
   stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
   stage.addEventListener('dblclick', () => _planZoomReset());
+}
+// ── 평면도 물건 선택: 3D 모델(SketchUp)에서 뽑은 물건 윤곽 (평면 좌표 mm) ──
+let _planObjs = null, _planObjSel = null, _planObjLoading = false;
+function _planObjsUrl(pm) { return pm.objectsUrl || (pm.name === PLAN_DEFAULT.name ? 'assets/models/jeongja-woosung.objects.json' : ''); }
+function _planObjsFor(pm) {
+  const url = _planObjsUrl(pm); if (!url) return null;
+  if (_planObjs && _planObjs.url === url) return _planObjs.list;
+  if (!_planObjLoading) {
+    _planObjLoading = true;
+    fetch(url).then(r => r.json()).then(list => { _planObjs = { url, list }; _planObjLoading = false; try { _renderPlanView(true); } catch (e) {} })
+      .catch(() => { _planObjLoading = false; });
+  }
+  return null;
+}
+function _planSelectObj(id) {
+  _planObjSel = _planObjSel === id ? null : id;
+  _renderPlanView(true);
+}
+function _planObjInfo() {
+  const o = _planObjSel && _planObjs?.list.find(x => x.id === _planObjSel); if (!o) return '';
+  const pm = _planGet(getProject()), z = pm && _planZoneOf(pm, o.x + o.w / 2, o.y + o.h / 2);
+  return `<div class="pv-objinfo" onpointerdown="event.stopPropagation()"><div><b>${esc(o.n)}</b><small>${Math.round(o.w).toLocaleString()} × ${Math.round(o.h).toLocaleString()} × ${Math.round(o.zh).toLocaleString()} mm${z ? ' · ' + esc(z.name) : ''}</small></div><button onclick="_planObjSel=null;_renderPlanView(true)" aria-label="선택 해제">✕</button></div>`;
 }
 // 스펙북(정자동 우성 311-205) 자재 — 프로젝트 데이터가 아닌 기본값. 공급사 연락처는 공개 저장소라 넣지 않음
 // buy: me=내가 구매(클라이언트 발주·직영시공), con=시공사 구매 / st: need=선택 필요, check=발주 전 현장 체크, own=보유
@@ -16663,7 +16695,7 @@ function _renderPlanView(keepScroll) {
     <div class="pv-left">
       <div class="pv-dds pv-dds-top"><button class="pv-dd" onclick="_planPick('zone')"><small>구역</small><b>${esc(z.name)}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>${hasImg ? `<button class="pv-dd" onclick="_planPick('layer')"><small>도면</small><b>${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>
       <div class="pv-chips">${Object.keys(PLAN_PT).map(t => `<button class="pv-chip" onclick="_planTogglePt('${t}')" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};border-color:${PLAN_PT[t].c};color:#fff;` : ''}">${PLAN_PT[t].l}</button>`).join('')}</div>
-      <div class="pv-stage">${ov.classList.contains('pv-inline') ? `<div class="pv-ov" onpointerdown="event.stopPropagation()">${_ivFpModeHtml('plan')}${hasImg ? `<button class="pv-ov-dd" onclick="_planPick('layer')">${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>` : ''}${ov.classList.contains('pv-inline') ? `<div class="pv-pts" onpointerdown="event.stopPropagation()">${Object.keys(PLAN_PT).map(t => `<button onclick="_planTogglePt('${t}')" aria-label="${PLAN_PT[t].l}" title="${PLAN_PT[t].l}" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};color:#fff;` : `color:#333333;`}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${PLAN_PT_ICON[t]}</svg></button>`).join('')}</div>` : ''}<div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '' })}</div>
+      <div class="pv-stage">${ov.classList.contains('pv-inline') ? `<div class="pv-ov" onpointerdown="event.stopPropagation()">${_ivFpModeHtml('plan')}${hasImg ? `<button class="pv-ov-dd" onclick="_planPick('layer')">${esc((layers.find(l => l.id === _planLayer) || {}).label || '구역도')}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>` : ''}</div>` : ''}${ov.classList.contains('pv-inline') ? `<div class="pv-pts" onpointerdown="event.stopPropagation()">${Object.keys(PLAN_PT).map(t => `<button onclick="_planTogglePt('${t}')" aria-label="${PLAN_PT[t].l}" title="${PLAN_PT[t].l}" style="${_planPtFilter[t] ? `background:${PLAN_PT[t].c};color:#fff;` : `color:#333333;`}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${PLAN_PT_ICON[t]}</svg></button>`).join('')}</div>` : ''}<div class="pv-inner">${_planSvg(pm, { points: true, click: true, sel: z.id, ptFilter: _planPtFilter, layer: hasImg ? _planLayer : '', objs: _planObjsFor(pm), objSel: _planObjSel })}</div>${_planObjInfo()}
         <div class="pv-zoom"><button onclick="_planZoomBy(1.4)" aria-label="확대">＋</button><button onclick="_planZoomBy(1/1.4)" aria-label="축소">－</button><button onclick="_planZoomReset()" aria-label="원래 크기" style="font-size:13px;">1:1</button></div>
       </div>
       <div style="font-size:12px;color:#999;">구역을 탭하면 정보가 바뀌어요 · 두 손가락으로 확대</div>
