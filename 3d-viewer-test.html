@@ -147,6 +147,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 <script>
@@ -951,6 +952,8 @@ function outermostGroupId(mesh) {
 }
 
 const loader = new THREE.GLTFLoader();
+// 압축(Draco) GLB 지원 — 스케치업에서 변환한 큰 모델을 가볍게 올리기 위함
+try { const _draco = new THREE.DRACOLoader(); _draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/'); loader.setDRACOLoader(_draco); } catch (e) { console.warn('draco', e); }
 // 앱에서 올린 3D 버전(GLB)이 있으면 ?model= 로 받아서 그 파일을 불러옴
 const _modelUrl = new URLSearchParams(location.search).get('model') || 'assets/models/jeongja-woosung.glb';
 loader.load(_modelUrl, (gltf) => {
