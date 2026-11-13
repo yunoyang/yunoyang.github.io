@@ -17514,6 +17514,9 @@ function _mergeLocalPreserve(cp, localProjs) {
   if (local.furniQuoteApplied || cp.furniQuoteApplied) merged.furniQuoteApplied = local.furniQuoteApplied || cp.furniQuoteApplied;
   merged.fpVersions = _mergeListById(local.fpVersions, cp.fpVersions, { type: 'fpVersion' });
   merged.docFiles = _mergeListById(local.docFiles, cp.docFiles, { type: 'docFile' });
+  // 제품 공유 링크 id(카테고리→vb_exports 문서 id): 키 단위 합집합 — {...cp}만 쓰면 협업자가 만든
+  // (아직 클라우드에 없는) 공유 id가 새로고침 시 사라져, 같은 카테고리를 다시 공유하면 새 링크가 생김
+  if (local.furnShareIds || cp.furnShareIds) merged.furnShareIds = { ...(cp.furnShareIds || {}), ...(local.furnShareIds || {}) };
   merged.specData = _specMerge(local.specData, cp.specData);
   merged.fpCurrent = _fpvMergeCur(local.fpCurrent, cp.fpCurrent);
   const _pm = _mergeEstimate(local.planModel, _planDec(cp.planModel)); if (_pm) merged.planModel = _pm;
@@ -17788,6 +17791,8 @@ function _syncProjToCloud(proj) {
     if (proj.furniQuoteApplied || cloudData.furniQuoteApplied) projData.furniQuoteApplied = proj.furniQuoteApplied || cloudData.furniQuoteApplied;
     projData.fpVersions = _mergeListById(proj.fpVersions, cloudData.fpVersions, { type: 'fpVersion' });
     projData.docFiles = _mergeListById(proj.docFiles, cloudData.docFiles, { type: 'docFile' });
+    // 제품 공유 링크 id: 키 단위 합집합 (다른 기기에서 만든 카테고리 공유 id를 통째로 덮어쓰지 않도록)
+    if (proj.furnShareIds || cloudData.furnShareIds) projData.furnShareIds = proj.furnShareIds = { ...(cloudData.furnShareIds || {}), ...(proj.furnShareIds || {}) };
     projData.specData = proj.specData = _specMerge(proj.specData, cloudData.specData);
     projData.fpCurrent = _fpvMergeCur(proj.fpCurrent, cloudData.fpCurrent);
     { const _p = _mergeEstimate(proj.planModel, _planDec(cloudData.planModel)); if (_p) projData.planModel = _planEnc(_p); if (proj.planSeeded || cloudData.planSeeded) projData.planSeeded = true; }
