@@ -16340,7 +16340,8 @@ function _planSvg(pm, opts) {
   }
   // 3D 모델에서 뽑은 물건(가구·위생도기 등) 윤곽 — 큰 것부터 그려 작은 물건이 위에서 눌리게
   if (opts.objs) opts.objs.forEach(o => { const on = opts.objSel === o.id;
-    s += `<rect data-obj="${o.id}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="30" fill="${on ? 'rgba(47,107,255,.32)' : 'rgba(47,107,255,.05)'}" stroke="${on ? '#2f6bff' : 'rgba(47,107,255,.45)'}" stroke-width="${on ? 55 : 18}" style="cursor:pointer"/>`; });
+    s += `<rect data-obj="${o.id}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="40" fill="${on ? 'rgba(47,107,255,.35)' : 'rgba(47,107,255,.14)'}" stroke="#2f6bff" stroke-width="${on ? 60 : 28}" style="cursor:pointer"/>`;
+    if (opts.objs.length <= 20) s += `<text x="${o.x + o.w / 2}" y="${o.y - 70}" text-anchor="middle" font-size="190" font-weight="700" fill="#2f6bff" stroke="#fff" stroke-width="40" paint-order="stroke" pointer-events="none">${esc(o.n)}</text>`; });
   if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="110" fill="${m.c}" stroke="#fff" stroke-width="35" opacity=".9" pointer-events="none"/>`; });
   if (opts.sel && layer) { const z = pm.zones.find(q => q.id === opts.sel); if (z) { const bb = _planBBox(z.poly); s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="300" font-weight="800" fill="#e8731a" stroke="#fff" stroke-width="60" paint-order="stroke" pointer-events="none">${esc(z.name)}</text>`; } }
   return s + '</svg>';

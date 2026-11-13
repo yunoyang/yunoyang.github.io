@@ -1104,7 +1104,24 @@ function sizeLabelMm(box) {
 
 // 같은 묶음(그룹)이 이미 선택된 상태에서 그 안의 한 부분을 다시 클릭하면 그 부분만 선택,
 // 그 외의 경우(새 묶음을 처음 클릭)에는 묶음 전체를 선택
+// 선택 가능한 물건 목록 (기본 정자동 모델: 싱크대·변기·세면대만) — 없으면 전체 선택 가능
+let pickObjects = null;
+if (!new URLSearchParams(location.search).get('model')) {
+  fetch('assets/models/jeongja-woosung.objects.json').then(r => r.json()).then(list => { pickObjects = new Map(list.map(o => [o.id, o])); }).catch(() => {});
+}
 function selectFromClick(mesh) {
+  if (pickObjects) {
+    const top = (mesh.userData.chain || groupChain(mesh))[0];
+    const obj = pickObjects.get(top);
+    if (!obj || selectedKey === top) { setSelectionHighlight([]); selectedMeshes = []; selectedKey = null; selectionMode = null; document.getElementById('click-hint').textContent = '싱크대 · 변기 · 세면대를 눌러 보세요'; return; }
+    const ms = allPickMeshes.filter(m => (m.userData.chain || [])[0] === top);
+    setSelectionHighlight(ms); selectedMeshes = ms; selectedKey = top; selectedDepth = 0; selectionMode = 'group'; selectedGroupId = top;
+    document.getElementById('click-hint').textContent = `선택됨: ${obj.n}`;
+    const box = new THREE.Box3(); ms.forEach(m => box.expandByObject(m));
+    document.getElementById('selected-info').innerHTML = `${obj.n}<br><span style="font-weight:400;color:#666;">${sizeLabelMm(box)}</span>`;
+    try { renderPresetPanel(); } catch (e) {}
+    return;
+  }
   // 같은 묶음 안을 다시 누르면 한 단계 안쪽 묶음으로, 더 이상 안쪽이 없으면 그 조각 하나만
   const chain = mesh.userData.chain || groupChain(mesh);
   const gid = chain[0] || mesh.name;
