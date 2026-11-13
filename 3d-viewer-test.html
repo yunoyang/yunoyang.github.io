@@ -936,6 +936,9 @@ function presetThumb(p) {
 let selectedMeshes = [];      // 현재 선택된 메시들 (묶음 선택 시 여러 개)
 let selectedGroupId = null;   // 현재 "묶음" 선택 기준이 된 최상위 그룹 id
 let selectionMode = null;     // 'group' | 'single'
+let selectedDepth = 0;        // 묶음 선택 단계 (0 = 가장 바깥 물건)
+let selectedKey = null;       // 현재 선택된 묶음 키 (체인 앞부분)
+const allPickMeshes = [];     // 선택 대상 메시 전체
 const meshAssignments = new Map(); // mesh.name -> presetId (페이지를 새로고침해도 저장/복원할 수 있게 uuid 대신 안정적인 이름을 키로 씀)
 const EDGE_COLOR_DEFAULT = 0x000000; // 스케치업처럼 또렷한 순수 검정 엣지
 const EDGE_COLOR_SELECTED = 0x5084ff;
@@ -945,10 +948,18 @@ const meshByName = new Map(); // mesh.name -> mesh (저장된 재질을 새로�
 // 메시 이름(예: "Mesh120_Group82_Group81_Group79_Model")에 스케치업의 중첩 그룹/컴포넌트
 // 체인이 그대로 남아있음 — 뒤에서부터가 바깥쪽(최상위) 그룹. 이를 이용해 "싱크대 세트" 같은
 // 묶음 전체를 한번에 선택할 수 있게 함.
+// 메시가 속한 묶음 체인 (바깥 → 안쪽)
+// 새 변환 모델: 'M12_G31_G40_G41' (바깥이 먼저) / 예전 모델: 'Mesh5 Group3 Group12 Model' (바깥이 마지막)
+function groupChain(mesh) {
+  const nm = mesh.name || '';
+  const g = nm.match(/^M\d+((?:_G\d+)+)/);
+  if (g) return g[1].split('_').filter(Boolean);
+  const t = nm.match(/Group\d+/g);
+  return t ? t.slice().reverse() : [];
+}
 function outermostGroupId(mesh) {
-  const tokens = mesh.name.match(/Group\d+/g);
-  if (!tokens || !tokens.length) return mesh.name; // 그룹 정보 없으면 자기 자신이 곧 그룹
-  return tokens[tokens.length - 1];
+  const c = groupChain(mesh);
+  return c.length ? c[0] : mesh.name; // 그룹 정보 없으면 자기 자신이 곧 그룹
 }
 
 const loader = new THREE.GLTFLoader();
@@ -1017,6 +1028,8 @@ loader.load(_modelUrl, (gltf) => {
       if (!groupMap.has(gid)) groupMap.set(gid, []);
       groupMap.get(gid).push(obj);
       meshByName.set(obj.name, obj);
+      obj.userData.chain = groupChain(obj);
+      allPickMeshes.push(obj);
     }
   });
   scene.add(model);
@@ -1092,18 +1105,21 @@ function sizeLabelMm(box) {
 // 같은 묶음(그룹)이 이미 선택된 상태에서 그 안의 한 부분을 다시 클릭하면 그 부분만 선택,
 // 그 외의 경우(새 묶음을 처음 클릭)에는 묶음 전체를 선택
 function selectFromClick(mesh) {
-  const gid = outermostGroupId(mesh);
-  const groupMeshes = groupMap.get(gid) || [mesh];
-  const isDrillDown = selectionMode === 'group' && selectedGroupId === gid && groupMeshes.length > 1;
-
-  let meshes, mode;
-  if (isDrillDown) {
-    meshes = [mesh];
-    mode = 'single';
-  } else {
-    meshes = groupMeshes;
-    mode = groupMeshes.length > 1 ? 'group' : 'single';
+  // 같은 묶음 안을 다시 누르면 한 단계 안쪽 묶음으로, 더 이상 안쪽이 없으면 그 조각 하나만
+  const chain = mesh.userData.chain || groupChain(mesh);
+  const gid = chain[0] || mesh.name;
+  const keyAt = d => chain.slice(0, d + 1).join('_');
+  const inChain = (m, d) => (m.userData.chain || []).slice(0, d + 1).join('_') === keyAt(d);
+  // 같은 물건을 다시 누르면 한 단계 안쪽부터, 아니면 가장 바깥 물건부터
+  let depth = (selectionMode === 'group' && selectedKey && keyAt(selectedDepth) === selectedKey) ? selectedDepth + 1 : 0;
+  const prevCount = depth > 0 ? allPickMeshes.filter(m => inChain(m, depth - 1)).length : Infinity;
+  let meshes = [mesh], mode = 'single';
+  for (; depth < chain.length; depth++) {
+    const ms = allPickMeshes.filter(m => inChain(m, depth));
+    if (ms.length > 1 && ms.length < prevCount) { meshes = ms; mode = 'group'; selectedKey = keyAt(depth); selectedDepth = depth; break; }
+    if (ms.length > 1 && depth === 0) { meshes = ms; mode = 'group'; selectedKey = keyAt(0); selectedDepth = 0; break; }
   }
+  if (mode === 'single') { selectedKey = null; selectedDepth = 0; }
 
   setSelectionHighlight(meshes);
   selectedMeshes = meshes;
@@ -1111,13 +1127,13 @@ function selectFromClick(mesh) {
   selectionMode = mode;
 
   const label = mode === 'group'
-    ? `선택됨: 묶음 (${meshes.length}개 부분) — 안의 특정 부분을 다시 클릭하면 그 부분만 선택돼요`
+    ? `선택됨: 물건 (${meshes.length}개 부분${selectedDepth ? ` · ${selectedDepth + 1}단계` : ''}) — 다시 누르면 한 단계 안쪽을 선택해요`
     : `선택됨: ${mesh.name || '(이름 없음)'}`;
   document.getElementById('click-hint').textContent = label;
   const box = new THREE.Box3();
   meshes.forEach((m) => box.expandByObject(m));
   const nameLine = mode === 'group'
-    ? `묶음 선택 (${meshes.length}개 부분)`
+    ? `물건 선택 · ${selectedKey} (${meshes.length}개 부분)`
     : (mesh.name || '(이름 없음)');
   document.getElementById('selected-info').innerHTML = `${nameLine}<br><span style="font-weight:400;color:#666;">${sizeLabelMm(box)}</span>`;
   renderPresetPanel();
