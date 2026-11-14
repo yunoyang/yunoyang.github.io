@@ -2095,6 +2095,14 @@ button, input, textarea, select { font-family:var(--font); }
 #iv-floorplan-card .iv-fp-3d-wrap { display:none !important; }
 #form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card) { display:none !important; }
 #form-view-panel:not([data-fpsub="3d"]) #iv-fp-3d-wrap { display:none !important; }
+#form-view-panel[data-fpsub="pdf"] .pv-left > :not(#iv-fp-pdf-wrap) { display:none !important; }
+#form-view-panel[data-fpsub="pdf"] #iv-fpv-plan { display:none !important; }
+#iv-fp-pdf-wrap { position:relative; width:100%; background:#fff; border-radius:12px; min-height:320px; }
+#iv-fp-pdf-wrap .pv-ov { position:sticky !important; top:8px; left:0 !important; right:0 !important; transform:none !important; width:100%; justify-content:center; z-index:2; padding:6px 0; }
+.ivpdf-pages { display:flex; flex-direction:column; gap:10px; padding:4px 0 12px; }
+.ivpdf-page { width:100%; height:auto; display:block; border:1px solid #eef0f3; border-radius:8px; cursor:zoom-in; background:#fff; }
+.ivpdf-empty { padding:80px 20px; text-align:center; font-size:14px; color:#8b95a1; line-height:1.6; }
+.ivpdf-empty small { font-size:12.5px; }
 #form-view-panel[data-fpsub="3d"] .iv-fp-3d-full-btn { display:none !important; }
 #form-view-panel[data-ivtab="fp"][data-fpsub="3d"] #iv-fp-3d-wrap { display:block !important; aspect-ratio:auto; border-radius:0; margin:0 -16px; width:calc(100% + 32px); min-height:420px; }
 @media (min-width:1024px) { body.vs2-info #form-view-panel[data-ivtab="fp"][data-fpsub="3d"] #iv-fp-3d-wrap { margin:0; width:100%; border-radius:12px; } }
@@ -16673,7 +16681,7 @@ async function _specSave() {
     localStorage.setItem('vibespace', JSON.stringify(state));
   } catch (e) { console.error('[specSync]', e.code, e.message); showToastMessage('⚠️ 제품 정보 동기화 실패'); }
 }
-function _ivFpModeHtml(k) { return `<div class="pv-mode"><button class="${k === 'plan' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('plan')">평면</button><button class="${k === '3d' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('3d')">3D</button></div><button class="pv-ov-dd pv-ov-ver" onclick="event.stopPropagation();_fpvOpen()" aria-label="버전 확인"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button>`; }
+function _ivFpModeHtml(k) { return `<div class="pv-mode"><button class="${k === 'plan' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('plan')">평면</button><button class="${k === 'pdf' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('pdf')">PDF</button><button class="${k === '3d' ? 'on' : ''}" onclick="event.stopPropagation();_ivFpSub('3d')">3D</button></div><button class="pv-ov-dd pv-ov-ver" onclick="event.stopPropagation();_fpvOpen()" aria-label="버전 확인"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button>`; }
 function _renderPlanView(keepScroll) {
   const ov = document.getElementById('plan-view'), pm = _planGet(getProject()); if (!ov || !pm) return;
   const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
@@ -16720,6 +16728,7 @@ function _renderPlanView(keepScroll) {
   </div>`;
   _planBindStage(); _planApplyZoom();
   if (keepScroll) { const r = ov.querySelector('.pv-right'); if (r) r.scrollTop = rightScroll; const b = ov.querySelector('.pv-body'); if (b) b.scrollTop = bodyScroll; }
+  if (document.getElementById('form-view-panel')?.dataset.fpsub === 'pdf') _ivPdfMount(true);
 }
 function _renderEstimateCard() {
   const el = document.getElementById('iv-estimate-card'); if (!el) return;
@@ -18813,6 +18822,60 @@ async function deleteDoc(id) {
 }
 
 // 공사정보 > 도면 하위 탭: 평면(도면 이미지 + 도면 정보 펼침) / 3D(화면 꽉 차게 3D 뷰)
+// ── 공사정보 > 도면 > PDF 탭: 올린 도면 PDF(평면 버전)와 자료 탭 PDF를 페이지째 보여줌 ──
+let _ivPdfSrc = null, _ivPdfToken = 0;
+function _ivPdfSources(proj) {
+  const plans = _fpvList(proj, 'plan').filter(v => v.ftype === 'pdf' && v.url).reverse().map(v => ({ id: 'v:' + v.id, url: v.url, name: v.name || '도면 PDF', tag: '도면' }));
+  const docs = _docList(proj).filter(d => d.url).map(d => ({ id: 'd:' + d.id, url: d.url, name: d.name || '자료', tag: '자료', docId: d.id }));
+  return [...plans, ...docs];
+}
+function _ivPdfMount(on) {
+  const pv = document.getElementById('plan-view'), left = pv?.querySelector('.pv-left');
+  let w = document.getElementById('iv-fp-pdf-wrap');
+  if (!on) { w?.remove(); return; }
+  if (!left) return;
+  if (!w) { w = document.createElement('div'); w.id = 'iv-fp-pdf-wrap'; left.appendChild(w); }
+  _ivPdfRender();
+}
+function _ivPdfPick() {
+  const list = _ivPdfSources(getProject()); if (list.length < 2) return;
+  document.getElementById('pv-pick')?.remove();
+  const ov = document.createElement('div'); ov.id = 'pv-pick'; ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `<div class="pv-pick-in"><div class="pv-pick-hd">PDF 선택</div>${list.map(x => `<button class="pv-pick-it${x.id === _ivPdfSrc ? ' on' : ''}" onclick="_ivPdfSrc='${x.id}';document.getElementById('pv-pick').remove();_ivPdfRender()"><span>${esc(x.name)}</span><small>${x.tag}</small></button>`).join('')}</div>`;
+  document.body.appendChild(ov);
+}
+async function _ivPdfRender() {
+  const w = document.getElementById('iv-fp-pdf-wrap'); if (!w) return;
+  const proj = getProject(), list = _ivPdfSources(proj);
+  if (!list.find(x => x.id === _ivPdfSrc)) _ivPdfSrc = list[0]?.id || null;
+  const src = list.find(x => x.id === _ivPdfSrc);
+  const head = `<div class="pv-ov">${_ivFpModeHtml('pdf')}${src ? `<button class="pv-ov-dd" onclick="_ivPdfPick()">${esc(src.name.length > 14 ? src.name.slice(0, 14) + '…' : src.name)}${list.length > 1 ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' : ''}</button>` : ''}</div>`;
+  if (!src) { w.innerHTML = head + `<div class="ivpdf-empty">아직 올린 PDF 도면이 없어요<br><small>버전 아이콘(↻)에서 평면도 PDF를 올리거나, 아카이브 > 자료에 PDF를 올리면 여기서 볼 수 있어요</small></div>`; return; }
+  const tok = ++_ivPdfToken;
+  w.innerHTML = head + `<div class="ivpdf-pages"><div class="ivpdf-empty">불러오는 중…</div></div>`;
+  try {
+    const lib = await _loadPdfJs();
+    const buf = await (await fetch(src.url)).arrayBuffer();
+    const pdf = await lib.getDocument({ data: buf }).promise;
+    if (tok !== _ivPdfToken) return;
+    const box = w.querySelector('.ivpdf-pages'); box.innerHTML = '';
+    const cw = Math.max(320, box.clientWidth || w.clientWidth || 600), dpr = Math.min(2, window.devicePixelRatio || 1);
+    const urls = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+      const page = await pdf.getPage(i); if (tok !== _ivPdfToken) return;
+      const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: cw * dpr / v1.width });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.className = 'ivpdf-page';
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      const idx = urls.length; urls.push(c.toDataURL('image/jpeg', 0.85));
+      c.onclick = () => src.docId ? openDocViewer(src.docId) : _openSwipeViewer(urls, idx);
+      box.appendChild(c);
+    }
+    if (pdf.numPages > 20) box.insertAdjacentHTML('beforeend', `<div class="ivpdf-empty">앞 20쪽만 보여요 (전체 ${pdf.numPages}쪽)</div>`);
+  } catch (e) {
+    if (tok !== _ivPdfToken) return;
+    w.querySelector('.ivpdf-pages').innerHTML = `<div class="ivpdf-empty">PDF를 불러오지 못했어요<br><small>${esc(e.message || '')}</small></div>`;
+  }
+}
 function _ivFpSub(k) {
   const panel = document.getElementById('form-view-panel'); if (!panel) return;
   panel.dataset.fpsub = k;
@@ -18821,6 +18884,7 @@ function _ivFpSub(k) {
   if (_w3 && _left && k === '3d') _left.appendChild(_w3); else if (_w3 && _pv && k !== '3d' && _w3.parentElement === _left) _pv.after(_w3);
   document.querySelectorAll('#iv-fp-sub button[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === k));
   _fpvRender();
+  _ivPdfMount(k === 'pdf');
   if (k !== '3d') _ivSwitchFpTab('2d');
   if (k === '3d') {
     _ivSwitchFpTab('3d');
