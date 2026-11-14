@@ -20668,7 +20668,7 @@ function _renderFurnitureCategoryDetail(cat) {
               ${isPending ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
               선택${isPending && unitPrice ? ' · 예산 포함' : ''}
             </button>
-            ${it.bought ? '<span class="fd-badge">구매완료</span>' : ''}
+            ${it.bought ? `<button onclick="event.stopPropagation();_fdId='${it.id}';_fdToggleBought();_renderFurnitureCategoryDetail(_furnitureCategoryView)" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;border:1.5px solid #111;background:#111;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--font);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>구매완료</button>` : ''}
           </div>`}
         </div>
       </div>`;
