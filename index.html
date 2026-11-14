@@ -2096,7 +2096,8 @@ button, input, textarea, select { font-family:var(--font); }
 #form-view-panel[data-fpsub="3d"] :is(#iv-floorplan-card,#iv-plan-card) { display:none !important; }
 #form-view-panel:not([data-fpsub="3d"]) #iv-fp-3d-wrap { display:none !important; }
 #form-view-panel[data-fpsub="pdf"] .pv-left > :not(#iv-fp-pdf-wrap) { display:none !important; }
-#form-view-panel[data-fpsub="pdf"] #iv-fpv-plan { display:none !important; }
+/* 도면 상단에 고정되던 업로드 평면도 카드 제거 — 올린 도면(이미지·PDF)은 PDF 탭에서 봄 */
+#iv-fpv-plan { display:none !important; }
 #iv-fp-pdf-wrap { position:relative; width:100%; background:#fff; border-radius:12px; min-height:320px; }
 #iv-fp-pdf-wrap .pv-ov { position:sticky !important; top:8px; left:0 !important; right:0 !important; transform:none !important; width:100%; justify-content:center; z-index:2; padding:6px 0; }
 .ivpdf-pages { display:flex; flex-direction:column; gap:10px; padding:4px 0 12px; }
@@ -18825,7 +18826,7 @@ async function deleteDoc(id) {
 // ── 공사정보 > 도면 > PDF 탭: 올린 도면 PDF(평면 버전)와 자료 탭 PDF를 페이지째 보여줌 ──
 let _ivPdfSrc = null, _ivPdfToken = 0;
 function _ivPdfSources(proj) {
-  const plans = _fpvList(proj, 'plan').filter(v => v.ftype === 'pdf' && v.url).reverse().map(v => ({ id: 'v:' + v.id, url: v.url, name: v.name || '도면 PDF', tag: '도면' }));
+  const plans = _fpvList(proj, 'plan').filter(v => (v.ftype === 'pdf' || v.ftype === 'image') && v.url).reverse().map(v => ({ id: 'v:' + v.id, url: v.url, name: v.name || '도면', tag: v.ftype === 'image' ? '도면 이미지' : '도면', img: v.ftype === 'image' }));
   const docs = _docList(proj).filter(d => d.url).map(d => ({ id: 'd:' + d.id, url: d.url, name: d.name || '자료', tag: '자료', docId: d.id }));
   return [...plans, ...docs];
 }
@@ -18850,8 +18851,9 @@ async function _ivPdfRender() {
   if (!list.find(x => x.id === _ivPdfSrc)) _ivPdfSrc = list[0]?.id || null;
   const src = list.find(x => x.id === _ivPdfSrc);
   const head = `<div class="pv-ov">${_ivFpModeHtml('pdf')}${src ? `<button class="pv-ov-dd" onclick="_ivPdfPick()">${esc(src.name.length > 14 ? src.name.slice(0, 14) + '…' : src.name)}${list.length > 1 ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' : ''}</button>` : ''}</div>`;
-  if (!src) { w.innerHTML = head + `<div class="ivpdf-empty">아직 올린 PDF 도면이 없어요<br><small>버전 아이콘(↻)에서 평면도 PDF를 올리거나, 아카이브 > 자료에 PDF를 올리면 여기서 볼 수 있어요</small></div>`; return; }
+  if (!src) { w.innerHTML = head + `<div class="ivpdf-empty">아직 올린 도면이 없어요<br><small>버전 아이콘(↻)에서 평면도 PDF·이미지를 올리거나, 아카이브 > 자료에 PDF를 올리면 여기서 볼 수 있어요</small></div>`; return; }
   const tok = ++_ivPdfToken;
+  if (src.img) { w.innerHTML = head + `<div class="ivpdf-pages"><img class="ivpdf-page" src="${esc(src.url)}" alt="" onclick="_openSwipeViewer(['${String(src.url).replace(/'/g, '%27')}'], 0)"></div>`; return; }
   w.innerHTML = head + `<div class="ivpdf-pages"><div class="ivpdf-empty">불러오는 중…</div></div>`;
   try {
     const lib = await _loadPdfJs();
