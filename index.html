@@ -2491,6 +2491,10 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 #login-banner span { flex:1; min-width:0; }
 #login-banner .lb-go { flex-shrink:0; height:30px; padding:0 12px; border:none; border-radius:15px; background:#111; color:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
 #login-banner .lb-x { flex-shrink:0; width:28px; height:28px; border:none; background:none; color:#8b95a1; font-size:13px; cursor:pointer; }
+.pv-ztabs { display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; scrollbar-width:none; }
+.pv-ztabs::-webkit-scrollbar { display:none; }
+.pv-ztabs button { flex-shrink:0; height:34px; padding:0 14px; border-radius:17px; border:1px solid #e5e8eb; background:#fff; font-size:13.5px; font-weight:500; color:#4e5968; font-family:inherit; cursor:pointer; white-space:nowrap; }
+.pv-ztabs button.on { background:#111; border-color:#111; color:#fff; font-weight:600; }
 .pv-objinfo { position:absolute; left:12px; right:12px; bottom:12px; z-index:3; display:flex; align-items:center; gap:10px; padding:10px 10px 10px 14px; background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.14); }
 .pv-objinfo > div { flex:1; min-width:0; display:flex; flex-direction:column; }
 .pv-objinfo b { font-size:15px; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -16690,7 +16694,8 @@ function _renderPlanView(keepScroll) {
   const rightScroll = keepScroll ? (ov.querySelector('.pv-right') || {}).scrollTop : 0, bodyScroll = keepScroll ? (ov.querySelector('.pv-body') || {}).scrollTop : 0;
   const z = pm.zones.find(x => x.id === _planSel) || pm.zones[0], st = _planZoneStats(pm, z);
   // 3D가 왼쪽 칸에 들어가 있으면 다시 그리지 않음 (iframe이 사라짐) — 제품 카드만 갱신
-  if (ov.querySelector('.pv-left #iv-fp-3d-wrap')) { const sp = ov.querySelector('.pv-spec'); if (sp) sp.outerHTML = _planSpecHtml(z); return; }
+  // 3D·PDF를 보고 있으면 왼쪽(iframe·PDF)은 그대로 두고 오른쪽 구역 정보만 다시 그림
+  const _onlyRight = !!ov.querySelector('.pv-left #iv-fp-3d-wrap, .pv-left #iv-fp-pdf-wrap') && !!ov.querySelector('.pv-right');
   const total = pm.zones.reduce((a, q) => a + _planArea(q.poly), 0);
   const row = (k, v) => `<div class="pv-row"><span>${k}</span><span>${v}</span></div>`;
   const doors = (pm.doors || []).filter(d => d.zone === z.id);
@@ -16698,7 +16703,7 @@ function _renderPlanView(keepScroll) {
   const lightRows = (Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join('<br>') + (z.fan ? `<br>씰링팬 ${z.fan}` : '')) || '—';
   const layers = pm.layers || [], hasImg = layers.length && pm.imgBox;
   ov.style.setProperty('--pv-ar', hasImg ? pm.imgBox.w + '/' + pm.imgBox.h : (pm.width + 300) + '/' + (pm.height + 300));
-  ov.innerHTML = `
+  const _html = `
   <div class="pv-hd">
     <button class="back-btn pv-back" onclick="_closePlanView()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
     <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;">도면 정보</div><div style="font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(pm.name)} · ${pm.width.toLocaleString()}×${pm.height.toLocaleString()}mm · ${total.toFixed(1)}㎡</div></div>
@@ -16713,6 +16718,7 @@ function _renderPlanView(keepScroll) {
       <div style="font-size:12px;color:#999;">구역을 탭하면 정보가 바뀌어요 · 두 손가락으로 확대</div>
     </div>
     <div class="pv-right">
+      <div class="pv-ztabs">${pm.zones.map(q => `<button class="${q.id === z.id ? 'on' : ''}" onclick="_planObjSel=null;_planSelect('${q.id}')">${esc(q.name)}</button>`).join('')}</div>
       <div class="pv-card">
         <div style="font-size:19px;font-weight:700;margin-bottom:10px;">${esc(z.name)}${z.alias ? `<span style="font-size:13px;color:#888;font-weight:500;margin-left:6px;">${esc(z.alias)}</span>` : ''}</div>
         <div class="pv-kpi"><div><small>바닥 면적</small><b>${st.area.toFixed(1)}㎡</b><small>${(st.area / 3.3058).toFixed(1)}평</small></div><div><small>크기</small><b>${(st.w / 1000).toFixed(1)}×${(st.h / 1000).toFixed(1)}</b><small>m</small></div><div><small>둘레</small><b>${st.perim.toFixed(1)}m</b><small>벽 ${st.wall.toFixed(1)}㎡</small></div></div>
@@ -16729,6 +16735,14 @@ function _renderPlanView(keepScroll) {
       <div class="pv-srcnote" style="font-size:12px;color:#999;line-height:1.6;padding:0 4px;">${esc(pm.source || '')}. 면적은 벽 중심선 기준이라 실제 마감 면적과 차이가 있을 수 있어요.</div>
     </div>
   </div>`;
+  if (_onlyRight) {
+    const tmp = document.createElement('div'); tmp.innerHTML = _html;
+    const nr = tmp.querySelector('.pv-right'), or = ov.querySelector('.pv-right');
+    if (nr && or) { or.replaceWith(nr); nr.querySelector('.pv-ztabs .on')?.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+    return;
+  }
+  ov.innerHTML = _html;
+  ov.querySelector('.pv-ztabs .on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
   _planBindStage(); _planApplyZoom();
   if (keepScroll) { const r = ov.querySelector('.pv-right'); if (r) r.scrollTop = rightScroll; const b = ov.querySelector('.pv-body'); if (b) b.scrollTop = bodyScroll; }
   if (document.getElementById('form-view-panel')?.dataset.fpsub === 'pdf') _ivPdfMount(true);
