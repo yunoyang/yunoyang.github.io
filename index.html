@@ -16332,6 +16332,26 @@ function _planSeed(proj) {
   proj.planModel = JSON.parse(JSON.stringify(PLAN_DEFAULT));
   return true;
 }
+// 선택 구역 치수 표시 — 가로·세로 치수선 + 이름·면적 라벨 (z.dimW/dimH 있으면 실내 치수 우선)
+function _planDimSvg(pm, z, layer) {
+  const bb = _planBBox(z.poly), st = _planZoneStats(pm, z), C = '#e8731a';
+  const w = z.dimW || bb.w, h = z.dimH || bb.h, area = z.dimArea || st.area;
+  const fs = Math.max(140, Math.min(230, Math.min(bb.w, bb.h) / 6)), off = Math.min(260, Math.min(bb.w, bb.h) / 5), tk = fs * .45;
+  const T = (x, y, t, o) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${o && o.fs || fs}" font-weight="800" fill="${o && o.c || C}" stroke="#fff" stroke-width="${fs * .28}" paint-order="stroke" pointer-events="none"${o && o.rot ? ` transform="rotate(-90 ${x} ${y})"` : ''}>${t}</text>`;
+  const L = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="30" pointer-events="none"/>`;
+  const yT = bb.y + off, xL = bb.x + off; let s = '';
+  // 가로 (상단)
+  s += L(bb.x, yT, bb.x + bb.w, yT) + L(bb.x, yT - tk, bb.x, yT + tk) + L(bb.x + bb.w, yT - tk, bb.x + bb.w, yT + tk);
+  s += T(bb.x + bb.w / 2, yT, w.toLocaleString());
+  // 세로 (좌측)
+  s += L(xL, bb.y, xL, bb.y + bb.h) + L(xL - tk, bb.y, xL + tk, bb.y) + L(xL - tk, bb.y + bb.h, xL + tk, bb.y + bb.h);
+  s += T(xL, bb.y + bb.h / 2, h.toLocaleString(), { rot: 1 });
+  // 이름 + 면적
+  const cx = bb.x + bb.w / 2 + off / 2, cy = bb.y + bb.h / 2 + off / 2;
+  s += T(cx, cy - fs * .7, esc(z.name), { fs: fs * 1.15, c: '#111' });
+  s += T(cx, cy + fs * .6, `${area.toFixed(2)}㎡ · ${(area / 3.3058).toFixed(1)}평`, { fs: fs * .9 });
+  return s;
+}
 function _planSvg(pm, opts) {
   opts = opts || {};
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
@@ -16343,7 +16363,7 @@ function _planSvg(pm, opts) {
     const fill = layer ? (sel ? 'rgba(232,115,26,.28)' : 'rgba(255,255,255,0)') : (sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]);
     const stroke = sel ? '#e8731a' : (layer ? 'rgba(0,0,0,0)' : '#9a9a9a');
     s += `<polygon data-zone="${z.id}" points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 70 : 30}" ${opts.click ? 'style="cursor:pointer"' : ''}/>`;
-    if (!layer) {
+    if (!layer && !sel) {
       const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
       s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
       if (bb.w > 1200 && bb.h > 1200) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.2}" text-anchor="middle" font-size="${fs * .8}" fill="#777" pointer-events="none">${st.area.toFixed(1)}㎡</text>`;
@@ -16358,7 +16378,7 @@ function _planSvg(pm, opts) {
     s += `<rect data-obj="${o.id}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="40" fill="${on ? 'rgba(47,107,255,.35)' : 'rgba(47,107,255,.14)'}" stroke="#2f6bff" stroke-width="${on ? 60 : 28}" style="cursor:pointer"/>`;
     if (opts.objs.length <= 20) s += `<text x="${o.x + o.w / 2}" y="${o.y - 70}" text-anchor="middle" font-size="190" font-weight="700" fill="#2f6bff" stroke="#fff" stroke-width="40" paint-order="stroke" pointer-events="none">${esc(o.n)}</text>`; });
   if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="110" fill="${m.c}" stroke="#fff" stroke-width="35" opacity=".9" pointer-events="none"/>`; });
-  if (opts.sel && layer) { const z = pm.zones.find(q => q.id === opts.sel); if (z) { const bb = _planBBox(z.poly); s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="300" font-weight="800" fill="#e8731a" stroke="#fff" stroke-width="60" paint-order="stroke" pointer-events="none">${esc(z.name)}</text>`; } }
+  if (opts.sel) { const z = pm.zones.find(q => q.id === opts.sel); if (z) s += _planDimSvg(pm, z, !!layer); }
   return s + '</svg>';
 }
 function _renderPlanCard() {
