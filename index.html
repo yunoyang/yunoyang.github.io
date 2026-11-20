@@ -2123,10 +2123,11 @@ button, input, textarea, select { font-family:var(--font); }
 /* PC: 도면을 위에 크게, 구역 정보는 아래로 / 평면·3D 탭은 도면 위 가운데 */
 @media (min-width:900px) {
   /* PC: 2컬럼 — 왼쪽 도면(스크롤해도 고정), 오른쪽 구역 정보 */
-  #plan-view.pv-inline .pv-body { flex-direction:row; align-items:flex-start; gap:24px; }
-  #plan-view.pv-inline .pv-left { flex:1 1 0; min-width:0; max-width:620px; padding:0 !important; position:sticky; top:72px; }
+  /* PC도 1컬럼 — 도면(구역별 치수 표시) 위, 구역 정보 아래 */
+  #plan-view.pv-inline .pv-body { flex-direction:column; align-items:stretch; gap:20px; overflow:visible; }
+  #plan-view.pv-inline .pv-left { flex:none; width:100%; max-width:900px; margin:0 auto; padding:0 !important; position:static; }
   #plan-view.pv-inline .pv-stage { height:auto; flex:none; }
-  #plan-view.pv-inline .pv-right { flex:1 1 0; min-width:0; width:auto; padding-top:0 !important; }
+  #plan-view.pv-inline .pv-right { flex:none; width:100%; padding-top:0 !important; }
   #form-view-panel[data-fpsub="pdf"] #plan-view.pv-inline .pv-left { position:static; max-width:none; } /* PDF는 여러 쪽이라 고정하지 않음 */
   #plan-view.pv-inline .pv-ov { left:50%; right:auto; transform:translateX(-50%); }
   #plan-view.pv-inline .pv-ov .pv-mode { flex:none; }
@@ -16366,7 +16367,9 @@ function _planSvg(pm, opts) {
     if (!layer && !sel) {
       const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
       s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
-      if (bb.w > 1200 && bb.h > 1200) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.2}" text-anchor="middle" font-size="${fs * .8}" fill="#777" pointer-events="none">${st.area.toFixed(1)}㎡</text>`;
+      const zw = z.dimW || bb.w, zh = z.dimH || bb.h, za = z.dimArea || st.area, big = bb.w > 1200 && bb.h > 1200, sf = big ? fs * .72 : Math.max(110, fs * .62);
+      s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.15}" text-anchor="middle" font-size="${sf}" fill="#555" pointer-events="none">${zw.toLocaleString()}×${zh.toLocaleString()}</text>`;
+      if (big || bb.h > 900) s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2 + fs * 1.15 + sf * 1.25}" text-anchor="middle" font-size="${sf}" fill="#888" pointer-events="none">${za.toFixed(1)}㎡</text>`;
     }
   });
   if (!layer) {
