@@ -16359,9 +16359,30 @@ function _planDimSvg(pm, z, layer) {
   s += T(cx, cy + fs * .6, `${area.toFixed(2)}㎡ · ${(area / 3.3058).toFixed(1)}평`, { fs: fs * .9 });
   return s;
 }
+// 도면 외곽 치수 체인 — 축선 간격(gridX/gridXb/gridY/gridYr) + 전체 길이, 도면처럼 바깥 2줄
+function _planChainSvg(pm) {
+  const W = pm.width, H = pm.height, C = '#555', fs = 170, tk = 60, o1 = 420, o2 = 780; let s = '';
+  const L = (a, b, c, d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${C}" stroke-width="14" pointer-events="none"/>`;
+  const T = (x, y, t, rot) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${fs}" font-weight="600" fill="#333" stroke="#fff" stroke-width="40" paint-order="stroke" pointer-events="none"${rot ? ` transform="rotate(-90 ${x} ${y})"` : ''}>${t}</text>`;
+  const tick = (x, y) => L(x - tk, y + tk, x + tk, y - tk);
+  const hor = (g, y, sgn) => { if (!g || g.length < 2) return; s += L(g[0], y, g[g.length - 1], y);
+    g.forEach(v => { s += tick(v, y) + L(v, sgn < 0 ? 0 - 60 : H + 60, v, y + sgn * tk); });
+    for (let i = 1; i < g.length; i++) s += T((g[i - 1] + g[i]) / 2, y + sgn * fs * .75, (g[i] - g[i - 1]).toLocaleString()); };
+  const ver = (g, x, sgn) => { if (!g || g.length < 2) return; s += L(x, g[0], x, g[g.length - 1]);
+    g.forEach(v => { s += tick(x, v) + L(sgn < 0 ? -60 : W + 60, v, x + sgn * tk, v); });
+    for (let i = 1; i < g.length; i++) s += T(x + sgn * fs * .75, (g[i - 1] + g[i]) / 2, (g[i] - g[i - 1]).toLocaleString(), 1); };
+  hor(pm.gridX, -o1, -1); hor([0, W], -o2, -1);
+  hor(pm.gridXb || pm.gridX, H + o1, 1); hor([0, W], H + o2, 1);
+  ver(pm.gridY, -o1, -1); ver([0, H], -o2, -1);
+  ver(pm.gridYr || pm.gridY, W + o1, 1); ver([0, H], W + o2, 1);
+  return s;
+}
 // 도면 보기 영역 — 구역 밖 치수선·숫자가 잘리지 않도록 여백 포함
-function _planVB(pm, img) { const ib = pm.imgBox, M = 0;
-  return img && ib ? [ib.x - M, ib.y - M, ib.w + M * 2, ib.h + M * 2] : [-300, -300, pm.width + 600, pm.height + 600]; }
+function _planVB(pm, img) { const ib = pm.imgBox, M = 1080;
+  if (!pm.gridX) return img && ib ? [ib.x, ib.y, ib.w, ib.h] : [-300, -300, pm.width + 600, pm.height + 600];
+  const x0 = Math.min(-M, img && ib ? ib.x : -M), y0 = Math.min(-M, img && ib ? ib.y : -M);
+  const x1 = Math.max(pm.width + M, img && ib ? ib.x + ib.w : 0), y1 = Math.max(pm.height + M, img && ib ? ib.y + ib.h : 0);
+  return [x0, y0, x1 - x0, y1 - y0]; }
 function _planSvg(pm, opts) {
   opts = opts || {};
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
@@ -16390,6 +16411,7 @@ function _planSvg(pm, opts) {
     s += `<rect data-obj="${o.id}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="40" fill="${on ? 'rgba(47,107,255,.35)' : 'rgba(47,107,255,.14)'}" stroke="#2f6bff" stroke-width="${on ? 60 : 28}" style="cursor:pointer"/>`;
     if (opts.objs.length <= 20) s += `<text x="${o.x + o.w / 2}" y="${o.y - 70}" text-anchor="middle" font-size="190" font-weight="700" fill="#2f6bff" stroke="#fff" stroke-width="40" paint-order="stroke" pointer-events="none">${esc(o.n)}</text>`; });
   if (opts.points) (pm.points || []).forEach(p => { if (opts.ptFilter && !opts.ptFilter[p.t]) return; const m = PLAN_PT[p.t] || PLAN_PT.outlet; s += `<circle cx="${p.x}" cy="${p.y}" r="110" fill="${m.c}" stroke="#fff" stroke-width="35" opacity=".9" pointer-events="none"/>`; });
+  if (pm.gridX) s += _planChainSvg(pm);
   if (opts.sel) { const z = pm.zones.find(q => q.id === opts.sel); if (z) s += _planDimSvg(pm, z, !!layer); }
   return s + '</svg>';
 }
