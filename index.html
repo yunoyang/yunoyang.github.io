@@ -16354,10 +16354,13 @@ function _planDimSvg(pm, z, layer) {
   s += T(cx, cy + fs * .6, `${area.toFixed(2)}㎡ · ${(area / 3.3058).toFixed(1)}평`, { fs: fs * .9 });
   return s;
 }
+// 도면 보기 영역 — 구역 밖 치수선·숫자가 잘리지 않도록 여백 포함
+function _planVB(pm, img) { const ib = pm.imgBox, M = 420;
+  return img && ib ? [ib.x - M, ib.y - M, ib.w + M * 2, ib.h + M * 2] : [-1000, -1000, pm.width + 1150, pm.height + 1150]; }
 function _planSvg(pm, opts) {
   opts = opts || {};
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
-  const vb = layer && ib ? [ib.x, ib.y, ib.w, ib.h] : [-820, -820, W + 970, H + 970];
+  const vb = _planVB(pm, layer && ib);
   let s = `<svg viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;font-family:inherit;">`;
   if (layer) s += `<image href="${layer.src}" x="${ib.x}" y="${ib.y}" width="${ib.w}" height="${ib.h}" preserveAspectRatio="none"/>`;
   (pm.zones || []).forEach((z, i) => {
@@ -16726,7 +16729,7 @@ function _renderPlanView(keepScroll) {
   const ptRows = Object.keys(PLAN_PT).filter(t => st.counts[t]).map(t => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;"><i style="width:8px;height:8px;border-radius:50%;background:${PLAN_PT[t].c};display:inline-block;"></i>${PLAN_PT[t].l} ${st.counts[t]}</span>`).join('') || '—';
   const lightRows = (Object.entries(z.light || {}).map(([k, v]) => `${esc(k)} ${v}`).join('<br>') + (z.fan ? `<br>씰링팬 ${z.fan}` : '')) || '—';
   const layers = pm.layers || [], hasImg = layers.length && pm.imgBox;
-  ov.style.setProperty('--pv-ar', hasImg ? pm.imgBox.w + '/' + pm.imgBox.h : (pm.width + 300) + '/' + (pm.height + 300));
+  { const _vb = _planVB(pm, hasImg); ov.style.setProperty('--pv-ar', _vb[2] + '/' + _vb[3]); }
   const _html = `
   <div class="pv-hd">
     <button class="back-btn pv-back" onclick="_closePlanView()" aria-label="뒤로"><svg class="icon" width="22" height="22" style="stroke-width:2" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-chevron-left"/></svg></button>
