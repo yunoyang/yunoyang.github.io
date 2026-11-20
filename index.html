@@ -16339,16 +16339,17 @@ function _planDimSvg(pm, z, layer) {
   const w = z.dimW || bb.w, h = z.dimH || bb.h, area = z.dimArea || st.area;
   const fs = Math.max(140, Math.min(230, Math.min(bb.w, bb.h) / 6)), off = Math.min(260, Math.min(bb.w, bb.h) / 5), tk = fs * .45;
   const T = (x, y, t, o) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${o && o.fs || fs}" font-weight="800" fill="${o && o.c || C}" stroke="#fff" stroke-width="${fs * .28}" paint-order="stroke" pointer-events="none"${o && o.rot ? ` transform="rotate(-90 ${x} ${y})"` : ''}>${t}</text>`;
-  const L = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="30" pointer-events="none"/>`;
-  const yT = bb.y + off, xL = bb.x + off; let s = '';
-  // 가로 (상단)
-  s += L(bb.x, yT, bb.x + bb.w, yT) + L(bb.x, yT - tk, bb.x, yT + tk) + L(bb.x + bb.w, yT - tk, bb.x + bb.w, yT + tk);
-  s += T(bb.x + bb.w / 2, yT, w.toLocaleString());
-  // 세로 (좌측)
-  s += L(xL, bb.y, xL, bb.y + bb.h) + L(xL - tk, bb.y, xL + tk, bb.y) + L(xL - tk, bb.y + bb.h, xL + tk, bb.y + bb.h);
-  s += T(xL, bb.y + bb.h / 2, h.toLocaleString(), { rot: 1 });
+  const L = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="18" pointer-events="none"/>`;
+  // 도면식 치수: 구역 밖으로 보조선을 빼고 치수선은 바깥에 (가로=위, 세로=왼쪽)
+  const D = 420, yT = bb.y - D, xL = bb.x - D, g = 60; let s = '';
+  s += L(bb.x, bb.y - g, bb.x, yT - tk) + L(bb.x + bb.w, bb.y - g, bb.x + bb.w, yT - tk);
+  s += L(bb.x, yT, bb.x + bb.w, yT) + L(bb.x - tk * .7, yT + tk * .7, bb.x + tk * .7, yT - tk * .7) + L(bb.x + bb.w - tk * .7, yT + tk * .7, bb.x + bb.w + tk * .7, yT - tk * .7);
+  s += T(bb.x + bb.w / 2, yT - fs * .75, w.toLocaleString());
+  s += L(bb.x - g, bb.y, xL - tk, bb.y) + L(bb.x - g, bb.y + bb.h, xL - tk, bb.y + bb.h);
+  s += L(xL, bb.y, xL, bb.y + bb.h) + L(xL - tk * .7, bb.y + tk * .7, xL + tk * .7, bb.y - tk * .7) + L(xL - tk * .7, bb.y + bb.h + tk * .7, xL + tk * .7, bb.y + bb.h - tk * .7);
+  s += T(xL - fs * .75, bb.y + bb.h / 2, h.toLocaleString(), { rot: 1 });
   // 이름 + 면적
-  const cx = bb.x + bb.w / 2 + off / 2, cy = bb.y + bb.h / 2 + off / 2;
+  const cx = bb.x + bb.w / 2, cy = bb.y + bb.h / 2;
   s += T(cx, cy - fs * .7, esc(z.name), { fs: fs * 1.15, c: '#111' });
   s += T(cx, cy + fs * .6, `${area.toFixed(2)}㎡ · ${(area / 3.3058).toFixed(1)}평`, { fs: fs * .9 });
   return s;
@@ -16356,14 +16357,14 @@ function _planDimSvg(pm, z, layer) {
 function _planSvg(pm, opts) {
   opts = opts || {};
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
-  const vb = layer && ib ? [ib.x, ib.y, ib.w, ib.h] : [-150, -150, W + 300, H + 300];
+  const vb = layer && ib ? [ib.x, ib.y, ib.w, ib.h] : [-820, -820, W + 970, H + 970];
   let s = `<svg viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;font-family:inherit;">`;
   if (layer) s += `<image href="${layer.src}" x="${ib.x}" y="${ib.y}" width="${ib.w}" height="${ib.h}" preserveAspectRatio="none"/>`;
   (pm.zones || []).forEach((z, i) => {
     const sel = opts.sel === z.id, bb = _planBBox(z.poly), st = _planZoneStats(pm, z);
     const fill = layer ? (sel ? 'rgba(232,115,26,.28)' : 'rgba(255,255,255,0)') : (sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]);
     const stroke = sel ? '#e8731a' : (layer ? 'rgba(0,0,0,0)' : '#9a9a9a');
-    s += `<polygon data-zone="${z.id}" points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 70 : 30}" ${opts.click ? 'style="cursor:pointer"' : ''}/>`;
+    s += `<polygon data-zone="${z.id}" points="${z.poly.map(p => p.join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 24 : 30}" ${opts.click ? 'style="cursor:pointer"' : ''}/>`;
     if (!layer && !sel) {
       const fs = Math.max(150, Math.min(300, Math.min(bb.w, bb.h) / 5));
       s += `<text x="${bb.x + bb.w / 2}" y="${bb.y + bb.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#333" pointer-events="none">${esc(z.name)}</text>`;
