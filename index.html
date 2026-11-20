@@ -2492,7 +2492,7 @@ body.vs2-on.vs2-sub #vs2-nav .vs2-nav-btn.on { background:none; }
 #login-banner span { flex:1; min-width:0; }
 #login-banner .lb-go { flex-shrink:0; height:30px; padding:0 12px; border:none; border-radius:15px; background:#111; color:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
 #login-banner .lb-x { flex-shrink:0; width:28px; height:28px; border:none; background:none; color:#8b95a1; font-size:13px; cursor:pointer; }
-.pv-ztabs { display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; scrollbar-width:none; }
+.pv-ztabs { position:relative; display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; scrollbar-width:none; }
 .pv-ztabs::-webkit-scrollbar { display:none; }
 .pv-ztabs button { flex-shrink:0; height:34px; padding:0 14px; border-radius:17px; border:1px solid #e5e8eb; background:#fff; font-size:13.5px; font-weight:500; color:#4e5968; font-family:inherit; cursor:pointer; white-space:nowrap; }
 .pv-ztabs button.on { background:#111; border-color:#111; color:#fff; font-weight:600; }
@@ -16340,14 +16340,19 @@ function _planDimSvg(pm, z, layer) {
   const fs = Math.max(140, Math.min(230, Math.min(bb.w, bb.h) / 6)), off = Math.min(260, Math.min(bb.w, bb.h) / 5), tk = fs * .45;
   const T = (x, y, t, o) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${o && o.fs || fs}" font-weight="800" fill="${o && o.c || C}" stroke="#fff" stroke-width="${fs * .28}" paint-order="stroke" pointer-events="none"${o && o.rot ? ` transform="rotate(-90 ${x} ${y})"` : ''}>${t}</text>`;
   const L = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="18" pointer-events="none"/>`;
-  // 도면식 치수: 구역 밖으로 보조선을 빼고 치수선은 바깥에 (가로=위, 세로=왼쪽)
-  const D = 420, yT = bb.y - D, xL = bb.x - D, g = 60; let s = '';
-  s += L(bb.x, bb.y - g, bb.x, yT - tk) + L(bb.x + bb.w, bb.y - g, bb.x + bb.w, yT - tk);
-  s += L(bb.x, yT, bb.x + bb.w, yT) + L(bb.x - tk * .7, yT + tk * .7, bb.x + tk * .7, yT - tk * .7) + L(bb.x + bb.w - tk * .7, yT + tk * .7, bb.x + bb.w + tk * .7, yT - tk * .7);
-  s += T(bb.x + bb.w / 2, yT - fs * .75, w.toLocaleString());
-  s += L(bb.x - g, bb.y, xL - tk, bb.y) + L(bb.x - g, bb.y + bb.h, xL - tk, bb.y + bb.h);
-  s += L(xL, bb.y, xL, bb.y + bb.h) + L(xL - tk * .7, bb.y + tk * .7, xL + tk * .7, bb.y - tk * .7) + L(xL - tk * .7, bb.y + bb.h + tk * .7, xL + tk * .7, bb.y + bb.h - tk * .7);
-  s += T(xL - fs * .75, bb.y + bb.h / 2, h.toLocaleString(), { rot: 1 });
+  // 도면식 치수: 보조선을 빼서 치수선 표시 — 도면 안쪽 방향을 우선 (위/아래, 왼쪽/오른쪽 중 도면 안에 들어가는 쪽)
+  const D = 380, g = 60, W = pm.width, H = pm.height; let s = '';
+  const hy = bb.y - D >= 0 ? -1 : (bb.y + bb.h + D <= H ? 1 : 0);   // -1 위, 1 아래, 0 구역 안
+  const vx = bb.x - D >= 0 ? -1 : (bb.x + bb.w + D <= W ? 1 : 0);   // -1 왼쪽, 1 오른쪽, 0 구역 안
+  const yT = hy < 0 ? bb.y - D : hy > 0 ? bb.y + bb.h + D : bb.y + D, yE = hy > 0 ? bb.y + bb.h : bb.y, ys = hy > 0 ? 1 : -1;
+  const xL = vx < 0 ? bb.x - D : vx > 0 ? bb.x + bb.w + D : bb.x + D, xE = vx > 0 ? bb.x + bb.w : bb.x, xs = vx > 0 ? 1 : -1;
+  const q = tk * .7;
+  if (hy) s += L(bb.x, yE - ys * -g, bb.x, yT + ys * tk) + L(bb.x + bb.w, yE - ys * -g, bb.x + bb.w, yT + ys * tk);
+  s += L(bb.x, yT, bb.x + bb.w, yT) + L(bb.x - q, yT + q, bb.x + q, yT - q) + L(bb.x + bb.w - q, yT + q, bb.x + bb.w + q, yT - q);
+  s += T(bb.x + bb.w / 2, yT + (hy > 0 ? fs * .75 : -fs * .75), w.toLocaleString());
+  if (vx) s += L(xE - xs * -g, bb.y, xL + xs * tk, bb.y) + L(xE - xs * -g, bb.y + bb.h, xL + xs * tk, bb.y + bb.h);
+  s += L(xL, bb.y, xL, bb.y + bb.h) + L(xL - q, bb.y + q, xL + q, bb.y - q) + L(xL - q, bb.y + bb.h + q, xL + q, bb.y + bb.h - q);
+  s += T(xL + (vx > 0 ? fs * .75 : -fs * .75), bb.y + bb.h / 2, h.toLocaleString(), { rot: 1 });
   // 이름 + 면적
   const cx = bb.x + bb.w / 2, cy = bb.y + bb.h / 2;
   s += T(cx, cy - fs * .7, esc(z.name), { fs: fs * 1.15, c: '#111' });
@@ -16355,8 +16360,8 @@ function _planDimSvg(pm, z, layer) {
   return s;
 }
 // 도면 보기 영역 — 구역 밖 치수선·숫자가 잘리지 않도록 여백 포함
-function _planVB(pm, img) { const ib = pm.imgBox, M = 420;
-  return img && ib ? [ib.x - M, ib.y - M, ib.w + M * 2, ib.h + M * 2] : [-1000, -1000, pm.width + 1150, pm.height + 1150]; }
+function _planVB(pm, img) { const ib = pm.imgBox, M = 0;
+  return img && ib ? [ib.x - M, ib.y - M, ib.w + M * 2, ib.h + M * 2] : [-300, -300, pm.width + 600, pm.height + 600]; }
 function _planSvg(pm, opts) {
   opts = opts || {};
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
@@ -16485,7 +16490,11 @@ function _planPick(kind) {
   document.body.appendChild(ov);
 }
 function _closePlanView() { const ov = document.getElementById('plan-view'); if (ov) ov.style.display = 'none'; }
-function _planSelect(id) { _planSel = id; _renderPlanView(true); }
+// 구역 탭을 가로로만 가운데 정렬 (scrollIntoView는 페이지까지 세로로 움직여서 사용 안 함)
+function _planTabCenter(root) { const b = root && root.querySelector('.pv-ztabs .on'), bar = b && b.parentElement; if (!bar) return;
+  bar.scrollLeft = b.offsetLeft - (bar.clientWidth - b.offsetWidth) / 2; }
+function _planSelect(id) { const y = window.scrollY, sc = document.scrollingElement; _planSel = id; _renderPlanView(true);
+  window.scrollTo(0, y); requestAnimationFrame(() => window.scrollTo(0, y)); }
 function _planSetLayer(id) { _planLayer = id; _renderPlanView(true); }
 function _planTogglePt(t) { _planPtFilter[t] = !_planPtFilter[t]; _renderPlanView(true); }
 function _planApplyZoom() {
@@ -16534,7 +16543,7 @@ function _planBindStage() {
     if (pts.size === 0) start = null;
   };
   stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
-  stage.addEventListener('dblclick', () => _planZoomReset());
+  stage.addEventListener('dblclick', e => { if (_planZoom.k > 1) _planZoomReset(); });
 }
 // ── 평면도 물건 선택: 3D 모델(SketchUp)에서 뽑은 물건 윤곽 (평면 좌표 mm) ──
 let _planObjs = null, _planObjSel = null, _planObjLoading = false;
@@ -16765,11 +16774,11 @@ function _renderPlanView(keepScroll) {
   if (_onlyRight) {
     const tmp = document.createElement('div'); tmp.innerHTML = _html;
     const nr = tmp.querySelector('.pv-right'), or = ov.querySelector('.pv-right');
-    if (nr && or) { or.replaceWith(nr); nr.querySelector('.pv-ztabs .on')?.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+    if (nr && or) { or.replaceWith(nr); _planTabCenter(nr); }
     return;
   }
   ov.innerHTML = _html;
-  ov.querySelector('.pv-ztabs .on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  _planTabCenter(ov);
   _planBindStage(); _planApplyZoom();
   if (keepScroll) { const r = ov.querySelector('.pv-right'); if (r) r.scrollTop = rightScroll; const b = ov.querySelector('.pv-body'); if (b) b.scrollTop = bodyScroll; }
   if (document.getElementById('form-view-panel')?.dataset.fpsub === 'pdf') _ivPdfMount(true);
