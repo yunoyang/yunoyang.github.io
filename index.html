@@ -4292,10 +4292,10 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-in { position:relative; }
 .gt-h { position:relative; border-bottom:1px solid #eceef0; }
 .gt-mo { position:absolute; top:5px; padding-left:5px; font-size:11px; font-weight:700; color:#333; white-space:nowrap; }
-.gt-dn { position:absolute; top:22px; display:flex; align-items:center; justify-content:center; gap:2px; font-size:11px; color:#4e5968; line-height:20px; }
+.gt-dn { position:absolute; top:19px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:11px; color:#4e5968; line-height:15px; }
 .gt-dn b { font-weight:600; } .gt-dn i { font-style:normal; font-size:10px; color:#a0a7b0; }
 .gt-dn.sun, .gt-dn.sun i { color:#e5484d; } .gt-dn.sat, .gt-dn.sat i { color:#3b82c4; }
-.gt-dn.tdy b { background:#111; color:#fff; border-radius:10px; min-width:20px; text-align:center; }
+.gt-dn.tdy b { background:#111; color:#fff; border-radius:9px; min-width:18px; line-height:18px; text-align:center; }
 .gt-nz { position:absolute; top:4px; transform:translateX(-50%); border:none; background:#fff3e0; border-radius:8px; font-size:10px; padding:0 3px; line-height:16px; cursor:pointer; }
 .gt-nz.hi { background:#ffe1e1; }
 .gt-b { position:relative; }
@@ -12331,7 +12331,7 @@ function _gtHtml(proj, procs, boxW) {
     if (wd === 0 || wd === 6) bg += `<div class="gt-we" style="left:${x}px;width:${dw}px"></div>`;
     if (i === 0 || d.getDate() === 1) mo += `<div class="gt-mo" style="left:${x}px">${d.getFullYear() !== today.getFullYear() ? d.getFullYear() + '. ' : ''}${d.getMonth() + 1}월</div>`;
     const show = dw >= 18 || (dw >= 9 ? wd === 1 : d.getDate() % 7 === 1);
-    if (show) hd += `<div class="gt-dn${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}${i === ti ? ' tdy' : ''}" style="left:${x}px;width:${Math.max(dw, 18)}px">${dw >= 30 ? `<i>${WK[wd]}</i>` : ''}<b>${d.getDate()}</b></div>`;
+    if (show) hd += `<div class="gt-dn${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}${i === ti ? ' tdy' : ''}" style="left:${x}px;width:${Math.max(dw, 18)}px">${dw >= 18 ? `<i>${WK[wd]}</i>` : ''}<b>${d.getDate()}</b></div>`;
   }
   const vline = (d, cls) => { const i = idx(d); return i >= 0 && i < n ? `<div class="gt-vl ${cls}" style="left:${i * dw + dw / 2}px"></div>` : ''; };
   const noiseHtml = noise.map((z, k) => { const i = idx(z.date); return i >= 0 && i < n ? `<button class="gt-nz ${z.level === '강' ? 'hi' : ''}" style="left:${i * dw + dw / 2}px" onclick="_gtNoise(${k})" aria-label="소음 ${esc(z.level)}">🔊</button>` : ''; }).join('');
@@ -14889,12 +14889,12 @@ function calMonthNav(delta) {
 }
 // 일정 탭: 캘린더 / 간트 전환
 function _calViewSeg() {
-  return `<div class="gt-vt" style="padding:12px 16px 0;"><div class="gt-seg">${[['cal', '캘린더'], ['gantt', '간트']].map(([k, l]) => `<button class="${(_vs2View === 'gantt' ? 'gantt' : 'cal') === k ? 'on' : ''}" onclick="_vs2View='${k === 'gantt' ? 'gantt' : 'list'}';renderCalendar()">${l}</button>`).join('')}</div>${_vs2View === 'gantt' ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
+  return `<div class="gt-vt" style="padding:12px 16px 0;"><span></span>${true ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
 }
 function renderCalendar() {
   const proj = getProject(); if (!proj) return;
   const container = document.getElementById('calendar-container'); if (!container) return;
-  if (_vs2View === 'gantt') {
+  if (true) { // 일정 탭 = 간트만 (캘린더 삭제)
     const procs = (proj.processes || []).filter(p => !p.deleted).sort((a, b) => (a.scheduleStart || '9999').localeCompare(b.scheduleStart || '9999'));
     const f = proj.form || {};
     container.innerHTML = _calViewSeg() + `<div style="padding:4px 16px 24px;">${f.startDate ? `<div style="font-size:13px;color:#6b7684;margin:0 2px 10px;">공사 기간 ${_vs2Fmt(f.startDate)} – ${_vs2Fmt(f.endDate || f.startDate)}</div>` : ''}${_gtHtml(proj, procs, (container.clientWidth || 360) - 32)}</div>`;
