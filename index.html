@@ -4321,6 +4321,9 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-bar.ord .gt-hl::after, .gt-bar.ord .gt-hr::after { background:currentColor !important; }
 #gt-tip { position:fixed; z-index:10000; width:120px; text-align:center; background:#111; color:#fff; font-size:12px; font-weight:600; border-radius:8px; padding:5px 0; pointer-events:none; }
 .gt-bar.ord span { font-size:11px; }
+.gt-add { display:flex; align-items:center; gap:6px; width:100%; height:36px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
+.gt-addrow { position:absolute; left:0; right:0; height:36px; cursor:copy; }
+.gt-addrow span { position:absolute; top:9px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
 .gt-lg { display:flex; flex-wrap:wrap; gap:12px; margin:10px 2px 0; font-size:12px; color:#6b7684; }
 .gt-lg span { display:inline-flex; align-items:center; gap:5px; }
 .gt-lg i { display:inline-block; width:16px; height:8px; border-radius:4px; }
@@ -12323,13 +12326,23 @@ function _gtHtml(proj, procs, boxW) {
     : (() => { const s = r.ph.map(x => x.start).sort()[0], e = r.ph.map(x => x.end).sort().at(-1), pc = _gtProgress(r.ph, today);
       return `<button class="gt-nm" onclick="openProcDetailScreen('${r.p.id}')"><i style="background:${_gtColor(r.p.name)}"></i><span class="t">${esc(r.p.name)}</span>${wide ? `<span class="c1">${dd(s, e)}일</span><span class="c2">${pc}%</span><span class="c3">${_gtRing(pc)}</span>` : ''}</button>`; })()).join('');
   return `<div class="gt${wide ? ' wide' : ''}">
-    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px">${wide ? '<span class="t">공종</span><span class="c1">기간</span><span class="c2">진행</span><span class="c3"></span>' : ''}</div>${left}</div>
+    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px">${wide ? '<span class="t">공종</span><span class="c1">기간</span><span class="c2">진행</span><span class="c3"></span>' : ''}</div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>
     <div class="gt-r" id="gt-r"><div class="gt-in" data-dw="${dw}" style="width:${W}px">
       <div class="gt-h" style="height:${HH}px">${mo}${hd}${noiseHtml}</div>
-      <div class="gt-b" style="height:${rows.length * RH}px">${bg}${rows.map((r, ri) => `<div class="gt-row${r.grp ? ' g' : ''}" style="top:${ri * RH}px"></div>`).join('')}
+      <div class="gt-b" style="height:${(rows.length + (_gtCanAdd() ? 1 : 0)) * RH}px">${bg}${_gtCanAdd() ? `<div class="gt-addrow" style="top:${rows.length * RH}px" onclick="_gtAddAt(event,'${a}',${dw})"><span style="left:${Math.max(0, (ti >= 0 && ti < n ? ti : 0) * dw)}px">+ 날짜를 눌러 공정 추가</span></div>` : ''}${rows.map((r, ri) => `<div class="gt-row${r.grp ? ' g' : ''}" style="top:${ri * RH}px"></div>`).join('')}
         ${f.startDate ? vline(f.startDate, 'st') : ''}${f.endDate ? vline(f.endDate, 'st') : ''}${ti >= 0 && ti < n ? `<div class="gt-vl tdy" style="left:${ti * dw + dw / 2}px"></div>` : ''}${bars}</div>
     </div></div></div>
     <div class="gt-lg"><span><i class="w"></i>시공</span><span><i class="o"></i>발주·준비</span><span><i class="t"></i>오늘</span><span><i class="s"></i>착공·완공</span>${noise.length ? '<span>🔊 소음</span>' : ''}</div>`;
+}
+function _gtCanAdd() { return typeof canEdit !== 'function' || canEdit(); }
+// 간트에서 공정 추가: 왼쪽 버튼 = 오늘(공사 기간 안이면) 또는 착공일, 아래 줄의 날짜를 누르면 그 날짜로
+function _gtAdd() {
+  const f = (getProject() || {}).form || {}, t = _calKey(_vs2Today());
+  openAddProcess(f.startDate && (t < f.startDate || (f.endDate && t > f.endDate)) ? f.startDate : t);
+}
+function _gtAddAt(e, a, dw) {
+  const row = e.currentTarget, x = e.clientX - row.getBoundingClientRect().left;
+  openAddProcess(_tplAddCal(a, Math.max(0, Math.floor(x / dw))));
 }
 function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); renderCalendar(); }
 // 막대 끌기: 가운데 = 이동, 양 끝 = 시작/종료일 조절, 움직이지 않고 떼면 상세 카드
