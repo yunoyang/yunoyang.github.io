@@ -4274,6 +4274,44 @@ body.vs2-info #screen-form #form-title { order:1; }
 #vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #vs2-timeline { padding:20px 20px 8px; background:#fff; }
 #vs2-timeline .vs2-h { font-size:14px; margin-bottom:16px; }
+/* 공정 간트 */
+.gt-vt { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
+.gt-seg { display:inline-flex; background:#f2f4f6; border-radius:10px; padding:3px; }
+.gt-seg button { border:none; background:none; padding:6px 14px; border-radius:8px; font-size:14px; font-weight:600; color:#6b7684; font-family:inherit; cursor:pointer; }
+.gt-seg.sm button { padding:5px 10px; font-size:13px; }
+.gt-seg button.on { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.gt { display:flex; border:1px solid #eceef0; border-radius:12px; overflow:hidden; background:#fff; }
+.gt-l { flex:none; border-right:1px solid #eceef0; background:#fff; z-index:2; }
+.gt-lh { border-bottom:1px solid #eceef0; }
+.gt-nm { display:flex; align-items:center; gap:6px; width:100%; height:40px; padding:0 8px; border:none; border-bottom:1px solid #f4f5f6; background:none; font-size:13px; font-weight:600; color:#222; text-align:left; font-family:inherit; white-space:nowrap; overflow:hidden; cursor:pointer; }
+.gt-nm i { flex:none; width:8px; height:8px; border-radius:2px; }
+.gt-r { flex:1; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+.gt-in { position:relative; }
+.gt-h { position:relative; border-bottom:1px solid #eceef0; }
+.gt-mo { position:absolute; top:3px; padding-left:4px; font-size:11px; font-weight:700; color:#333; border-left:1px solid #d5d9de; height:14px; line-height:14px; white-space:nowrap; }
+.gt-dn { position:absolute; top:20px; display:flex; flex-direction:column; align-items:center; font-size:11px; color:#4e5968; line-height:1.15; }
+.gt-dn b { font-weight:600; } .gt-dn i { font-style:normal; font-size:10px; color:#999; }
+.gt-dn.sun, .gt-dn.sun i { color:#e5484d; } .gt-dn.sat, .gt-dn.sat i { color:#3b82c4; }
+.gt-dn.tdy b { background:#111; color:#fff; border-radius:9px; padding:0 4px; }
+.gt-nz { position:absolute; top:2px; transform:translateX(-50%); border:none; background:#fff3e0; border-radius:8px; font-size:10px; padding:0 3px; line-height:16px; cursor:pointer; }
+.gt-nz.hi { background:#ffe1e1; }
+.gt-b { position:relative; }
+.gt-we { position:absolute; top:0; bottom:0; background:#fbf1f2; }
+.gt-row { position:absolute; left:0; right:0; height:40px; border-bottom:1px solid #f4f5f6; }
+.gt-vl { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #e5484d; pointer-events:none; z-index:1; }
+.gt-vl.tdy { border-left:2px solid #111; }
+.gt-bar { position:absolute; height:20px; border:none; border-radius:5px; padding:0; cursor:pointer; z-index:2; }
+.gt-bar.ord { height:14px; border:1.5px dashed; }
+.gt-lg { display:flex; flex-wrap:wrap; gap:12px; margin:10px 2px 0; font-size:12px; color:#6b7684; }
+.gt-lg span { display:inline-flex; align-items:center; gap:5px; }
+.gt-lg i { display:inline-block; width:16px; height:8px; border-radius:2px; }
+.gt-lg i.w { background:#6b7684; } .gt-lg i.o { border:1.5px dashed #6b7684; background:#6b768422; }
+.gt-lg i.t { width:2px; height:12px; background:#111; } .gt-lg i.s { width:0; height:12px; border-left:1.5px dashed #e5484d; }
+.gt-ph { display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:12px; background:#f7f8fa; margin-bottom:8px; }
+.gt-ph.on { background:#fff6ee; }
+.gt-ph b { display:block; font-size:15px; color:#111; } .gt-ph small { font-size:13px; color:#6b7684; }
+.gt-tag { flex:none; font-size:12px; font-weight:700; border-radius:6px; padding:3px 7px; }
+.gt-tag.w { background:#111; color:#fff; } .gt-tag.o { background:#fff; color:#333; border:1px dashed #999; } .gt-tag.n { background:#ffe1e1; color:#c62828; }
 .vs2-ftab { display:flex; gap:20px; border-bottom:1px solid #e5e8eb; margin-bottom:16px; overflow-x:auto; scrollbar-width:none; }
 .vs2-ftab::-webkit-scrollbar { display:none; }
 .vs2-ftab button { flex-shrink:0; border:none; background:none; padding:4px 2px 10px; font-size:14px; font-weight:500; color:#8b95a1; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; }
@@ -12199,6 +12237,66 @@ function _vs2RenderOverview() {
 }
 // 첫 화면 공정 진행: 단계로 나누지 않고 모든 공정을 일정 순으로 펼쳐 보여줌. 누르면 공정 상세 화면.
 let _vs2Filter = 'all';
+// ===== 공정 간트 차트 (모바일: 공종명 고정 + 막대 영역 가로 스크롤, 확대 3단계) =====
+let _vs2View = 'list', _gtZoom = 0, _gtFitW = 0;
+const GT_COLORS = { '가설': '#8d9aa6', '철거': '#6b7684', '설비': '#3b82c4', '전기': '#e8731a', '냉난방': '#14a3a3', '경량': '#c9a227', '목공': '#b7793e', '타일': '#5b8def', '필름': '#d36b9a', '월패드·도어락': '#c2a000', '도배': '#7c6fd6', '도장': '#4caf7a', '가구': '#9b6bd3', '마루': '#a0522d' };
+function _gtColor(n) { if (GT_COLORS[n]) return GT_COLORS[n]; let h = 0; for (const c of n || '') h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h},45%,50%)`; }
+function _gtPhases(p) {
+  if (Array.isArray(p.phases) && p.phases.length) return p.phases;
+  return p.scheduleStart ? [{ kind: 'work', label: p.name, start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }] : [];
+}
+function _gtHtml(proj, procs, boxW) {
+  const rows = procs.map(p => ({ p, ph: _gtPhases(p) })).filter(r => r.ph.length);
+  if (!rows.length) return `<div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">일정이 있는 공정이 없어요</div>`;
+  const f = proj.form || {}, noise = proj.scheduleNoise || [];
+  let a = rows.flatMap(r => r.ph.map(x => x.start)).sort()[0], b = rows.flatMap(r => r.ph.map(x => x.end)).sort().at(-1);
+  if (f.startDate && f.startDate < a) a = f.startDate; if (f.endDate && f.endDate > b) b = f.endDate;
+  const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1, LW = 72;
+  const dw = _gtZoom === 0 ? 36 : _gtZoom === 1 ? 20 : Math.max(5, ((_gtFitW || boxW - LW) - 2) / n);
+  const W = Math.ceil(n * dw), RH = 40, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5);
+  const today = _vs2Today(), ti = Math.round((today - d0) / 864e5), WK = '일월화수목금토';
+  let bg = '', hd = '', mo = '';
+  for (let i = 0; i < n; i++) {
+    const d = new Date(d0); d.setDate(d.getDate() + i); const wd = d.getDay(), x = i * dw;
+    if (wd === 0 || wd === 6) bg += `<div class="gt-we" style="left:${x}px;width:${dw}px"></div>`;
+    if (i === 0 || d.getDate() === 1) mo += `<div class="gt-mo" style="left:${x}px">${d.getMonth() + 1}월</div>`;
+    const show = dw >= 18 || (dw >= 9 ? wd === 1 : d.getDate() % 7 === 1);
+    if (show) hd += `<div class="gt-dn${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}${i === ti ? ' tdy' : ''}" style="left:${x}px;width:${Math.max(dw, 18)}px"><b>${d.getDate()}</b>${dw >= 18 ? `<i>${WK[wd]}</i>` : ''}</div>`;
+  }
+  const vline = (d, cls) => { const i = idx(d); return i >= 0 && i < n ? `<div class="gt-vl ${cls}" style="left:${i * dw + dw / 2}px"></div>` : ''; };
+  const noiseHtml = noise.map((z, k) => { const i = idx(z.date); return i >= 0 && i < n ? `<button class="gt-nz ${z.level === '강' ? 'hi' : ''}" style="left:${i * dw + dw / 2}px;${dw < 18 ? 'top:34px;' : ''}" onclick="_gtNoise(${k})" aria-label="소음 ${esc(z.level)}">🔊</button>` : ''; }).join('');
+  const bars = rows.map((r, ri) => r.ph.map((x, k) => {
+    const s = idx(x.start), e = idx(x.end), c = _gtColor(r.p.name), o = x.kind === 'order';
+    return `<button class="gt-bar${o ? ' ord' : ''}" style="top:${ri * RH + (o ? 13 : 10)}px;left:${s * dw + 1}px;width:${Math.max(dw - 2, (e - s + 1) * dw - 2)}px;${o ? `border-color:${c};background:${c}22` : `background:${c}`}" onclick="_gtOpen('${r.p.id}',${k})" aria-label="${esc(r.p.name)} ${esc(x.label || '')}"></button>`;
+  }).join('')).join('');
+  const names = rows.map(r => `<button class="gt-nm" onclick="openProcDetailScreen('${r.p.id}')"><i style="background:${_gtColor(r.p.name)}"></i>${esc(r.p.name)}</button>`).join('');
+  return `<div class="gt">
+    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${names}</div>
+    <div class="gt-r" id="gt-r"><div class="gt-in" style="width:${W}px">
+      <div class="gt-h" style="height:${HH}px">${mo}${hd}${noiseHtml}</div>
+      <div class="gt-b" style="height:${rows.length * RH}px">${bg}${rows.map((r, ri) => `<div class="gt-row" style="top:${ri * RH}px"></div>`).join('')}
+        ${f.startDate ? vline(f.startDate, 'st') : ''}${f.endDate ? vline(f.endDate, 'st') : ''}${ti >= 0 && ti < n ? `<div class="gt-vl tdy" style="left:${ti * dw + dw / 2}px"></div>` : ''}${bars}</div>
+    </div></div></div>
+    <div class="gt-lg"><span><i class="w"></i>시공</span><span><i class="o"></i>발주·준비</span><span><i class="t"></i>오늘</span><span><i class="s"></i>착공·완공</span>${noise.length ? '<span>🔊 소음</span>' : ''}</div>`;
+}
+function _gtSetZoom(z) { _gtZoom = z; _vs2RenderTimeline(); }
+function _gtAfter() {
+  const r = document.getElementById('gt-r'); if (!r) return;
+  if (_gtZoom === 2) { if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; _vs2RenderTimeline(); } return; }
+  const t = r.querySelector('.gt-vl.tdy, .gt-vl.st'); if (t) r.scrollLeft = Math.max(0, parseFloat(t.style.left) - 60);
+}
+function _gtOpen(id, k) {
+  const proj = getProject(), p = (proj.processes || []).find(x => x.id === id); if (!p) return;
+  const ph = _gtPhases(p), fd = d => formatDate(d).slice(5), days = x => Math.round((_vs2D(x.end) - _vs2D(x.start)) / 864e5) + 1;
+  const nz = (proj.scheduleNoise || []).filter(z => ph.some(x => z.date >= x.start && z.date <= x.end));
+  _tplSheetOpen(`<div class="tpl-hd"><span></span><b><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${_gtColor(p.name)};margin-right:6px;"></i>${esc(p.name)}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
+    <div class="tpl-bd">${ph.map((x, i) => `<div class="gt-ph${i === k ? ' on' : ''}"><span class="gt-tag ${x.kind === 'order' ? 'o' : 'w'}">${x.kind === 'order' ? '발주' : '시공'}</span><div><b>${esc(x.label || p.name)}</b><small>${fd(x.start)}${x.end !== x.start ? ' ~ ' + fd(x.end) : ''} · ${days(x)}일</small></div></div>`).join('')}
+      ${nz.map(z => `<div class="gt-ph"><span class="gt-tag n">소음 ${esc(z.level)}</span><div><b>${esc(z.note)}</b><small>${fd(z.date)}</small></div></div>`).join('')}
+      ${p.company ? `<div class="tpl-sum" style="margin-top:12px;">담당 업체 · ${esc(p.company)}</div>` : ''}</div>
+    <div class="tpl-ft"><button class="ptn-cta" onclick="_tplClose();openProcDetailScreen('${p.id}')">공정 상세 보기</button></div>`);
+}
+function _gtNoise(k) { const z = (getProject().scheduleNoise || [])[k]; if (z) showToastMessage(`🔊 ${formatDate(z.date).slice(5)} 소음 ${z.level} · ${z.note}`, 3500); }
+
 function _vs2RenderTimeline() {
   const el = document.getElementById('vs2-timeline'); const proj = getProject(); if (!el || !proj) return;
   const today = _vs2Today();
@@ -12221,7 +12319,10 @@ function _vs2RenderTimeline() {
   const tabOf = g => g.id === 'demo' ? 'structure' : g.id === 'after' ? 'finish' : g.id;
   // 모든 공정을 한 장씩 풀어서 보여주고, 탭으로 단계 필터
   const list = groups.filter(g => _vs2Filter === 'all' || tabOf(g) === _vs2Filter).flatMap(g => g.ps);
-  el.innerHTML = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>` + list.map(p => {
+  const _vt = `<div class="gt-vt"><div class="gt-seg">${[['list', '목록'], ['gantt', '간트']].map(([k, l]) => `<button class="${_vs2View === k ? 'on' : ''}" onclick="_vs2View='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>${_vs2View === 'gantt' ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
+  const _ft = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>`;
+  if (_vs2View === 'gantt') { el.innerHTML = _vt + _ft + _gtHtml(proj, [...list].sort(byStart), el.clientWidth || 360); _gtAfter(); return; }
+  el.innerHTML = _vt + _ft + list.map(p => {
     const done = _vs2ProcState(p, today) === 'done';
     const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
     const period = s ? (e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
@@ -12428,8 +12529,36 @@ const PROC_TEMPLATES = [
   { k: 'full', label: '전체 리모델링', desc: '철거부터 입주청소까지 집 전체를 고치는 경우', items: [['실측', 1], ['도면설계', 5], ['동의서 및 보양', 1], ['철거', 3], ['샷시', 1], ['설비', 2], ['전기', 2], ['목공', 7], ['시스템에어컨', 1], ['타일', 5], ['위생도기', 1], ['필름', 3], ['도배', 3], ['마루', 2], ['조명', 1], ['가구', 3], ['실리콘', 1], ['입주청소', 1]] },
   { k: 'partial', label: '부분 리모델링 (주방·욕실)', desc: '주방이나 욕실 등 일부 공간만 고치는 경우', items: [['실측', 1], ['동의서 및 보양', 1], ['철거', 2], ['설비', 2], ['타일', 4], ['위생도기', 1], ['가구', 2], ['실리콘', 1], ['입주청소', 1]] },
   { k: 'finish', label: '마감만 (도배·마루·조명)', desc: '구조 변경 없이 마감재만 바꾸는 경우', items: [['실측', 1], ['도배', 3], ['마루', 2], ['조명', 1], ['입주청소', 1]] },
+  { k: 'detail', label: '상세 공정표 (공종별 발주·시공)', desc: '업체 공정표처럼 공종마다 발주와 시공 단계를 나눠 약 5주에 배치', detail: true, get items() { return PROC_DETAIL_TRADES.map(t => [t.n, 1]); } },
 ];
 let _tplK = null, _tplOff = new Set();
+// 업체식 상세 공정표 (하우먼트 예상 공정표 ver.261019 기준) — 착공일 0 기준 달력 일수 오프셋, o=발주·준비 / w=시공
+const PROC_DETAIL_TRADES = [
+  { n: '가설', ph: [['w', -1, 0, '내·외부 보양'], ['w', 34, 34, '준공청소']], phase: 'structure' },
+  { n: '철거', ph: [['w', 0, 10, '천장 에어컨 부위·우물장·바닥·벽체 타일·마루 철거, 폐기물 반출'], ['w', 20, 21, '자재 및 폐기물 반출'], ['w', 30, 31, '자재 및 폐기물 반출']] },
+  { n: '설비', ph: [['w', 5, 9, '세탁실·화장실 급배수 이설, 미장, 방수'], ['w', 20, 25, '천장 UBR, 위생도기, 환풍기, 샤워부스 설치']] },
+  { n: '전기', ph: [['w', 6, 10, '전등·전열·통신 배선'], ['w', 25, 30, '스위치·콘센트·전등기구 취부']] },
+  { n: '냉난방', ph: [['o', 0, 2, '냉난방기·자재 발주'], ['w', 3, 6, '냉난방 배관 및 기기 설치']], phase: 'structure' },
+  { n: '경량', ph: [['o', 0, 1, '경자재 발주'], ['w', 8, 13, '현관 입구·거실 간벽 조성 및 석고보드']], phase: 'structure' },
+  { n: '목공', ph: [['o', 0, 2, '목자재·목창호 발주'], ['w', 8, 33, '천장 등박스·단내림, 벽체 골조·석고보드, 도어 프레임·도어·몰딩']] },
+  { n: '타일', ph: [['o', 2, 4, '타일·인조석 발주'], ['w', 14, 23, '화장실 벽·바닥, 발코니·세탁실 바닥, 인조대리석, 메지']] },
+  { n: '필름', ph: [['w', 33, 34, '현관문 필름 시공']], phase: 'finish' },
+  { n: '월패드·도어락', ph: [['w', 33, 34, '월패드 및 도어락 공사']], phase: 'finish' },
+  { n: '도배', ph: [['o', 12, 14, '도배지 발주'], ['w', 20, 23, '퍼티·초배·정배']] },
+  { n: '도장', ph: [['w', 25, 26, '발코니 탄성코트']] },
+  { n: '가구', ph: [['o', 16, 19, '가구 실측 및 발주'], ['w', 27, 31, '붙박이장·싱크장·상판 시공']] },
+  { n: '마루', ph: [['o', 12, 12, '마루 발주'], ['w', 26, 27, '바닥 마루 시공']] },
+];
+const PROC_DETAIL_NOISE = [[2, '강', '바닥·벽체 타일 철거'], [5, '강', '세탁실 급배수 할석·마루 철거'], [6, '중', '에어컨 코어 타공, 천장 앵커']];
+function _tplAddCal(d, n) { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return _tplYmd(x); }
+function _tplDetailSchedule() {
+  if (!_tplS) return [];
+  return PROC_DETAIL_TRADES.filter(t => !_tplOff.has(t.n)).map(t => {
+    const phases = t.ph.map(([k, a, b, label]) => ({ kind: k === 'o' ? 'order' : 'work', label, start: _tplAddCal(_tplS, a), end: _tplAddCal(_tplS, b) }));
+    return { name: t.n, phase: t.phase, phases, s: phases.map(x => x.start).sort()[0], e: phases.map(x => x.end).sort().at(-1) };
+  });
+}
+
 
 function _tplYmd(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }
 function _tplAddWork(d, n) { // n 작업일 뒤 (일요일 제외)
@@ -12509,6 +12638,7 @@ function _tplRenderList() {
   const proj = getProject(); if (!proj) return;
   const rec = _tplRecommend(proj);
   const card = t => {
+    if (t.detail) return `<button class="tpl-card" onclick="_tplPick('${t.k}')"><span><b>${t.label}</b><small>${t.desc}</small><small class="m">공종 ${PROC_DETAIL_TRADES.length}개 · 발주·시공 단계 · 35일</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b8c1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>`;
     const sch = _tplSchedule(proj, t.items);
     const meta = sch.length ? `공정 ${t.items.length}개 · ${_tplE ? `${_tplWorkdays(sch[0].s, _tplE)}일 안에 배치` : `약 ${_tplWeeks(sch)}주`}` : `공정 ${t.items.length}개`;
     return `<button class="tpl-card" onclick="_tplPick('${t.k}')"><span><b>${t.label}${t.k === rec ? ' <span class="tpl-rec">추천</span>' : ''}</b><small>${t.desc}</small><small class="m">${meta}</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0b8c1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>`;
@@ -12526,6 +12656,15 @@ function _tplPick(k) {
 function _tplToggle(name) { _tplOff.has(name) ? _tplOff.delete(name) : _tplOff.add(name); _tplRenderPreview(); }
 function _tplRenderPreview() {
   const proj = getProject(), t = PROC_TEMPLATES.find(x => x.k === _tplK); if (!proj || !t) return;
+  if (t.detail) {
+    const sch = _tplDetailSchedule(), at = Object.fromEntries(sch.map(x => [x.name, x]));
+    const rows = PROC_DETAIL_TRADES.map(tr => { const on = !_tplOff.has(tr.n), x = at[tr.n];
+      return `<button class="tpl-row${on ? ' on' : ''}" onclick="_tplToggle('${tr.n}')"><span class="tpl-cb"></span><b>${tr.n}</b><small>${on && x ? x.phases.map(q => `${q.kind === 'order' ? '발주 ' : ''}${formatDate(q.start).slice(5)}${q.end !== q.start ? '~' + formatDate(q.end).slice(5) : ''}`).join(' · ') : '빼기'}</small></button>`; }).join('');
+    _tplSheetOpen(`<div class="tpl-hd"><button onclick="_tplK=null;_tplRenderList()" aria-label="뒤로">‹</button><b>${t.label}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
+      <div class="tpl-bd"><div class="tpl-sum">착공 ${formatDate(_tplS)} 기준 · 발주와 시공 단계가 함께 들어가요 · 필요 없는 공종은 눌러서 빼세요</div><div class="tpl-list">${rows}</div></div>
+      <div class="tpl-ft"><button class="ptn-cta" ${sch.length ? '' : 'disabled'} onclick="_tplApply()">공종 ${sch.length}개 추가하기</button></div>`);
+    return;
+  }
   const sch = _tplSchedule(proj, t.items.filter(([n]) => !_tplOff.has(n)));
   const at = Object.fromEntries(sch.map(x => [x.name, x]));
   const rows = t.items.map(([n]) => {
@@ -12542,17 +12681,20 @@ function _tplRenderPreview() {
 }
 function _tplApply() {
   const proj = getProject(), t = PROC_TEMPLATES.find(x => x.k === _tplK); if (!proj || !t) return;
-  const sch = _tplSchedule(proj, t.items.filter(([n]) => !_tplOff.has(n)));
+  const sch = t.detail ? _tplDetailSchedule() : _tplSchedule(proj, t.items.filter(([n]) => !_tplOff.has(n)));
+  if (t.detail && sch.length) proj.scheduleNoise = PROC_DETAIL_NOISE.map(([o, lv, note]) => ({ date: _tplAddCal(_tplS, o), level: lv, note }));
   if (!sch.length) return;
   const have = new Set((proj.processes || []).filter(p => !p.deleted).map(p => p.name));
   const add = sch.filter(x => !have.has(x.name)).map((x, i) => ({
     id: 'p_' + (Date.now() + i) + Math.random().toString(36).slice(2, 6),
     name: x.name, type: x.name, scheduleStart: x.s, scheduleEnd: x.e, company: '', details: [],
+    ...(x.phases ? { phases: x.phases } : {}), ...(x.phase ? { phase: x.phase } : {}),
   }));
   proj.processes = [...(proj.processes || []), ...add];
   const f = proj.form || (proj.form = {});
   f.startDate = _tplS;
-  if (!_tplE || _tplE < sch.at(-1).e) f.endDate = sch.at(-1).e; else f.endDate = _tplE;
+  const _last = sch.map(x => x.e).sort().at(-1);
+  if (!_tplE || _tplE < _last) f.endDate = _last; else f.endDate = _tplE;
   save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {}
   _tplClose(); renderAll();
   showToastMessage(_ti('check') + `공정 ${add.length}개와 일정을 추가했어요`);
