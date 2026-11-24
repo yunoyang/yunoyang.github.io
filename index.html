@@ -4324,6 +4324,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-del { display:flex; justify-content:center; gap:20px; margin-top:12px; }
 .gt-del button { border:none; background:none; font-size:14px; font-weight:600; color:#6b7684; font-family:inherit; cursor:pointer; padding:6px 4px; }
 .gt-del button.r { color:#e5484d; }
+.gt-ren { flex:1; min-width:0; font:inherit; font-size:13px; border:1.5px solid #2f6bff; border-radius:6px; padding:3px 6px; outline:none; background:#fff; }
 .gt-add { display:flex; align-items:center; gap:6px; width:100%; height:36px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
 .gt-addrow { position:absolute; left:0; right:0; height:36px; cursor:copy; }
 .gt-addrow span { position:absolute; top:9px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
@@ -12298,7 +12299,7 @@ function _gtHtml(proj, procs, boxW) {
     rows.push({ grp: gid, label: gl, s: gs, e: ge, n: rs.length, pct: Math.round(rs.reduce((t, r) => t + _gtProgress(r.ph, today), 0) / rs.length) });
     if (!_gtCollapsed.has(gid)) rs.forEach(r => rows.push(r));
   });
-  const wide = boxW >= 640, LW = wide ? 300 : 96;
+  const wide = boxW >= 640, LW = wide ? 150 : 96;
   const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1;
   const dw = _gtZoom === 0 ? 36 : _gtZoom === 1 ? 20 : Math.max(5, ((_gtFitW || boxW - LW) - 2) / n);
   const W = Math.ceil(n * dw), RH = 36, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5), dd = (x, y) => Math.round((_vs2D(y) - _vs2D(x)) / 864e5) + 1;
@@ -12317,7 +12318,7 @@ function _gtHtml(proj, procs, boxW) {
     const top = ri * RH;
     if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
       return `<div class="gt-gbar" style="top:${top + 16}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 10}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
-    const c = _gtColor(r.p.name);
+    const c = _gtColor(r.p.type || r.p.name);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
       const pc = o ? 0 : _gtProgress([x], today), lbl = w >= 72 ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
@@ -12325,17 +12326,37 @@ function _gtHtml(proj, procs, boxW) {
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
-    ? `<button class="gt-gr" onclick="_gtToggle('${r.grp}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${_gtCollapsed.has(r.grp) ? -90 : 0}deg)"><polyline points="6 9 12 15 18 9"/></svg><b>${esc(r.label)}</b>${wide ? `<span class="c1">${dd(r.s, r.e)}일</span><span class="c2">${r.pct}%</span><span class="c3">${_gtRing(r.pct)}</span>` : ''}</button>`
+    ? `<button class="gt-gr" onclick="_gtToggle('${r.grp}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${_gtCollapsed.has(r.grp) ? -90 : 0}deg)"><polyline points="6 9 12 15 18 9"/></svg><b>${esc(r.label)}</b></button>`
     : (() => { const s = r.ph.map(x => x.start).sort()[0], e = r.ph.map(x => x.end).sort().at(-1), pc = _gtProgress(r.ph, today);
-      return `<button class="gt-nm" onclick="openProcDetailScreen('${r.p.id}')"><i style="background:${_gtColor(r.p.name)}"></i><span class="t">${esc(r.p.name)}</span>${wide ? `<span class="c1">${dd(s, e)}일</span><span class="c2">${pc}%</span><span class="c3">${_gtRing(pc)}</span>` : ''}</button>`; })()).join('');
+      return `<button class="gt-nm" data-pid="${r.p.id}" onclick="_gtRename('${r.p.id}',this)" title="눌러서 이름 수정"><i style="background:${_gtColor(r.p.type || r.p.name)}"></i><span class="t">${esc(r.p.name)}</span></button>`; })()).join('');
   return `<div class="gt${wide ? ' wide' : ''}">
-    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px">${wide ? '<span class="t">공종</span><span class="c1">기간</span><span class="c2">진행</span><span class="c3"></span>' : ''}</div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>
+    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>
     <div class="gt-r" id="gt-r"><div class="gt-in" data-dw="${dw}" style="width:${W}px">
       <div class="gt-h" style="height:${HH}px">${mo}${hd}${noiseHtml}</div>
       <div class="gt-b" style="height:${(rows.length + (_gtCanAdd() ? 1 : 0)) * RH}px">${bg}${_gtCanAdd() ? `<div class="gt-addrow" style="top:${rows.length * RH}px" onclick="_gtAddAt(event,'${a}',${dw})"><span style="left:${Math.max(0, (ti >= 0 && ti < n ? ti : 0) * dw)}px">+ 날짜를 눌러 공정 추가</span></div>` : ''}${rows.map((r, ri) => `<div class="gt-row${r.grp ? ' g' : ''}" style="top:${ri * RH}px"></div>`).join('')}
         ${f.startDate ? vline(f.startDate, 'st') : ''}${f.endDate ? vline(f.endDate, 'st') : ''}${ti >= 0 && ti < n ? `<div class="gt-vl tdy" style="left:${ti * dw + dw / 2}px"></div>` : ''}${bars}</div>
     </div></div></div>
     <div class="gt-lg"><span><i class="w"></i>시공</span><span><i class="o"></i>발주·준비</span><span><i class="t"></i>오늘</span><span><i class="s"></i>착공·완공</span>${noise.length ? '<span>🔊 소음</span>' : ''}</div>`;
+}
+// 왼쪽 공정 이름을 눌러 바로 수정 (Enter/바깥 누르면 저장, Esc 취소)
+function _gtRename(id, btn) {
+  if (!_gtCanAdd()) { openProcDetailScreen(id); return; }
+  const proj = getProject(), p = (proj.processes || []).find(x => x.id === id); if (!p || btn.querySelector('input')) return;
+  const sp = btn.querySelector('.t'), inp = document.createElement('input');
+  inp.className = 'gt-ren'; inp.value = p.name || ''; inp.maxLength = 30;
+  sp.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const fin = ok => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    if (ok && v && v !== p.name) {
+      p.name = v; p.updatedAt = Date.now(); save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {}
+      renderAll(); showToastMessage(_ti('check') + '공정 이름을 바꿨어요');
+    } else renderCalendar();
+  };
+  inp.addEventListener('click', e => e.stopPropagation());
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fin(true); } else if (e.key === 'Escape') fin(false); });
+  inp.addEventListener('blur', () => fin(true));
 }
 function _gtCanAdd() { return typeof canEdit !== 'function' || canEdit(); }
 // 간트에서 공정 추가: 왼쪽 버튼 = 오늘(공사 기간 안이면) 또는 착공일, 아래 줄의 날짜를 누르면 그 날짜로
@@ -12426,7 +12447,7 @@ function _gtOpen(id, k) {
   const proj = getProject(), p = (proj.processes || []).find(x => x.id === id); if (!p) return;
   const ph = _gtPhases(p), fd = d => formatDate(d).slice(5), days = x => Math.round((_vs2D(x.end) - _vs2D(x.start)) / 864e5) + 1;
   const nz = (proj.scheduleNoise || []).filter(z => ph.some(x => z.date >= x.start && z.date <= x.end));
-  _tplSheetOpen(`<div class="tpl-hd"><span></span><b><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${_gtColor(p.name)};margin-right:6px;"></i>${esc(p.name)}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
+  _tplSheetOpen(`<div class="tpl-hd"><span></span><b><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${_gtColor(p.type || p.name)};margin-right:6px;"></i>${esc(p.name)}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
     <div class="tpl-bd">${ph.map((x, i) => `<div class="gt-ph${i === k ? ' on' : ''}"><span class="gt-tag ${x.kind === 'order' ? 'o' : 'w'}">${x.kind === 'order' ? '발주' : '시공'}</span><div><b>${esc(x.label || p.name)}</b><small>${fd(x.start)}${x.end !== x.start ? ' ~ ' + fd(x.end) : ''} · ${days(x)}일</small></div></div>`).join('')}
       ${nz.map(z => `<div class="gt-ph"><span class="gt-tag n">소음 ${esc(z.level)}</span><div><b>${esc(z.note)}</b><small>${fd(z.date)}</small></div></div>`).join('')}
       ${p.company ? `<div class="tpl-sum" style="margin-top:12px;">담당 업체 · ${esc(p.company)}</div>` : ''}</div>
