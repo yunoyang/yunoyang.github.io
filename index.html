@@ -4319,6 +4319,10 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-hl { left:0; } .gt-hr { right:0; }
 #gt-tip { position:fixed; z-index:10000; width:120px; text-align:center; background:#111; color:#fff; font-size:12px; font-weight:600; border-radius:8px; padding:5px 0; pointer-events:none; }
 .gt-bar.ord span { font-size:11px; }
+.gt-ck { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:22px; height:22px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.12); pointer-events:none; }
+.gt-bar.ord .gt-ck { width:16px; height:16px; right:3px; background:var(--c); }
+.gt-bar.ord .gt-ck svg { width:10px; height:10px; }
+.gt-bar span { margin-right:auto; }
 .gt-del { display:flex; justify-content:center; gap:20px; margin-top:12px; }
 .gt-del button { border:none; background:none; font-size:14px; font-weight:600; color:#6b7684; font-family:inherit; cursor:pointer; padding:6px 4px; }
 .gt-del button.r { color:#e5484d; }
@@ -12342,8 +12346,8 @@ function _gtHtml(proj, procs, boxW) {
     const c = _gtPC(r.p);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
-      const pc = o ? (x.progress || 0) : _gtProgress([x], today), lbl = w >= 72 ? `<span>${x.progress === 100 ? '✓ ' : ''}${esc(o ? '발주' : (x.label || r.p.name))}</span>` : (x.progress === 100 && w >= 22 ? '<span>✓</span>' : '');
-      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 10 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${_gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
+      const pc = o ? (x.progress || 0) : _gtProgress([x], today), dn = pc >= 100 && w >= 26, lbl = w >= (dn ? 96 : 72) ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
+      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 10 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${_gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}${dn ? `<b class="gt-ck" style="color:${o ? '#fff' : c}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg></b>` : ''}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
