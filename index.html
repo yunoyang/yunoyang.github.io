@@ -4283,7 +4283,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt { display:flex; border:1px solid #eceef0; border-radius:14px; overflow:hidden; background:#fff; }
 .gt-l { flex:none; border-right:1px solid #eceef0; background:#fff; z-index:2; }
 .gt-lh { display:flex; align-items:flex-end; padding:0 12px 8px; border-bottom:1px solid #eceef0; font-size:12px; color:#8b95a1; }
-.gt-nm, .gt-gr { display:flex; align-items:center; gap:7px; width:100%; height:36px; padding:0 10px; border:none; background:none; font-family:inherit; text-align:left; white-space:nowrap; cursor:pointer; }
+.gt-nm, .gt-gr { display:flex; align-items:center; gap:7px; width:100%; height:44px; padding:0 10px; border:none; background:none; font-family:inherit; text-align:left; white-space:nowrap; cursor:pointer; }
 .gt-nm { font-size:13px; color:#333; padding-left:14px; }
 .gt-wide .gt-nm, .gt.wide .gt-nm { padding-left:30px; }
 .gt-nm i { flex:none; width:8px; height:8px; border-radius:50%; }
@@ -4303,16 +4303,16 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-nz.hi { background:#ffe1e1; }
 .gt-b { position:relative; }
 .gt-we { position:absolute; top:0; bottom:0; background:#f7f8fa; }
-.gt-row { position:absolute; left:0; right:0; height:36px; }
+.gt-row { position:absolute; left:0; right:0; height:44px; }
 .gt-row.g { background:rgba(247,248,250,.6); }
 .gt-vl { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #e5484d; pointer-events:none; z-index:1; }
 .gt-vl.tdy { border-left:1.5px solid #111; }
 .gt-gbar { position:absolute; height:4px; border-radius:2px; background:#d5d9de; pointer-events:none; }
 .gt-glb { position:absolute; font-size:11px; color:#8b95a1; white-space:nowrap; pointer-events:none; }
-.gt-bar { position:absolute; height:24px; border:none; border-radius:12px; padding:0; cursor:pointer; z-index:2; overflow:hidden; display:flex; align-items:center; color:#fff; }
-.gt-bar em { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,.14); border-radius:12px 0 0 12px; }
-.gt-bar span { position:relative; padding:0 10px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.gt-bar.ord { height:18px; border:1.5px dashed; border-radius:9px; }
+.gt-bar { position:absolute; height:30px; border:none; border-radius:999px; padding:0; cursor:pointer; z-index:2; overflow:hidden; display:flex; align-items:center; color:#fff; }
+.gt-bar em { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,.14); border-radius:999px 0 0 999px; }
+.gt-bar span { position:relative; padding:0 14px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gt-bar.ord { height:24px; border:1.5px dashed; border-radius:999px; }
 .gt-bar { touch-action:pan-x pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
 .gt-bar.drag { box-shadow:0 4px 12px rgba(0,0,0,.25); z-index:5; opacity:.92; transform:scaleY(1.12); }
 .gt-hl, .gt-hr { position:absolute; top:0; bottom:0; width:12px; cursor:ew-resize; z-index:3; }
@@ -4337,9 +4337,9 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gs-col button.on { box-shadow:0 0 0 2px #fff, 0 0 0 4px #111; }
 .gt-bar { transition:transform .15s ease, box-shadow .15s ease; transform-origin:center; }
 .gt-bar.sel { transform:scale(1.08, 1.25); box-shadow:0 6px 16px rgba(0,0,0,.28); z-index:6; }
-.gt-add { display:flex; align-items:center; gap:6px; width:100%; height:36px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
-.gt-addrow { position:absolute; left:0; right:0; height:36px; cursor:copy; }
-.gt-addrow span { position:absolute; top:9px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
+.gt-add { display:flex; align-items:center; gap:6px; width:100%; height:44px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
+.gt-addrow { position:absolute; left:0; right:0; height:44px; cursor:copy; }
+.gt-addrow span { position:absolute; top:13px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
 .gt-lg { display:flex; flex-wrap:wrap; gap:12px; margin:10px 2px 0; font-size:12px; color:#6b7684; }
 .gt-lg span { display:inline-flex; align-items:center; gap:5px; }
 .gt-lg i { display:inline-block; width:16px; height:8px; border-radius:4px; }
@@ -12315,7 +12315,7 @@ function _gtHtml(proj, procs, boxW) {
   const wide = boxW >= 640, LW = wide ? 150 : 96;
   const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1;
   const dw = _gtZoom === 0 ? 36 : _gtZoom === 1 ? 20 : Math.max(5, ((_gtFitW || boxW - LW) - 2) / n);
-  const W = Math.ceil(n * dw), RH = 36, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5), dd = (x, y) => Math.round((_vs2D(y) - _vs2D(x)) / 864e5) + 1;
+  const W = Math.ceil(n * dw), RH = 44, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5), dd = (x, y) => Math.round((_vs2D(y) - _vs2D(x)) / 864e5) + 1;
   const ti = Math.round((today - d0) / 864e5), WK = '일월화수목금토';
   let bg = '', hd = '', mo = '';
   for (let i = 0; i < n; i++) {
@@ -12330,12 +12330,12 @@ function _gtHtml(proj, procs, boxW) {
   const bars = rows.map((r, ri) => {
     const top = ri * RH;
     if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
-      return `<div class="gt-gbar" style="top:${top + 16}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 10}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
+      return `<div class="gt-gbar" style="top:${top + 20}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 14}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
     const c = _gtPC(r.p);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
       const pc = o ? (x.progress || 0) : _gtProgress([x], today), lbl = w >= 72 ? `<span>${x.progress === 100 ? '✓ ' : ''}${esc(o ? '발주' : (x.label || r.p.name))}</span>` : (x.progress === 100 && w >= 22 ? '<span>✓</span>' : '');
-      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 9 : 6)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
+      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 10 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
