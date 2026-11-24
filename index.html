@@ -12270,11 +12270,13 @@ function _gtRing(pct) {
 }
 function _gtHtml(proj, procs, boxW) {
   const today = _vs2Today();
-  const all = procs.map(p => ({ p, ph: _gtPhases(p) })).filter(r => r.ph.length);
-  if (!all.length) return `<div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">일정이 있는 공정이 없어요</div>`;
   const f = proj.form || {}, noise = proj.scheduleNoise || [];
-  let a = all.flatMap(r => r.ph.map(x => x.start)).sort()[0], b = all.flatMap(r => r.ph.map(x => x.end)).sort().at(-1);
-  if (f.startDate && f.startDate < a) a = f.startDate; if (f.endDate && f.endDate > b) b = f.endDate;
+  // 실제 공사 기간(착공~완공) 안의 일정만 — 기간 밖 단계는 빼고, 걸친 단계는 기간에 맞춰 자름
+  const PS = f.startDate || '', PE = f.endDate || '';
+  const clip = ph => ph.filter(x => (!PS || x.end >= PS) && (!PE || x.start <= PE)).map(x => ({ ...x, start: PS && x.start < PS ? PS : x.start, end: PE && x.end > PE ? PE : x.end }));
+  const all = procs.map(p => ({ p, ph: clip(_gtPhases(p)) })).filter(r => r.ph.length);
+  if (!all.length) return `<div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">${PS ? '공사 기간 안에 잡힌 일정이 없어요' : '일정이 있는 공정이 없어요'}</div>`;
+  let a = PS || all.flatMap(r => r.ph.map(x => x.start)).sort()[0], b = PE || all.flatMap(r => r.ph.map(x => x.end)).sort().at(-1);
   // 행 구성: 단계(섹션) 행 + 공종 행 — 섹션은 접기/펴기
   const rows = [];
   GT_GROUPS.forEach(([gid, gl]) => {
@@ -12322,11 +12324,11 @@ function _gtHtml(proj, procs, boxW) {
     </div></div></div>
     <div class="gt-lg"><span><i class="w"></i>시공</span><span><i class="o"></i>발주·준비</span><span><i class="t"></i>오늘</span><span><i class="s"></i>착공·완공</span>${noise.length ? '<span>🔊 소음</span>' : ''}</div>`;
 }
-function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); _vs2RenderTimeline(); }
-function _gtSetZoom(z) { _gtZoom = z; _vs2RenderTimeline(); }
+function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); renderCalendar(); }
+function _gtSetZoom(z) { _gtZoom = z; renderCalendar(); }
 function _gtAfter() {
   const r = document.getElementById('gt-r'); if (!r) return;
-  if (_gtZoom === 2) { if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; _vs2RenderTimeline(); } return; }
+  if (_gtZoom === 2) { if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; renderCalendar(); } return; }
   const t = r.querySelector('.gt-vl.tdy') || r.querySelector('.gt-vl.st'); if (t) r.scrollLeft = Math.max(0, parseFloat(t.style.left) - 60);
 }
 function _gtOpen(id, k) {
@@ -12363,10 +12365,8 @@ function _vs2RenderTimeline() {
   const tabOf = g => g.id === 'demo' ? 'structure' : g.id === 'after' ? 'finish' : g.id;
   // 모든 공정을 한 장씩 풀어서 보여주고, 탭으로 단계 필터
   const list = groups.filter(g => _vs2Filter === 'all' || tabOf(g) === _vs2Filter).flatMap(g => g.ps);
-  const _vt = `<div class="gt-vt"><div class="gt-seg">${[['list', '목록'], ['gantt', '간트']].map(([k, l]) => `<button class="${_vs2View === k ? 'on' : ''}" onclick="_vs2View='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>${_vs2View === 'gantt' ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
   const _ft = `<div class="vs2-ftab">${TABS.map(([k, l]) => `<button class="${_vs2Filter === k ? 'on' : ''}" onclick="_vs2Filter='${k}';_vs2RenderTimeline()">${l}</button>`).join('')}</div>`;
-  if (_vs2View === 'gantt') { el.innerHTML = _vt + _ft + _gtHtml(proj, [...list].sort(byStart), el.clientWidth || 360); _gtAfter(); return; }
-  el.innerHTML = _vt + _ft + list.map(p => {
+  el.innerHTML = _ft + list.map(p => {
     const done = _vs2ProcState(p, today) === 'done';
     const s = p.scheduleStart, e = p.scheduleEnd || p.scheduleStart;
     const period = s ? (e !== s ? `${_vs2Fmt(s)} - ${_vs2Fmt(e)}` : _vs2Fmt(s)) : '일정 미정';
@@ -14646,7 +14646,8 @@ let _calMode = 'week', _calSel = null;
 function _calKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function _calActive(proj, d) {
   const k = _calKey(d);
-  return (proj.processes || []).filter(p => !p.deleted && p.scheduleStart && k >= p.scheduleStart && k <= (p.scheduleEnd || p.scheduleStart))
+  // 단계(phases)가 있으면 실제 작업이 있는 날만 (예: 가설은 보양일·준공청소일만)
+  return (proj.processes || []).filter(p => !p.deleted && p.scheduleStart && (Array.isArray(p.phases) && p.phases.length ? p.phases.some(x => k >= x.start && k <= x.end) : k >= p.scheduleStart && k <= (p.scheduleEnd || p.scheduleStart)))
     .sort((a, b) => a.scheduleStart.localeCompare(b.scheduleStart));
 }
 function calSetMode(m) { _calMode = m; renderCalendar(); }
@@ -14658,9 +14659,23 @@ function calMonthNav(delta) {
   calMonth = { year: _calSel.getFullYear(), month: _calSel.getMonth() };
   renderCalendar();
 }
+// 일정 탭: 캘린더 / 간트 전환
+function _calViewSeg() {
+  return `<div class="gt-vt" style="padding:12px 16px 0;"><div class="gt-seg">${[['cal', '캘린더'], ['gantt', '간트']].map(([k, l]) => `<button class="${(_vs2View === 'gantt' ? 'gantt' : 'cal') === k ? 'on' : ''}" onclick="_vs2View='${k === 'gantt' ? 'gantt' : 'list'}';renderCalendar()">${l}</button>`).join('')}</div>${_vs2View === 'gantt' ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
+}
 function renderCalendar() {
   const proj = getProject(); if (!proj) return;
-  const container = document.getElementById('calendar-container');
+  const container = document.getElementById('calendar-container'); if (!container) return;
+  if (_vs2View === 'gantt') {
+    const procs = (proj.processes || []).filter(p => !p.deleted).sort((a, b) => (a.scheduleStart || '9999').localeCompare(b.scheduleStart || '9999'));
+    const f = proj.form || {};
+    container.innerHTML = _calViewSeg() + `<div style="padding:4px 16px 24px;">${f.startDate ? `<div style="font-size:13px;color:#6b7684;margin:0 2px 10px;">공사 기간 ${_vs2Fmt(f.startDate)} – ${_vs2Fmt(f.endDate || f.startDate)}</div>` : ''}${_gtHtml(proj, procs, (container.clientWidth || 360) - 32)}</div>`;
+    _gtAfter(); return;
+  }
+  _renderCalendarMain(proj, container);
+  container.insertAdjacentHTML('afterbegin', _calViewSeg());
+}
+function _renderCalendarMain(proj, container) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   if (!_calSel || _calSel.getFullYear() !== calMonth.year || _calSel.getMonth() !== calMonth.month) {
     _calSel = (today.getFullYear() === calMonth.year && today.getMonth() === calMonth.month) ? new Date(today) : new Date(calMonth.year, calMonth.month, 1);
