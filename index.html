@@ -4325,6 +4325,12 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-ren { flex:1; min-width:0; font:inherit; font-size:13px; border:1.5px solid #2f6bff; border-radius:6px; padding:3px 6px; outline:none; background:#fff; }
 #gt-menu, #gt-sub { position:fixed; z-index:10001; background:#fff; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.16), 0 0 0 1px rgba(0,0,0,.04); padding:6px; min-width:180px; }
 #gt-sub { min-width:120px; max-height:70vh; overflow-y:auto; z-index:10002; }
+#gt-menu.h { display:flex; align-items:center; gap:2px; padding:5px; min-width:0; white-space:nowrap; border-radius:999px; }
+#gt-menu.h .gm-hd { border:none; margin:0; padding:0 12px 0 10px; border-right:1px solid #eceef0; }
+#gt-menu.h .gm-hd small { margin-left:6px; padding:0; }
+#gt-menu.h .gm-it { width:auto; padding:7px 11px; gap:6px; font-size:13px; border-radius:999px; }
+#gt-menu.h .gm-it .ch { transform:rotate(90deg); }
+#gt-menu.h .gm-it.r { margin-left:2px; }
 .gm-hd { display:flex; align-items:center; gap:6px; padding:6px 10px 8px; border-bottom:1px solid #f0f1f3; margin-bottom:4px; }
 .gm-hd i { width:8px; height:8px; border-radius:50%; flex:none; } .gm-hd b { font-size:13px; color:#111; } .gm-hd small { font-size:12px; color:#8b95a1; margin-left:auto; padding-left:8px; white-space:nowrap; }
 .gm-it, .gs-it { display:flex; align-items:center; gap:10px; width:100%; border:none; background:none; padding:8px 10px; border-radius:8px; font-size:14px; color:#333; font-family:inherit; text-align:left; cursor:pointer; white-space:nowrap; }
@@ -12413,12 +12419,12 @@ function _gtMenu(pid, k, bar) {
       ['del', I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'), '삭제', 0, 'r'],
     ] : [['detail', I('<path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'), '공정 상세 보기']]),
   ];
-  const m = document.createElement('div'); m.id = 'gt-menu';
+  const m = document.createElement('div'); m.id = 'gt-menu'; if (window.innerWidth >= 900) m.className = 'h'; // PC: 막대 아래 가로 메뉴
   m.innerHTML = `<div class="gm-hd"><i style="background:${_gtPC(p)}"></i><b>${esc(p.name)}</b><small>${_vs2Fmt(ph.start)}${ph.end !== ph.start ? ' – ' + _vs2Fmt(ph.end) : ''}</small></div>` +
     items.map(([a, ic, l, sub, cls]) => `<button class="gm-it${cls ? ' ' + cls : ''}" data-a="${a}">${ic}<span>${l}</span>${sub ? ch : ''}</button>`).join('');
   document.body.appendChild(m);
   const b = bar.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
-  let x = Math.min(Math.max(8, b.left + Math.min(b.width, 120) / 2 - 20), window.innerWidth - mw - 8), y = b.bottom + 6;
+  let x = Math.min(Math.max(8, m.className === 'h' ? b.left : b.left + Math.min(b.width, 120) / 2 - 20), window.innerWidth - mw - 8), y = b.bottom + 8;
   if (y + mh > window.innerHeight - 8) y = Math.max(8, b.top - mh - 6);
   m.style.left = x + 'px'; m.style.top = y + 'px';
   m.addEventListener('click', e => { const it = e.target.closest('.gm-it'); if (it) _gtMenuAct(it.dataset.a, it); });
@@ -12433,6 +12439,7 @@ function _gtSub(it, html) {
   _gtSubClose(); it.classList.add('open');
   const s = document.createElement('div'); s.id = 'gt-sub'; s.innerHTML = html; document.body.appendChild(s);
   const r = it.getBoundingClientRect(), w = s.offsetWidth, h = s.offsetHeight;
+  if (document.getElementById('gt-menu')?.className === 'h') { const x = Math.min(r.left, window.innerWidth - w - 8); let y = r.bottom + 6; if (y + h > window.innerHeight - 8) y = r.top - h - 6; s.style.left = Math.max(8, x) + 'px'; s.style.top = Math.max(8, y) + 'px'; return s; }
   let x = r.right + 4; if (x + w > window.innerWidth - 8) x = r.left - w - 4; if (x < 8) x = Math.min(window.innerWidth - w - 8, r.left + 16);
   let y = Math.min(r.top - 6, window.innerHeight - h - 8); if (x === Math.min(window.innerWidth - w - 8, r.left + 16)) y = Math.min(r.bottom + 2, window.innerHeight - h - 8);
   s.style.left = x + 'px'; s.style.top = Math.max(8, y) + 'px';
