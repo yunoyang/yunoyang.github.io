@@ -4313,8 +4313,8 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-bar em { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,.14); border-radius:12px 0 0 12px; }
 .gt-bar span { position:relative; padding:0 10px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gt-bar.ord { height:18px; border:1.5px dashed; border-radius:9px; }
-.gt-bar { touch-action:none; user-select:none; -webkit-user-select:none; }
-.gt-bar.drag { box-shadow:0 4px 12px rgba(0,0,0,.25); z-index:5; opacity:.92; }
+.gt-bar { touch-action:pan-x pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.gt-bar.drag { box-shadow:0 4px 12px rgba(0,0,0,.25); z-index:5; opacity:.92; transform:scaleY(1.12); }
 .gt-hl, .gt-hr { position:absolute; top:0; bottom:0; width:12px; cursor:ew-resize; z-index:3; }
 .gt-hl { left:0; } .gt-hr { right:0; }
 .gt-bar:hover .gt-hl::after, .gt-bar:hover .gt-hr::after, .gt-bar.drag .gt-hl::after, .gt-bar.drag .gt-hr::after { content:''; position:absolute; top:5px; bottom:5px; left:5px; width:2px; border-radius:1px; background:rgba(255,255,255,.85); }
@@ -12333,19 +12333,30 @@ function _gtHtml(proj, procs, boxW) {
 }
 function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); renderCalendar(); }
 // 막대 끌기: 가운데 = 이동, 양 끝 = 시작/종료일 조절, 움직이지 않고 떼면 상세 카드
+// 터치는 길게 누른 뒤(0.35초)에만 끌기 시작 — 그 전에 손가락을 밀면 평소처럼 간트가 스크롤됨
 function _gtBindDrag(r) {
   r.querySelectorAll('.gt-bar').forEach(bar => {
+    let armed = false;
+    bar.addEventListener('touchmove', e => { if (armed) e.preventDefault(); }, { passive: false });
+    bar.addEventListener('contextmenu', e => e.preventDefault());
     bar.addEventListener('pointerdown', e => {
       if (e.button) return;
+      const touch = e.pointerType !== 'mouse';
       const mode = e.target.classList.contains('gt-hl') ? 'l' : e.target.classList.contains('gt-hr') ? 'r' : 'm';
-      const dw = +r.querySelector('.gt-in').dataset.dw, x0 = e.clientX, L0 = parseFloat(bar.style.left), W0 = parseFloat(bar.style.width);
+      const dw = +r.querySelector('.gt-in').dataset.dw, L0 = parseFloat(bar.style.left), W0 = parseFloat(bar.style.width);
+      let x0 = e.clientX, y0 = e.clientY;
       const nd = Math.max(1, Math.round((W0 + 2) / dw)), pid = bar.dataset.pid, k = +bar.dataset.k;
       const proj = getProject(), p = (proj.processes || []).find(x => x.id === pid), ph0 = p && _gtPhases(p)[k];
       const lb = bar.querySelector('span'), lbTxt = lb ? lb.textContent : '';
-      let dd = 0, moved = false; const edit = typeof canEdit !== 'function' || canEdit();
-      try { bar.setPointerCapture(e.pointerId); } catch (er) {}
+      const edit = typeof canEdit !== 'function' || canEdit();
+      let dd = 0, moved = false, dead = false, timer = null;
+      const arm = () => { armed = true; bar.classList.add('drag'); try { navigator.vibrate && navigator.vibrate(15); } catch (er) {} try { bar.setPointerCapture(e.pointerId); } catch (er) {}
+        if (ph0) _gtTip(bar, `${_vs2Fmt(ph0.start)} – ${_vs2Fmt(ph0.end)}`); };
+      if (edit) { if (touch) timer = setTimeout(arm, 350); else { armed = true; try { bar.setPointerCapture(e.pointerId); } catch (er) {} } }
       const mv = ev => {
-        const dx = ev.clientX - x0; if (!moved && Math.abs(dx) > 5) { if (!edit) return; moved = true; bar.classList.add('drag'); }
+        const dx = ev.clientX - x0;
+        if (!armed) { if (Math.abs(dx) > 8 || Math.abs(ev.clientY - y0) > 8) { dead = true; clearTimeout(timer); } return; }
+        if (!moved && Math.abs(dx) > 4) { moved = true; bar.classList.add('drag'); }
         if (!moved) return;
         dd = Math.round(dx / dw);
         if (mode === 'l') dd = Math.min(dd, nd - 1); if (mode === 'r') dd = Math.max(dd, -(nd - 1));
@@ -12354,11 +12365,12 @@ function _gtBindDrag(r) {
         else bar.style.width = W0 + dd * dw + 'px';
         if (ph0) { const ns = mode === 'r' ? ph0.start : _tplAddCal(ph0.start, dd), ne = mode === 'l' ? ph0.end : _tplAddCal(ph0.end, dd); _gtTip(bar, `${_vs2Fmt(ns)} – ${_vs2Fmt(ne)}`); }
       };
-      const up = () => {
+      const up = ev => {
+        clearTimeout(timer);
         bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up);
-        _gtTip(null);
-        if (!moved) { _gtOpen(pid, k); return; }
-        bar.classList.remove('drag');
+        const wasArmed = armed; armed = false; _gtTip(null); bar.classList.remove('drag');
+        if (ev.type === 'pointercancel' || dead) return;
+        if (!moved) { if (!(touch && wasArmed)) _gtOpen(pid, k); return; }
         if (dd) _gtShift(pid, k, mode, dd); else if (lb) lb.textContent = lbTxt;
       };
       bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
