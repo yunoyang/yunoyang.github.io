@@ -4325,6 +4325,19 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-del button { border:none; background:none; font-size:14px; font-weight:600; color:#6b7684; font-family:inherit; cursor:pointer; padding:6px 4px; }
 .gt-del button.r { color:#e5484d; }
 .gt-ren { flex:1; min-width:0; font:inherit; font-size:13px; border:1.5px solid #2f6bff; border-radius:6px; padding:3px 6px; outline:none; background:#fff; }
+#gt-menu, #gt-sub { position:fixed; z-index:10001; background:#fff; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.16), 0 0 0 1px rgba(0,0,0,.04); padding:6px; min-width:180px; }
+#gt-sub { min-width:120px; max-height:70vh; overflow-y:auto; z-index:10002; }
+.gm-hd { display:flex; align-items:center; gap:6px; padding:6px 10px 8px; border-bottom:1px solid #f0f1f3; margin-bottom:4px; }
+.gm-hd i { width:8px; height:8px; border-radius:50%; flex:none; } .gm-hd b { font-size:13px; color:#111; } .gm-hd small { font-size:12px; color:#8b95a1; margin-left:auto; padding-left:8px; white-space:nowrap; }
+.gm-it, .gs-it { display:flex; align-items:center; gap:10px; width:100%; border:none; background:none; padding:8px 10px; border-radius:8px; font-size:14px; color:#333; font-family:inherit; text-align:left; cursor:pointer; white-space:nowrap; }
+.gm-it span { flex:1; } .gm-it .ch { color:#b0b8c1; }
+.gm-it:hover, .gm-it.open, .gs-it:hover { background:#f2f4f6; }
+.gm-it.r { color:#e5484d; }
+.gs-it { font-size:13px; padding:7px 12px; } .gs-it.on { background:#eef3ff; color:#2f6bff; font-weight:600; } .gs-it.mute { color:#8b95a1; border-top:1px solid #f0f1f3; border-radius:0 0 8px 8px; margin-top:4px; }
+.gs-col { display:grid; grid-template-columns:repeat(5, 24px); gap:8px; padding:8px; }
+.gs-col button { width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; }
+.gs-col button.on { box-shadow:0 0 0 2px #fff, 0 0 0 4px #111; }
+.gt-bar.sel { box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--c); z-index:4; }
 .gt-add { display:flex; align-items:center; gap:6px; width:100%; height:36px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
 .gt-addrow { position:absolute; left:0; right:0; height:36px; cursor:copy; }
 .gt-addrow span { position:absolute; top:9px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
@@ -12274,6 +12287,7 @@ function _gtPhases(p) {
 let _gtCollapsed = new Set();
 const GT_GROUPS = [['planning', '플래닝'], ['structure', '구조공사'], ['finish', '마감공사'], ['after', '입주']];
 function _gtProgress(ph, today) {
+  if (ph.some(x => typeof x.progress === 'number')) return Math.round(ph.reduce((t, x) => t + (typeof x.progress === 'number' ? x.progress : _gtProgress([{ ...x, progress: undefined }], today)), 0) / ph.length);
   const s = _vs2D(ph.map(x => x.start).sort()[0]), e = _vs2D(ph.map(x => x.end).sort().at(-1));
   if (today < s) return 0; if (today > e) return 100;
   return Math.round(((today - s) / 864e5 + 1) / ((e - s) / 864e5 + 1) * 100);
@@ -12318,17 +12332,17 @@ function _gtHtml(proj, procs, boxW) {
     const top = ri * RH;
     if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
       return `<div class="gt-gbar" style="top:${top + 16}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 10}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
-    const c = _gtColor(r.p.type || r.p.name);
+    const c = _gtPC(r.p);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
-      const pc = o ? 0 : _gtProgress([x], today), lbl = w >= 72 ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
+      const pc = o ? (x.progress || 0) : _gtProgress([x], today), lbl = w >= 72 ? `<span>${x.progress === 100 ? '✓ ' : ''}${esc(o ? '발주' : (x.label || r.p.name))}</span>` : (x.progress === 100 && w >= 22 ? '<span>✓</span>' : '');
       return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 9 : 6)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
     ? `<button class="gt-gr" onclick="_gtToggle('${r.grp}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${_gtCollapsed.has(r.grp) ? -90 : 0}deg)"><polyline points="6 9 12 15 18 9"/></svg><b>${esc(r.label)}</b></button>`
     : (() => { const s = r.ph.map(x => x.start).sort()[0], e = r.ph.map(x => x.end).sort().at(-1), pc = _gtProgress(r.ph, today);
-      return `<button class="gt-nm" data-pid="${r.p.id}" onclick="_gtRename('${r.p.id}',this)" title="눌러서 이름 수정"><i style="background:${_gtColor(r.p.type || r.p.name)}"></i><span class="t">${esc(r.p.name)}</span></button>`; })()).join('');
+      return `<button class="gt-nm" data-pid="${r.p.id}" onclick="_gtRename('${r.p.id}',this)" title="눌러서 이름 수정"><i style="background:${_gtPC(r.p)}"></i><span class="t">${esc(r.p.name)}</span></button>`; })()).join('');
   return `<div class="gt${wide ? ' wide' : ''}">
     <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>
     <div class="gt-r" id="gt-r"><div class="gt-in" data-dw="${dw}" style="width:${W}px">
@@ -12367,6 +12381,85 @@ function _gtAdd() {
 function _gtAddAt(e, a, dw) {
   const row = e.currentTarget, x = e.clientX - row.getBoundingClientRect().left;
   openAddProcess(_tplAddCal(a, Math.max(0, Math.floor(x / dw))));
+}
+// ===== 간트 막대 메뉴 (참고 UI: 막대 아래 팝오버 + 하위 메뉴) =====
+const GT_PALETTE = ['#2f6bff', '#7c4dff', '#14a3a3', '#4caf7a', '#e8731a', '#f06a5f', '#d36b9a', '#c9a227', '#6b7684', '#a0522d'];
+function _gtPC(p) { return p.color || _gtColor(p.type || p.name); }
+function _gtMat(p) { if (!Array.isArray(p.phases) || !p.phases.length) p.phases = [{ kind: 'work', label: p.name, start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }]; return p.phases; }
+function _gtSave(proj) { save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); }
+let _gtMenuCtx = null;
+function _gtMenuClose() { document.getElementById('gt-menu')?.remove(); document.querySelectorAll('.gt-bar.sel').forEach(b => b.classList.remove('sel')); _gtMenuCtx = null; }
+function _gtMenu(pid, k, bar) {
+  _gtMenuClose();
+  const proj = getProject(), p = (proj.processes || []).find(x => x.id === pid); if (!p) return;
+  const ph = _gtPhases(p)[k] || {}, edit = _gtCanAdd(), done = ph.progress === 100;
+  _gtMenuCtx = { pid, k }; bar.classList.add('sel');
+  const I = d => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const ch = '<svg class="ch" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+  const items = [
+    ['info', I('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'), '상세 정보'],
+    ...(edit ? [
+      ['done', I(done ? '<circle cx="12" cy="12" r="9"/>' : '<circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/>'), done ? '완료 취소' : '완료로 표시'],
+      ['edit', I('<path d="M4 20h4L19 9l-4-4L4 16v4z"/>'), '이름 수정'],
+      ['color', I('<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/>'), '색상', 1],
+      ['prog', I('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), '진행률', 1],
+      ['dup', I('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'), '복제'],
+      ['detail', I('<path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'), '공정 상세 보기'],
+      ...(Array.isArray(p.phases) && p.phases.length > 1 ? [['delph', I('<path d="M5 12h14"/>'), '이 단계만 삭제']] : []),
+      ['del', I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'), '삭제', 0, 'r'],
+    ] : [['detail', I('<path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'), '공정 상세 보기']]),
+  ];
+  const m = document.createElement('div'); m.id = 'gt-menu';
+  m.innerHTML = `<div class="gm-hd"><i style="background:${_gtPC(p)}"></i><b>${esc(p.name)}</b><small>${_vs2Fmt(ph.start)}${ph.end !== ph.start ? ' – ' + _vs2Fmt(ph.end) : ''}</small></div>` +
+    items.map(([a, ic, l, sub, cls]) => `<button class="gm-it${cls ? ' ' + cls : ''}" data-a="${a}">${ic}<span>${l}</span>${sub ? ch : ''}</button>`).join('');
+  document.body.appendChild(m);
+  const b = bar.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+  let x = Math.min(Math.max(8, b.left + Math.min(b.width, 120) / 2 - 20), window.innerWidth - mw - 8), y = b.bottom + 6;
+  if (y + mh > window.innerHeight - 8) y = Math.max(8, b.top - mh - 6);
+  m.style.left = x + 'px'; m.style.top = y + 'px';
+  m.addEventListener('click', e => { const it = e.target.closest('.gm-it'); if (it) _gtMenuAct(it.dataset.a, it); });
+  setTimeout(() => {
+    const off = e => { if (!e.target.closest('#gt-menu, #gt-sub')) { document.removeEventListener('pointerdown', off, true); _gtSubClose(); _gtMenuClose(); } };
+    document.addEventListener('pointerdown', off, true);
+    document.getElementById('gt-r')?.addEventListener('scroll', () => { _gtSubClose(); _gtMenuClose(); }, { once: true });
+  }, 0);
+}
+function _gtSubClose() { document.getElementById('gt-sub')?.remove(); document.querySelectorAll('.gm-it.open').forEach(x => x.classList.remove('open')); }
+function _gtSub(it, html) {
+  _gtSubClose(); it.classList.add('open');
+  const s = document.createElement('div'); s.id = 'gt-sub'; s.innerHTML = html; document.body.appendChild(s);
+  const r = it.getBoundingClientRect(), w = s.offsetWidth, h = s.offsetHeight;
+  let x = r.right + 4; if (x + w > window.innerWidth - 8) x = r.left - w - 4; if (x < 8) x = Math.min(window.innerWidth - w - 8, r.left + 16);
+  let y = Math.min(r.top - 6, window.innerHeight - h - 8); if (x === Math.min(window.innerWidth - w - 8, r.left + 16)) y = Math.min(r.bottom + 2, window.innerHeight - h - 8);
+  s.style.left = x + 'px'; s.style.top = Math.max(8, y) + 'px';
+  return s;
+}
+function _gtMenuAct(a, it) {
+  const c = _gtMenuCtx; if (!c) return;
+  const proj = getProject(), p = (proj.processes || []).find(x => x.id === c.pid); if (!p) return;
+  const close = () => { _gtSubClose(); _gtMenuClose(); };
+  if (a === 'info') { close(); _gtOpen(c.pid, c.k); return; }
+  if (a === 'detail') { close(); openProcDetailScreen(c.pid); return; }
+  if (a === 'edit') { close(); const btn = document.querySelector(`.gt-nm[data-pid="${c.pid}"]`); if (btn) _gtRename(c.pid, btn); return; }
+  if (a === 'del') { close(); deleteProcess(c.pid); return; }
+  if (a === 'delph') { close(); _gtDelPhase(c.pid, c.k); return; }
+  if (a === 'done') { const ph = _gtMat(p)[c.k]; if (!ph) return; const was = ph.progress; ph.progress = was === 100 ? undefined : 100; if (ph.progress === undefined) delete ph.progress; close(); _gtSave(proj);
+    showActionToast(was === 100 ? '완료를 취소했어요' : `${p.name} 완료로 표시했어요`, () => { const q = _gtMat(p)[c.k]; if (was === undefined) delete q.progress; else q.progress = was; _gtSave(proj); }, '되돌리기'); return; }
+  if (a === 'dup') { close();
+    const np = JSON.parse(JSON.stringify(p)); np.id = 'proc_' + Date.now(); np.name = p.name + ' (복사)'; np.details = []; delete np.updatedAt;
+    (np.phases || []).forEach(x => delete x.progress);
+    proj.processes.push(np); _gtSave(proj); showToastMessage(_ti('check') + `${np.name}을(를) 추가했어요`); return; }
+  if (a === 'color') {
+    const cur = _gtPC(p);
+    const s = _gtSub(it, `<div class="gs-col">${GT_PALETTE.map(col => `<button data-c="${col}" style="background:${col}" class="${col === cur ? 'on' : ''}" aria-label="${col}"></button>`).join('')}</div>${p.color ? '<button class="gs-it" data-c="">기본 색으로</button>' : ''}`);
+    s.addEventListener('click', e => { const bt = e.target.closest('[data-c]'); if (!bt) return; if (bt.dataset.c) p.color = bt.dataset.c; else delete p.color; close(); _gtSave(proj); });
+    return;
+  }
+  if (a === 'prog') {
+    const ph = _gtPhases(p)[c.k] || {}, cur = typeof ph.progress === 'number' ? ph.progress : null;
+    const s = _gtSub(it, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => `<button class="gs-it${cur === v ? ' on' : ''}" data-v="${v}">${v} %</button>`).join('') + (cur !== null ? '<button class="gs-it mute" data-v="">자동 (날짜 기준)</button>' : ''));
+    s.addEventListener('click', e => { const bt = e.target.closest('[data-v]'); if (!bt) return; const q = _gtMat(p)[c.k]; if (!q) return; if (bt.dataset.v) q.progress = +bt.dataset.v; else delete q.progress; close(); _gtSave(proj); });
+  }
 }
 function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); renderCalendar(); }
 // 막대 끌기: 가운데 = 이동, 양 끝 = 시작/종료일 조절, 움직이지 않고 떼면 상세 카드
@@ -12407,7 +12500,7 @@ function _gtBindDrag(r) {
         bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up);
         const wasArmed = armed; armed = false; _gtTip(null); bar.classList.remove('drag');
         if (ev.type === 'pointercancel' || dead) return;
-        if (!moved) { if (!(touch && wasArmed)) _gtOpen(pid, k); return; }
+        if (!moved) { if (!(touch && wasArmed)) _gtMenu(pid, k, bar); return; }
         if (dd) _gtShift(pid, k, mode, dd); else if (lb) lb.textContent = lbTxt;
       };
       bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
@@ -12447,7 +12540,7 @@ function _gtOpen(id, k) {
   const proj = getProject(), p = (proj.processes || []).find(x => x.id === id); if (!p) return;
   const ph = _gtPhases(p), fd = d => formatDate(d).slice(5), days = x => Math.round((_vs2D(x.end) - _vs2D(x.start)) / 864e5) + 1;
   const nz = (proj.scheduleNoise || []).filter(z => ph.some(x => z.date >= x.start && z.date <= x.end));
-  _tplSheetOpen(`<div class="tpl-hd"><span></span><b><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${_gtColor(p.type || p.name)};margin-right:6px;"></i>${esc(p.name)}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
+  _tplSheetOpen(`<div class="tpl-hd"><span></span><b><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${_gtPC(p)};margin-right:6px;"></i>${esc(p.name)}</b><button onclick="_tplClose()" aria-label="닫기">✕</button></div>
     <div class="tpl-bd">${ph.map((x, i) => `<div class="gt-ph${i === k ? ' on' : ''}"><span class="gt-tag ${x.kind === 'order' ? 'o' : 'w'}">${x.kind === 'order' ? '발주' : '시공'}</span><div><b>${esc(x.label || p.name)}</b><small>${fd(x.start)}${x.end !== x.start ? ' ~ ' + fd(x.end) : ''} · ${days(x)}일</small></div></div>`).join('')}
       ${nz.map(z => `<div class="gt-ph"><span class="gt-tag n">소음 ${esc(z.level)}</span><div><b>${esc(z.note)}</b><small>${fd(z.date)}</small></div></div>`).join('')}
       ${p.company ? `<div class="tpl-sum" style="margin-top:12px;">담당 업체 · ${esc(p.company)}</div>` : ''}</div>
