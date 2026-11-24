@@ -4274,37 +4274,49 @@ body.vs2-info #screen-form #form-title { order:1; }
 #vs2-seg button.on { color:#111; font-weight:700; border-bottom-color:#111; }
 #vs2-timeline { padding:20px 20px 8px; background:#fff; }
 #vs2-timeline .vs2-h { font-size:14px; margin-bottom:16px; }
-/* 공정 간트 */
+/* 공정 간트 (참고: 섹션 그룹 + 둥근 막대 + 진행률) */
 .gt-vt { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
 .gt-seg { display:inline-flex; background:#f2f4f6; border-radius:10px; padding:3px; }
 .gt-seg button { border:none; background:none; padding:6px 14px; border-radius:8px; font-size:14px; font-weight:600; color:#6b7684; font-family:inherit; cursor:pointer; }
 .gt-seg.sm button { padding:5px 10px; font-size:13px; }
 .gt-seg button.on { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.1); }
-.gt { display:flex; border:1px solid #eceef0; border-radius:12px; overflow:hidden; background:#fff; }
+.gt { display:flex; border:1px solid #eceef0; border-radius:14px; overflow:hidden; background:#fff; }
 .gt-l { flex:none; border-right:1px solid #eceef0; background:#fff; z-index:2; }
-.gt-lh { border-bottom:1px solid #eceef0; }
-.gt-nm { display:flex; align-items:center; gap:6px; width:100%; height:40px; padding:0 8px; border:none; border-bottom:1px solid #f4f5f6; background:none; font-size:13px; font-weight:600; color:#222; text-align:left; font-family:inherit; white-space:nowrap; overflow:hidden; cursor:pointer; }
-.gt-nm i { flex:none; width:8px; height:8px; border-radius:2px; }
+.gt-lh { display:flex; align-items:flex-end; padding:0 12px 8px; border-bottom:1px solid #eceef0; font-size:12px; color:#8b95a1; }
+.gt-nm, .gt-gr { display:flex; align-items:center; gap:7px; width:100%; height:36px; padding:0 10px; border:none; background:none; font-family:inherit; text-align:left; white-space:nowrap; cursor:pointer; }
+.gt-nm { font-size:13px; color:#333; padding-left:14px; }
+.gt-wide .gt-nm, .gt.wide .gt-nm { padding-left:30px; }
+.gt-nm i { flex:none; width:8px; height:8px; border-radius:50%; }
+.gt-gr { background:#f7f8fa; font-size:13px; color:#111; gap:4px; padding:0 8px; }
+.gt-gr b { font-weight:700; }
+.gt-nm .t, .gt-gr b, .gt-lh .t { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.gt-l .c1 { width:52px; text-align:right; color:#6b7684; font-size:12px; } .gt-l .c2 { width:44px; text-align:right; color:#6b7684; font-size:12px; } .gt-l .c3 { width:22px; display:flex; justify-content:flex-end; }
 .gt-r { flex:1; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
 .gt-in { position:relative; }
 .gt-h { position:relative; border-bottom:1px solid #eceef0; }
-.gt-mo { position:absolute; top:3px; padding-left:4px; font-size:11px; font-weight:700; color:#333; border-left:1px solid #d5d9de; height:14px; line-height:14px; white-space:nowrap; }
-.gt-dn { position:absolute; top:20px; display:flex; flex-direction:column; align-items:center; font-size:11px; color:#4e5968; line-height:1.15; }
-.gt-dn b { font-weight:600; } .gt-dn i { font-style:normal; font-size:10px; color:#999; }
+.gt-mo { position:absolute; top:5px; padding-left:5px; font-size:11px; font-weight:700; color:#333; white-space:nowrap; }
+.gt-dn { position:absolute; top:22px; display:flex; align-items:center; justify-content:center; gap:2px; font-size:11px; color:#4e5968; line-height:20px; }
+.gt-dn b { font-weight:600; } .gt-dn i { font-style:normal; font-size:10px; color:#a0a7b0; }
 .gt-dn.sun, .gt-dn.sun i { color:#e5484d; } .gt-dn.sat, .gt-dn.sat i { color:#3b82c4; }
-.gt-dn.tdy b { background:#111; color:#fff; border-radius:9px; padding:0 4px; }
-.gt-nz { position:absolute; top:2px; transform:translateX(-50%); border:none; background:#fff3e0; border-radius:8px; font-size:10px; padding:0 3px; line-height:16px; cursor:pointer; }
+.gt-dn.tdy b { background:#111; color:#fff; border-radius:10px; min-width:20px; text-align:center; }
+.gt-nz { position:absolute; top:4px; transform:translateX(-50%); border:none; background:#fff3e0; border-radius:8px; font-size:10px; padding:0 3px; line-height:16px; cursor:pointer; }
 .gt-nz.hi { background:#ffe1e1; }
 .gt-b { position:relative; }
-.gt-we { position:absolute; top:0; bottom:0; background:#fbf1f2; }
-.gt-row { position:absolute; left:0; right:0; height:40px; border-bottom:1px solid #f4f5f6; }
+.gt-we { position:absolute; top:0; bottom:0; background:#f7f8fa; }
+.gt-row { position:absolute; left:0; right:0; height:36px; }
+.gt-row.g { background:rgba(247,248,250,.6); }
 .gt-vl { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #e5484d; pointer-events:none; z-index:1; }
-.gt-vl.tdy { border-left:2px solid #111; }
-.gt-bar { position:absolute; height:20px; border:none; border-radius:5px; padding:0; cursor:pointer; z-index:2; }
-.gt-bar.ord { height:14px; border:1.5px dashed; }
+.gt-vl.tdy { border-left:1.5px solid #111; }
+.gt-gbar { position:absolute; height:4px; border-radius:2px; background:#d5d9de; pointer-events:none; }
+.gt-glb { position:absolute; font-size:11px; color:#8b95a1; white-space:nowrap; pointer-events:none; }
+.gt-bar { position:absolute; height:24px; border:none; border-radius:12px; padding:0; cursor:pointer; z-index:2; overflow:hidden; display:flex; align-items:center; color:#fff; }
+.gt-bar em { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,.14); border-radius:12px 0 0 12px; }
+.gt-bar span { position:relative; padding:0 10px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gt-bar.ord { height:18px; border:1.5px dashed; border-radius:9px; }
+.gt-bar.ord span { font-size:11px; }
 .gt-lg { display:flex; flex-wrap:wrap; gap:12px; margin:10px 2px 0; font-size:12px; color:#6b7684; }
 .gt-lg span { display:inline-flex; align-items:center; gap:5px; }
-.gt-lg i { display:inline-block; width:16px; height:8px; border-radius:2px; }
+.gt-lg i { display:inline-block; width:16px; height:8px; border-radius:4px; }
 .gt-lg i.w { background:#6b7684; } .gt-lg i.o { border:1.5px dashed #6b7684; background:#6b768422; }
 .gt-lg i.t { width:2px; height:12px; background:#111; } .gt-lg i.s { width:0; height:12px; border-left:1.5px dashed #e5484d; }
 .gt-ph { display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:12px; background:#f7f8fa; margin-bottom:8px; }
@@ -12245,45 +12257,77 @@ function _gtPhases(p) {
   if (Array.isArray(p.phases) && p.phases.length) return p.phases;
   return p.scheduleStart ? [{ kind: 'work', label: p.name, start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }] : [];
 }
+let _gtCollapsed = new Set();
+const GT_GROUPS = [['planning', '플래닝'], ['structure', '구조공사'], ['finish', '마감공사'], ['after', '입주']];
+function _gtProgress(ph, today) {
+  const s = _vs2D(ph.map(x => x.start).sort()[0]), e = _vs2D(ph.map(x => x.end).sort().at(-1));
+  if (today < s) return 0; if (today > e) return 100;
+  return Math.round(((today - s) / 864e5 + 1) / ((e - s) / 864e5 + 1) * 100);
+}
+function _gtRing(pct) {
+  const r = 6, c = 2 * Math.PI * r, col = pct >= 100 ? '#2f6bff' : '#2f6bff';
+  return `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="${r}" fill="none" stroke="#dfe3e8" stroke-width="2"/>${pct ? `<circle cx="8" cy="8" r="${r}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="${c * pct / 100} ${c}" transform="rotate(-90 8 8)" stroke-linecap="round"/>` : ''}</svg>`;
+}
 function _gtHtml(proj, procs, boxW) {
-  const rows = procs.map(p => ({ p, ph: _gtPhases(p) })).filter(r => r.ph.length);
-  if (!rows.length) return `<div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">일정이 있는 공정이 없어요</div>`;
+  const today = _vs2Today();
+  const all = procs.map(p => ({ p, ph: _gtPhases(p) })).filter(r => r.ph.length);
+  if (!all.length) return `<div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">일정이 있는 공정이 없어요</div>`;
   const f = proj.form || {}, noise = proj.scheduleNoise || [];
-  let a = rows.flatMap(r => r.ph.map(x => x.start)).sort()[0], b = rows.flatMap(r => r.ph.map(x => x.end)).sort().at(-1);
+  let a = all.flatMap(r => r.ph.map(x => x.start)).sort()[0], b = all.flatMap(r => r.ph.map(x => x.end)).sort().at(-1);
   if (f.startDate && f.startDate < a) a = f.startDate; if (f.endDate && f.endDate > b) b = f.endDate;
-  const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1, LW = 72;
+  // 행 구성: 단계(섹션) 행 + 공종 행 — 섹션은 접기/펴기
+  const rows = [];
+  GT_GROUPS.forEach(([gid, gl]) => {
+    const rs = all.filter(r => _getProcPhase(r.p) === gid); if (!rs.length) return;
+    const ph = rs.flatMap(r => r.ph), gs = ph.map(x => x.start).sort()[0], ge = ph.map(x => x.end).sort().at(-1);
+    rows.push({ grp: gid, label: gl, s: gs, e: ge, n: rs.length, pct: Math.round(rs.reduce((t, r) => t + _gtProgress(r.ph, today), 0) / rs.length) });
+    if (!_gtCollapsed.has(gid)) rs.forEach(r => rows.push(r));
+  });
+  const wide = boxW >= 640, LW = wide ? 300 : 96;
+  const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1;
   const dw = _gtZoom === 0 ? 36 : _gtZoom === 1 ? 20 : Math.max(5, ((_gtFitW || boxW - LW) - 2) / n);
-  const W = Math.ceil(n * dw), RH = 40, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5);
-  const today = _vs2Today(), ti = Math.round((today - d0) / 864e5), WK = '일월화수목금토';
+  const W = Math.ceil(n * dw), RH = 36, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5), dd = (x, y) => Math.round((_vs2D(y) - _vs2D(x)) / 864e5) + 1;
+  const ti = Math.round((today - d0) / 864e5), WK = '일월화수목금토';
   let bg = '', hd = '', mo = '';
   for (let i = 0; i < n; i++) {
     const d = new Date(d0); d.setDate(d.getDate() + i); const wd = d.getDay(), x = i * dw;
     if (wd === 0 || wd === 6) bg += `<div class="gt-we" style="left:${x}px;width:${dw}px"></div>`;
-    if (i === 0 || d.getDate() === 1) mo += `<div class="gt-mo" style="left:${x}px">${d.getMonth() + 1}월</div>`;
+    if (i === 0 || d.getDate() === 1) mo += `<div class="gt-mo" style="left:${x}px">${d.getFullYear() !== today.getFullYear() ? d.getFullYear() + '. ' : ''}${d.getMonth() + 1}월</div>`;
     const show = dw >= 18 || (dw >= 9 ? wd === 1 : d.getDate() % 7 === 1);
-    if (show) hd += `<div class="gt-dn${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}${i === ti ? ' tdy' : ''}" style="left:${x}px;width:${Math.max(dw, 18)}px"><b>${d.getDate()}</b>${dw >= 18 ? `<i>${WK[wd]}</i>` : ''}</div>`;
+    if (show) hd += `<div class="gt-dn${wd === 0 ? ' sun' : wd === 6 ? ' sat' : ''}${i === ti ? ' tdy' : ''}" style="left:${x}px;width:${Math.max(dw, 18)}px">${dw >= 30 ? `<i>${WK[wd]}</i>` : ''}<b>${d.getDate()}</b></div>`;
   }
   const vline = (d, cls) => { const i = idx(d); return i >= 0 && i < n ? `<div class="gt-vl ${cls}" style="left:${i * dw + dw / 2}px"></div>` : ''; };
-  const noiseHtml = noise.map((z, k) => { const i = idx(z.date); return i >= 0 && i < n ? `<button class="gt-nz ${z.level === '강' ? 'hi' : ''}" style="left:${i * dw + dw / 2}px;${dw < 18 ? 'top:34px;' : ''}" onclick="_gtNoise(${k})" aria-label="소음 ${esc(z.level)}">🔊</button>` : ''; }).join('');
-  const bars = rows.map((r, ri) => r.ph.map((x, k) => {
-    const s = idx(x.start), e = idx(x.end), c = _gtColor(r.p.name), o = x.kind === 'order';
-    return `<button class="gt-bar${o ? ' ord' : ''}" style="top:${ri * RH + (o ? 13 : 10)}px;left:${s * dw + 1}px;width:${Math.max(dw - 2, (e - s + 1) * dw - 2)}px;${o ? `border-color:${c};background:${c}22` : `background:${c}`}" onclick="_gtOpen('${r.p.id}',${k})" aria-label="${esc(r.p.name)} ${esc(x.label || '')}"></button>`;
-  }).join('')).join('');
-  const names = rows.map(r => `<button class="gt-nm" onclick="openProcDetailScreen('${r.p.id}')"><i style="background:${_gtColor(r.p.name)}"></i>${esc(r.p.name)}</button>`).join('');
-  return `<div class="gt">
-    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${names}</div>
+  const noiseHtml = noise.map((z, k) => { const i = idx(z.date); return i >= 0 && i < n ? `<button class="gt-nz ${z.level === '강' ? 'hi' : ''}" style="left:${i * dw + dw / 2}px" onclick="_gtNoise(${k})" aria-label="소음 ${esc(z.level)}">🔊</button>` : ''; }).join('');
+  const bars = rows.map((r, ri) => {
+    const top = ri * RH;
+    if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
+      return `<div class="gt-gbar" style="top:${top + 16}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 10}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
+    const c = _gtColor(r.p.name);
+    return r.ph.map((x, k) => {
+      const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
+      const pc = o ? 0 : _gtProgress([x], today), lbl = w >= 72 ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
+      return `<button class="gt-bar${o ? ' ord' : ''}" style="top:${top + (o ? 9 : 6)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c}`}" onclick="_gtOpen('${r.p.id}',${k})" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}</button>`;
+    }).join('');
+  }).join('');
+  const left = rows.map(r => r.grp
+    ? `<button class="gt-gr" onclick="_gtToggle('${r.grp}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${_gtCollapsed.has(r.grp) ? -90 : 0}deg)"><polyline points="6 9 12 15 18 9"/></svg><b>${esc(r.label)}</b>${wide ? `<span class="c1">${dd(r.s, r.e)}일</span><span class="c2">${r.pct}%</span><span class="c3">${_gtRing(r.pct)}</span>` : ''}</button>`
+    : (() => { const s = r.ph.map(x => x.start).sort()[0], e = r.ph.map(x => x.end).sort().at(-1), pc = _gtProgress(r.ph, today);
+      return `<button class="gt-nm" onclick="openProcDetailScreen('${r.p.id}')"><i style="background:${_gtColor(r.p.name)}"></i><span class="t">${esc(r.p.name)}</span>${wide ? `<span class="c1">${dd(s, e)}일</span><span class="c2">${pc}%</span><span class="c3">${_gtRing(pc)}</span>` : ''}</button>`; })()).join('');
+  return `<div class="gt${wide ? ' wide' : ''}">
+    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px">${wide ? '<span class="t">공종</span><span class="c1">기간</span><span class="c2">진행</span><span class="c3"></span>' : ''}</div>${left}</div>
     <div class="gt-r" id="gt-r"><div class="gt-in" style="width:${W}px">
       <div class="gt-h" style="height:${HH}px">${mo}${hd}${noiseHtml}</div>
-      <div class="gt-b" style="height:${rows.length * RH}px">${bg}${rows.map((r, ri) => `<div class="gt-row" style="top:${ri * RH}px"></div>`).join('')}
+      <div class="gt-b" style="height:${rows.length * RH}px">${bg}${rows.map((r, ri) => `<div class="gt-row${r.grp ? ' g' : ''}" style="top:${ri * RH}px"></div>`).join('')}
         ${f.startDate ? vline(f.startDate, 'st') : ''}${f.endDate ? vline(f.endDate, 'st') : ''}${ti >= 0 && ti < n ? `<div class="gt-vl tdy" style="left:${ti * dw + dw / 2}px"></div>` : ''}${bars}</div>
     </div></div></div>
     <div class="gt-lg"><span><i class="w"></i>시공</span><span><i class="o"></i>발주·준비</span><span><i class="t"></i>오늘</span><span><i class="s"></i>착공·완공</span>${noise.length ? '<span>🔊 소음</span>' : ''}</div>`;
 }
+function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); _vs2RenderTimeline(); }
 function _gtSetZoom(z) { _gtZoom = z; _vs2RenderTimeline(); }
 function _gtAfter() {
   const r = document.getElementById('gt-r'); if (!r) return;
   if (_gtZoom === 2) { if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; _vs2RenderTimeline(); } return; }
-  const t = r.querySelector('.gt-vl.tdy, .gt-vl.st'); if (t) r.scrollLeft = Math.max(0, parseFloat(t.style.left) - 60);
+  const t = r.querySelector('.gt-vl.tdy') || r.querySelector('.gt-vl.st'); if (t) r.scrollLeft = Math.max(0, parseFloat(t.style.left) - 60);
 }
 function _gtOpen(id, k) {
   const proj = getProject(), p = (proj.processes || []).find(x => x.id === id); if (!p) return;
