@@ -12339,11 +12339,11 @@ function _gtHtml(proj, procs, boxW) {
     const top = ri * RH;
     if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
       return `<div class="gt-gbar" style="top:${top + 23}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 17}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
-    const c = _gtPC(r.p);
+    const c0 = _gtPC(r.p);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
-      const pc = o ? (x.progress || 0) : _gtProgress([x], today), dn = pc >= 100 && w >= 26, lbl = w >= (dn ? 96 : 72) ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
-      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 11 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${_gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}${dn ? `<b class="gt-ck" style="color:${o ? '#fff' : c}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg></b>` : ''}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
+      const pc = o ? (x.progress || 0) : _gtProgress([x], today), dn = pc >= 100 && w >= 26, c = pc >= 100 ? '#a7aeb8' : c0, lbl = w >= (dn ? 96 : 72) ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
+      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 11 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${pc >= 100 ? "#fff" : _gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}${dn ? `<b class="gt-ck" style="color:${o ? '#fff' : c}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg></b>` : ''}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
