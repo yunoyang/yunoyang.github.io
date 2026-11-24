@@ -12308,6 +12308,7 @@ function _gtHtml(proj, procs, boxW) {
   const rows = [];
   GT_GROUPS.forEach(([gid, gl]) => {
     const rs = all.filter(r => _getProcPhase(r.p) === gid); if (!rs.length) return;
+    rs.forEach((r, i) => { const pal = GT_GROUP_PAL[gid] || GT_GROUP_PAL.structure; _gtAuto[r.p.id] = pal[i % pal.length]; });
     const ph = rs.flatMap(r => r.ph), gs = ph.map(x => x.start).sort()[0], ge = ph.map(x => x.end).sort().at(-1);
     rows.push({ grp: gid, label: gl, s: gs, e: ge, n: rs.length, pct: Math.round(rs.reduce((t, r) => t + _gtProgress(r.ph, today), 0) / rs.length) });
     if (!_gtCollapsed.has(gid)) rs.forEach(r => rows.push(r));
@@ -12335,7 +12336,7 @@ function _gtHtml(proj, procs, boxW) {
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
       const pc = o ? (x.progress || 0) : _gtProgress([x], today), lbl = w >= 72 ? `<span>${x.progress === 100 ? '✓ ' : ''}${esc(o ? '발주' : (x.label || r.p.name))}</span>` : (x.progress === 100 && w >= 22 ? '<span>✓</span>' : '');
-      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 10 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
+      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 10 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${_gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
@@ -12382,8 +12383,12 @@ function _gtAddAt(e, a, dw) {
   openAddProcess(_tplAddCal(a, Math.max(0, Math.floor(x / dw))));
 }
 // ===== 간트 막대 메뉴 (참고 UI: 막대 아래 팝오버 + 하위 메뉴) =====
-const GT_PALETTE = ['#2f6bff', '#7c4dff', '#14a3a3', '#4caf7a', '#e8731a', '#f06a5f', '#d36b9a', '#c9a227', '#6b7684', '#a0522d'];
-function _gtPC(p) { return p.color || _gtColor(p.type || p.name); }
+const GT_PALETTE = ['#2f80ff', '#4fb0ff', '#3fe0cc', '#7b4dff', '#9a7bff', '#c4b2f7', '#f7826a', '#f99a84', '#f5b5a8', '#6b7684'];
+// 참고 UI 색: 단계(섹션)마다 한 색 계열, 공종마다 진하기를 번갈아
+const GT_GROUP_PAL = { planning: ['#2f80ff', '#4fb0ff', '#3fe0cc'], structure: ['#2f80ff', '#4fb0ff', '#3fe0cc'], finish: ['#7b4dff', '#9a7bff', '#c4b2f7'], after: ['#f7826a', '#f99a84', '#f5b5a8'] };
+let _gtAuto = {};
+function _gtPC(p) { return p.color || _gtAuto[p.id] || _gtColor(p.type || p.name); }
+function _gtInk(hex) { const h = (hex || '').replace('#', ''); if (h.length !== 6) return '#fff'; const [r, g, b] = [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16)); return (r * 299 + g * 587 + b * 114) / 1000 > 165 ? '#1f2a44' : '#fff'; }
 function _gtMat(p) { if (!Array.isArray(p.phases) || !p.phases.length) p.phases = [{ kind: 'work', label: p.name, start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }]; return p.phases; }
 function _gtSave(proj) { save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); }
 let _gtMenuCtx = null;
