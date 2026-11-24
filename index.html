@@ -2296,10 +2296,7 @@ body.vs2-info #iv-tabs { margin:0 -16px 16px; }
 body.vs2-info #iv-tabs button { flex:1 1 0; min-width:0; padding-left:4px !important; padding-right:4px !important; }
 body.vs2-info #form-view-panel { padding-top:0 !important; padding-bottom:calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
 @media (min-width:1024px) {
-  body.vs2-info #screen-form { padding-left:96px; box-sizing:border-box; }
-  body.vs2-info #vs2-nav { left:16px; right:auto; top:50%; bottom:auto; width:64px; max-width:none; margin:0; border-radius:32px; transform:translateY(-50%) !important; }
-  body.vs2-info #vs2-nav .vs2-nav-in { flex-direction:column; gap:6px; padding:8px 6px; }
-  body.vs2-info #vs2-nav .vs2-nav-btn { flex:none; width:52px; height:52px; }
+  body.vs2-info #vs2-nav { max-width:400px; bottom:20px; }
   body.vs2-info #screen-form .form-header { padding-left:32px; padding-right:32px; }
   /* PC: 다른 메뉴(공정|일정, 스타일|제품)처럼 탭이 콘텐츠 영역 좌우 끝까지, 본문은 한 칼럼 */
   body.vs2-info #form-view-panel[style*="display: block"] { display:block !important; }
@@ -4428,14 +4425,12 @@ body.vs2-on #main-scroll { padding-bottom:calc(88px + env(safe-area-inset-bottom
 body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)); }
 /* ===== PC(1024px+) vs2 레이아웃: 좌측 세로 사이드바 + 넓은 콘텐츠(최대 1440px) ===== */
 @media (min-width:1024px) {
-  body.vs2-on { --vs2-side:96px; }
   body.vs2-on .app { max-width:100% !important; }
-  body.vs2-on #screen-main { padding-left:var(--vs2-side); box-sizing:border-box; }
-  body.vs2-on #vs2-nav { left:16px; right:auto; top:50%; bottom:auto; width:64px; max-width:none; margin:0; border-radius:32px; transform:translateY(-50%) !important; }
-  body.vs2-on #vs2-nav .vs2-nav-in { flex-direction:column; gap:6px; padding:8px 6px; }
-  body.vs2-on #vs2-nav .vs2-nav-btn { flex:none; width:52px; height:52px; }
-  body.vs2-on #main-scroll { padding-bottom:48px; }
-  body.vs2-on .floating-group { bottom:24px; }
+  /* PC도 모바일처럼 하단 가운데 가로 메뉴바 */
+  body.vs2-on { --vs2-side:0px; }
+  body.vs2-on #vs2-nav { max-width:400px; bottom:20px; }
+  body.vs2-on #main-scroll { padding-bottom:110px; }
+  body.vs2-on .floating-group { bottom:100px; }
   body.vs2-on #main-scroll > *:not(.header) { max-width:1440px !important; padding-left:32px; padding-right:32px; box-sizing:border-box; }
   body.vs2-on #main-scroll > #vs2-seg { padding-left:32px; padding-right:32px; }
   body.vs2-on #screen-main .header { padding-left:32px; padding-right:32px; }
@@ -12424,7 +12419,7 @@ function _gtMenu(pid, k, bar) {
       ['del', I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'), '삭제', 0, 'r'],
     ] : [['detail', I('<path d="M14 4h6v6M20 4l-8 8M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'), '공정 상세 보기']]),
   ];
-  const m = document.createElement('div'); m.id = 'gt-menu'; if (window.innerWidth >= 900) m.className = 'h'; // PC: 막대 아래 가로 메뉴
+  const m = document.createElement('div'); m.id = 'gt-menu';
   m.innerHTML = `<div class="gm-hd"><i style="background:${_gtPC(p)}"></i><b>${esc(p.name)}</b><small>${_vs2Fmt(ph.start)}${ph.end !== ph.start ? ' – ' + _vs2Fmt(ph.end) : ''}</small></div>` +
     items.map(([a, ic, l, sub, cls]) => `<button class="gm-it${cls ? ' ' + cls : ''}" data-a="${a}">${ic}<span>${l}</span>${sub ? ch : ''}</button>`).join('');
   document.body.appendChild(m);
