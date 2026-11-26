@@ -165,13 +165,26 @@ if ('serviceWorker' in navigator) {
 </script>
 <!-- ========================== -->
 
-<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="icons-sprite.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-<script>emailjs.init('r9S0kpOB1nFauIyfg');</script>
+<script>
+// 앱 시작 속도: 주소검색·이메일·이미지 캡처·도면 편집 라이브러리는 앱 시작 때 받지 않고 쓸 때만 받아옴
+const _LIBS = {
+  postcode: 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js',
+  emailjs: 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js',
+  html2canvas: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+  fabric: 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js',
+};
+const _libP = {};
+function _lazyLib(name) {
+  return _libP[name] || (_libP[name] = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = _LIBS[name]; sc.async = true;
+    sc.onload = () => res(); sc.onerror = () => { delete _libP[name]; rej(new Error(name + ' 로드 실패')); };
+    document.head.appendChild(sc);
+  }));
+}
+async function _emailjs() { await _lazyLib('emailjs'); if (!window._ejsInit) { emailjs.init('r9S0kpOB1nFauIyfg'); window._ejsInit = 1; } return emailjs; }
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono&display=swap');
 :root {
@@ -14154,7 +14167,7 @@ async function _sendProcRecordMentionNotifications(record, proc, emails, proj) {
   const snippet = (record.content||'').replace(/<[^>]+>/g,'').slice(0,100);
   for (const email of emails) {
     try {
-      await emailjs.send('service_elvk718', 'template_11ldrbw', {
+      await (await _emailjs()).send('service_elvk718', 'template_11ldrbw', {
         to_email: email,
         to_name: email.split('@')[0],
         from_name: sender,
@@ -15442,8 +15455,8 @@ function saveFormAndBack() {
 }
 
 // ===== ADDRESS =====
-function searchAddress() {
-  if (typeof daum === 'undefined' || !daum.Postcode) { alert('주소 검색 서비스를 불러오는 중입니다.'); return; }
+async function searchAddress() {
+  if (typeof daum === 'undefined' || !daum.Postcode) { try { await _lazyLib('postcode'); } catch (e) { showToastMessage('주소 검색을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; } }
   const overlay = document.getElementById('addr-search-overlay');
   const container = document.getElementById('addr-search-container');
   if (!overlay || !container) return;
@@ -15838,6 +15851,7 @@ async function downloadNoticeImage() {
   const btn = document.getElementById('notice-download-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;"></span>'; }
   try {
+    await _lazyLib('html2canvas');
     const canvas = await html2canvas(card, {
       scale: 3,
       useCORS: true,
@@ -19707,7 +19721,7 @@ async function sendInviteByMail() {
   const origText = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span> 전송 중...'; }
   try {
-    await emailjs.send('service_elvk718', 'template_11ldrbw', {
+    await (await _emailjs()).send('service_elvk718', 'template_11ldrbw', {
       to_email:     _currentInviteEmail,
       to_name:      _currentInviteEmail.split('@')[0],
       from_name:    state.user.name || state.user.email,
@@ -23328,7 +23342,7 @@ async function _sendMentionNotifications(meeting, emails, proj) {
   const sender = state.user?.name || state.user?.email?.split('@')[0] || '';
   for (const email of emails) {
     try {
-      await emailjs.send('service_elvk718', 'template_11ldrbw', {
+      await (await _emailjs()).send('service_elvk718', 'template_11ldrbw', {
         to_email: email,
         to_name: email.split('@')[0],
         from_name: sender,
@@ -24654,6 +24668,7 @@ function fpDuplicateSelected() {
 // Canvas init
 // ──────────────────────────────────────────
 function fpInitCanvas(idxOrUrl) {
+  if (typeof fabric === 'undefined') { _lazyLib('fabric').then(() => fpInitCanvas(idxOrUrl)).catch(() => showToastMessage('도면 편집 도구를 불러오지 못했어요')); return; }
   const wrap = document.getElementById('fp-canvas-wrap');
   const W = wrap.clientWidth  || 800;
   const H = wrap.clientHeight || 600;
@@ -25031,7 +25046,7 @@ async function fpSendCommentMentionNotifications(commentText, proj) {
   const snippet = commentText.slice(0, 120);
   for (const u of targets) {
     try {
-      await emailjs.send('service_elvk718', 'template_11ldrbw', {
+      await (await _emailjs()).send('service_elvk718', 'template_11ldrbw', {
         to_email: u.email, to_name: u.name, from_name: sender,
         project_name: projName, invite_link: _publicOrigin() + "/",
         role: `[도면 코멘트] ${sender}님이 멘션했습니다:\n"${snippet}"`,
