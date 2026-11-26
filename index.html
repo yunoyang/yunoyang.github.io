@@ -4308,7 +4308,7 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-glb { position:absolute; font-size:11px; color:#8b95a1; white-space:nowrap; pointer-events:none; }
 .gt-bar { position:absolute; height:36px; border:none; border-radius:999px; padding:0; cursor:pointer; z-index:2; overflow:hidden; display:flex; align-items:center; color:#fff; }
 .gt-bar em { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,.14); border-radius:999px 0 0 999px; }
-.gt-bar span { position:relative; padding:0 16px; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gt-bar span { position:relative; will-change:transform; box-sizing:border-box; flex:none; max-width:100%; padding:0 16px; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gt-bar.ord { height:28px; border:1.5px dashed; border-radius:999px; }
 .gt-bar { touch-action:pan-x pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
 .gt-bar.drag { box-shadow:0 4px 12px rgba(0,0,0,.25); z-index:5; opacity:.92; transform:scale(1.06); }
@@ -4346,6 +4346,10 @@ body.vs2-info #screen-form #form-title { order:1; }
 .gt-bar { transition:transform .15s ease, box-shadow .15s ease; transform-origin:center; }
 .gt-bar.sel { transform:scale(1.1); box-shadow:0 6px 16px rgba(0,0,0,.28); z-index:6; }
 @media (hover:hover) and (pointer:fine) { .gt-bar:hover { transform:scale(1.1); box-shadow:0 6px 16px rgba(0,0,0,.28); z-index:6; cursor:pointer; } }
+.gt-bl { position:absolute; transform:translateY(-50%); font-size:12px; font-weight:600; color:#333; white-space:nowrap; pointer-events:none; z-index:2; }
+.gt-gml { position:absolute; border:none; background:#fff; border-radius:999px; padding:2px 10px; font:inherit; font-size:12px; font-weight:700; color:#111; box-shadow:0 0 0 1px #eceef0; cursor:pointer; z-index:3; white-space:nowrap; }
+.gt-gml small { color:#8b95a1; font-weight:600; }
+.gt:not(.wide) { border-radius:12px; }
 .gt-add { display:flex; align-items:center; gap:6px; width:100%; height:50px; padding:0 12px; border:none; background:none; font-size:13px; font-weight:600; color:#2f6bff; font-family:inherit; cursor:pointer; white-space:nowrap; }
 .gt-addrow { position:absolute; left:0; right:0; height:50px; cursor:copy; }
 .gt-addrow span { position:absolute; top:16px; font-size:12px; color:#b0b8c1; white-space:nowrap; pointer-events:none; padding-left:6px; }
@@ -12320,9 +12324,10 @@ function _gtHtml(proj, procs, boxW) {
     rows.push({ grp: gid, label: gl, s: gs, e: ge, n: rs.length, pct: Math.round(rs.reduce((t, r) => t + _gtProgress(r.ph, today), 0) / rs.length) });
     if (!_gtCollapsed.has(gid)) rs.forEach(r => rows.push(r));
   });
-  const wide = boxW >= 640, LW = wide ? 150 : 96;
+  const wide = boxW >= 640, mob = !wide, LW = mob ? 0 : 150; // 모바일: 왼쪽 공정 목록 없이 일정만
   const d0 = _vs2D(a), n = Math.round((_vs2D(b) - d0) / 864e5) + 1;
-  const dw = _gtZoom === 0 ? 36 : _gtZoom === 1 ? 20 : Math.max(5, ((_gtFitW || boxW - LW) - 2) / n);
+  if (_gtZoom > 1) _gtZoom = 1; const fitW = (_gtFitW || boxW - LW) - 2; // 주 = 한 화면 7일, 월 = 한 화면 약 31일
+  const dw = _gtZoom === 0 ? Math.max(36, fitW / 7) : Math.max(10, fitW / 31);
   const W = Math.ceil(n * dw), RH = 50, HH = 52, idx = d => Math.round((_vs2D(d) - d0) / 864e5), dd = (x, y) => Math.round((_vs2D(y) - _vs2D(x)) / 864e5) + 1;
   const ti = Math.round((today - d0) / 864e5), WK = '일월화수목금토';
   let bg = '', hd = '', mo = '';
@@ -12338,12 +12343,15 @@ function _gtHtml(proj, procs, boxW) {
   const bars = rows.map((r, ri) => {
     const top = ri * RH;
     if (r.grp) { const s = idx(r.s), e = idx(r.e), w = (e - s + 1) * dw;
-      return `<div class="gt-gbar" style="top:${top + 23}px;left:${s * dw}px;width:${w}px"></div><div class="gt-glb" style="top:${top + 17}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`; }
+      return `<div class="gt-gbar" style="top:${top + 23}px;left:${s * dw}px;width:${w}px"></div>${mob ? `<button class="gt-gml" data-w="${w}" style="top:${top + 6}px;left:${s * dw}px" onclick="_gtToggle('${r.grp}')">${_gtCollapsed.has(r.grp) ? '▸' : '▾'} ${esc(r.label)} <small>${r.n}</small></button>` : `<div class="gt-glb" style="top:${top + 17}px;left:${(e + 1) * dw + 6}px">${esc(r.label)}</div>`}`; }
     const c0 = _gtPC(r.p);
     return r.ph.map((x, k) => {
       const s = idx(x.start), e = idx(x.end), o = x.kind === 'order', w = Math.max(dw - 2, (e - s + 1) * dw - 2);
-      const pc = o ? (x.progress || 0) : _gtProgress([x], today), dn = pc >= 100 && w >= 26, c = pc >= 100 ? '#a7aeb8' : c0, lbl = w >= (dn ? 96 : 72) ? `<span>${esc(o ? '발주' : (x.label || r.p.name))}</span>` : '';
-      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 11 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${pc >= 100 ? "#fff" : _gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}${dn ? `<b class="gt-ck" style="color:${o ? '#fff' : c}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg></b>` : ''}<i class="gt-hl"></i><i class="gt-hr"></i></div>`;
+      const pc = o ? (x.progress || 0) : _gtProgress([x], today), dn = pc >= 100 && w >= 26, c = pc >= 100 ? '#a7aeb8' : c0;
+      const txt = mob ? (o ? `${r.p.name} 발주` : (r.ph.length > 1 && x.label && x.label !== r.p.name ? `${r.p.name} · ${x.label}` : r.p.name)) : (o ? '발주' : (x.label || r.p.name));
+      const need = mob ? Math.min(150, txt.length * 11 + 28) + (dn ? 24 : 0) : (dn ? 96 : 72), inLbl = w >= need, lbl = inLbl ? `<span>${esc(txt)}</span>` : '';
+      const outLbl = mob && !inLbl && k === r.ph.length - 1 ? `<span class="gt-bl" style="top:${top + 16}px;left:${e * dw + dw + 6}px">${esc(txt)}</span>` : '';
+      return `<div class="gt-bar${o ? ' ord' : ''}" role="button" data-pid="${r.p.id}" data-k="${x._i}" style="top:${top + (o ? 11 : 7)}px;left:${s * dw + 1}px;width:${w}px;--c:${c};${o ? `border-color:${c};background:${c}1f;color:${c}` : `background:${c};color:${pc >= 100 ? "#fff" : _gtInk(c)}`}" aria-label="${esc(r.p.name)} ${esc(x.label || '')}">${!o && pc > 0 && pc < 100 ? `<em style="width:${pc}%"></em>` : ''}${lbl}${dn ? `<b class="gt-ck" style="color:${o ? '#fff' : c}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17 19 7.5"/></svg></b>` : ''}<i class="gt-hl"></i><i class="gt-hr"></i></div>${outLbl}`;
     }).join('');
   }).join('');
   const left = rows.map(r => r.grp
@@ -12351,7 +12359,7 @@ function _gtHtml(proj, procs, boxW) {
     : (() => { const s = r.ph.map(x => x.start).sort()[0], e = r.ph.map(x => x.end).sort().at(-1), pc = _gtProgress(r.ph, today);
       return `<button class="gt-nm" data-pid="${r.p.id}" onclick="_gtRename('${r.p.id}',this)" title="눌러서 이름 수정"><i style="background:${_gtPC(r.p)}"></i><span class="t">${esc(r.p.name)}</span></button>`; })()).join('');
   return `<div class="gt${wide ? ' wide' : ''}">
-    <div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>
+    ${mob ? '' : `<div class="gt-l" style="width:${LW}px"><div class="gt-lh" style="height:${HH}px"></div>${left}${_gtCanAdd() ? `<button class="gt-add" onclick="_gtAdd()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>공정 추가</button>` : ''}</div>`}
     <div class="gt-r" id="gt-r"><div class="gt-in" data-dw="${dw}" style="width:${W}px">
       <div class="gt-h" style="height:${HH}px">${mo}${hd}${noiseHtml}</div>
       <div class="gt-b" style="height:${(rows.length + (_gtCanAdd() ? 1 : 0)) * RH}px">${bg}${_gtCanAdd() ? `<div class="gt-addrow" style="top:${rows.length * RH}px" onclick="_gtAddAt(event,'${a}',${dw})"><span style="left:${Math.max(0, (ti >= 0 && ti < n ? ti : 0) * dw)}px">+ 날짜를 눌러 공정 추가</span></div>` : ''}${rows.map((r, ri) => `<div class="gt-row${r.grp ? ' g' : ''}" style="top:${ri * RH}px"></div>`).join('')}
@@ -12454,7 +12462,7 @@ function _gtMenuAct(a, it) {
   const close = () => { _gtSubClose(); _gtMenuClose(); };
   if (a === 'info') { close(); _gtOpen(c.pid, c.k); return; }
   if (a === 'detail') { close(); openProcDetailScreen(c.pid); return; }
-  if (a === 'edit') { close(); const btn = document.querySelector(`.gt-nm[data-pid="${c.pid}"]`); if (btn) _gtRename(c.pid, btn); return; }
+  if (a === 'edit') { close(); const btn = document.querySelector(`.gt-nm[data-pid="${c.pid}"]`); if (btn) _gtRename(c.pid, btn); else openProcDetailScreen(c.pid); return; }
   if (a === 'del') { close(); deleteProcess(c.pid); return; }
   if (a === 'delph') { close(); _gtDelPhase(c.pid, c.k); return; }
   if (a === 'done') { const ph = _gtMat(p)[c.k]; if (!ph) return; const was = ph.progress; ph.progress = was === 100 ? undefined : 100; if (ph.progress === undefined) delete ph.progress; close(); _gtSave(proj, p);
@@ -12544,10 +12552,24 @@ function _gtShift(pid, k, mode, dd) {
   }, '되돌리기');
 }
 function _gtSetZoom(z) { _gtZoom = z; renderCalendar(); }
+// 막대가 화면 왼쪽 밖에서 시작해도 이름이 보이게: 스크롤 위치만큼 라벨을 막대 안에서 밀어줌
+function _gtPinLabels(r) {
+  const sl = r.scrollLeft;
+  r.querySelectorAll('.gt-bar > span, .gt-gml').forEach(el => {
+    const host = el.classList.contains('gt-gml') ? el : el.parentElement;
+    const L = parseFloat(host.style.left) || 0, W = el.classList.contains('gt-gml') ? (parseFloat(el.dataset.w) || 0) : host.offsetWidth;
+    let dx = Math.max(0, sl - L + 4);
+    if (!el.classList.contains('gt-gml')) { dx = Math.min(dx, Math.max(0, W - 60)); el.style.maxWidth = (W - dx) + 'px'; }
+    else dx = Math.min(dx, Math.max(0, W - el.offsetWidth));
+    el.style.transform = dx ? `translateX(${dx}px)` : '';
+  });
+}
 function _gtAfter() {
   const r = document.getElementById('gt-r'); if (!r) return;
+  if (!r._pin) { r._pin = 1; let q = 0; r.addEventListener('scroll', () => { if (q) return; q = requestAnimationFrame(() => { q = 0; _gtPinLabels(r); }); }, { passive: true }); }
+  setTimeout(() => _gtPinLabels(r), 0);
   _gtBindDrag(r);
-  if (_gtZoom === 2) { if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; renderCalendar(); } return; }
+  if (Math.abs(r.clientWidth - _gtFitW) > 1) { _gtFitW = r.clientWidth; renderCalendar(); return; }
   const t = r.querySelector('.gt-vl.tdy') || r.querySelector('.gt-vl.st'); if (t) r.scrollLeft = Math.max(0, parseFloat(t.style.left) - 60);
 }
 function _gtOpen(id, k) {
@@ -14891,7 +14913,7 @@ function calMonthNav(delta) {
 }
 // 일정 탭: 캘린더 / 간트 전환
 function _calViewSeg() {
-  return `<div class="gt-vt" style="padding:12px 16px 0;"><span></span>${true ? `<div class="gt-seg sm">${['주', '2주', '전체'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
+  return `<div class="gt-vt" style="padding:12px 16px 0;"><span></span>${true ? `<div class="gt-seg sm">${['주', '월'].map((l, i) => `<button class="${_gtZoom === i ? 'on' : ''}" onclick="_gtSetZoom(${i})">${l}</button>`).join('')}</div>` : ''}</div>`;
 }
 function renderCalendar() {
   const proj = getProject(); if (!proj) return;
