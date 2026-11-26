@@ -16706,6 +16706,9 @@ function _estSeedNow() { const p = getProject(); if (_estSeedDefault(p, true)) {
 // ===== 도면 정보 (싱글소스 디지털 도면) =====
 // 좌표 단위 mm, 원점 = 도면 외곽 좌상단. 넓이·둘레·벽면적·설비 개수는 좌표에서 자동 계산.
 // 기본값: (STUDIO) DANHAN 도면 및 제안서(2026.10.21) 평면도·마감도·전기도·천장도 기준
+// 앱(네이티브)에는 큰 에셋(예시 평면도·3D 모델)을 넣지 않고 웹사이트에서 받아옴 — 앱 용량 절감
+const _WEB_ORIGIN = 'https://vibespacekorea.com/';
+function _assetUrl(u) { if (!u || /^(https?:|data:|blob:)/.test(u)) return u; return (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) && /^assets\/(plans|models)\//.test(u) ? _WEB_ORIGIN + u : u; }
 const PLAN_DEFAULT = {
   name: '정자동 우성아파트 311-205', source: 'STUDIO DANHAN 도면 2026.10.21 (1/100)', width: 9300, height: 11500, ceiling: 2300,
   gridX: [0, 3300, 6300, 9300], gridXb: [0, 4500, 9300], gridY: [0, 3800, 6100, 10000, 11500], gridYr: [0, 300, 1700, 5000, 6400, 11500],
@@ -16841,7 +16844,7 @@ function _planSvg(pm, opts) {
   const W = pm.width, H = pm.height, layer = opts.layer && (pm.layers || []).find(l => l.id === opts.layer), ib = pm.imgBox;
   const vb = _planVB(pm, layer && ib);
   let s = `<svg viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;font-family:inherit;">`;
-  if (layer) s += `<image href="${layer.src}" x="${ib.x}" y="${ib.y}" width="${ib.w}" height="${ib.h}" preserveAspectRatio="none"/>`;
+  if (layer) s += `<image href="${_assetUrl(layer.src)}" x="${ib.x}" y="${ib.y}" width="${ib.w}" height="${ib.h}" preserveAspectRatio="none"/>`;
   (pm.zones || []).forEach((z, i) => {
     const sel = opts.sel === z.id, bb = _planBBox(z.poly), st = _planZoneStats(pm, z);
     const fill = layer ? (sel ? 'rgba(232,115,26,.28)' : 'rgba(255,255,255,0)') : (sel ? '#ffe9d6' : PLAN_ZONE_COLORS[i % PLAN_ZONE_COLORS.length]);
@@ -16948,7 +16951,7 @@ function _openPlanView() {
   if (!_planSel || !pm.zones.find(z => z.id === _planSel)) _planSel = 'z11';
   if (_planLayer === null) _planLayer = (pm.layers && pm.layers[0]) ? pm.layers[0].id : '';
   _planZoom = { k: 1, x: 0, y: 0 };
-  (pm.layers || []).forEach(l => { const im = new Image(); im.src = l.src; });
+  (pm.layers || []).forEach(l => { const im = new Image(); im.src = _assetUrl(l.src); });
   _renderPlanView();
 }
 // 평면도: 구역·도면 종류 드롭다운 → 바텀시트에서 선택
@@ -17022,7 +17025,7 @@ function _planBindStage() {
 }
 // ── 평면도 물건 선택: 3D 모델(SketchUp)에서 뽑은 물건 윤곽 (평면 좌표 mm) ──
 let _planObjs = null, _planObjSel = null, _planObjLoading = false;
-function _planObjsUrl(pm) { return pm.objectsUrl || (pm.name === PLAN_DEFAULT.name ? 'assets/models/jeongja-woosung.objects.json' : ''); }
+function _planObjsUrl(pm) { return _assetUrl(pm.objectsUrl || (pm.name === PLAN_DEFAULT.name ? 'assets/models/jeongja-woosung.objects.json' : '')); }
 function _planObjsFor(pm) {
   const url = _planObjsUrl(pm); if (!url) return null;
   if (_planObjs && _planObjs.url === url) return _planObjs.list;
