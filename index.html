@@ -1878,6 +1878,7 @@ button, input, textarea, select { font-family:var(--font); }
 }
 
 /* ── 모바일 바텀시트 아이템 ── */
+[hidden] { display:none !important; }
 .mobile-sheet-item {
   display:flex; align-items:center; gap:12px; padding:16px 20px;
   font-size:16px; font-weight:400; color:#111; cursor:pointer;
@@ -4739,7 +4740,7 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
         <button class="tab-btn" onclick="switchMainTab('calendar',this)"><span class="tab-label">일정</span></button>
         <button class="tab-btn" onclick="switchMainTab('style',this)"><span class="tab-label">스타일</span></button>
         <button class="tab-btn" onclick="switchMainTab('content',this)"><span class="tab-label">컨텐츠</span></button>
-        <button class="tab-btn" id="tab-btn-matselect" onclick="switchMainTab('matselect',this)"><span class="tab-label">자재선택</span></button>
+        <button class="tab-btn" id="tab-btn-matselect" hidden onclick="switchMainTab('matselect',this)"><span class="tab-label">자재선택</span></button>
         <button class="tab-btn" id="tab-btn-furniture" onclick="switchMainTab('furniture',this)"><span class="tab-label">가구&가전</span></button>
         <button class="tab-btn" id="tab-btn-sitephotos" onclick="switchMainTab('sitephotos',this)"><span class="tab-label">현장사진</span></button>
         <button class="tab-btn" id="tab-btn-specbook" onclick="switchMainTab('specbook',this)"><span class="tab-label">스펙북</span></button>
@@ -6407,8 +6408,8 @@ body.vs2-on .floating-group { bottom:calc(90px + env(safe-area-inset-bottom,0px)
   <div class="dialog" style="gap:0;padding:0 0 calc(16px + env(safe-area-inset-bottom));">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 6px;"></div>
     <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('sitephotos');"><span style="display:flex;align-items:center;gap:8px;">📷&nbsp; 현장 사진</span></button>
-    <button class="mobile-sheet-item" onclick="closeAllMenus();_vs2Go('matselect');"><span style="display:flex;align-items:center;gap:8px;">🧱&nbsp; 자재 선택</span></button>
-    <button class="mobile-sheet-item" onclick="openNoticeDialog();closeAllMenus();"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문</span></button>
+    <button class="mobile-sheet-item" hidden onclick="closeAllMenus();_vs2Go('matselect');"><span style="display:flex;align-items:center;gap:8px;">🧱&nbsp; 자재 선택</span></button>
+    <button class="mobile-sheet-item" hidden onclick="openNoticeDialog();closeAllMenus();"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-file-text"/></svg> 인테리어 양해 안내문</span></button>
     <button class="mobile-sheet-item" onclick="closeAllMenus();openAccountDialog();"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20"><use href="#icon-user"/></svg> 계정</span></button>
     <button class="mobile-sheet-item" onclick="closeAllMenus();setTimeout(()=>toggleLandingMenu({stopPropagation(){}}),0);"><span style="display:flex;align-items:center;gap:8px;"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 설정</span></button>
   </div>
@@ -7844,6 +7845,16 @@ async function _notifyNewUserIfNeeded() {
   } catch(e) { console.warn('User notify failed:', e); }
 }
 
+// ===== 기능 정리(2026-11-27 · 2단계): 1분기 목표와 무관하거나 쓰지 않는 기능은 화면에서 숨김 =====
+// 코드·데이터는 그대로 두고 진입점만 막음 → 문제 없으면 이후 코드 삭제, 되살릴 땐 true로
+const FEATURES = {
+  matSelect: false,     // 자재선택 탭
+  notice: false,        // 인테리어 양해 안내문
+  accountType: false,   // 로그인 직후 일반/전문가 계정 유형 선택 화면
+  proPage: false,       // 업체 공개 페이지 관리
+  aiZones: false,       // 도면 AI 구역 인식(API 키 없음)
+  tipFeeds: false,      // 공정 팁의 커뮤니티 피드
+};
 // ===== 계정 유형 선택 (일반/전문가) — 신규 가입자에게만 1회 노출 =====
 let _acctSelectedRole = null, _acctSelectedKind = null;
 let _acctSelectedCategories = new Set();
@@ -7860,6 +7871,7 @@ async function _checkAccountTypeOnLogin() {
       state.user.projectsPublic = !!doc.data().projectsPublic;
       return; // 이미 선택 완료된 유저
     }
+    if (!FEATURES.accountType) return; // 숨김: 가입 직후 바로 앱으로
     _acctGoToStep('role');
     goTo('account-setup');
   } catch(e) { console.warn('accountType check failed:', e); }
@@ -8435,7 +8447,7 @@ async function _renderExpertStatusCard() {
         </div>
         ${status === 'approved' ? `
         <div style="font-size:12.5px;color:#16a34a;margin-top:8px;line-height:1.6;">업체 목록에 노출되고 있습니다.</div>
-        <button onclick="openProPageManager()" style="width:100%;height:44px;margin-top:12px;background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">내 업체 페이지 관리 · 사진/영상</button>
+        <button onclick="openProPageManager()" ${FEATURES.proPage ? '' : 'hidden'} style="width:100%;height:44px;margin-top:12px;background:#fff;color:#111;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">내 업체 페이지 관리 · 사진/영상</button>
         <button onclick="openUserProfile(state.user.email,state.user.name,'오너')" style="width:100%;height:44px;margin-top:12px;background:#222;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font);">내 전문가 페이지 보기</button>` : ''}
         ${status === 'withdrawn' ? `
         <div style="font-size:12.5px;color:#888;margin-top:8px;line-height:1.6;">업체 회원에서 탈퇴 처리되어 업체 목록 노출이 중단됐습니다.</div>
@@ -12138,8 +12150,8 @@ function _renderMoreTab() {
     ${_mrInfoCard(proj)}
     <div class="mr-sec"><div class="mr-h">프로젝트</div>
       ${row(I.camera, '현장 사진', "_vs2Go('sitephotos')")}
-      ${row(I.layers, '자재 선택', "_vs2Go('matselect')")}
-      ${row(I.doc, '인테리어 양해 안내문', 'openNoticeDialog()')}
+      ${FEATURES.matSelect ? row(I.layers, '자재 선택', "_vs2Go('matselect')") : ''}
+      ${FEATURES.notice ? row(I.doc, '인테리어 양해 안내문', 'openNoticeDialog()') : ''}
       ${_ptnEnabled() ? row(I.users, '제휴 서비스', 'openPartnerService()') : ''}
       ${_ptnIsPartner() ? row(I.consult, '제휴 신청 받은함', 'openPartnerInbox()') : ''}
     </div>
@@ -14241,7 +14253,7 @@ function _renderTipTab(data, procId) {
     html += '</div>';
   }
   // 피드
-  if (data.feeds?.length) {
+  if (FEATURES.tipFeeds && data.feeds?.length) {
     const src = {youtube:'🎬 YouTube', cafe:'💬 카페', thread:'🧵 쓰레드'};
     html += `<div class="tip-block"><div class="tip-block-title">커뮤니티</div>`;
     data.feeds.forEach(f => {
@@ -19016,7 +19028,7 @@ async function _fpvUpload(kind, input) {
     document.getElementById('fpv-sheet')?.remove();
     _fpvRender(); if (kind === '3d') _fpvReload3d();
     showToastMessage('✅ 새 버전을 올렸어요');
-    if (kind === 'plan' && confirm('이 도면에서 AI로 구역(거실·안방 등)을 인식해 구역 화면을 업데이트할까요?')) _fpvAnalyze(v.id);
+    if (FEATURES.aiZones && kind === 'plan' && confirm('이 도면에서 AI로 구역(거실·안방 등)을 인식해 구역 화면을 업데이트할까요?')) _fpvAnalyze(v.id);
   } catch (e) {
     console.warn('[fpv upload]', e);
     showToastMessage('⚠️ 업로드 실패 (' + (e.code || e.message || '') + ')');
