@@ -12397,7 +12397,9 @@ let _gtAuto = {};
 function _gtPC(p) { return p.color || _gtAuto[p.id] || _gtColor(p.type || p.name); }
 function _gtInk(hex) { const h = (hex || '').replace('#', ''); if (h.length !== 6) return '#fff'; const [r, g, b] = [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16)); return (r * 299 + g * 587 + b * 114) / 1000 > 165 ? '#1f2a44' : '#fff'; }
 function _gtMat(p) { if (!Array.isArray(p.phases) || !p.phases.length) p.phases = [{ kind: 'work', label: p.name, start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }]; return p.phases; }
-function _gtSave(proj) { save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); }
+// 간트 편집(완료·색상·진행률·이동·단계 삭제)은 반드시 공정 updatedAt을 갱신해야 함 — _mergeOneProcess는
+// updatedAt이 더 최신인 쪽을 통째로 채택하므로, 갱신 없이 sync하면 클라우드의 이전 값이 이겨 편집이 바로 되돌아감
+function _gtSave(proj, p) { if (p) p.updatedAt = Date.now(); save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); }
 let _gtMenuCtx = null;
 function _gtMenuClose() { document.getElementById('gt-menu')?.remove(); document.querySelectorAll('.gt-bar.sel').forEach(b => b.classList.remove('sel')); _gtMenuCtx = null; }
 function _gtMenu(pid, k, bar) {
@@ -12455,22 +12457,22 @@ function _gtMenuAct(a, it) {
   if (a === 'edit') { close(); const btn = document.querySelector(`.gt-nm[data-pid="${c.pid}"]`); if (btn) _gtRename(c.pid, btn); return; }
   if (a === 'del') { close(); deleteProcess(c.pid); return; }
   if (a === 'delph') { close(); _gtDelPhase(c.pid, c.k); return; }
-  if (a === 'done') { const ph = _gtMat(p)[c.k]; if (!ph) return; const was = ph.progress; ph.progress = was === 100 ? undefined : 100; if (ph.progress === undefined) delete ph.progress; close(); _gtSave(proj);
-    showActionToast(was === 100 ? '완료를 취소했어요' : `${p.name} 완료로 표시했어요`, () => { const q = _gtMat(p)[c.k]; if (was === undefined) delete q.progress; else q.progress = was; _gtSave(proj); }, '되돌리기'); return; }
+  if (a === 'done') { const ph = _gtMat(p)[c.k]; if (!ph) return; const was = ph.progress; ph.progress = was === 100 ? undefined : 100; if (ph.progress === undefined) delete ph.progress; close(); _gtSave(proj, p);
+    showActionToast(was === 100 ? '완료를 취소했어요' : `${p.name} 완료로 표시했어요`, () => { const q = _gtMat(p)[c.k]; if (was === undefined) delete q.progress; else q.progress = was; _gtSave(proj, p); }, '되돌리기'); return; }
   if (a === 'dup') { close();
     const np = JSON.parse(JSON.stringify(p)); np.id = 'proc_' + Date.now(); np.name = p.name + ' (복사)'; np.details = []; delete np.updatedAt;
     (np.phases || []).forEach(x => delete x.progress);
-    proj.processes.push(np); _gtSave(proj); showToastMessage(_ti('check') + `${np.name}을(를) 추가했어요`); return; }
+    proj.processes.push(np); _gtSave(proj, np); showToastMessage(_ti('check') + `${np.name}을(를) 추가했어요`); return; }
   if (a === 'color') {
     const cur = _gtPC(p);
     const s = _gtSub(it, `<div class="gs-col">${GT_PALETTE.map(col => `<button data-c="${col}" style="background:${col}" class="${col === cur ? 'on' : ''}" aria-label="${col}"></button>`).join('')}</div>${p.color ? '<button class="gs-it" data-c="">기본 색으로</button>' : ''}`);
-    s.addEventListener('click', e => { const bt = e.target.closest('[data-c]'); if (!bt) return; if (bt.dataset.c) p.color = bt.dataset.c; else delete p.color; close(); _gtSave(proj); });
+    s.addEventListener('click', e => { const bt = e.target.closest('[data-c]'); if (!bt) return; if (bt.dataset.c) p.color = bt.dataset.c; else delete p.color; close(); _gtSave(proj, p); });
     return;
   }
   if (a === 'prog') {
     const ph = _gtPhases(p)[c.k] || {}, cur = typeof ph.progress === 'number' ? ph.progress : null;
     const s = _gtSub(it, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => `<button class="gs-it${cur === v ? ' on' : ''}" data-v="${v}">${v} %</button>`).join('') + (cur !== null ? '<button class="gs-it mute" data-v="">자동 (날짜 기준)</button>' : ''));
-    s.addEventListener('click', e => { const bt = e.target.closest('[data-v]'); if (!bt) return; const q = _gtMat(p)[c.k]; if (!q) return; if (bt.dataset.v) q.progress = +bt.dataset.v; else delete q.progress; close(); _gtSave(proj); });
+    s.addEventListener('click', e => { const bt = e.target.closest('[data-v]'); if (!bt) return; const q = _gtMat(p)[c.k]; if (!q) return; if (bt.dataset.v) q.progress = +bt.dataset.v; else delete q.progress; close(); _gtSave(proj, p); });
   }
 }
 function _gtToggle(g) { _gtCollapsed.has(g) ? _gtCollapsed.delete(g) : _gtCollapsed.add(g); renderCalendar(); }
@@ -12534,7 +12536,7 @@ function _gtShift(pid, k, mode, dd) {
     const x = p.phases[k]; if (!x) return; mv(x);
     p.scheduleStart = p.phases.map(q => q.start).sort()[0]; p.scheduleEnd = p.phases.map(q => q.end).sort().at(-1);
   } else { const x = { start: p.scheduleStart, end: p.scheduleEnd || p.scheduleStart }; mv(x); p.scheduleStart = x.start; p.scheduleEnd = x.end; }
-  const done = () => { save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderCalendar(); };
+  const done = () => { p.updatedAt = Date.now(); save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderCalendar(); };
   done();
   const ph = _gtPhases(p)[k] || {};
   showActionToast(`${p.name} ${_vs2Fmt(ph.start)} – ${_vs2Fmt(ph.end)}로 변경했어요`, () => {
@@ -12565,7 +12567,7 @@ function _gtDelPhase(id, k) {
   const snap = JSON.stringify({ phases: p.phases, s: p.scheduleStart, e: p.scheduleEnd }), gone = p.phases[k];
   p.phases = p.phases.filter((x, i) => i !== k);
   p.scheduleStart = p.phases.map(q => q.start).sort()[0]; p.scheduleEnd = p.phases.map(q => q.end).sort().at(-1);
-  const done = () => { save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); };
+  const done = () => { p.updatedAt = Date.now(); save(); try { if (proj.cloudId) _syncProcessesToCloud(proj); } catch (e) {} renderAll(); };
   _tplClose(); done();
   showActionToast(`${p.name} · ${gone && gone.label || '단계'} 삭제했어요`, () => { const o = JSON.parse(snap); p.phases = o.phases; p.scheduleStart = o.s; p.scheduleEnd = o.e; done(); }, '되돌리기');
 }
